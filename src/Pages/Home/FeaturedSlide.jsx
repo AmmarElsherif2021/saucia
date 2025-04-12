@@ -12,98 +12,13 @@ import {
   useColorMode,
 } from "@chakra-ui/react";
 import { ChevronLeftIcon, ChevronRightIcon, StarIcon } from "@chakra-ui/icons";
-import dessertPic from "../assets/dessert.JPG";
-import fruitPic from "../assets/fruits.JPG";
-import leavesPic from "../assets/leaves.JPG";
-import saladIcon from "../assets/salad.svg";
-import { FeaturedItemCard } from "./Cards";
+import dessertPic from "../../assets/dessert.JPG";
+import fruitPic from "../../assets/fruits.JPG";
+import leavesPic from "../../assets/leaves.JPG";
+import saladIcon from "../../assets/salad.svg";
+import { FeaturedItemCard } from "../../Components/Cards";
 
-// Carousel Component for Featured Items
-const ItemsCarousel = ({ items, title, subtitle }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [itemsToShow, setItemsToShow] = useState(3);
-  const { colorMode } = useColorMode();
-  const carouselRef = useRef(null);
-
-  // Responsive items to show based on container width
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      if (width < 600) setItemsToShow(1);
-      else if (width < 900) setItemsToShow(2);
-      else if (width < 1200) setItemsToShow(3);
-      else setItemsToShow(4);
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const nextSlide = () => {
-    if (currentIndex < items.length - itemsToShow) {
-      setCurrentIndex(currentIndex + 1);
-    } else {
-      setCurrentIndex(0); // Loop back to start
-    }
-  };
-
-  const prevSlide = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    } else {
-      setCurrentIndex(items.length - itemsToShow); // Loop to end
-    }
-  };
-
-  return (
-    <Box mb={8}>
-      <Flex justify="space-between" align="center" mb={4}>
-        <Box>
-          <Heading size="md" textStyle="heading" textAlign="left">{title}</Heading>
-          <Text fontSize="sm" color={colorMode === "dark" ? "gray.400" : "gray.600"} textAlign="left">{subtitle}</Text>
-        </Box>
-        <Flex>
-          <IconButton
-            icon={<ChevronLeftIcon />}
-            aria-label="Previous"
-            mr={1}
-            onClick={prevSlide}
-            isDisabled={items.length <= itemsToShow}
-            variant="outline"
-            colorScheme="brand"
-          />
-          <IconButton
-            icon={<ChevronRightIcon />}
-            aria-label="Next"
-            onClick={nextSlide}
-            isDisabled={items.length <= itemsToShow}
-            variant="outline"
-            colorScheme="brand"
-          />
-        </Flex>
-      </Flex>
-
-      <Box position="relative" overflow="hidden" ref={carouselRef}>
-        <Flex
-          transition="transform 0.5s ease"
-          transform={`translateX(-${currentIndex * (100 / itemsToShow)}%)`}
-          width={`${(items.length / itemsToShow) * 100}%`}
-        >
-          {items.map((item, index) => (
-            <Box
-              key={index}
-              flex={`0 0 ${100 / itemsToShow}%`}
-              px={2}
-            >
-              <FeaturedItemCard {...item} />
-            </Box>
-          ))}
-        </Flex>
-      </Box>
-    </Box>
-  );
-};
+import { ItemsCarousel } from "../../Components/ItemsCarousel"; 
 
 // Main Featured Food Items Component
 
@@ -142,6 +57,15 @@ export const FEAT = ({
       rating: 4.2,
       category: "Salad",
       isSpecial: true,
+    },
+    {
+      name: "Classic Cake",
+      description: "Rich chocolate cake with a delicious ganache topping and a hint of espresso.",
+      price: 6.99,
+      image: dessertPic,
+      rating: 4.5,
+      category: "Dessert",
+      isTrending: false,
     },
     {
       name: "Berry Smoothie Bowl",
@@ -204,10 +128,7 @@ export const FEAT = ({
         </Flex>
 
         {/* Display the filtered items */}
-      {displayedItems.length > 0 ? (
-        <ItemsCarousel
-          items={displayedItems}
-          title={
+            {/* title={
             selectedCategory === "trending"
               ? "Trending Now"
               : selectedCategory === "recommended"
@@ -224,7 +145,11 @@ export const FEAT = ({
               : selectedCategory === "seasonal"
               ? "Limited time offerings with seasonal ingredients"
               : "Explore all our featured items"
-          }
+          }*/}
+      {displayedItems.length > 0 ? (
+        <ItemsCarousel
+          items={displayedItems}
+      
         />
       ) : (
         <Text>No items available for this category.</Text>

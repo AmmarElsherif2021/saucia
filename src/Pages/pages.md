@@ -48,6 +48,7 @@
 - Sorting options (popularity, price, rating)
 
 ### 3. Offers Page (`/offers`)
+
 - Daily deals
 - Combo offers
 - Limited-time specials

@@ -395,15 +395,14 @@ export const FeaturedItemCard = ({
   
   return (
     <Box
-      maxW="300px"
+      maxW="250px"
       borderRadius="xl"
       overflow="hidden"
-      boxShadow="lg"
       bg={colorMode === "dark" ? "gray.700" : "white"}
       position="relative"
       transition="transform 0.3s"
       _hover={{ transform: "translateY(-5px)" }}
-      height="320px"
+      height="300px"
     >
       {/* Image takes most of the card */}
       <Box position="relative" height="220px">

@@ -1,4 +1,4 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Fragment } from "react";
 import {
   Button,
@@ -56,11 +56,18 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
+  Badge,
+  Avatar,
+  Divider,
+  IconButton,
+  FormControl,
+  FormLabel,
+  SimpleGrid,
+  useToast,
 } from "@chakra-ui/react";
-import { StarIcon } from "@chakra-ui/icons";
+import { StarIcon, EditIcon } from "@chakra-ui/icons";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-
 
 // Button Component - Fully leveraging theme variants
 export const BTN = ({ type = "button", size = "md", colorScheme = "brand", variant = "solid", disabled = false, icon, onClick, children }) => {
@@ -81,11 +88,12 @@ export const BTN = ({ type = "button", size = "md", colorScheme = "brand", varia
 };
 
 // Text Input Component - Using theme variants properly
-export const TXT = ({ placeholder, value, maxLength, variant = "outline", disabled = false, onChange, textTransform }) => {
+export const TXT = ({ placeholder, value, maxLength, variant = "outline", disabled = false, onChange, textTransform, name }) => {
   const { colorMode } = useColorMode();
   
   return (
     <Input
+      name={name}
       placeholder={placeholder}
       value={value}
       maxLength={maxLength}
@@ -94,7 +102,6 @@ export const TXT = ({ placeholder, value, maxLength, variant = "outline", disabl
       onChange={onChange}
       _focus={{ 
         borderColor: "brand.700", 
-         
       }}
       sx={{
         borderColor: colorMode === "dark" ? "gray.600" : "gray.300",
@@ -125,20 +132,20 @@ export const TXTAREA = ({ rows = 3, cols, value, maxLength, disabled = false, on
         borderColor: colorMode === "dark" ? "gray.600" : "gray.300",
         borderWidth: "2px",
         color: colorMode === "dark" ? "white" : "black",
-        
         backgroundColor: "white"
       }}
     />
   );
 };
-export const SwitchToggle = ({ isOn = false, disabled = false, onChange }) =>{
-  //const [switchOn, setSwitchOn] = useState(false);
-  return (
+
+// Switch Toggle Component with Text
+export const SwitchToggle = ({ isOn = false, onChange, label }) => (
   <Flex align="center" gap={3}>
-            <TSW isOn={false} onChange={onChange} />
-            <Text>Switch is {isOn? "ON" : "OFF"}</Text>
-          </Flex>
-)};
+    <TSW isOn={isOn} onChange={onChange} />
+    {label && <Text>{label}</Text>}
+  </Flex>
+);
+
 // Checkbox Component - Using theme colors
 export const CHK = ({ checked = false, label, disabled = false, onChange }) => (
   <Checkbox 
@@ -177,7 +184,7 @@ export const RDO = ({ name, options = [], selected, disabled = false, onChange }
 );
 
 // Dropdown Component - Now properly using the navButton variant from theme
-export const DD = ({ options = [], selectedItem, disabled = false, onChange, placeholder = "Select option",settableMenu=false }) => {
+export const DD = ({ options = [], selectedItem, disabled = false, onChange, placeholder = "Select option", settableMenu=false }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selected, setSelected] = useState(selectedItem);
 
@@ -208,7 +215,7 @@ export const DD = ({ options = [], selectedItem, disabled = false, onChange, pla
   );
 };
 
-//Alert dialogue
+// Alert dialogue
 export const ALT = ({ message, type = "success", dismissible = false, icon, timeout, onDismiss }) => {
   const [show, setShow] = useState(true);
   const { colorMode } = useColorMode();
@@ -234,7 +241,7 @@ export const ALT = ({ message, type = "success", dismissible = false, icon, time
       borderColor={`${type}.400`}
       color={`${type}.700`}
     >
-      {icon? icon: ""}
+      {icon ? icon : ""}
       <Box flex="1">
         <AlertTitle>{message.title}</AlertTitle>
         <AlertDescription>{message.description}</AlertDescription>
@@ -294,12 +301,14 @@ export const SLD = ({ min = 0, max = 100, step = 1, value, onChange }) => (
 );
 
 // Progress Bar Component - Using theme colors
-export const PB = ({ value = 0, max = 100, colorScheme = "brand", animated = false }) => (
+export const PB = ({ value = 0, max = 100, colorScheme = "brand", animated = false, size = "md" }) => (
   <Progress
     value={(value / max) * 100}
     colorScheme={colorScheme}
     hasStripe={animated}
     isAnimated={animated}
+    size={size}
+    borderRadius="full"
   />
 );
 
@@ -390,23 +399,22 @@ export const ACC = ({ sections = [], expandedItem, onToggle }) => {
         </AccordionItem>
       ))}
     </Accordion>
-
-    
   );
 };
 
 // Tabs Component - Using theme colors
-export const TAB = ({ items = [], activeTab = 0, onSelect, orientation = "horizontal" }) => {
+export const TAB = ({ items = [], activeTab = 0, onSelect, orientation = "horizontal", variant = "soft-rounded" }) => {
   return (
     <Tabs 
       index={activeTab} 
       onChange={onSelect} 
       orientation={orientation}
       colorScheme="brand"
+      variant={variant}
     >
-      <TabList>
+      <TabList mb={4} overflowX="auto" flexWrap={{ base: "nowrap", lg: "wrap" }}>
         {items.map((item, index) => (
-          <Tab as={Button} variant="underlined" key={index}>{item.label}</Tab>
+          <Tab as={item.as || Button} variant={item.variant || "underlined"} key={index} minWidth="auto" ml={2} whiteSpace="nowrap">{item.label}</Tab>
         ))}
       </TabList>
       <TabPanels>
@@ -503,6 +511,106 @@ export const LD = ({ size = "md", colorScheme = "brand", type = "spinner" }) => 
     return <Spinner size={size} color={`${colorScheme}.500`} />;
   }
   return <Progress size={size} colorScheme={colorScheme} isIndeterminate />;
+};
+
+// Badge List Component - Reused from ProfileComponent
+export const BadgeList = ({ items = [], colorScheme = "tertiary", emptyMessage }) => (
+  <Flex wrap="wrap" gap={2} w={"auto"} justify="flex-start">
+    {items.length > 0 ? (
+      items.map((item, index) => (
+        <Badge
+          key={index}
+          colorScheme={colorScheme}
+          variant="subtle"
+          px={3}
+          py={1}
+          borderRadius="full"
+        >
+          {item}
+        </Badge>
+      ))
+    ) : (
+      <Text color="gray.500">{emptyMessage}</Text>
+    )}
+  </Flex>
+);
+
+// Base Card component for inheritance - Reused from ProfileComponent
+export const Card = ({ children, colorScheme, ...props }) => {
+  const { colorMode } = useColorMode();
+  return (
+    <Box
+      p={4}
+      borderWidth="1px"
+      borderRadius="22px"
+      colorScheme={colorScheme || "gray"}
+      bg={colorMode === "dark" ? `${colorScheme || "gray"}.800` : `${colorScheme || "gray"}.300`}
+      {...props}
+    >
+      {children}
+    </Box>
+  );
+};
+
+// Tab Content Component - Reused from ProfileComponent
+export const TabContent = ({ title, children, isEmpty, emptyMessage = "No data available" }) => (
+  <>
+    <Heading size="md" mb={4} color="brand.700">
+      {title}
+    </Heading>
+    {isEmpty ? (
+      <Text color="gray.500">{emptyMessage}</Text>
+    ) : (
+      <Box overflowY="auto" maxHeight="400px" borderRadius="30px">
+        {children}
+      </Box>
+    )}
+  </>
+);
+
+// Calorie Tracker Component
+export const CalorieTracker = ({ goal, current }) => {
+  const { colorMode } = useColorMode();
+  const remaining = goal - current;
+  
+  return (
+    <Card sx={{background:"brand.100"}} mb={4}>
+      <Heading size="md" mb={4} color="brand.700">
+        Daily Calorie Tracking
+      </Heading>
+      <Flex justify="space-between" mb={2}>
+        <Text>Consumed: {current} cal</Text>
+        <Text>Goal: {goal} cal</Text>
+      </Flex>
+      <PB
+        value={current}
+        max={goal}
+        colorScheme={current > goal ? "red" : "brand"}
+        size="lg"
+      />
+      <Text fontSize="sm" color={colorMode === "dark" ? "gray.400" : "gray.500"}>
+        {remaining > 0 ? `${remaining} calories remaining` : "Goal exceeded"}
+      </Text>
+    </Card>
+  );
+};
+
+// Notification Setting Component - Reused from ProfileComponent
+export const NotificationSetting = ({ name, value, onChange }) => {
+  const { colorMode } = useColorMode();
+  return (
+    <Flex
+      p={4}
+      mx="20%"
+      borderRadius="20px"
+      bg={colorMode === "dark" ? "gray.800" : "gray.100"}
+      align="center"
+      justify="space-between"
+    >
+      <Text>{name.replace(/^\w/, (c) => c.toUpperCase())} Notifications</Text>
+      <TSW isOn={value} onChange={onChange} />
+    </Flex>
+  );
 };
 
 // Widgets Playground - Using layer styles from theme
@@ -605,25 +713,21 @@ export const ComponentsTrial = () => {
             message={{ title: "Alert", description: "This is a hazard message" }} 
             type="error" 
             dismissible 
-
           />
           <ALT 
             message={{ title: "Alert", description: "This is an alert message" }} 
             type="warning" 
             dismissible 
-
           />
           <ALT 
             message={{ title: "Alert", description: "This is a success message" }} 
             type="success" 
             dismissible 
-
           />
           <ALT 
             message={{ title: "Alert", description: "This is an info message" }} 
             type="info" 
             dismissible 
-
           />
         </Box>
 
@@ -640,7 +744,7 @@ export const ComponentsTrial = () => {
 
         <Box layerStyle={colorMode === "dark" ? "card-dark" : "card"}>
           <Heading size="md" mb={3} textStyle="heading">Toggle Switch</Heading>
-          <SwitchToggle/>
+          <SwitchToggle isOn={false} label="Switch is OFF" onChange={() => {}} />
         </Box>
 
         <Box layerStyle={colorMode === "dark" ? "card-dark" : "card"}>
@@ -664,6 +768,14 @@ export const ComponentsTrial = () => {
             items={tabItems} 
             activeTab={activeTab} 
             onSelect={setActiveTab} 
+          />
+        </Box>
+
+        <Box layerStyle={colorMode === "dark" ? "card-dark" : "card"}>
+          <Heading size="md" mb={3} textStyle="heading">Badge List</Heading>
+          <BadgeList 
+            items={["Item 1", "Item 2", "Item 3"]}
+            colorScheme="brand"
           />
         </Box>
 

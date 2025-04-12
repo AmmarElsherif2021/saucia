@@ -1,80 +1,32 @@
-import {
-  Box,
+import { useState } from "react";
+import { 
   Flex,
   Text,
-  Heading,
-  Avatar,
-  Badge,
-  Stack,
   Divider,
-  Button,
-  IconButton,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
+  SimpleGrid,
   useColorMode,
   useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
-  FormControl,
-  FormLabel,
-  Input,
-  SimpleGrid,
-  Switch,
   useToast,
-  Progress,
-  background,
+  Image,
+  Avatar,
+  Heading
 } from "@chakra-ui/react";
-import { EditIcon, StarIcon } from "@chakra-ui/icons";
-import { useState } from "react";
+import { StarIcon, EditIcon } from "@chakra-ui/icons";
 import saladIcon from "../assets/salad.svg";
 import billIcon from "../assets/bill.svg";
 import locationIcon from "../assets/location.svg";
-// Reusable BadgeList component
-const BadgeList = ({ items = [], colorScheme = "teriary", emptyMessage }) => (
-  <Flex  wrap="wrap" gap={2} w={"auto"} justify="flex-start">
-    {items.length > 0 ? (
-      items.map((item, index) => (
-        <Badge
-          key={index}
-          colorScheme={colorScheme}
-          variant="subtle"
-          px={3}
-          py={1}
-          borderRadius="full"
-        >
-          {item}
-        </Badge>
-      ))
-    ) : (
-      <Text color="gray.500">{emptyMessage}</Text>
-    )}
-  </Flex>
-);
+import {
+  BTN,
+  TXT,
+  MOD,
+  Card,
+  BadgeList,
+  TAB,
+  TabContent,
+  CalorieTracker,
+  NotificationSetting,
 
-// Base Card component for inheritance
-const Card = ({ children, ...props }) => {
-  const { colorMode } = useColorMode();
-  return (
-    <Box
-      p={4}
-      borderWidth="1px"
-      borderRadius="22px"
-      colorScheme={props.colorScheme || "gray"}
-      bg={colorMode === "dark" ? `${props.colorScheme || "gray"}.800` : `${props.colorScheme || "gray"}.300`}
-      {...props}
-    >
-      {children}
-    </Box>
-  );
-};
+} from "./ComponentsTrial";
 
 // Specialized BillCard for order history
 const BillCard = ({ order }) => {
@@ -82,7 +34,7 @@ const BillCard = ({ order }) => {
     <Card colorScheme="accent" mb={4}>
       <Flex alignItems="flex-start">
         <Box mr={3} mt={1}>
-          <img src={billIcon} alt="Bill" width="50px" height="50px" />
+          <Image src={billIcon} alt="Bill" width="50px" height="50px" />
         </Box>
         <Box flex="1">
           <Text fontWeight="bold">Order ID: {order.id}</Text>
@@ -117,7 +69,7 @@ const AddressCard = ({ address }) => {
       )}
       <Flex alignItems="flex-start">
         <Box mr={3} mt={1}>
-          <img src={locationIcon} alt="Location" width="50px" height="50px" />
+          <Image src={locationIcon} alt="Location" width="50px" height="50px" />
         </Box>
         <Box flex="1">
           <Text fontWeight="bold">{address.name}</Text>
@@ -144,7 +96,7 @@ const FavouriteItemCard = ({ item }) => {
     <Card colorScheme="secondary" mb={4}>
       <Flex alignItems="flex-start">
         <Box mr={3} mt={1}>
-          <img src={saladIcon} alt="Food Item" width="50px" height="50px" />
+          <Image src={saladIcon} alt="Food Item" width="50px" height="50px" />
         </Box>
         <Box flex="1">
           <Text fontWeight="bold">{item.name}</Text>
@@ -158,13 +110,13 @@ const FavouriteItemCard = ({ item }) => {
               <StarIcon color="yellow.500" mr={1} />
               <Text>{item.rating}</Text>
             </Flex>
-            <Button 
+            <BTN 
               size="sm" 
               colorScheme={isRegistered ? "red" : "brand"}
               onClick={toggleRegistration}
             >
               {isRegistered ? "Unregister" : "Register"}
-            </Button>
+            </BTN>
           </Flex>
         </Box>
       </Flex>
@@ -172,38 +124,6 @@ const FavouriteItemCard = ({ item }) => {
   );
 };
 
-// Reusable TabContent component
-const TabContent = ({ title, children, isEmpty, emptyMessage = "No data available" }) => (
-  <>
-    <Heading size="md" mb={4} color="brand.700">
-      {title}
-    </Heading>
-    {isEmpty ? (
-      <Text color="gray.500">{emptyMessage}</Text>
-    ) : (
-      <Box overflowY="auto" maxHeight="400px" borderRadius="30px">
-        {children}
-      </Box>
-    )}
-  </>
-);
-
-// Reusable NotificationSetting component
-const NotificationSetting = ({ name, value, onChange }) => (
-  <Flex
-    p={4}
-    mx="20%"
-    borderRadius="20px"
-    bg={useColorMode().colorMode === "dark" ? "gray.800" : "gray.100"}
-    align="center"
-    justify="space-between"
-  >
-    <Text>{name.replace(/^\w/, (c) => c.toUpperCase())} Notifications</Text>
-    <Switch isChecked={value} colorScheme="brand" onChange={onChange} />
-  </Flex>
-);
-
-// Profile component
 export const PROF = ({
   name = "John Doe",
   email = "john@example.com",
@@ -254,33 +174,6 @@ export const PROF = ({
       isClosable: true,
     });
     onClose();
-  };
-
-  // Daily calorie tracking component
-  const CalorieTracker = () => {
-    const remaining = calorieTracking.goal - calorieTracking.current;
-    
-    return (
-      <Card sx={{background:"brand.100"}} mb={4}>
-        <Heading size="md" mb={4} color="brand.700">
-          Daily Calorie Tracking
-        </Heading>
-        <Flex justify="space-between" mb={2}>
-          <Text>Consumed: {calorieTracking.current} cal</Text>
-          <Text>Goal: {calorieTracking.goal} cal</Text>
-        </Flex>
-        <Progress
-          value={(calorieTracking.current / calorieTracking.goal) * 100}
-          colorScheme={calorieTracking.current > calorieTracking.goal ? "red" : "brand"}
-          size="lg"
-          borderRadius="full"
-          mb={2}
-        />
-        <Text fontSize="sm" color={colorMode === "dark" ? "gray.400" : "gray.500"}>
-          {remaining > 0 ? `${remaining} calories remaining` : "Goal exceeded"}
-        </Text>
-      </Card>
-    );
   };
 
   const tabsData = [
@@ -377,14 +270,13 @@ export const PROF = ({
             <Text>{email}</Text>
             <Text>{phoneNumber}</Text>
           </Box>
-          <IconButton
+          <BTN
             aria-label="Edit profile"
             icon={<EditIcon />}
             ml={{ base: 0, md: "auto" }}
             mt={{ base: 4, md: 0 }}
             onClick={onOpen}
-            as={Button}
-            variant={"ghost"}
+            variant="ghost"
             colorScheme="brand"
             size="lg"
           />
@@ -403,55 +295,31 @@ export const PROF = ({
         </Flex>
       </Card>
 
-      <CalorieTracker />
+      <CalorieTracker goal={calorieTracking.goal} current={calorieTracking.current} />
 
-      <Tabs variant="soft-rounded" colorScheme="brand">
-        <TabList mb={4} overflowX="auto" flexWrap={{ base: "nowrap", lg: "wrap" }}>
-          {tabsData.map((tab, index) => (
-            <Tab key={index} minWidth="auto" ml={2} whiteSpace="nowrap">{tab.title}</Tab>
-          ))}
-        </TabList>
-        <TabPanels>
-          {tabsData.map((tab, index) => (
-            <TabPanel key={index}>{tab.content}</TabPanel>
-          ))}
-        </TabPanels>
-      </Tabs>
-
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Edit Profile</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <FormControl mb={3}>
-              <FormLabel>Name</FormLabel>
-              <Input name="name" value={formData.name} onChange={handleInputChange} />
-            </FormControl>
-            <FormControl mb={3}>
-              <FormLabel>Email</FormLabel>
-              <Input name="email" value={formData.email} onChange={handleInputChange} />
-            </FormControl>
-            <FormControl mb={3}>
-              <FormLabel>Phone Number</FormLabel>
-              <Input name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} />
-            </FormControl>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose}>
-              Cancel
-            </Button>
-            <Button colorScheme="brand" onClick={handleSubmit}>
-              Save Changes
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <TAB items={tabsData} variant="soft-rounded" colorScheme="brand" />
+      
+      <MOD 
+        visible={isOpen} 
+        title="Edit Profile" 
+        onClose={onClose}
+      >
+        <TXT name="name" value={formData.name} onChange={handleInputChange} label="Name" />
+        <TXT name="email" value={formData.email} onChange={handleInputChange} label="Email" />
+        <TXT name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} label="Phone Number" />
+        <Flex justify="flex-end" mt={4}>
+          <BTN variant="ghost" mr={3} onClick={onClose}>
+            Cancel
+          </BTN>
+          <BTN colorScheme="brand" onClick={handleSubmit}>
+            Save Changes
+          </BTN>
+        </Flex>
+      </MOD>
     </Box>
   );
 };
 
-//Profile Demo
 export const ProfileDemo = () => {
   const demoData = {
     name: "Jane Doe",
