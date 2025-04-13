@@ -7,18 +7,18 @@ import { Navbar } from "./Components/Navbar";
 
 // Imported page components
 import { HomePage } from "./Pages/Home/HomePage";
-import { MenuPage } from "./Pages/MenuPage";
+import { MenuPage } from "./Pages/Menu/MenuPage";
 import { UserAccountPage } from "./Pages/UserAccountPage";
-import { CartPage } from "./Pages/CartPage";
+import { CartPage } from "./Pages/Cart/CartPage";
 import { CheckoutPage } from "./Pages/CheckoutPage";
 import { InfoPage } from "./Pages/InfoPage";
 import { AboutPage } from "./Pages/AboutPage";
 
 // Layout component to include Navbar
 const Layout = ({ children }) => (
-  <div style={{ maxWidth: "100vw", margin: "0", position:"absolute", top:"0", left:"0", right:"0", bottom:"0" }}>
+  <div style={{backgroundColor:"white", maxWidth: "100vw", height:"fit-content", margin: "0", position:"absolute", top:"0", left:"0", right:"0", bottom:"0" }}>
     <Navbar />
-    <main style={{ marginTop: "64px" }}>{children}</main>
+    <main style={{ marginTop: "70px" }}>{children}</main>
   </div>
 );
 

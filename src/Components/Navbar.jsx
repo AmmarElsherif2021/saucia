@@ -8,9 +8,11 @@ import {
   useDisclosure,
   Stack,
   useColorModeValue,
+  Img,
 } from "@chakra-ui/react";
 import { HamburgerIcon, CloseIcon, MoonIcon, SunIcon } from "@chakra-ui/icons";
 import { Link } from "react-router-dom";
+import logoIcon from "../assets/logo.png";
 
 export const Navbar = () => {
   const { colorMode, toggleColorMode } = useColorMode();
@@ -29,14 +31,19 @@ export const Navbar = () => {
       >
         {/* Logo */}
         <Box fontWeight="bold" fontSize="lg" color={textColor}>
-          <Link to="/">BrandLogo</Link>
+          <Link to="/"><Img src={logoIcon} w={20}/></Link>
         </Box>
 
         {/* Desktop Menu */}
         <Flex display={{ base: "none", md: "flex" }} alignItems="center" gap={4}>
-          <Link to="/">
+          <Link to="/cart">
             <Button variant="underlined" colorScheme="brand">
-              Home
+              Cart
+            </Button>
+          </Link>
+          <Link to="/menu">
+            <Button variant="underlined" colorScheme="brand">
+              Menu
             </Button>
           </Link>
           <Link to="/about">
@@ -47,6 +54,11 @@ export const Navbar = () => {
           <Link to="/contact">
             <Button variant="underlined" colorScheme="brand">
               Contact
+            </Button>
+          </Link>
+          <Link to="/">
+            <Button variant="underlined" colorScheme="brand">
+              login
             </Button>
           </Link>
           <IconButton

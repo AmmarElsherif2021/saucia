@@ -116,324 +116,325 @@ const theme = extendTheme({
       200: "#9ee7c6",
       300: "#7adfb1",
       400: "#56d69c",
-      500: "#32cd87", // Success color
-      600: "#28a96d",
-      700: "#1e8553",
-      800: "#146139",
-      900: "#0a3d1f",
-    },
-  },
-
-  config: {
-    initialColorMode: "light",
-    useSystemColorMode: false,
-  },
-
-  styles: {
-    global: (props) => ({
-      body: {
-        backgroundColor: props.colorMode === "dark" ? "gray.800" : "gray.50",
-        color: props.colorMode === "dark" ? "gray.100" : "gray.800",
-        fontFamily: "body",
-        lineHeight: "base",
-      },
-      "*::placeholder": {
-        color: props.colorMode === "dark" ? "gray.400" : "gray.500",
-      },
-      "*, *::before, &::after": {
-        borderColor: props.colorMode === "dark" ? "gray.600" : "gray.200",
-      },
-    }),
-  },
-
-  fonts: {
-    heading: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-    body: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-    mono: "'Fira Code', monospace",
-  },
-
-  components: {
-    Box: {
-      baseStyle: (props) => ({
-
-        color: props.colorMode === "dark" ? "gray.100" : "gray.800",
-        borderRadius: "md",
-        boxShadow: "none",
-        p: 4,
-        transition: "all 0.2s ease-in-out",
-      }),
-      variants: {
-        solid: (props) => ({
-          bg: props.colorMode === "dark" ? "gray.700" : "white", 
-          p: 4,
-          borderRadius: "lg",
-        }),
-        outline: (props) => ({
-          border: "2px solid",
-          borderColor: props.colorScheme ? `${props.colorScheme}.500` : "gray.500",
-          bg: "transparent",
-        }),
-        ghost: (props) => ({
-          bg: "transparent",
-          _hover: {
-            bg: props.colorScheme ? `${props.colorScheme}.50` : "gray.50",
+       // Success color
+        600: "#28a96d",
+        700: "#1e8553",
+        800: "#146139",
+        900: "#0a3d1f",
           },
-        }),
-        card: (props) => ({
-          bg: props.colorMode === "dark" ? "gray.700" : "white",
-          borderRadius: "xl",
-          boxShadow: "md",
-          p: 6,
-        }),
-      },
-      defaultProps: {
-        variant: "solid",
-        colorScheme: "brand",
-      },
-    },
-    Flex: {
-      baseStyle: (props) => ({
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        gap: 4,
-        width: '100%',
-        transition: 'all 0.2s ease-in-out',
-      }),
-      variants: {
-        solid: (props) => ({
-          bg: props.colorScheme ? `${props.colorScheme}.100` : 'gray.100',
-          p: 4,
-          borderRadius: 'lg',
-          border:"none",
-          _hover: {
-            bg: props.colorScheme ? `${props.colorScheme}.200` : 'gray.200',
-          },
-        }),
-        outline: (props) => ({
-          border: '2px solid',
-          borderColor: props.colorScheme ? `${props.colorScheme}.500` : 'gray.500',
-          p: 4,
-          borderRadius: 'md',
-          _hover: {
-            bg: props.colorScheme ? `${props.colorScheme}.50` : 'gray.50',
-          },
-        }),
-        ghost: (props) => ({
-          p: 0,
-          border:"none",
-          bg:"transparent",
-          _hover: {
-            bg: props.colorScheme ? `${props.colorScheme}.50` : 'gray.50',
-          },
-        }),
-        center: (props) => ({
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-        }),
-        spaced: {
-          justifyContent: 'space-between',
-          alignItems: 'center',
         },
-        responsive: {
-          flexDirection: { base: 'column', md: 'row' },
-        }
-      },
-      defaultProps: {
-        variant: 'ghost',
-        colorScheme: 'brand',
-      },
-    },
-    Button: {
-      baseStyle: {
-        fontWeight: "semibold",
-        borderRadius: "md",
-        _focus: {
-          boxShadow: "none",
-        },
-      },
-      variants: {
-        solid: (props) => ({
-          bg: "brand.700",
-          color: "white",
-          borderStyle: "none",
-          _hover: {
-            bg: props.colorScheme?`${props.colorScheme}.700`:"brand.700",
-          },
-          _active: {
-            bg: props.colorScheme?`${props.colorScheme}.800`:"brand.800",
-          },
-        }),
-        outline: (props) => ({
-          border: "2px solid",
-          borderColor: props.colorScheme?`${props.colorScheme}.500`:"brand.500",
-          color: props.colorScheme?`${props.colorScheme}.500`:"brand.500",
-          _hover: {
-            bg: props.colorScheme?`${props.colorScheme}.50`:"brand.50",
-          },
-        }),
-        ghost: (props) => ({
-          color: props.colorScheme?`${props.colorScheme}.600`:"brand.600",
-          border: "none",
-          _hover: {
-            bg: props.colorScheme?`${props.colorScheme}.100`:"brand.100",
-          },
-        }),
-        underlined: (props) => ({
-          color: props.colorMode === "dark" ? "brand.300" : "brand.700",
-          bg: "transparent",
-          p: 2,
-          height: "auto",
-          borderStyle: "none",
-          _hover: {
-            bg: "transparent",
-            _after: {
-      
-              width: "100%",
-            },
-          },
-          _after: {
-            content: '""',
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            width: "0",
-            
-            height: "2px",
-            bg: props.colorMode === "dark" ? "brand.500" : "brand.700",
-            transition: "width 0.3s ease",
-          },
-        }),
-      },
-      defaultProps: {
-        variant: "solid",
-        size: "md",
-        colorScheme: "brand",
-      },
-    },
 
-    Input: {
-      baseStyle: {
-        field: {
+        config: {
+          initialColorMode: "light",
+          useSystemColorMode: false,
+        },
+
+        styles: {
+          global: (props) => ({
+        body: {
+          backgroundColor: props.colorMode === "dark" ? "gray.800" : "gray.50",
+          color: props.colorMode === "dark" ? "gray.100" : "gray.800",
+          fontFamily: "body",
+          lineHeight: "base",
+        },
+        "*::placeholder": {
+          color: props.colorMode === "dark" ? "gray.400" : "gray.500",
+        },
+        "*, *::before, &::after": {
+          borderColor: props.colorMode === "dark" ? "gray.600" : "gray.200",
+        },
+          }),
+        },
+
+        fonts: {
+          heading: "'Poppins', sans-serif",
+          body:  "'Fira Code',sans-serif",
+          mono: "'Fira Code', monospace",
+        },
+
+        components: {
+          Box: {
+        baseStyle: (props) => ({
+
+          color: props.colorMode === "dark" ? "gray.100" : "gray.800",
           borderRadius: "md",
-          borderWidth: "2px",
-          borderColor: "brand.700",
+          boxShadow: "none",
+          p: 4,
+          transition: "all 0.2s ease-in-out",
+        }),
+        variants: {
+          solid: (props) => ({
+            bg: props.colorMode === "dark" ? "gray.700" : "white", 
+            p: 4,
+            borderRadius: "lg",
+          }),
+          outline: (props) => ({
+            border: "2px solid",
+            borderColor: props.colorScheme ? `${props.colorScheme}.500` : "gray.500",
+            bg: "transparent",
+          }),
+          ghost: (props) => ({
+            bg: "transparent",
+            _hover: {
+          bg: props.colorScheme ? `${props.colorScheme}.50` : "gray.50",
+            },
+          }),
+          card: (props) => ({
+            bg: props.colorMode === "dark" ? "gray.700" : "white",
+            borderRadius: "xl",
+            boxShadow: "md",
+            p: 6,
+          }),
+        },
+        defaultProps: {
+          variant: "solid",
+          colorScheme: "brand",
+        },
+          },
+          Flex: {
+        baseStyle: (props) => ({
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          gap: 4,
+          width: '100%',
+          transition: 'all 0.2s ease-in-out',
+        }),
+        variants: {
+          solid: (props) => ({
+            bg: props.colorScheme ? `${props.colorScheme}.100` : 'gray.100',
+            p: 4,
+            borderRadius: 'lg',
+            border:"none",
+            _hover: {
+          bg: props.colorScheme ? `${props.colorScheme}.200` : 'gray.200',
+            },
+          }),
+          outline: (props) => ({
+            border: '2px solid',
+            borderColor: props.colorScheme ? `${props.colorScheme}.500` : 'gray.500',
+            p: 4,
+            borderRadius: 'md',
+            _hover: {
+          bg: props.colorScheme ? `${props.colorScheme}.50` : 'gray.50',
+            },
+          }),
+          ghost: (props) => ({
+            p: 0,
+            border:"none",
+            bg:"transparent",
+            _hover: {
+          bg: props.colorScheme ? `${props.colorScheme}.50` : 'gray.50',
+            },
+          }),
+          center: (props) => ({
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+          }),
+          spaced: {
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          },
+          responsive: {
+            flexDirection: { base: 'column', md: 'row' },
+          }
+        },
+        defaultProps: {
+          variant: 'ghost',
+          colorScheme: 'brand',
+        },
+          },
+          Button: {
+        baseStyle: {
+          fontWeight: "semibold",
+          borderRadius: "md",
           _focus: {
-            borderColor: "brand.800",
-            borderWidth: "3px",
+            boxShadow: "none",
           },
         },
-      },
-      variants: {
-        outline: {
-          field: {
-            
+        variants: {
+          solid: (props) => ({
+            bg: "brand.700",
+            color: "white",
+            borderStyle: "none",
             _hover: {
-              borderColor: "gray.400",
+          bg: props.colorScheme?`${props.colorScheme}.700`:"brand.700",
             },
-            _focus: {
-              borderColor: "brand.500",
+            _active: {
+          bg: props.colorScheme?`${props.colorScheme}.800`:"brand.800",
             },
-          },
-        },
-        filled: {
-          field: {
-            bg: "gray.100",
+          }),
+          outline: (props) => ({
+            border: "2px solid",
+            borderColor: props.colorScheme?`${props.colorScheme}.500`:"brand.500",
+            color: props.colorScheme?`${props.colorScheme}.500`:"brand.500",
             _hover: {
-              bg: "gray.200",
+          bg: props.colorScheme?`${props.colorScheme}.50`:"brand.50",
             },
-            _focus: {
-              bg: "white",
-              borderColor: "brand.500",
+          }),
+          ghost: (props) => ({
+            color: props.colorScheme?`${props.colorScheme}.600`:"brand.600",
+            border: "none",
+            _hover: {
+          bg: props.colorScheme?`${props.colorScheme}.100`:"brand.100",
             },
+          }),
+          underlined: (props) => ({
+            color: props.colorMode === "dark" ? "brand.300" : "brand.700",
+            bg: "transparent",
+            p: 2,
+            height: "auto",
+            borderStyle: "none",
+            _hover: {
+          bg: "transparent",
+          _after: {
+        
+            width: "100%",
           },
+            },
+            _after: {
+          content: '""',
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          width: "0",
+          
+          height: "2px",
+          bg: props.colorMode === "dark" ? "brand.500" : "brand.700",
+          transition: "width 0.3s ease",
+            },
+          }),
         },
-      },
-      defaultProps: {
-        variant: "outline",
-      },
-    },
+        defaultProps: {
+          variant: "solid",
+          size: "md",
+          colorScheme: "brand",
+        },
+          },
 
-    Textarea: {
-      baseStyle: {
-        borderRadius: "md",
-        borderWidth: "2px",
-        borderColor: "brand.500",
-        _focus: {
-          borderColor: "brand.500",
-          boxShadow: "0 0 0 1px brand.500",
+          Input: {
+        baseStyle: {
+          field: {
+            borderRadius: "md",
+            borderWidth: "2px",
+            borderColor: "brand.700",
+            _focus: {
+          borderColor: "brand.800",
+          borderWidth: "3px",
+            },
+          },
         },
-      },
-      variants: {
-        outline: {
-       
+        variants: {
+          outline: {
+            field: {
+          
           _hover: {
             borderColor: "gray.400",
           },
           _focus: {
             borderColor: "brand.500",
           },
-        },
-        filled: {
+            },
+          },
+          filled: {
+            field: {
           bg: "gray.100",
           _hover: {
             bg: "gray.200",
           },
           _focus: {
             bg: "white",
-            borderColor: "brand.700",
+            borderColor: "brand.500",
+          },
+            },
           },
         },
-      },
-      defaultProps: {
-        variant: "outline",
-      },
-    },
-    Heading: {
-      baseStyle: (props) => ({
-        fontWeight: "bold",
-        lineHeight: "shorter",
-        color: props.colorMode === "dark" ? "white" : "gray.800",
-      }),
-      sizes: {
-        xl: { fontSize: "4xl" },
-        lg: { fontSize: "3xl" },
-        md: { fontSize: "2xl" },
-        sm: { fontSize: "xl" },
-        xs: { fontSize: "lg" },
-      },
-      defaultProps: {
-        size: "md",
-      },
-    },
+        defaultProps: {
+          variant: "outline",
+        },
+          },
 
-    Text: {
-      baseStyle: (props) => ({
-        margin: 0,
-        padding: 0,
-        color: props.colorMode === "dark" ? "gray.100" : "gray.800",
-      }),
-      variants: {
-        muted: (props) => ({
-          color: props.colorMode === "dark" ? "gray.400" : "gray.600",
-          fontSize: "sm",
+          Textarea: {
+        baseStyle: {
+          borderRadius: "md",
+          borderWidth: "2px",
+          borderColor: "brand.500",
+          _focus: {
+            borderColor: "brand.500",
+            boxShadow: "0 0 0 1px brand.500",
+          },
+        },
+        variants: {
+          outline: {
+         
+            _hover: {
+          borderColor: "gray.400",
+            },
+            _focus: {
+          borderColor: "brand.500",
+            },
+          },
+          filled: {
+            bg: "gray.100",
+            _hover: {
+          bg: "gray.200",
+            },
+            _focus: {
+          bg: "white",
+          borderColor: "brand.700",
+            },
+          },
+        },
+        defaultProps: {
+          variant: "outline",
+        },
+          },
+          Heading: {
+        baseStyle: (props) => ({
+          fontWeight: "bold",
+          lineHeight: "shorter",
+          color: props.colorMode === "dark" ? "white" : "gray.800",
         }),
-        subtle: (props) => ({
-          color: props.colorMode === "dark" ? "gray.300" : "gray.500",
-        }),
-      },
-    },
+        sizes: {
+          xl: { fontSize: "4xl" },
+          lg: { fontSize: "3xl" },
+          md: { fontSize: "2xl" },
+          sm: { fontSize: "xl" },
+          xs: { fontSize: "lg" },
+        },
+        defaultProps: {
+          size: "md",
+        },
+          },
 
-    Card: {
-      baseStyle: (props) => ({
-        display: "flex",
-        flexDirection: "column",
-        background: props.colorMode === "dark" ? "gray.700" : "white",
-        alignItems: "center",
-        gap: 4,
-        boxShadow: props.colorMode === "dark" ? "dark-lg" : "sm",
-        borderRadius: "2xl", // Rounded cards as seen in screenshots
+          Text: {
+        baseStyle: (props) => ({
+          margin: 0,
+          padding: 0,
+          color: props.colorMode === "dark" ? "gray.100" : "gray.800",
+          fontFamily: "body",
+        }),
+        variants: {
+          muted: (props) => ({
+            color: props.colorMode === "dark" ? "gray.400" : "gray.600",
+            fontSize: "sm",
+          }),
+          subtle: (props) => ({
+            color: props.colorMode === "dark" ? "gray.300" : "gray.500",
+          }),
+        },
+          },
+
+          Card: {
+        baseStyle: (props) => ({
+          display: "flex",
+          flexDirection: "column",
+          background: props.colorMode === "dark" ? "gray.700" : "white",
+          alignItems: "center",
+          gap: 4,
+          boxShadow: props.colorMode === "dark" ? "dark-lg" : "sm",
+          borderRadius: "2xl", // Rounded cards as seen in screenshots
         p: 6,
       }),
       variants: {

@@ -17,7 +17,6 @@ import fruitPic from "../../assets/fruits.JPG";
 import leavesPic from "../../assets/leaves.JPG";
 import saladIcon from "../../assets/salad.svg";
 import { FeaturedItemCard } from "../../Components/Cards";
-
 import { ItemsCarousel } from "../../Components/ItemsCarousel"; 
 
 // Main Featured Food Items Component
@@ -31,7 +30,7 @@ export const FEAT = ({
 
   // Default items in case none are provided
   const defaultItems = [
-    {
+    { 
       name: "Classic Chocolate Cake",
       description: "Rich chocolate cake with a delicious ganache topping and a hint of espresso.",
       price: 8.99,
@@ -107,7 +106,7 @@ export const FEAT = ({
       : defaultItems; // "all" or fallback
 
   return (
-    <Box p={4} bg={colorMode === "dark" ? "gray.800" : "gray.50"}>
+    <Box p={4} bg="transparent">
       <Heading mb={6} textStyle="heading">
         Featured Food Items
       </Heading>
@@ -149,6 +148,7 @@ export const FEAT = ({
       {displayedItems.length > 0 ? (
         <ItemsCarousel
           items={displayedItems}
+          CardComponent={FeaturedItemCard}
       
         />
       ) : (

@@ -403,6 +403,7 @@ export const FeaturedItemCard = ({
       transition="transform 0.3s"
       _hover={{ transform: "translateY(-5px)" }}
       height="300px"
+      my={2}
     >
       {/* Image takes most of the card */}
       <Box position="relative" height="220px">
@@ -487,6 +488,132 @@ export const FeaturedItemCard = ({
             </Text>
           </Flex>
           <Button colorScheme="brand" size="xs">
+            Add to Cart
+          </Button>
+        </Flex>
+      </Box>
+    </Box>
+  );
+};
+
+// Offer Card with Image Prominence
+export const OfferCard = ({ 
+  name, 
+  description, 
+  price, 
+  image, 
+  rating, 
+  category, 
+  isSpecial, 
+  isTrending,
+  isRecommended 
+}) => {
+  const { colorMode } = useColorMode();
+  return (
+    <Box
+      maxW="500px"
+      borderRadius="15%"
+      overflow="hidden"
+      position="relative"
+      transition="transform 0.3s"
+      _hover={{ transform: "translateY(-5px)" }}
+      height="300px"
+      my={2}
+    >
+      {/* Image as background */}
+      <Box position="relative" height="100%" zIndex={0}>
+        <Image 
+          src={image || saladIcon} 
+          alt={name} 
+          height="100%" 
+          width="100%" 
+          objectFit="cover"
+          filter="brightness(0.7)"
+        />
+        
+        {/* Badges overlay on image */}
+        <Flex 
+          position="absolute" 
+          top="4" 
+          left="4" 
+          right="4" 
+          justifyContent="space-between"
+          zIndex={2}
+        >
+          <Flex gap="2">
+            {isSpecial && (
+              <Badge colorScheme="accent" variant="solid" borderRadius="full" px="2">
+                Seasonal
+              </Badge>
+            )}
+            {isTrending && (
+              <Badge colorScheme="highlight" variant="solid" borderRadius="full" px="2">
+                Trending
+              </Badge>
+            )}
+          </Flex>
+          {isRecommended && (
+            <Badge colorScheme="success" variant="solid" borderRadius="full" px="2">
+              Recommended
+            </Badge>
+          )}
+        </Flex>
+        
+        {/* Category tag */}
+        <Badge
+          position="absolute"
+          bottom="4"
+          right="4"
+          bg="brand.600"
+          color="white"
+          borderRadius="full"
+          px="2"
+          zIndex={2}
+        >
+          {category}
+        </Badge>
+      </Box>
+      
+      {/* Floating content */}
+      <Box 
+        position="absolute" 
+        bottom="0" 
+        left="0" 
+        right="0" 
+        bg={colorMode === "dark" ? "rgba(0, 0, 0, 0.8)" : "rgba(255, 255, 255, 0.9)"} 
+        p="4" 
+        borderTopRadius="lg"
+        zIndex={2}
+      >
+        <Flex justify="space-between" align="center" mb="2">
+          <Heading size="md" color={colorMode === "dark" ? "white" : "gray.800"} noOfLines={1}>
+            {name}
+          </Heading>
+          <Text fontWeight="bold" fontSize="lg" color="brand.700">
+            ${price.toFixed(2)}
+          </Text>
+        </Flex>
+        
+        <Text color={colorMode === "dark" ? "gray.300" : "gray.600"} fontSize="sm" mb="2" noOfLines={2}>
+          {description}
+        </Text>
+        
+        <Flex justify="space-between" align="center">
+          <Flex align="center">
+            {Array(5)
+              .fill("")
+              .map((_, i) => (
+                <StarIcon
+                  key={i}
+                  color={i < rating ? "brand.500" : "gray.300"}
+                  boxSize="3"
+                />
+              ))}
+            <Text ml="1" fontSize="xs" color={colorMode === "dark" ? "gray.400" : "gray.500"}>
+              ({rating})
+            </Text>
+          </Flex>
+          <Button colorScheme="brand" size="sm">
             Add to Cart
           </Button>
         </Flex>

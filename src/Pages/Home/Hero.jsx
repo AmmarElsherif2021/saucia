@@ -1,24 +1,62 @@
-import { Box, Heading, Text } from '@chakra-ui/react';
-export const Hero= () => {
+import { Box, Heading, Text,useColorMode  } from "@chakra-ui/react";
+import { ItemsCarousel } from "../../Components/ItemsCarousel";
+import heroA from "../../assets/hero-1.JPG";
+import heroB from "../../assets/hero-2.JPG";
+import heroC from "../../assets/hero-3.JPG";
+
+const HeroCard = ({ name, description, image }) => {
+  const colorMode = useColorMode();
   return (
     <Box
-      bgImage="url('https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0')"
+      bgImage={`url(${image})`}
       bgSize="cover"
-      bgPosition="center"
+      bgPosition="stretch"
+      height="100vh"
+      display="flex"
+      flexDirection="column"
+      justifyContent="center"
+      alignItems="center"
+      color="white"
+      textAlign="center"
+      py={0}
+      mx={"-60px"}
+    >
+      <Heading as="h2" bg="brand.600" color="brand.50" size="4xl" mb={1} p={0}>
+        {name}
+      </Heading>
+      <Text  fontSize="4xl" bg="black" color="brand.500" sx={{paddingY:0}} >{description}</Text>
+    </Box>
+  );
+}
+export const Hero = () => {
+  const heroSlides = [
+    {
+      name: "Welcome to Our Website",
+      description: "Discover amazing content and connect with us.",
+      image: heroA,
+    },
+    {
+      name: "Explore Our Features",
+      description: "Find out what makes us unique and special.",
+      image: heroC,
+    },
+    {
+      name: "Join Our Community",
+      description: "Be part of something bigger and better.",
+      image: heroB,
+    },
+  ];
+
+  return (
+    <Box
       height="100vh"
       display="flex"
       alignItems="center"
       justifyContent="center"
+      bg="transparent"
       color="white"
     >
-      <Box textAlign="center">
-        <Heading as="h1" size="2xl" mb={4}>
-          Welcome to Our Website
-        </Heading>
-        <Text fontSize="xl">
-          Discover amazing content and connect with us.
-        </Text>
-      </Box>
+      <ItemsCarousel items={heroSlides} CardComponent={HeroCard} visibleCount={1}/>
     </Box>
   );
-}
+};

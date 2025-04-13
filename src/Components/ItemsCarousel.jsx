@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Box, Flex, IconButton, useColorMode,Button } from '@chakra-ui/react';
+import { useState, useEffect, useRef } from 'react';
+import { Box, Flex, IconButton, useColorMode, Button } from '@chakra-ui/react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { FeaturedItemCard } from './Cards';
 
-
-export const ItemsCarousel = ({ items, cardType="FeaturedItemCard" }) => {
+export const ItemsCarousel = ({ items, CardComponent = FeaturedItemCard ,visibleCount=0 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsToShow, setItemsToShow] = useState(3);
   const { colorMode } = useColorMode();
@@ -16,11 +15,11 @@ export const ItemsCarousel = ({ items, cardType="FeaturedItemCard" }) => {
   // Responsive items to show based on container width
   useEffect(() => {
     const handleResize = () => {
-      const width = window.innerWidth;
+     if(Boolean(visibleCount)){setItemsToShow(1)}else{ const width = window.innerWidth;
       if (width < 600) setItemsToShow(1);
       else if (width < 900) setItemsToShow(2);
       else if (width < 1200) setItemsToShow(3);
-      else setItemsToShow(4);
+      else setItemsToShow(4);}
     };
 
     handleResize();
@@ -58,11 +57,12 @@ export const ItemsCarousel = ({ items, cardType="FeaturedItemCard" }) => {
       ref={carouselRef}
       mb={8}
       w="100%"
-      p={2}
-      bg={colorMode === "dark" ? "gray.800" : "accent.700"}
-      borderRadius="xl"
+      px={1}
+      bg={colorMode === "dark" ? "gray.800" : "brand.200"}
+      borderRadius="3xl"
       align="center"
       justify="center"
+      height={"100%"}
     >
       {/* Previous Button */}
       <IconButton
@@ -78,7 +78,7 @@ export const ItemsCarousel = ({ items, cardType="FeaturedItemCard" }) => {
       />
 
       {/* Carousel Content */}
-      <Flex
+      <Flex 
         width="100%"
         justify="center"
         align="center"
@@ -91,8 +91,8 @@ export const ItemsCarousel = ({ items, cardType="FeaturedItemCard" }) => {
             flex={`0 0 calc(${100 / itemsToShow}% - 16px)`}
             minWidth="250px"
           >
-            {item && cardType==="FeaturedItemCard" ? (
-              <FeaturedItemCard {...item} />
+            {item ? (
+              <CardComponent {...item} />
             ) : (
               <Box height="100%" visibility="hidden" />
             )}
