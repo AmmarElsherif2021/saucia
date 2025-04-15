@@ -3,20 +3,20 @@ import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ChakraProvider } from "@chakra-ui/react";
 import theme from "./Components/theme";
-import { Navbar } from "./Components/Navbar";
+import { Navbar } from "./Components/Navbar/Navbar";
 
 // Imported page components
 import { HomePage } from "./Pages/Home/HomePage";
 import { MenuPage } from "./Pages/Menu/MenuPage";
 import { UserAccountPage } from "./Pages/UserAccountPage";
 import { CartPage } from "./Pages/Cart/CartPage";
-import { CheckoutPage } from "./Pages/CheckoutPage";
+import { CheckoutPage } from "./Pages/Checkout/CheckoutPage";
 import { InfoPage } from "./Pages/InfoPage";
-import { AboutPage } from "./Pages/AboutPage";
+import { AboutPage } from "./Pages/About/AboutPage";
 
 // Layout component to include Navbar
 const Layout = ({ children }) => (
-  <div style={{backgroundColor:"white", maxWidth: "100vw", height:"fit-content", margin: "0", position:"absolute", top:"0", left:"0", right:"0", bottom:"0" }}>
+  <div style={{ backgroundColor: "white", width: "100%", minWidth: "320px", height: "fit-content", paddingX: "0", marginX: "0", position: "absolute", top: "0", left: "0", right: "0", bottom: "0" }}>
     <Navbar />
     <main style={{ marginTop: "70px" }}>{children}</main>
   </div>
@@ -56,7 +56,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: "/checkout",
+    path: "checkout",
     element: (
       <Layout>
         <CheckoutPage />

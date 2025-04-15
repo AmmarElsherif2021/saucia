@@ -3,7 +3,7 @@ import { Box, Flex, IconButton, useColorMode, Button } from '@chakra-ui/react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { FeaturedItemCard } from './Cards';
 
-export const ItemsCarousel = ({ items, CardComponent = FeaturedItemCard ,visibleCount=0 }) => {
+export const ItemsCarousel = ({ items, CardComponent = FeaturedItemCard ,visibleCount=1, auto=false }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsToShow, setItemsToShow] = useState(3);
   const { colorMode } = useColorMode();
@@ -27,6 +27,18 @@ export const ItemsCarousel = ({ items, CardComponent = FeaturedItemCard ,visible
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+
+  //auto display
+  useEffect(() => {
+    if (auto) {
+      const interval = setInterval(() => {
+        setCurrentIndex((prevIndex) =>
+          prevIndex >= totalSlides - 1 ? 0 : prevIndex + 1
+        );
+      }, 6000); // Change slide every 3 seconds
+      return () => clearInterval(interval); // Cleanup interval on unmount
+    }
+  }, [auto, totalSlides]);
   const nextSlide = () => {
     setCurrentIndex((prevIndex) => 
       prevIndex >= totalSlides - 1 ? 0 : prevIndex + 1
@@ -72,7 +84,7 @@ export const ItemsCarousel = ({ items, CardComponent = FeaturedItemCard ,visible
         isDisabled={items.length <= itemsToShow}
         as={Button}
         variant="solid"
-        colorScheme="accent"
+        colorScheme="brand"
         zIndex={5}
         sx={{ borderRadius: "50%" }}
       />
@@ -108,7 +120,7 @@ export const ItemsCarousel = ({ items, CardComponent = FeaturedItemCard ,visible
         isDisabled={items.length <= itemsToShow}
         as={Button}
         variant="solid"
-        colorScheme="accent"
+        colorScheme="brand"
         zIndex={5}
         sx={{ borderRadius: "50%" }}
       />

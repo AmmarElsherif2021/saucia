@@ -1,329 +1,335 @@
 {
-    "menu": {
-      "name": "Salad Menu",
-      "categories": [
-        {
-          "name": "Base Ingredients",
-          "subcategories": [
-            {
-              "name": "Greens",
-              "items": [
-                {
-                  "name": "Lettuce",
-                  "weight": "50g",
-                  "calories": 12
-                },
-                {
-                  "name": "Mixed greens",
-                  "weight": "100g",
-                  "calories": 17
-                },
-                {
-                  "name": "Arugula",
-                  "weight": "100g",
-                  "calories": 17
-                },
-                {
-                  "name": "Kale",
-                  "weight": "100g",
-                  "calories": 17
-                }
-              ]
-            },
-            {
-              "name": "Vegetables",
-              "items": [
-                {
-                  "name": "Cucumber",
-                  "weight": "10g",
-                  "calories": 10
-                },
-                {
-                  "name": "Broccoli",
-                  "weight": "30g",
-                  "calories": 10
-                },
-                {
-                  "name": "Carrot",
-                  "weight": "20g",
-                  "calories": 0
-                },
-                {
-                  "name": "Corn",
-                  "weight": "2g",
-                  "calories": 0
-                },
-                {
-                  "name": "Grilled eggplant",
-                  "weight": "30g",
-                  "calories": 10
-                },
-                {
-                  "name": "Cherry tomatoes",
-                  "weight": "60g",
-                  "calories": 15
-                },
-                {
-                  "name": "Pomegranate",
-                  "weight": "20g",
-                  "calories": 5
-                },
-                {
-                  "name": "Sweet potato",
-                  "weight": "30g",
-                  "calories": 10
-                },
-                {
-                  "name": "Red cabbage",
-                  "weight": "35g",
-                  "calories": 10
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Proteins",
-          "items": [
-            {
-              "name": "Chicken",
-              "weight": "10g",
-              "calories": 10
-            },
-            {
-              "name": "Shrimp",
-              "weight": "60g",
-              "calories": 90
-            },
-            {
-              "name": "Tuna",
-              "weight": "1g",
-              "calories": 10
-            },
-            {
-              "name": "Salmon",
-              "weight": "1g",
-              "calories": 10
-            },
-            {
-              "name": "Egg",
-              "weight": "2 eggs",
-              "calories": 77
-            }
-          ]
-        },
-        {
-          "name": "Cheese",
-          "items": [
-            {
-              "name": "Parmesan",
-              "weight": "10g",
-              "calories": 10
-            },
-            {
-              "name": "Halloumi",
-              "weight": "10g",
-              "calories": 10
-            },
-            {
-              "name": "Feta",
-              "weight": "10g",
-              "calories": 10
-            },
-            {
-              "name": "Cheddar",
-              "weight": "10g",
-              "calories": 10
-            }
-          ]
-        },
-        {
-          "name": "Toppings & Extras",
-          "subcategories": [
-            {
-              "name": "Fruits",
-              "items": [
-                {
-                  "name": "Avocado",
-                  "weight": "30g",
-                  "calories": 48
-                },
-                {
-                  "name": "Pumpkin",
-                  "weight": "60g",
-                  "calories": 20
-                },
-                {
-                  "name": "Beets",
-                  "weight": "60g",
-                  "calories": 50
-                }
-              ]
-            },
-            {
-              "name": "Grains & Legumes",
-              "items": [
-                {
-                  "name": "Lentils",
-                  "weight": "80g",
-                  "calories": 150
-                },
-                {
-                  "name": "Bulgur",
-                  "weight": "80g",
-                  "calories": 75
-                },
-                {
-                  "name": "Quinoa",
-                  "weight": "80g",
-                  "calories": 120
-                },
-                {
-                  "name": "Chickpeas",
-                  "weight": "80g",
-                  "calories": 75
-                }
-              ]
-            },
-            {
-              "name": "Crunchy Toppings",
-              "items": [
-                {
-                  "name": "Crushed corn",
-                  "weight": "20g",
-                  "calories": 4
-                },
-                {
-                  "name": "Crushed bread crumbs",
-                  "weight": "10g",
-                  "calories": 10
-                },
-                {
-                  "name": "Crunchy potatoes",
-                  "weight": "20g",
-                  "calories": 12
-                },
-                {
-                  "name": "Dried figs",
-                  "weight": "20g",
-                  "calories": 13
-                },
-                {
-                  "name": "Caramelized nuts",
-                  "weight": "20g",
-                  "calories": 14
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Dressings",
-          "items": [
-            {
-              "name": "Caesar dressing",
-              "calories": 10
-            },
-            {
-              "name": "Mexican dressing",
-              "calories": 2
-            },
-            {
-              "name": "Balsamic dressing",
-              "calories": 10
-            },
-            {
-              "name": "Tahini",
-              "calories": 8
-            },
-            {
-              "name": "Pomegranate dressing",
-              "calories": 30
-            },
-            {
-              "name": "Yogurt, honey & mustard",
-              "calories": 10
-            },
-            {
-              "name": "Lemon, sumac & olive oil",
-              "calories": 50
-            },
-            {
-              "name": "Orange & olive oil",
-              "calories": 60
-            }
-          ]
-        },
-        {
-          "name": "Signature Salads",
-          "items": [
-            {
-              "name": "Avocado Salad",
-              "ingredients": [
-                "Lettuce",
-                "corn",
-                "black olives",
-                "tomatoes",
-                "green cabbage",
-                "cucumber",
-                "Red beans",
-                "carrots",
-                "grilled peppers",
-                "crispy onions"
-              ],
-              "dressing": "Lemon, sumac and olive oil dressing",
-              "calories": 802
-            },
-            {
-              "name": "Mexican Salad",
-              "ingredients": [
-                "Lettuce",
-                "grilled peppers",
-                "cucumber",
-                "beets",
-                "black olives",
-                "Grilled broccoli",
-                "avocado",
-                "pickled cucumbers",
-                "sunflower seeds"
-              ],
-              "dressing": "Mexican dressing",
-              "calories": 803
-            },
-            {
-              "name": "Protein Salad",
-              "ingredients": [
-                "Choice of protein",
-                "lettuce",
-                "arugula",
-                "grilled eggplant",
-                "Tomatoes",
-                "onions",
-                "grilled peppers",
-                "beets",
-                "crispy potatoes",
-                "Sunflower seeds"
-              ],
-              "calories": 803
-            },
-            {
-              "name": "Antioxidant Salad",
-              "ingredients": [
-                "Spinach leaves",
-                "strawberries",
-                "broccoli",
-                "avocado",
-                "carrots",
-                "Beets",
-                "soft cheese",
-                "walnuts",
-                "sunflower seeds"
-              ],
-              "dressing": "Pomegranate dressing",
-              "calories": 803
-            }
-          ]
-        }
-      ]
-    }
+  "menu": {
+    "name": "Salad Menu",
+    "categories": [
+      {
+        "name": "Base Ingredients",
+        "icon": "ingredient.svg",
+        "subcategories": [
+          {
+            "name": "Greens",
+            "items": [
+              {
+                "name": "Lettuce",
+                "weight": "50g",
+                "calories": 12
+              },
+              {
+                "name": "Mixed greens",
+                "weight": "100g",
+                "calories": 17
+              },
+              {
+                "name": "Arugula",
+                "weight": "100g",
+                "calories": 17
+              },
+              {
+                "name": "Kale",
+                "weight": "100g",
+                "calories": 17
+              }
+            ]
+          },
+          {
+            "name": "Vegetables",
+            "items": [
+              {
+                "name": "Cucumber",
+                "weight": "10g",
+                "calories": 10
+              },
+              {
+                "name": "Broccoli",
+                "weight": "30g",
+                "calories": 10
+              },
+              {
+                "name": "Carrot",
+                "weight": "20g",
+                "calories": 0
+              },
+              {
+                "name": "Corn",
+                "weight": "2g",
+                "calories": 0
+              },
+              {
+                "name": "Grilled eggplant",
+                "weight": "30g",
+                "calories": 10
+              },
+              {
+                "name": "Cherry tomatoes",
+                "weight": "60g",
+                "calories": 15
+              },
+              {
+                "name": "Pomegranate",
+                "weight": "20g",
+                "calories": 5
+              },
+              {
+                "name": "Sweet potato",
+                "weight": "30g",
+                "calories": 10
+              },
+              {
+                "name": "Red cabbage",
+                "weight": "35g",
+                "calories": 10
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Proteins",
+        "icon": "protein.svg",
+        "items": [
+          {
+            "name": "Chicken",
+            "weight": "10g",
+            "calories": 10
+          },
+          {
+            "name": "Shrimp",
+            "weight": "60g",
+            "calories": 90
+          },
+          {
+            "name": "Tuna",
+            "weight": "1g",
+            "calories": 10
+          },
+          {
+            "name": "Salmon",
+            "weight": "1g",
+            "calories": 10
+          },
+          {
+            "name": "Egg",
+            "weight": "2 eggs",
+            "calories": 77
+          }
+        ]
+      },
+      {
+        "name": "Cheese",
+        "icon": "cheese.svg",
+        "items": [
+          {
+            "name": "Parmesan",
+            "weight": "10g",
+            "calories": 10
+          },
+          {
+            "name": "Halloumi",
+            "weight": "10g",
+            "calories": 10
+          },
+          {
+            "name": "Feta",
+            "weight": "10g",
+            "calories": 10
+          },
+          {
+            "name": "Cheddar",
+            "weight": "10g",
+            "calories": 10
+          }
+        ]
+      },
+      {
+        "name": "Toppings & Extras",
+        "icon": "extras.svg",
+        "subcategories": [
+          {
+            "name": "Fruits",
+            "items": [
+              {
+                "name": "Avocado",
+                "weight": "30g",
+                "calories": 48
+              },
+              {
+                "name": "Pumpkin",
+                "weight": "60g",
+                "calories": 20
+              },
+              {
+                "name": "Beets",
+                "weight": "60g",
+                "calories": 50
+              }
+            ]
+          },
+          {
+            "name": "Grains & Legumes",
+            "items": [
+              {
+                "name": "Lentils",
+                "weight": "80g",
+                "calories": 150
+              },
+              {
+                "name": "Bulgur",
+                "weight": "80g",
+                "calories": 75
+              },
+              {
+                "name": "Quinoa",
+                "weight": "80g",
+                "calories": 120
+              },
+              {
+                "name": "Chickpeas",
+                "weight": "80g",
+                "calories": 75
+              }
+            ]
+          },
+          {
+            "name": "Crunchy Toppings",
+            "items": [
+              {
+                "name": "Crushed corn",
+                "weight": "20g",
+                "calories": 4
+              },
+              {
+                "name": "Crushed bread crumbs",
+                "weight": "10g",
+                "calories": 10
+              },
+              {
+                "name": "Crunchy potatoes",
+                "weight": "20g",
+                "calories": 12
+              },
+              {
+                "name": "Dried figs",
+                "weight": "20g",
+                "calories": 13
+              },
+              {
+                "name": "Caramelized nuts",
+                "weight": "20g",
+                "calories": 14
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Dressings",
+        "icon": "dressings.svg",
+        "items": [
+          {
+            "name": "Caesar dressing",
+            "calories": 10
+          },
+          {
+            "name": "Mexican dressing",
+            "calories": 2
+          },
+          {
+            "name": "Balsamic dressing",
+            "calories": 10
+          },
+          {
+            "name": "Tahini",
+            "calories": 8
+          },
+          {
+            "name": "Pomegranate dressing",
+            "calories": 30
+          },
+          {
+            "name": "Yogurt, honey & mustard",
+            "calories": 10
+          },
+          {
+            "name": "Lemon, sumac & olive oil",
+            "calories": 50
+          },
+          {
+            "name": "Orange & olive oil",
+            "calories": 60
+          }
+        ]
+      },
+      {
+        "name": "Signature Salads",
+        "icon": "salad.svg",
+        "items": [
+          {
+            "name": "Avocado Salad",
+            "ingredients": [
+              "Lettuce",
+              "corn",
+              "black olives",
+              "tomatoes",
+              "green cabbage",
+              "cucumber",
+              "Red beans",
+              "carrots",
+              "grilled peppers",
+              "crispy onions"
+            ],
+            "dressing": "Lemon, sumac and olive oil dressing",
+            "calories": 802
+          },
+          {
+            "name": "Mexican Salad",
+            "ingredients": [
+              "Lettuce",
+              "grilled peppers",
+              "cucumber",
+              "beets",
+              "black olives",
+              "Grilled broccoli",
+              "avocado",
+              "pickled cucumbers",
+              "sunflower seeds"
+            ],
+            "dressing": "Mexican dressing",
+            "calories": 803
+          },
+          {
+            "name": "Protein Salad",
+            "ingredients": [
+              "Choice of protein",
+              "lettuce",
+              "arugula",
+              "grilled eggplant",
+              "Tomatoes",
+              "onions",
+              "grilled peppers",
+              "beets",
+              "crispy potatoes",
+              "Sunflower seeds"
+            ],
+            "calories": 803
+          },
+          {
+            "name": "Antioxidant Salad",
+            "ingredients": [
+              "Spinach leaves",
+              "strawberries",
+              "broccoli",
+              "avocado",
+              "carrots",
+              "Beets",
+              "soft cheese",
+              "walnuts",
+              "sunflower seeds"
+            ],
+            "dressing": "Pomegranate dressing",
+            "calories": 803
+          }
+        ]
+      }
+    ]
   }
+}

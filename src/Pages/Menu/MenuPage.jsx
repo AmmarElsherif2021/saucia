@@ -26,6 +26,24 @@ import cheeseB from "../../assets/menu/cheese2.JPG";
 import cheeseC from "../../assets/menu/cheese3.JPG";
 import cheeseD from "../../assets/menu/cheese4.JPG";
 
+// Import icons
+import ingredientIcon from "../../assets/menu/ingredient.svg";
+import proteinIcon from "../../assets/menu/protein.svg";
+import cheeseIcon from "../../assets/menu/cheese.svg";
+import extrasIcon from "../../assets/menu/extras.svg";
+import dressingsIcon from "../../assets/menu/dressings.svg";
+import saladIcon from "../../assets/menu/salad.svg";
+
+// Map category names to their respective icons
+const iconsMap = {
+  "Base Ingredients": ingredientIcon,
+  "Proteins": proteinIcon,
+  "Cheese": cheeseIcon,
+  "Toppings & Extras": extrasIcon,
+  "Dressings": dressingsIcon,
+  "Signature Salads": saladIcon
+};
+
 export const MenuPage = () => {
   const images = [
     greensA,
@@ -56,6 +74,7 @@ export const MenuPage = () => {
   // Generate accordion sections dynamically from menuData.json
   const menuSections = menuData.menu.categories.map((category) => ({
     title: category.name,
+    icon: iconsMap[category.name], // Use the proper icon based on category name
     content: (
       <Box>
         {/* Render subcategories if they exist */}

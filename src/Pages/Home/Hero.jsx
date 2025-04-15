@@ -1,16 +1,45 @@
-import { Box, Heading, Text,useColorMode  } from "@chakra-ui/react";
+import { Box, Heading, Text, useColorMode } from "@chakra-ui/react";
 import { ItemsCarousel } from "../../Components/ItemsCarousel";
 import heroA from "../../assets/hero-1.JPG";
 import heroB from "../../assets/hero-2.JPG";
 import heroC from "../../assets/hero-3.JPG";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { useEffect, useState } from "react";
+
+const AnimatedText = ({ text,delay=0 }) => {
+  const [displayText, setDisplayText] = useState("");
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, (latest) => Math.round(latest));
+
+  useEffect(() => {
+    const unsubscribe = rounded.onChange((latest) => {
+      setDisplayText(text.slice(0, latest));
+    });
+    return () => unsubscribe();
+  }, [rounded, text]);
+
+  useEffect(() => {
+    const controls = animate(count, text.length, {
+      type: "tween",
+      delay: delay,
+      duration: 2,
+      ease: "easeIn",
+    });
+    
+    return () => controls.stop();
+  }, [text]);
+
+  return <motion.span>{displayText}</motion.span>;
+};
 
 const HeroCard = ({ name, description, image }) => {
-  const colorMode = useColorMode();
+  const { colorMode } = useColorMode();
+  
   return (
     <Box
       bgImage={`url(${image})`}
       bgSize="cover"
-      bgPosition="stretch"
+      bgPosition="center"
       height="100vh"
       display="flex"
       flexDirection="column"
@@ -18,16 +47,19 @@ const HeroCard = ({ name, description, image }) => {
       alignItems="center"
       color="white"
       textAlign="center"
-      py={0}
+      px={8}
       mx={"-60px"}
     >
-      <Heading as="h2" bg="brand.600" color="brand.50" size="4xl" mb={1} p={0}>
-        {name}
+      <Heading as="h1" opacity={"0.9"} bg="brand.600" color="brand.50" mb={1} p={4} sx={{ fontSize: "3em" }}>
+        <AnimatedText text={name} />
       </Heading>
-      <Text  fontSize="4xl" bg="black" color="brand.500" sx={{paddingY:0}} >{description}</Text>
+      <Text fontSize="1.5em" bg="black" color="brand.500" sx={{ paddingY: 0 }}>
+        <AnimatedText  text={description} delay={2} />
+      </Text>
     </Box>
   );
 }
+
 export const Hero = () => {
   const heroSlides = [
     {
@@ -56,7 +88,7 @@ export const Hero = () => {
       bg="transparent"
       color="white"
     >
-      <ItemsCarousel items={heroSlides} CardComponent={HeroCard} visibleCount={1}/>
+      <ItemsCarousel items={heroSlides} CardComponent={HeroCard} visibleCount={1} auto={true}/>
     </Box>
   );
 };

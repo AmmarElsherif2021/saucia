@@ -1,5 +1,5 @@
 import { border, color, extendTheme } from "@chakra-ui/react";
-
+import "../index.css"
 const theme = extendTheme({
   colors: {
     brand: {
@@ -116,325 +116,318 @@ const theme = extendTheme({
       200: "#9ee7c6",
       300: "#7adfb1",
       400: "#56d69c",
-       // Success color
-        600: "#28a96d",
-        700: "#1e8553",
-        800: "#146139",
-        900: "#0a3d1f",
+      // Success color
+      600: "#28a96d",
+      700: "#1e8553",
+      800: "#146139",
+      900: "#0a3d1f",
+        },
+      },
+
+      config: {
+        initialColorMode: "light",
+        useSystemColorMode: false,
+      },
+
+      styles: {
+        global: (props) => ({
+          body: {
+            backgroundColor: props.colorMode === "dark" ? "gray.800" : "gray.50",
+            color: props.colorMode === "dark" ? "gray.100" : "gray.800",
+            fontFamily: "'Outfit', sans-serif",
+            lineHeight: "base",
           },
-        },
-
-        config: {
-          initialColorMode: "light",
-          useSystemColorMode: false,
-        },
-
-        styles: {
-          global: (props) => ({
-        body: {
-          backgroundColor: props.colorMode === "dark" ? "gray.800" : "gray.50",
-          color: props.colorMode === "dark" ? "gray.100" : "gray.800",
-          fontFamily: "body",
-          lineHeight: "base",
-        },
-        "*::placeholder": {
-          color: props.colorMode === "dark" ? "gray.400" : "gray.500",
-        },
-        "*, *::before, &::after": {
-          borderColor: props.colorMode === "dark" ? "gray.600" : "gray.200",
-        },
-          }),
-        },
-
-        fonts: {
-          heading: "'Poppins', sans-serif",
-          body:  "'Fira Code',sans-serif",
-          mono: "'Fira Code', monospace",
-        },
-
-        components: {
-          Box: {
-        baseStyle: (props) => ({
-
-          color: props.colorMode === "dark" ? "gray.100" : "gray.800",
-          borderRadius: "md",
-          boxShadow: "none",
+          "*::placeholder": {
+            color: props.colorMode === "dark" ? "gray.400" : "gray.500",
+          },
+          "*, *::before, &::after": {
+            borderColor: props.colorMode === "dark" ? "gray.600" : "gray.200",
+          },
+        }),
+      },
+      fonts: {
+        heading: "'Montserrat', sans-serif",
+        body: "'Outfit', sans-serif",
+      },
+      components: {
+        Box: {
+      baseStyle: (props) => ({
+        color: props.colorMode === "dark" ? "gray.100" : "gray.800",
+        borderRadius: "md",
+        boxShadow: "none",
+        p: 4,
+        transition: "all 0.2s ease-in-out",
+      }),
+      variants: {
+        solid: (props) => ({
+          bg: props.colorMode === "dark" ? "gray.700" : "white",
           p: 4,
-          transition: "all 0.2s ease-in-out",
+          borderRadius: "lg",
         }),
-        variants: {
-          solid: (props) => ({
-            bg: props.colorMode === "dark" ? "gray.700" : "white", 
-            p: 4,
-            borderRadius: "lg",
-          }),
-          outline: (props) => ({
-            border: "2px solid",
-            borderColor: props.colorScheme ? `${props.colorScheme}.500` : "gray.500",
-            bg: "transparent",
-          }),
-          ghost: (props) => ({
-            bg: "transparent",
-            _hover: {
-          bg: props.colorScheme ? `${props.colorScheme}.50` : "gray.50",
-            },
-          }),
-          card: (props) => ({
-            bg: props.colorMode === "dark" ? "gray.700" : "white",
-            borderRadius: "xl",
-            boxShadow: "md",
-            p: 6,
-          }),
-        },
-        defaultProps: {
-          variant: "solid",
-          colorScheme: "brand",
-        },
-          },
-          Flex: {
-        baseStyle: (props) => ({
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          gap: 4,
-          width: '100%',
-          transition: 'all 0.2s ease-in-out',
-        }),
-        variants: {
-          solid: (props) => ({
-            bg: props.colorScheme ? `${props.colorScheme}.100` : 'gray.100',
-            p: 4,
-            borderRadius: 'lg',
-            border:"none",
-            _hover: {
-          bg: props.colorScheme ? `${props.colorScheme}.200` : 'gray.200',
-            },
-          }),
-          outline: (props) => ({
-            border: '2px solid',
-            borderColor: props.colorScheme ? `${props.colorScheme}.500` : 'gray.500',
-            p: 4,
-            borderRadius: 'md',
-            _hover: {
-          bg: props.colorScheme ? `${props.colorScheme}.50` : 'gray.50',
-            },
-          }),
-          ghost: (props) => ({
-            p: 0,
-            border:"none",
-            bg:"transparent",
-            _hover: {
-          bg: props.colorScheme ? `${props.colorScheme}.50` : 'gray.50',
-            },
-          }),
-          center: (props) => ({
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center',
-          }),
-          spaced: {
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          },
-          responsive: {
-            flexDirection: { base: 'column', md: 'row' },
-          }
-        },
-        defaultProps: {
-          variant: 'ghost',
-          colorScheme: 'brand',
-        },
-          },
-          Button: {
-        baseStyle: {
-          fontWeight: "semibold",
-          borderRadius: "md",
-          _focus: {
-            boxShadow: "none",
-          },
-        },
-        variants: {
-          solid: (props) => ({
-            bg: "brand.700",
-            color: "white",
-            borderStyle: "none",
-            _hover: {
-          bg: props.colorScheme?`${props.colorScheme}.700`:"brand.700",
-            },
-            _active: {
-          bg: props.colorScheme?`${props.colorScheme}.800`:"brand.800",
-            },
-          }),
-          outline: (props) => ({
-            border: "2px solid",
-            borderColor: props.colorScheme?`${props.colorScheme}.500`:"brand.500",
-            color: props.colorScheme?`${props.colorScheme}.500`:"brand.500",
-            _hover: {
-          bg: props.colorScheme?`${props.colorScheme}.50`:"brand.50",
-            },
-          }),
-          ghost: (props) => ({
-            color: props.colorScheme?`${props.colorScheme}.600`:"brand.600",
-            border: "none",
-            _hover: {
-          bg: props.colorScheme?`${props.colorScheme}.100`:"brand.100",
-            },
-          }),
-          underlined: (props) => ({
-            color: props.colorMode === "dark" ? "brand.300" : "brand.700",
-            bg: "transparent",
-            p: 2,
-            height: "auto",
-            borderStyle: "none",
-            _hover: {
+        outline: (props) => ({
+          border: "2px solid",
+          borderColor: props.colorScheme ? `${props.colorScheme}.500` : "gray.500",
           bg: "transparent",
-          _after: {
-        
-            width: "100%",
+        }),
+        ghost: (props) => ({
+          bg: "transparent",
+          _hover: {
+            bg: props.colorScheme ? `${props.colorScheme}.50` : "gray.50",
           },
-            },
+        }),
+        card: (props) => ({
+          bg: props.colorMode === "dark" ? "gray.700" : "white",
+          borderRadius: "xl",
+          boxShadow: "md",
+          p: 6,
+        }),
+      },
+      defaultProps: {
+        variant: "solid",
+        colorScheme: "brand",
+      },
+        },
+        Flex: {
+      baseStyle: (props) => ({
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        gap: 4,
+        width: '100%',
+        transition: 'all 0.2s ease-in-out',
+      }),
+      variants: {
+        solid: (props) => ({
+          bg: props.colorScheme ? `${props.colorScheme}.100` : 'gray.100',
+          px: 4,
+          borderRadius: 'lg',
+          border: "none",
+          _hover: {
+            bg: props.colorScheme ? `${props.colorScheme}.200` : 'gray.200',
+          },
+        }),
+        outline: (props) => ({
+          border: '2px solid',
+          borderColor: props.colorScheme ? `${props.colorScheme}.500` : 'gray.500',
+          px: 4,
+          borderRadius: 'md',
+          _hover: {
+            bg: props.colorScheme ? `${props.colorScheme}.50` : 'gray.50',
+          },
+        }),
+        ghost: (props) => ({
+          px: 0,
+          border: "none",
+          bg: "transparent",
+          _hover: {
+            bg: props.colorScheme ? `${props.colorScheme}.50` : 'gray.50',
+          },
+        }),
+        center: (props) => ({
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+        }),
+        spaced: {
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        },
+        responsive: {
+          flexDirection: { base: 'column', md: 'row' },
+        }
+      },
+      defaultProps: {
+        variant: 'ghost',
+        colorScheme: 'brand',
+      },
+        },
+        Button: {
+      baseStyle: {
+        fontWeight: "semibold",
+        borderRadius: "md",
+        _focus: {
+          boxShadow: "none",
+        },
+      },
+      variants: {
+        solid: (props) => ({
+          bg: props.colorScheme ? `${props.colorScheme}.700` : "brand.700",
+          color: "white",
+          borderStyle: "none",
+          _hover: {
+            bg: props.colorScheme ? `${props.colorScheme}.600` : "brand.800",
+          },
+          _active: {
+            bg: props.colorScheme ? `${props.colorScheme}.800` : "brand.800",
+          },
+        }),
+        outline: (props) => ({
+       
+          border: "2px solid",
+          borderColor: props.colorScheme ? `${props.colorScheme}.500` : "brand.500",
+          color: props.colorScheme ? `${props.colorScheme}.500` : "brand.500",
+          _hover: {
+            bg: props.colorScheme ? `${props.colorScheme}.300` : "brand.200",
+          },
+        }),
+        ghost: (props) => ({
+          color: props.colorScheme ? `${props.colorScheme}.600` : "brand.600",
+          border: "none",
+          _hover: {
+            bg: props.colorScheme ? `${props.colorScheme}.100` : "brand.100",
+          },
+        }),
+        underlined: (props) => ({
+          color: props.colorMode === "dark" ? "brand.300" : "brand.700",
+          bg: "transparent",
+          p: 2,
+          height: "auto",
+          borderStyle: "none",
+          _hover: {
+            bg: "transparent",
             _after: {
-          content: '""',
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          width: "0",
-          
-          height: "2px",
-          bg: props.colorMode === "dark" ? "brand.500" : "brand.700",
-          transition: "width 0.3s ease",
+        width: "100%",
             },
-          }),
-        },
-        defaultProps: {
-          variant: "solid",
-          size: "md",
-          colorScheme: "brand",
-        },
           },
+          _after: {
+            content: '""',
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            width: "0",
+            height: "2px",
+            bg: props.colorMode === "dark" ? "brand.500" : "brand.700",
+            transition: "width 0.3s ease",
+          },
+        }),
+      },
+      defaultProps: {
+        variant: "solid",
+        size: "md",
+        colorScheme: "brand",
+      },
+        },
 
-          Input: {
-        baseStyle: {
+        Input: {
+      baseStyle: {
+        field: {
+          borderRadius: "md",
+          borderWidth: "2px",
+          borderColor: "brand.700",
+          _focus: {
+            borderColor: "brand.800",
+            borderWidth: "3px",
+          },
+        },
+      },
+      variants: {
+        outline: {
           field: {
-            borderRadius: "md",
-            borderWidth: "2px",
-            borderColor: "brand.700",
+            _hover: {
+        borderColor: "gray.400",
+            },
             _focus: {
-          borderColor: "brand.800",
-          borderWidth: "3px",
+        borderColor: "brand.500",
             },
           },
         },
-        variants: {
-          outline: {
-            field: {
-          
+        filled: {
+          field: {
+            bg: "gray.100",
+            _hover: {
+        bg: "gray.200",
+            },
+            _focus: {
+        bg: "white",
+        borderColor: "brand.500",
+            },
+          },
+        },
+      },
+      defaultProps: {
+        variant: "outline",
+      },
+        },
+
+        Textarea: {
+      baseStyle: {
+        borderRadius: "md",
+        borderWidth: "2px",
+        borderColor: "brand.500",
+        _focus: {
+          borderColor: "brand.500",
+          boxShadow: "0 0 0 1px brand.500",
+        },
+      },
+      variants: {
+        outline: {
           _hover: {
             borderColor: "gray.400",
           },
           _focus: {
             borderColor: "brand.500",
           },
-            },
-          },
-          filled: {
-            field: {
+        },
+        filled: {
           bg: "gray.100",
           _hover: {
             bg: "gray.200",
           },
           _focus: {
             bg: "white",
-            borderColor: "brand.500",
-          },
-            },
+            borderColor: "brand.700",
           },
         },
-        defaultProps: {
-          variant: "outline",
+      },
+      defaultProps: {
+        variant: "outline",
+      },
         },
-          },
+        Heading: {
+      baseStyle: (props) => ({
+        fontWeight: "bold",
+        lineHeight: "shorter",
+        color: props.colorMode === "dark" ? "white" : "gray.800",
+      }),
+      sizes: {
+        xl: { fontSize: "4xl" },
+        lg: { fontSize: "3xl" },
+        md: { fontSize: "2xl" },
+        sm: { fontSize: "xl" },
+        xs: { fontSize: "lg" },
+      },
+      defaultProps: {
+        size: "md",
+      },
+        },
 
-          Textarea: {
-        baseStyle: {
-          borderRadius: "md",
-          borderWidth: "2px",
-          borderColor: "brand.500",
-          _focus: {
-            borderColor: "brand.500",
-            boxShadow: "0 0 0 1px brand.500",
-          },
-        },
-        variants: {
-          outline: {
-         
-            _hover: {
-          borderColor: "gray.400",
-            },
-            _focus: {
-          borderColor: "brand.500",
-            },
-          },
-          filled: {
-            bg: "gray.100",
-            _hover: {
-          bg: "gray.200",
-            },
-            _focus: {
-          bg: "white",
-          borderColor: "brand.700",
-            },
-          },
-        },
-        defaultProps: {
-          variant: "outline",
-        },
-          },
-          Heading: {
-        baseStyle: (props) => ({
-          fontWeight: "bold",
-          lineHeight: "shorter",
-          color: props.colorMode === "dark" ? "white" : "gray.800",
+        Text: {
+      baseStyle: (props) => ({
+        margin: 0,
+        padding: 0,
+        color: props.colorMode === "dark" ? "gray.100" : "gray.800",
+        fontFamily: "'Outfit', sans-serif",
+      }),
+      variants: {
+        muted: (props) => ({
+          color: props.colorMode === "dark" ? "gray.400" : "gray.600",
+          fontSize: "sm",
         }),
-        sizes: {
-          xl: { fontSize: "4xl" },
-          lg: { fontSize: "3xl" },
-          md: { fontSize: "2xl" },
-          sm: { fontSize: "xl" },
-          xs: { fontSize: "lg" },
-        },
-        defaultProps: {
-          size: "md",
-        },
-          },
-
-          Text: {
-        baseStyle: (props) => ({
-          margin: 0,
-          padding: 0,
-          color: props.colorMode === "dark" ? "gray.100" : "gray.800",
-          fontFamily: "body",
+        subtle: (props) => ({
+          color: props.colorMode === "dark" ? "gray.300" : "gray.500",
         }),
-        variants: {
-          muted: (props) => ({
-            color: props.colorMode === "dark" ? "gray.400" : "gray.600",
-            fontSize: "sm",
-          }),
-          subtle: (props) => ({
-            color: props.colorMode === "dark" ? "gray.300" : "gray.500",
-          }),
+      },
         },
-          },
 
-          Card: {
-        baseStyle: (props) => ({
-          display: "flex",
-          flexDirection: "column",
-          background: props.colorMode === "dark" ? "gray.700" : "white",
-          alignItems: "center",
-          gap: 4,
-          boxShadow: props.colorMode === "dark" ? "dark-lg" : "sm",
-          borderRadius: "2xl", // Rounded cards as seen in screenshots
+        Card: {
+      baseStyle: (props) => ({
+        display: "flex",
+        flexDirection: "column",
+        background: props.colorMode === "dark" ? "gray.700" : "white",
+        alignItems: "center",
+        gap: 4,
+        boxShadow: props.colorMode === "dark" ? "dark-lg" : "sm",
+        borderRadius: "2xl", // Rounded cards as seen in screenshots
         p: 6,
       }),
       variants: {
@@ -524,25 +517,48 @@ const theme = extendTheme({
       },
     },
     Menu: {
-      baseStyle: {
+      baseStyle: (props) => ({
         list: {
-          bg: "white",
-          borderRadius: "md",
-          boxShadow: "md",
+          bg: props.colorMode === "dark" ? "gray.800" : "white",
+          borderRadius: "lg",
+          padding: 4,
         },
         item: {
           borderStyle: "none",
+          borderRadius: "sm",
+          fontSize: "md",
+          padding: 4,
           _hover: {
-            bg: "brand.50",
-            color: "brand.600",
-            
+            bg: props.colorMode === "dark" ? "gray.700" : "brand.50",
+            color: props.colorMode === "dark" ? "gray.100" : "brand.600",
           },
           _focus: {
-            bg: "brand.100",
+            bg: props.colorMode === "dark" ? "gray.600" : "brand.100",
           },
         },
-      },
+      }),
     },
+
+    Tooltip: {
+      baseStyle: (props) => ({
+        bg: props.colorMode === "dark" ? "gray.800" : "white",
+        color: props.colorMode === "dark" ? "gray.100" : "gray.800",
+        borderRadius: "md",
+        boxShadow: props.colorMode === "dark" ? "dark-lg" : "lg",
+      }),
+    },
+
+    Progress: {
+      baseStyle: (props) => ({
+        filledTrack: {
+          bg: props.colorMode === "dark" ? "brand.500" : "brand.700",
+        },
+        track: {
+          bg: props.colorMode === "dark" ? "gray.700" : "gray.200",
+        },
+      }),
+    },
+
     Checkbox: {
       baseStyle: (props) => ({
         control: {
@@ -617,45 +633,51 @@ const theme = extendTheme({
             },}),
         },
 
-    Tooltip: {
-        baseStyle: (props) => ({
-            bg: props.colorMode === "dark" ? "gray.800" : "white",
-            borderRadius: "md",
-            boxShadow: props.colorMode === "dark" ? "dark-lg" : "lg",
-        }),
-        },
-    Progress: {
-        baseStyle: (props) => ({
-            filledTrack: {
-            bg: "brand.700",
-            },
-            track: {
-            bg: props.colorMode === "dark" ? "gray.700" : "white",
-            },
-        }),
-    },
-    Divider: {
-        baseStyle: (props) => ({
+   
+        Divider: {
+          baseStyle: (props) => ({
             borderColor: props.colorMode === "dark" ? "gray.600" : "gray.200",
-        }),
-    },
-    Tabs: {
-      baseStyle: (props) => ({
-          tab: {
-          color: props.colorMode === "dark" ? "white" : "gray.800",
-          border: "none",
-          _selected: {
-              color: "brand.700",
-              fontWeight: "bold",
-              border:"none",
-              fontSize: "1.1em",
-              // borderBottom: "2px solid",
-              // borderRadius: "0",
-              
-          },
-          },
-      }),
-  },
+          }),
+        },
+    
+        Tabs: {
+          baseStyle: (props) => ({
+            tab: {
+              color: props.colorMode === "dark" ? "gray.100" : "gray.800",
+              _selected: {
+                color: props.colorMode === "dark" ? "brand.300" : "brand.700",
+                fontWeight: "bold",
+              },
+            },
+          }),
+        },
+    
+        Breadcrumb: {
+          baseStyle: (props) => ({
+            separator: {
+              color: props.colorMode === "dark" ? "gray.600" : "gray.300",
+            },
+          }),
+        },
+    
+        Popover: {
+          baseStyle: (props) => ({
+            popover: {
+              bg: props.colorMode === "dark" ? "gray.800" : "white",
+              borderRadius: "md",
+              boxShadow: props.colorMode === "dark" ? "dark-lg" : "lg",
+            },
+          }),
+        },
+    
+        Collapse: {
+          baseStyle: (props) => ({
+            container: {
+              bg: props.colorMode === "dark" ? "gray.800" : "white",
+              borderRadius: "md",
+            },
+          }),
+        },
   FormLabel: {
     baseStyle: (props) => ({
       shadow:"none",
@@ -690,33 +712,9 @@ const theme = extendTheme({
     }),
   },
  
-  Breadcrumb: {
-    baseStyle: (props) => ({
-      separator: {
-        color: props.colorMode === "dark" ? "gray.600" : "gray.300",
-      },
-    }),
-  },
 
-  Popover: {
-    baseStyle: (props) => ({
-      popover: {
-        bg: props.colorMode === "dark" ? "gray.800" : "white",
-        borderRadius: "md",
-        boxShadow: props.colorMode === "dark" ? "dark-lg" : "lg",
-      },
-    }),
-  },
-  Collapse: {
-    baseStyle: (props) => ({
-      container: {
-        bg: props.colorMode === "dark" ? "gray.800" : "white",
-        borderRadius: "md",
-        //boxShadow: props.colorMode === "dark" ? "dark-lg" : "lg",
-      },
-    }),
-  },
   },
 });
 
 export default theme;
+

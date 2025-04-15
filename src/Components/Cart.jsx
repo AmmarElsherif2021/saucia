@@ -8,6 +8,7 @@ import {
     Divider,
     useColorMode,
     useToast,
+    Input
   } from "@chakra-ui/react";
   import { AddIcon } from "@chakra-ui/icons";
   import { useState } from "react";
@@ -27,7 +28,7 @@ import {
   }) => {
     const { colorMode } = useColorMode();
     const toast = useToast();
-  
+    const [promoCode, setPromoCode] = useState("");
     const handleIncrease = (itemId) => {
       onIncrease(itemId);
       toast({
@@ -63,20 +64,39 @@ import {
         isClosable: true,
       });
     };
-  
+   const handleApplyPromoCode = () => {
+      if (promoCode === "DISCOUNT10") {
+        toast({
+          title: "Promo code applied",
+          description: "You have received a 10% discount!",
+          status: "success",
+          duration: 2000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: "Invalid promo code",
+          description: "Please check the code and try again.",
+          status: "error",
+          duration: 2000,
+          isClosable: true,
+        });
+      }
+    };
+    
     return (
       <Box
-        bg={colorMode === "dark" ? "gray.700" : "info.50"}
-        borderRadius="5%"
+        bg={colorMode === "dark" ? "gray.700" : "brand.400"}
+        borderRadius="50px"
         boxShadow="none"
         p={6}
         width="100%"
         maxW="500px"
         mx="auto"
       >
-        <Heading size="lg" mb={0.5} color="brand.700">
+        <Heading size="lg" mb={0.5} color="brand.900">
           Your Cart
-          <Badge ml={2} colorScheme="info" fontSize="md">
+          <Badge ml={3} colorScheme="warning" fontSize="md">
             {items.length} {items.length === 1 ? "item" : "items"}
           </Badge>
         </Heading>
@@ -109,28 +129,71 @@ import {
               <Text fontWeight="bold" fontSize="lg">
                 Subtotal:
               </Text>
-              <Text fontWeight="bold" fontSize="xl" color="brand.700">
+              <Text fontWeight="bold" fontSize="xl" color="brand.900">
                 ${totalPrice.toFixed(2)}
               </Text>
             </Flex>
             <Flex justify="space-between" align="center" mb={0.5}>
-              <Text color={colorMode === "dark" ? "gray.300" : "gray.600"}>
+              <Text fontSize="md" color={colorMode === "dark" ? "gray.300" : "gray.900"}>
                 Delivery Fee:
               </Text>
-              <Text>$2.99</Text>
+              <Text color="brand.900">$2.99</Text>
             </Flex>
             <Divider my={1} />
             <Flex justify="space-between" align="center" mb={0.5}>
               <Text fontWeight="bold" fontSize="lg">
                 Total:
               </Text>
-              <Text fontWeight="bold" fontSize="xl" color="brand.700">
+              <Text fontWeight="bold" fontSize="xl" color="brand.900">
                 ${(totalPrice + 2.99).toFixed(2)}
               </Text>
             </Flex>
           </>
         )}
-  
+        
+          {/* Special Instructions */}
+              <Box mb={6}>
+                <Heading size="md" mb={4}>
+                  Special Instructions
+                </Heading>
+                <Input
+                  placeholder="Add any special instructions for your order..."
+                  variant="outline"
+                  size="md"
+                  w={"md"}
+                  sx={{
+                    borderColor: "brand.800",
+                    borderWidth: "2px",
+                    bg: colorMode === "dark" ? "gray.800" : "brand.200",
+                  }}  
+                />
+                
+              </Box>
+        
+              {/* Promo Code */}
+              <Box mb={6}>
+                <Heading size="md" mb={4}>
+                  Promo Code
+                </Heading>
+                <Flex gap={2}>
+                  <Input
+                    placeholder="Enter promo code"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                    variant="outline"
+                    size="md"
+                    sx={{
+                      borderColor: "brand.800",
+                      borderWidth: "2px",
+                      bg: colorMode === "dark" ? "gray.800" : "brand.200",
+                    }}
+                  />
+                  <Button colorScheme="brand" onClick={handleApplyPromoCode}>
+                    Apply
+                  </Button>
+                </Flex>
+              </Box>
+              
         {checkoutButton && items.length > 0 && (
           <Button
             colorScheme="brand"

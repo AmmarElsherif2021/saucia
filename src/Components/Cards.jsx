@@ -208,18 +208,18 @@ export const CartCard = ({
     <Flex
       direction="row"
       align="center"
-      bg={colorMode === "dark" ? "gray.700" : "white"}
-      borderRadius="md"
-      boxShadow="sm"
+      bg={colorMode === "dark" ? "gray.700" : "brand.100"}
+      borderRadius="27px"
       p={2}
       mb={2}
       width="100%"
       position="relative"
       _hover={{ 
-        boxShadow: colorMode === "dark" ? "dark-lg" : "md",
+        //boxShadow: colorMode === "dark" ? "dark-lg" : "md",
         transform: "scale(1.01)"
       }}
       transition="all 0.2s"
+      
     >
       {/* Enhanced Image with border radius */}
       <Box
@@ -227,7 +227,7 @@ export const CartCard = ({
         width="100px"
         height="100px"
         overflow="hidden"
-        borderRadius="md"
+        borderRadius="25px"
         flexShrink={0}
       >
         <Image
@@ -268,7 +268,7 @@ export const CartCard = ({
         </Text>
         <Text 
           fontSize="md" 
-          color="brand.700"
+          color="brand.900"
           fontWeight="bold"
           py={0.5}
           my={0.5}
@@ -295,7 +295,7 @@ export const CartCard = ({
           variant="outlined"
        
           onClick={onDecrease}
-          colorScheme="brand"
+          
         />
         <Text mx={1} fontSize="sm" minW="20px" textAlign="center">
           {quantity}
@@ -307,13 +307,13 @@ export const CartCard = ({
           size="xs"
           variant="outlined"
           onClick={onIncrease}
-          colorScheme="brand"
+          
         />
         <Button
-          as={Button}
+          
           aria-label="Remove item"
           size="xs"
-          variant="outline"
+          variant="solid"
           onClick={onRemove}
           colorScheme="error"
           ml={2}

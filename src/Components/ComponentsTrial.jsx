@@ -64,10 +64,12 @@ import {
   FormLabel,
   SimpleGrid,
   useToast,
+  Img,
 } from "@chakra-ui/react";
 import { StarIcon, EditIcon } from "@chakra-ui/icons";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { CartDemo } from "./Cart";
 
 // Button Component - Fully leveraging theme variants
 export const BTN = ({ type = "button", size = "md", colorScheme = "brand", variant = "solid", disabled = false, icon, onClick, children }) => {
@@ -100,6 +102,7 @@ export const TXT = ({ placeholder, value, maxLength, variant = "outline", disabl
       variant={variant}
       isDisabled={disabled}
       onChange={onChange}
+      w="auto"
       _focus={{ 
         borderColor: "brand.700", 
       }}
@@ -192,13 +195,13 @@ export const DD = ({ options = [], selectedItem, disabled = false, onChange, pla
     <Menu isOpen={isOpen} onClose={onClose} placement="bottom">
       <MenuButton
         as={Button}
-        variant="underlined" // Using the underline variant from theme
+        variant="underlined" 
         onClick={onOpen}
         isDisabled={disabled}
       >
         <span>{settableMenu ? options.find((o) => o.value === selected)?.label : placeholder}</span>
       </MenuButton>
-      <MenuList>
+      <MenuList >
         {options.map((option) => (
           <MenuItem
             key={option.value}
@@ -240,6 +243,8 @@ export const ALT = ({ message, type = "success", dismissible = false, icon, time
       borderRadius="md"    
       borderColor={`${type}.400`}
       color={`${type}.700`}
+      m={2}
+      w={"auto"}
     >
       {icon ? icon : ""}
       <Box flex="1">
@@ -389,9 +394,12 @@ export const ACC = ({ sections = [], expandedItem, onToggle }) => {
     <Accordion index={expandedItem} onChange={onToggle}>
       {sections.map((section, index) => (
         <AccordionItem key={index}>
-          <AccordionButton sx={{borderStyle:"none", bg: "secondary.100", color: "brand.700" }}>
+          <AccordionButton sx={{borderStyle:"none", bg: "secondary.100", color: "brand.900" }}>
             <Box flex="1" textAlign="left" textStyle="heading" >
-              {section.title}
+            <Flex align="center" gap={2}>   
+              {section.icon && <Img width={10} src={section.icon}/>} 
+            <Heading>{section.title}</Heading>
+            </Flex>
             </Box>
             <AccordionIcon />
           </AccordionButton>
@@ -787,6 +795,11 @@ export const ComponentsTrial = () => {
           </Flex>
         </Box>
       </Stack>
+      <Box mt={6}>
+        <Heading size="md" mb={4} textStyle="heading">Cart</Heading>
+        <CartDemo/>
+        </Box>
     </Box>
+    
   );
 };
