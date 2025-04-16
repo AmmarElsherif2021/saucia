@@ -2,65 +2,96 @@ import { useState, useEffect, useRef } from 'react';
 import { Box, Flex, IconButton, useColorMode, Button } from '@chakra-ui/react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { FeaturedItemCard } from './Cards';
+import { motion } from 'framer-motion';
 
-export const ItemsCarousel = ({ items, CardComponent = FeaturedItemCard ,visibleCount=1, auto=false }) => {
+// Animation variants defined outside the component
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      delayChildren: 0.3,
+      staggerChildren: 0.2
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { x: -20, opacity: 0 },
+  visible: {
+    x: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.3
+    }
+  }
+};
+
+export const ItemsCarousel = ({ items, CardComponent = FeaturedItemCard, visibleCount = 1, auto = false }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [itemsToShow, setItemsToShow] = useState(3);
+  const [itemsToShow, setItemsToShow] = useState(visibleCount);
   const { colorMode } = useColorMode();
   const carouselRef = useRef(null);
 
   // Calculate the total number of slides needed
-  const totalSlides = Math.ceil(items.length / itemsToShow);
+  const totalSlides = Math.max(1, Math.ceil(items.length / itemsToShow));
 
   // Responsive items to show based on container width
   useEffect(() => {
     const handleResize = () => {
-     if(Boolean(visibleCount)){setItemsToShow(1)}else{ const width = window.innerWidth;
-      if (width < 600) setItemsToShow(1);
-      else if (width < 900) setItemsToShow(2);
-      else if (width < 1200) setItemsToShow(3);
-      else setItemsToShow(4);}
+      if (visibleCount > 0) {
+        setItemsToShow(visibleCount);
+      } else {
+        const width = window.innerWidth;
+        if (width < 600) setItemsToShow(1);
+        else if (width < 900) setItemsToShow(2);
+        else if (width < 1200) setItemsToShow(3);
+        else setItemsToShow(4);
+      }
     };
 
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [visibleCount]);
 
-
-  //auto display
+  // Auto display
   useEffect(() => {
-    if (auto) {
+    if (auto && items.length > itemsToShow) {
       const interval = setInterval(() => {
-        setCurrentIndex((prevIndex) =>
-          prevIndex >= totalSlides - 1 ? 0 : prevIndex + 1
-        );
-      }, 6000); // Change slide every 3 seconds
-      return () => clearInterval(interval); // Cleanup interval on unmount
+        nextSlide();
+      }, 6000); // Change slide every 6 seconds
+      return () => clearInterval(interval);
     }
-  }, [auto, totalSlides]);
+  }, [auto, items.length, itemsToShow]);
+
   const nextSlide = () => {
-    setCurrentIndex((prevIndex) => 
-      prevIndex >= totalSlides - 1 ? 0 : prevIndex + 1
-    );
+    setCurrentIndex((prevIndex) => (prevIndex >= totalSlides - 1 ? 0 : prevIndex + 1));
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prevIndex) => 
-      prevIndex <= 0 ? totalSlides - 1 : prevIndex - 1
-    );
+    setCurrentIndex((prevIndex) => (prevIndex <= 0 ? totalSlides - 1 : prevIndex - 1));
   };
 
-  // Calculate the visible items based on current index and items to show
-  const visibleItems = items.slice(
-    currentIndex * itemsToShow,
-    (currentIndex + 1) * itemsToShow
-  );
+  const getCircularItems = () => {
+    if (items.length <= itemsToShow) {
+      return items;
+    }
 
-  // Fill with empty items if needed to maintain consistent layout
-  while (visibleItems.length < itemsToShow) {
-    visibleItems.push(null);
-  }
+    const startIdx = (currentIndex * itemsToShow) % items.length;
+    const endIdx = startIdx + itemsToShow;
+    
+    if (endIdx > items.length) {
+      return [
+        ...items.slice(startIdx),
+        ...items.slice(0, endIdx - items.length)
+      ];
+    }
+    
+    return items.slice(startIdx, endIdx);
+  };
+
+  const visibleItems = getCircularItems();
 
   return (
     <Flex
@@ -70,16 +101,16 @@ export const ItemsCarousel = ({ items, CardComponent = FeaturedItemCard ,visible
       mb={8}
       w="100%"
       px={1}
-      bg={colorMode === "dark" ? "gray.800" : "brand.200"}
+      bg={colorMode === "dark" ? "brand.900" : "brand.200"}
       borderRadius="3xl"
       align="center"
       justify="center"
-      height={"100%"}
+      height="100%"
     >
       {/* Previous Button */}
       <IconButton
         icon={<ChevronLeftIcon />}
-        aria-label="Prev"
+        aria-label="Previous"
         onClick={prevSlide}
         isDisabled={items.length <= itemsToShow}
         as={Button}
@@ -91,17 +122,25 @@ export const ItemsCarousel = ({ items, CardComponent = FeaturedItemCard ,visible
 
       {/* Carousel Content */}
       <Flex 
+        as={motion.div}
         width="100%"
         justify="center"
         align="center"
         wrap="wrap"
         gap={2}
+        variants={visibleCount==1 && containerVariants}
+        initial="hidden"
+        animate="visible"
       >
         {visibleItems.map((item, index) => (
           <Box
-            key={item ? item.name + index : `empty-${index}`}
-            flex={`0 0 calc(${100 / itemsToShow}% - 16px)`}
+            key={`item-${index}-${currentIndex}`}
+            flex={`0 0 calc(${100 / itemsToShow}% - 5%)`}
+          
             minWidth="250px"
+            as={motion.div}
+            variants={visibleCount==1 && itemVariants}
+            display="flex"
           >
             {item ? (
               <CardComponent {...item} />

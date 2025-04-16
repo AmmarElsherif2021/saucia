@@ -70,7 +70,7 @@ export const Footer = () => {
                                 type="email"
                                 placeholder="Your email"
                                 size="md"
-                                bg="gray.800"
+                                bg="brand.900"
                                 borderColor="gray.700"
                                 _placeholder={{ color: 'gray.500' }}
                                 _focus={{ borderColor: 'brand.400' }}

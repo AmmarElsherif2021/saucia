@@ -132,8 +132,8 @@ const theme = extendTheme({
       styles: {
         global: (props) => ({
           body: {
-            backgroundColor: props.colorMode === "dark" ? "gray.800" : "gray.50",
-            color: props.colorMode === "dark" ? "gray.100" : "gray.800",
+            backgroundColor: props.colorMode === "dark" ? "brand.900" : "gray.50",
+            color: props.colorMode === "dark" ? "gray.100" : "brand.900",
             fontFamily: "'Outfit', sans-serif",
             lineHeight: "base",
           },
@@ -152,7 +152,7 @@ const theme = extendTheme({
       components: {
         Box: {
       baseStyle: (props) => ({
-        color: props.colorMode === "dark" ? "gray.100" : "gray.800",
+        color: props.colorMode === "dark" ? "gray.100" : "brand.900",
         borderRadius: "md",
         boxShadow: "none",
         p: 4,
@@ -387,7 +387,7 @@ const theme = extendTheme({
       baseStyle: (props) => ({
         fontWeight: "bold",
         lineHeight: "shorter",
-        color: props.colorMode === "dark" ? "white" : "gray.800",
+        color: props.colorMode === "dark" ? "white" : "brand.900",
       }),
       sizes: {
         xl: { fontSize: "4xl" },
@@ -405,7 +405,7 @@ const theme = extendTheme({
       baseStyle: (props) => ({
         margin: 0,
         padding: 0,
-        color: props.colorMode === "dark" ? "gray.100" : "gray.800",
+        color: props.colorMode === "dark" ? "gray.100" : "brand.900",
         fontFamily: "'Outfit', sans-serif",
       }),
       variants: {
@@ -474,7 +474,7 @@ const theme = extendTheme({
         subtle: (props) => ({
           container: {
             bg: `${props.colorScheme}.50`,
-            color: props.colorMode === "dark" ? "white" : "gray.800",
+            color: props.colorMode === "dark" ? "white" : "brand.900",
           },
           icon: {
             color: `${props.colorScheme}.500`,
@@ -483,15 +483,15 @@ const theme = extendTheme({
         solid: (props) => ({
           container: {
             bg: `${props.colorScheme}.100`,
-            color: props.colorMode === "dark" ? "white" : "gray.800",
+            color: props.colorMode === "dark" ? "white" : "brand.900",
             borderWidth: "2px",
             borderColor: "brand.700",
           }
         }),
         "left-accent": (props) => ({
           container: {
-            bg: props.colorMode === "dark" ? "gray.800" : `${props.colorScheme}.50`,
-            color: props.colorMode === "dark" ? "white" : "gray.800",
+            bg: props.colorMode === "dark" ? "brand.900" : `${props.colorScheme}.50`,
+            color: props.colorMode === "dark" ? "white" : "brand.900",
             borderLeftWidth: "4px",
             borderLeftColor: `${props.colorScheme}.500`,
           },
@@ -501,8 +501,8 @@ const theme = extendTheme({
         }),
         "top-accent": (props) => ({
           container: {
-            bg: props.colorMode === "dark" ? "gray.800" : `${props.colorScheme}.50`,
-            color: props.colorMode === "dark" ? "white" : "gray.800",
+            bg: props.colorMode === "dark" ? "brand.900" : `${props.colorScheme}.50`,
+            color: props.colorMode === "dark" ? "white" : "brand.900",
             borderTopWidth: "4px",
             borderTopColor: `${props.colorScheme}.500`,
           },
@@ -519,7 +519,7 @@ const theme = extendTheme({
     Menu: {
       baseStyle: (props) => ({
         list: {
-          bg: props.colorMode === "dark" ? "gray.800" : "white",
+          bg: props.colorMode === "dark" ? "brand.900" : "white",
           borderRadius: "lg",
           padding: 4,
         },
@@ -541,8 +541,8 @@ const theme = extendTheme({
 
     Tooltip: {
       baseStyle: (props) => ({
-        bg: props.colorMode === "dark" ? "gray.800" : "white",
-        color: props.colorMode === "dark" ? "gray.100" : "gray.800",
+        bg: props.colorMode === "dark" ? "brand.900" : "white",
+        color: props.colorMode === "dark" ? "gray.100" : "brand.900",
         borderRadius: "md",
         boxShadow: props.colorMode === "dark" ? "dark-lg" : "lg",
       }),
@@ -573,7 +573,7 @@ const theme = extendTheme({
           }
         },
         label: {
-          color: props.colorMode === "dark" ? "white" : "gray.800",
+          color: props.colorMode === "dark" ? "white" : "brand.900",
         }, 
         }), 
         variants: {
@@ -611,7 +611,7 @@ const theme = extendTheme({
     Modal: {
         baseStyle: (props) => ({
             dialog: {
-            bg: props.colorMode === "dark" ? "gray.800" : "white",
+            bg: props.colorMode === "dark" ? "brand.900" : "white",
             borderRadius: "xl",
             boxShadow: props.colorMode === "dark" ? "dark-lg" : "lg",
             },
@@ -643,7 +643,7 @@ const theme = extendTheme({
         Tabs: {
           baseStyle: (props) => ({
             tab: {
-              color: props.colorMode === "dark" ? "gray.100" : "gray.800",
+              color: props.colorMode === "dark" ? "gray.100" : "brand.900",
               _selected: {
                 color: props.colorMode === "dark" ? "brand.300" : "brand.700",
                 fontWeight: "bold",
@@ -663,7 +663,7 @@ const theme = extendTheme({
         Popover: {
           baseStyle: (props) => ({
             popover: {
-              bg: props.colorMode === "dark" ? "gray.800" : "white",
+              bg: props.colorMode === "dark" ? "brand.900" : "white",
               borderRadius: "md",
               boxShadow: props.colorMode === "dark" ? "dark-lg" : "lg",
             },
@@ -673,7 +673,7 @@ const theme = extendTheme({
         Collapse: {
           baseStyle: (props) => ({
             container: {
-              bg: props.colorMode === "dark" ? "gray.800" : "white",
+              bg: props.colorMode === "dark" ? "brand.900" : "white",
               borderRadius: "md",
             },
           }),
@@ -681,7 +681,7 @@ const theme = extendTheme({
   FormLabel: {
     baseStyle: (props) => ({
       shadow:"none",
-      color: props.colorMode === "dark" ? "white" : "gray.800",
+      color: props.colorMode === "dark" ? "white" : "brand.900",
     }),
   },
   FormHelperText: {
@@ -697,13 +697,13 @@ const theme = extendTheme({
   Avatar: {
     baseStyle: (props) => ({
       bg: props.colorMode === "dark" ? "gray.700" : "gray.200",
-      color: props.colorMode === "dark" ? "white" : "gray.800",
+      color: props.colorMode === "dark" ? "white" : "brand.900",
     }),
   },
   Tag: {
     baseStyle: (props) => ({
       bg: props.colorMode === "dark" ? "gray.700" : "gray.200",
-      color: props.colorMode === "dark" ? "white" : "gray.800",
+      color: props.colorMode === "dark" ? "white" : "brand.900",
     }),
   },
   Spinner: {

@@ -41,14 +41,16 @@ const HeroCard = ({ name, description, image }) => {
       bgSize="cover"
       bgPosition="center"
       height="100vh"
+      w={"100vw"}
       display="flex"
       flexDirection="column"
       justifyContent="center"
       alignItems="center"
       color="white"
       textAlign="center"
-      px={8}
-      mx={"-60px"}
+      px={0}
+      mx={0}
+    
     >
       <Heading as="h1" opacity={"0.9"} bg="brand.600" color="brand.50" mb={1} p={4} sx={{ fontSize: "3em" }}>
         <AnimatedText text={name} />

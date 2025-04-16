@@ -10,6 +10,7 @@ import {
   Button,
   IconButton,
   useColorMode,
+  VStack
 } from "@chakra-ui/react";
 import { ChevronLeftIcon, ChevronRightIcon, StarIcon } from "@chakra-ui/icons";
 import dessertPic from "../../assets/dessert.JPG";
@@ -106,8 +107,8 @@ export const FEAT = ({
       : defaultItems; // "all" or fallback
 
   return (
-    <Box p={4} bg="transparent">
-      <Heading mb={6} textStyle="heading">
+    <VStack p={4} bg="transparent" alignItems={"center"}>
+      <Heading mb={6} fontSize={"3em"} textStyle="heading">
         Featured Food Items
       </Heading>
 
@@ -118,8 +119,8 @@ export const FEAT = ({
             key={category}
             colorScheme={selectedCategory === category ? "brand" : "gray"}
             onClick={() => setSelectedCategory(category)}
-            variant={selectedCategory === category ? "solid" : "outline"}
-            size={"sm"}
+            variant={selectedCategory === category ? "outline":"underlined"}
+            size={"xs"}
             >
             {category.charAt(0).toUpperCase() + category.slice(1)}
             </Button>
@@ -149,12 +150,12 @@ export const FEAT = ({
         <ItemsCarousel
           items={displayedItems}
           CardComponent={FeaturedItemCard}
-      
+          visibleCount={4}
         />
       ) : (
         <Text>No items available for this category.</Text>
       )}
-    </Box>
+    </VStack>
   );
 };
 

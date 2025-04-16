@@ -254,7 +254,7 @@ export const PROF = ({
   ];
 
   return (
-    <Box p={4} bg={colorMode === "dark" ? "gray.800" : "white"}>
+    <Box p={4} bg={colorMode === "dark" ? "brand.900" : "white"}>
       <Card sx={{background:"gray.100"}} mb={4}>
         <Flex align="center" mb={4} direction={{ base: "column", md: "row" }}>
           <Avatar 

@@ -26,8 +26,8 @@ export const Navbar = () => {
     onClose: onProfileModalClose 
   } = useDisclosure();
   
-  const bgColor = useColorModeValue("white", "gray.800");
-  const textColor = useColorModeValue("gray.800", "white");
+  const bgColor = useColorModeValue("white", "brand.900");
+  const textColor = useColorModeValue("brand.900", "white");
 
   // Dropdown options for the user menu
   const userMenuOptions = [

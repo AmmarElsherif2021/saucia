@@ -164,7 +164,7 @@ import {
                   sx={{
                     borderColor: "brand.800",
                     borderWidth: "2px",
-                    bg: colorMode === "dark" ? "gray.800" : "brand.200",
+                    bg: colorMode === "dark" ? "brand.900" : "brand.200",
                   }}  
                 />
                 
@@ -185,7 +185,7 @@ import {
                     sx={{
                       borderColor: "brand.800",
                       borderWidth: "2px",
-                      bg: colorMode === "dark" ? "gray.800" : "brand.200",
+                      bg: colorMode === "dark" ? "brand.900" : "brand.200",
                     }}
                   />
                   <Button colorScheme="brand" onClick={handleApplyPromoCode}>

@@ -10,12 +10,12 @@ export const OffersSlide = ({ offers = [] }) => {
 
   return (
     <Box p={4}bg="transparent">
-      <Heading mb={6} textStyle="heading">
+      <Heading fontSize={"3em"} mb={6} textStyle="heading">
         Exclusive Offers
       </Heading>
 
       {/* Carousel */}
-      <ItemsCarousel items={offers} CardComponent={OfferCard}/>
+      <ItemsCarousel visibleCount={offers?.length} items={offers} CardComponent={OfferCard}/>
     </Box>
   );
 };

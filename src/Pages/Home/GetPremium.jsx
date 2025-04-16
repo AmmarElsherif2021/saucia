@@ -1,9 +1,15 @@
 
 import { Box, Heading, Text, Button, VStack } from '@chakra-ui/react';
-
+import premiumBg from '../../assets/PremiumBG.JPG'; 
 export const GetPremium = () => {
     return (
-        <Box as="section" bg="gray.50" py={10} px={5}>
+        <Box as="section" bg="gray.50" py={10} px={5} mb={10}
+        bgImage={`url(${premiumBg})`}
+      bgSize="cover"
+      bgPosition="center"
+        borderRadius={"2xl"}
+      w={"95%"}
+        >
             <VStack spacing={6} align="center" maxW="lg" mx="auto">
                 <Heading as="h2" size="lg" textAlign="center">
                     Join Our Premium Plans

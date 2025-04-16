@@ -22,6 +22,7 @@ import grainsB from "../../assets/menu/grains2.jpg";
 import cartIcon from "../../assets/cart.svg";
 import { CRT } from "../../Components/Cart";
 import { useNavigate } from "react-router";
+import cartBg from "../../assets/CartBg.png";
 export const CartPage = () => {
   const { colorMode } = useColorMode();
   const navigate=useNavigate()
@@ -84,7 +85,13 @@ export const CartPage = () => {
     navigate("/checkout")
   };
   return (
-    <Box p={4} bg={colorMode === "dark" ? "gray.800" : "gray.50"}>
+    <Box p={4} bg={colorMode === "dark" ? "brand.900" : "gray.50"}
+       bgImage={`url(${cartBg})`}
+          bgSize="cover"
+          bgPosition="center"
+          w={"100vw"}
+          h={"100vh"}
+    >
     <CRT items={cartItems} totalPrice={totalPrice} onIncrease={handleIncrease} onDecrease={handleDecrease} onCheckout={handleCheckOut} onRemove={handleRemove} checkoutButton={true} />
     </Box>
   );

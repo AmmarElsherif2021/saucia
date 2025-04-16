@@ -88,7 +88,7 @@ export const PremiumFoodCard = ({ name, description, price, image, rating, categ
       
       <Box p="5">
         <Flex justifyContent="space-between" alignItems="center" mb="2">
-          <Heading size="md" color={colorMode === "dark" ? "white" : "gray.800"}>{name}</Heading>
+          <Heading size="md" color={colorMode === "dark" ? "white" : "brand.900"}>{name}</Heading>
           <Badge colorScheme="brand" variant="subtle" borderRadius="full">
             {category}
           </Badge>
@@ -259,7 +259,7 @@ export const CartCard = ({
         <Text 
           fontWeight="bold" 
           fontSize="lg" 
-          color={colorMode === "dark" ? "white" : "gray.800"}
+          color={colorMode === "dark" ? "white" : "brand.900"}
           noOfLines={1}
           py={0.5}
           my={0.5}
@@ -329,7 +329,7 @@ export const FoodCards = () => {
   const { colorMode } = useColorMode();
   
   return (
-    <Box p={4} bg={colorMode === "dark" ? "gray.800" : "gray.50"}>
+    <Box p={4} bg={colorMode === "dark" ? "brand.900" : "gray.50"}>
       <Heading mb={6} textStyle="heading">Food Cards</Heading>
       
       <Stack spacing={8}>
@@ -460,7 +460,7 @@ export const FeaturedItemCard = ({
       {/* Content overlays bottom of image */}
       <Box p="3" bg={colorMode === "dark" ? "gray.700" : "white"}>
         <Flex justify="space-between" align="center" mb="1">
-          <Heading size="sm" color={colorMode === "dark" ? "white" : "gray.800"} noOfLines={1}>
+          <Heading size="sm" color={colorMode === "dark" ? "white" : "brand.900"} noOfLines={1}>
             {name}
           </Heading>
           <Text fontWeight="bold" fontSize="md" color="brand.700">
@@ -586,7 +586,7 @@ export const OfferCard = ({
         zIndex={2}
       >
         <Flex justify="space-between" align="center" mb="2">
-          <Heading size="md" color={colorMode === "dark" ? "white" : "gray.800"} noOfLines={1}>
+          <Heading size="md" color={colorMode === "dark" ? "white" : "brand.900"} noOfLines={1}>
             {name}
           </Heading>
           <Text fontWeight="bold" fontSize="lg" color="brand.700">

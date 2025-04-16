@@ -611,7 +611,7 @@ export const NotificationSetting = ({ name, value, onChange }) => {
       p={4}
       mx="20%"
       borderRadius="20px"
-      bg={colorMode === "dark" ? "gray.800" : "gray.100"}
+      bg={colorMode === "dark" ? "brand.900" : "gray.100"}
       align="center"
       justify="space-between"
     >
@@ -655,7 +655,7 @@ export const ComponentsTrial = () => {
   ];
 
   return (
-    <Box p={4} bg={colorMode === "dark" ? "gray.800" : "gray.50"}>
+    <Box p={4} bg={colorMode === "dark" ? "brand.900" : "gray.50"}>
       <Flex justify="space-between" align="center" mb={6}>
         <Heading mb={0} textStyle="heading">Widgets Playground</Heading>
         <Button onClick={toggleColorMode} size="sm">
