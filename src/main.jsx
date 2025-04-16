@@ -2,17 +2,17 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ChakraProvider } from "@chakra-ui/react";
-import theme from "./Components/theme";
-import { Navbar } from "./Components/Navbar/Navbar";
+import theme from "./Components/theme.jsx";
+import { Navbar } from "./Components/Navbar/Navbar.jsx";
 
 // Imported page components
-import { HomePage } from "./Pages/Home/HomePage";
-import { MenuPage } from "./Pages/Menu/MenuPage";
-import { UserAccountPage } from "./Pages/UserAccountPage";
-import { CartPage } from "./Pages/Cart/CartPage";
-import { CheckoutPage } from "./Pages/Checkout/CheckoutPage";
-import { InfoPage } from "./Pages/InfoPage";
-import { AboutPage } from "./Pages/About/AboutPage";
+import { HomePage } from "./Pages/Home/HomePage.jsx";
+import { MenuPage } from "./Pages/Menu/MenuPage.jsx";
+import { UserAccountPage } from "./Pages/UserAccountPage.jsx";
+import { CartPage } from "./Pages/Cart/CartPage.jsx";
+import { CheckoutPage } from "./Pages/Checkout/CheckoutPage.jsx";
+import { InfoPage } from "./Pages/InfoPage.jsx";
+import { AboutPage } from "./Pages/About/AboutPage.jsx";
 
 // Layout component to include Navbar
 const Layout = ({ children }) => (
