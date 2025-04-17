@@ -1,4 +1,4 @@
-import { useState } from "react";
+//import { useState } from "react";
 import {
   Box,
   Image,
@@ -14,14 +14,18 @@ import {
   Tag,
   useColorMode,
 } from "@chakra-ui/react";
-import { IconButton,StarIcon, AddIcon, MinusIcon, DeleteIcon } from "@chakra-ui/icons";
+import { IconButton, StarIcon, AddIcon, MinusIcon, DeleteIcon } from "@chakra-ui/icons";
 import dessertPic from "../assets/dessert.JPG";
 import fruitPic from "../assets/fruits.JPG";
 import leavesPic from "../assets/leaves.JPG"
 import saladIcon from "../assets/salad.svg";
+
+import { useTranslation } from 'react-i18next';
+
 // Basic Food Card - Simple design with image, title, price
 export const FoodCard = ({ name, description, price, image, rating, category }) => {
   const { colorMode } = useColorMode();
+  const { t } = useTranslation();
   
   return (
     <Box
@@ -38,8 +42,7 @@ export const FoodCard = ({ name, description, price, image, rating, category }) 
       <Box p="4">
         <Flex variant="solid" justify="space-between" align="baseline" mb="2">
           <Heading size="md" color="brand.700" textAlign="left">{name}</Heading>
-          <Text  fontWeight="bold" fontSize="md" color="brand.900">
-          <br/>
+          <Text fontWeight="bold" fontSize="md" color="brand.900">
             ${price.toFixed(2)}
           </Text>
         </Flex>
@@ -49,7 +52,7 @@ export const FoodCard = ({ name, description, price, image, rating, category }) 
         </Text>
         
         <Button colorScheme="brand" size="sm" width="full">
-          Add to Cart
+          {t('buttons.addToCart')}
         </Button>
       </Box>
     </Box>
@@ -59,6 +62,7 @@ export const FoodCard = ({ name, description, price, image, rating, category }) 
 // Premium Food Card - More detailed with rating, tag, and action buttons
 export const PremiumFoodCard = ({ name, description, price, image, rating, category, isPopular }) => {
   const { colorMode } = useColorMode();
+  const { t } = useTranslation();
   
   return (
     <Box
@@ -80,7 +84,7 @@ export const PremiumFoodCard = ({ name, description, price, image, rating, categ
           px="2"
           py="1"
         >
-          Popular
+          {t('common.popular')}
         </Badge>
       )}
       
@@ -90,7 +94,7 @@ export const PremiumFoodCard = ({ name, description, price, image, rating, categ
         <Flex justifyContent="space-between" alignItems="center" mb="2">
           <Heading size="md" color={colorMode === "dark" ? "white" : "brand.900"}>{name}</Heading>
           <Badge colorScheme="brand" variant="subtle" borderRadius="full">
-            {category}
+            {t(`foodCategories.${category?.toLowerCase()}`)}
           </Badge>
         </Flex>
         
@@ -110,7 +114,7 @@ export const PremiumFoodCard = ({ name, description, price, image, rating, categ
               />
             ))}
           <Text ml="1" fontSize="sm" color={colorMode === "dark" ? "gray.400" : "gray.500"}>
-            {rating} stars
+            {rating} {t('common.stars')}
           </Text>
         </Flex>
         
@@ -119,7 +123,7 @@ export const PremiumFoodCard = ({ name, description, price, image, rating, categ
             ${price.toFixed(2)}
           </Text>
           <Button colorScheme="brand" size="md">
-            Add to Cart
+            {t('buttons.addToCart')}
           </Button>
         </Flex>
       </Box>
@@ -130,6 +134,7 @@ export const PremiumFoodCard = ({ name, description, price, image, rating, categ
 // Minimalist Food Card - Clean design with horizontal layout
 export const MinimalistFoodCard = ({ name, description, price, image, prepTime, dietaryInfo }) => {
   const { colorMode } = useColorMode();
+  const { t } = useTranslation();
   
   return (
     <Flex
@@ -170,7 +175,7 @@ export const MinimalistFoodCard = ({ name, description, price, image, prepTime, 
               py="0.5"
               fontSize="xs"
             >
-              {tag}
+              {t(`dietaryTags.${tag?.toLowerCase().replace('-', '')}`)}
             </Badge>
           ))}
         </Flex>
@@ -181,18 +186,19 @@ export const MinimalistFoodCard = ({ name, description, price, image, prepTime, 
               ${price.toFixed(2)}
             </Text>
             <Text fontSize="xs" color={colorMode === "dark" ? "gray.400" : "gray.500"}>
-              {prepTime} min prep time
+              {prepTime} {t('common.minPrepTime')}
             </Text>
           </Box>
           <Button colorScheme="brand" size="sm">
-            Order
+            {t('buttons.order')}
           </Button>
         </Flex>
       </Box>
     </Flex>
   );
 };
-//compact cart card
+
+// Compact cart card
 export const CartCard = ({ 
   name, 
   price, 
@@ -203,6 +209,7 @@ export const CartCard = ({
   onRemove 
 }) => {
   const { colorMode } = useColorMode();
+  const { t } = useTranslation();
 
   return (
     <Flex
@@ -215,13 +222,10 @@ export const CartCard = ({
       width="100%"
       position="relative"
       _hover={{ 
-        //boxShadow: colorMode === "dark" ? "dark-lg" : "md",
         transform: "scale(1.01)"
       }}
       transition="all 0.2s"
-      
     >
-      {/* Enhanced Image with border radius */}
       <Box
         position="relative"
         width="100px"
@@ -238,7 +242,6 @@ export const CartCard = ({
           height="100%"
           filter="brightness(0.95)"
         />
-        {/* Quantity badge overlay */}
         <Badge
           position="absolute"
           bottom="2"
@@ -254,7 +257,6 @@ export const CartCard = ({
         </Badge>
       </Box>
 
-      {/* Item details */}
       <Box textAlign="left" flex="3" px={3} minW="50">
         <Text 
           fontWeight="bold" 
@@ -281,21 +283,18 @@ export const CartCard = ({
           py={0.5}
           my={0.5}
         >
-          ${price.toFixed(2)} each
+          ${price.toFixed(2)} {t('common.each')}
         </Text>
       </Box>
 
-      {/* Quantity controls */}
       <Flex align="center">
         <IconButton
           icon={<MinusIcon />}
-          aria-label="Decrease quantity"
+          aria-label={t('buttons.decreaseQuantity')}
           size="xs"
           as={Button}
           variant="outlined"
-       
           onClick={onDecrease}
-          
         />
         <Text mx={1} fontSize="sm" minW="20px" textAlign="center">
           {quantity}
@@ -303,15 +302,13 @@ export const CartCard = ({
         <IconButton
           icon={<AddIcon />}
           as={Button}
-          aria-label="Increase quantity"
+          aria-label={t('buttons.increaseQuantity')}
           size="xs"
           variant="outlined"
           onClick={onIncrease}
-          
         />
         <Button
-          
-          aria-label="Remove item"
+          aria-label={t('buttons.removeItem')}
           size="xs"
           variant="solid"
           onClick={onRemove}
@@ -323,18 +320,18 @@ export const CartCard = ({
   );
 };
 
-
 // Food Cards Demo Component
 export const FoodCards = () => {
   const { colorMode } = useColorMode();
+  const { t } = useTranslation();
   
   return (
     <Box p={4} bg={colorMode === "dark" ? "brand.900" : "gray.50"}>
-      <Heading mb={6} textStyle="heading">Food Cards</Heading>
+      <Heading mb={6} textStyle="heading">{t('widgets.foodCards')}</Heading>
       
       <Stack spacing={8}>
         <Box>
-          <Heading size="md" mb={4}>Basic Food Card</Heading>
+          <Heading size="md" mb={4}>{t('widgets.basicFoodCard')}</Heading>
           <Flex wrap="wrap" gap={6} justify="center">
             <FoodCard 
               name="Classic Chocolate Cake" 
@@ -348,7 +345,7 @@ export const FoodCards = () => {
         </Box>
         
         <Box>
-          <Heading size="md" mb={4}>Premium Food Card</Heading>
+          <Heading size="md" mb={4}>{t('widgets.premiumFoodCard')}</Heading>
           <Flex wrap="wrap" gap={6} justify="center">
             <PremiumFoodCard 
               name="Fresh Fruit Platter" 
@@ -363,7 +360,7 @@ export const FoodCards = () => {
         </Box>
         
         <Box>
-          <Heading size="md" mb={4}>Minimalist Food Card</Heading>
+          <Heading size="md" mb={4}>{t('widgets.minimalistFoodCard')}</Heading>
           <Flex wrap="wrap" gap={6} justify="center">
             <MinimalistFoodCard 
               name="Garden Salad" 
@@ -379,6 +376,7 @@ export const FoodCards = () => {
     </Box>
   );
 };
+
 // Featured Item Card with Image Prominence
 export const FeaturedItemCard = ({ 
   name, 
@@ -392,6 +390,7 @@ export const FeaturedItemCard = ({
   isRecommended 
 }) => {
   const { colorMode } = useColorMode();
+  const { t } = useTranslation();
   
   return (
     <Box
@@ -405,7 +404,6 @@ export const FeaturedItemCard = ({
       height="300px"
       my={2}
     >
-      {/* Image takes most of the card */}
       <Box position="relative" height="220px">
         <Image 
           src={image || saladIcon} 
@@ -415,7 +413,6 @@ export const FeaturedItemCard = ({
           objectFit="cover"
         />
         
-        {/* Badges overlay on image */}
         <Flex 
           position="absolute" 
           top="0" 
@@ -427,23 +424,22 @@ export const FeaturedItemCard = ({
           <Flex gap="2">
             {isSpecial && (
               <Badge colorScheme="accent" variant="solid" borderRadius="full" px="2">
-                Seasonal
+                {t('common.seasonal')}
               </Badge>
             )}
             {isTrending && (
               <Badge colorScheme="highlight" variant="solid" borderRadius="full" px="2">
-                Trending
+                {t('common.trending')}
               </Badge>
             )}
           </Flex>
           {isRecommended && (
             <Badge colorScheme="success" variant="solid" borderRadius="full" px="2">
-              Recommended
+              {t('common.recommended')}
             </Badge>
           )}
         </Flex>
         
-        {/* Category tag */}
         <Badge
           position="absolute"
           bottom="2"
@@ -453,11 +449,10 @@ export const FeaturedItemCard = ({
           borderRadius="full"
           px="2"
         >
-          {category}
+          {t(`foodCategories.${category?.toLowerCase()}`)}
         </Badge>
       </Box>
       
-      {/* Content overlays bottom of image */}
       <Box p="3" bg={colorMode === "dark" ? "gray.700" : "white"}>
         <Flex justify="space-between" align="center" mb="1">
           <Heading size="sm" color={colorMode === "dark" ? "white" : "brand.900"} noOfLines={1}>
@@ -488,7 +483,7 @@ export const FeaturedItemCard = ({
             </Text>
           </Flex>
           <Button colorScheme="brand" size="xs">
-            Add to Cart
+            {t('buttons.addToCart')}
           </Button>
         </Flex>
       </Box>
@@ -509,6 +504,8 @@ export const OfferCard = ({
   isRecommended 
 }) => {
   const { colorMode } = useColorMode();
+  const { t } = useTranslation();
+  
   return (
     <Box
       maxW="500px"
@@ -520,7 +517,6 @@ export const OfferCard = ({
       height="300px"
       my={2}
     >
-      {/* Image as background */}
       <Box position="relative" height="100%" zIndex={0}>
         <Image 
           src={image || saladIcon} 
@@ -531,7 +527,6 @@ export const OfferCard = ({
           filter="brightness(0.7)"
         />
         
-        {/* Badges overlay on image */}
         <Flex 
           position="absolute" 
           top="4" 
@@ -543,23 +538,22 @@ export const OfferCard = ({
           <Flex gap="2">
             {isSpecial && (
               <Badge colorScheme="accent" variant="solid" borderRadius="full" px="2">
-                Seasonal
+                {t('common.seasonal')}
               </Badge>
             )}
             {isTrending && (
               <Badge colorScheme="highlight" variant="solid" borderRadius="full" px="2">
-                Trending
+                {t('common.trending')}
               </Badge>
             )}
           </Flex>
           {isRecommended && (
             <Badge colorScheme="success" variant="solid" borderRadius="full" px="2">
-              Recommended
+              {t('common.recommended')}
             </Badge>
           )}
         </Flex>
         
-        {/* Category tag */}
         <Badge
           position="absolute"
           bottom="4"
@@ -570,11 +564,10 @@ export const OfferCard = ({
           px="2"
           zIndex={2}
         >
-          {category}
+          {t(`foodCategories.${category?.toLowerCase()}`)}
         </Badge>
       </Box>
       
-      {/* Floating content */}
       <Box 
         position="absolute" 
         bottom="0" 
@@ -614,7 +607,7 @@ export const OfferCard = ({
             </Text>
           </Flex>
           <Button colorScheme="brand" size="sm">
-            Add to Cart
+            {t('buttons.addToCart')}
           </Button>
         </Flex>
       </Box>

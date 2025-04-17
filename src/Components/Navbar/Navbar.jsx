@@ -16,32 +16,26 @@ import { Link } from "react-router-dom";
 import logoIcon from "../../assets/logo.png";
 import { ProfileDD } from "./profileDD.jsx";
 import { ProfileModal } from "./ProfileModal";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 export const Navbar = () => {
   const { colorMode, toggleColorMode } = useColorMode();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { 
-    isOpen: isProfileModalOpen, 
-    onOpen: onProfileModalOpen, 
-    onClose: onProfileModalClose 
+  const {
+    isOpen: isProfileModalOpen,
+    onOpen: onProfileModalOpen,
+    onClose: onProfileModalClose,
   } = useDisclosure();
-  
+  const [language, setLanguage] = useState("EN");
+  const { t, i18n } = useTranslation(); // Initialize useTranslation
+
   const bgColor = useColorModeValue("white", "brand.900");
   const textColor = useColorModeValue("brand.900", "white");
 
-  // Dropdown options for the user menu
-  const userMenuOptions = [
-    { value: "profile", label: "Profile" },
-    { value: "settings", label: "Settings" },
-    { value: "logout", label: "Logout" },
-  ];
-
-  const handleUserMenuSelect = (value) => {
-    if (value === "logout") {
-      console.log("Logging out...");
-    } else {
-      console.log(`Navigating to ${value}`);
-    }
+  const toggleLanguage = () => {
+    const newLanguage = i18n.language === "en" ? "ar" : "en";
+    setLanguage(newLanguage.toUpperCase());
+    i18n.changeLanguage(newLanguage); // Change language in i18n
   };
 
   return (
@@ -61,49 +55,57 @@ export const Navbar = () => {
         </Box>
 
         {/* Desktop Menu */}
-        <Flex display={{ base: "none", md: "flex" }} alignItems="center" gap={8} ml="auto" mr={4}>
+        <Flex display={{ base: "none", md: "flex"}} alignItems="center" gap={2} mx="20%" >
           <Link to="/cart">
-            <Button variant="underlined" colorScheme="brand">
-              Cart
+            <Button variant="underlined" colorScheme="brand" size={"sm"}>
+              {t("navbar.cart")} {/* Translate "Cart" */}
             </Button>
           </Link>
           <Link to="/menu">
-            <Button variant="underlined" colorScheme="brand">
-              Menu
+            <Button variant="underlined" colorScheme="brand" size={"sm"}>
+              {t("navbar.menu")} {/* Translate "Menu" */}
             </Button>
           </Link>
           <Link to="/about">
-            <Button variant="underlined" colorScheme="brand">
-              About
+            <Button variant="underlined" colorScheme="brand" size={"sm"}>
+              {t("navbar.about")} {/* Translate "About" */}
             </Button>
           </Link>
+          <Link to="/premium" onClick={onClose} >
+              <Button variant="underlined" w="70px" size={"sm"}>
+                {t("premium.getPremium")} 
+              </Button>
+            </Link>
         </Flex>
 
-        {/* User Menu and Theme Toggle - Desktop */}
+        {/* User Menu, Theme Toggle, and Language Toggle - Desktop */}
         <HStack spacing={2} display={{ base: "none", md: "flex" }}>
           <ProfileDD />
           <IconButton
-            aria-label="Toggle Color Mode"
+            aria-label={t("common.toggleDarkMode")} // Translate "Toggle Dark Mode"
             icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
             onClick={toggleColorMode}
             variant="ghost"
           />
+          <Button onClick={toggleLanguage} variant="ghost">
+            {language}
+          </Button>
         </HStack>
-         
+
         {/* Mobile Controls */}
         <Flex display={{ base: "flex", md: "none" }}>
           {/* Theme Toggle - Mobile */}
           <IconButton
-            aria-label="Toggle Color Mode"
+            aria-label={t("common.toggleDarkMode")} // Translate "Toggle Dark Mode"
             icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
             onClick={toggleColorMode}
             variant="ghost"
             mr={2}
           />
-          
+
           {/* Hamburger Menu - Mobile */}
           <IconButton
-            aria-label={isOpen ? "Close Menu" : "Open Menu"}
+            aria-label={isOpen ? t("common.close") : t("common.open")} // Translate "Close" and "Open"
             icon={isOpen ? <CloseIcon /> : <HamburgerIcon />}
             onClick={isOpen ? onClose : onOpen}
             variant="ghost"
@@ -117,42 +119,50 @@ export const Navbar = () => {
           <VStack alignItems="center" spacing={4} w="100%">
             <Link to="/" onClick={onClose}>
               <Button variant="underlined" w="70px">
-                Home
+                {t("navbar.home")} 
               </Button>
             </Link>
             <Link to="/cart" onClick={onClose}>
               <Button variant="underlined" w="70px">
-                Cart
+                {t("navbar.cart")} 
               </Button>
             </Link>
             <Link to="/menu" onClick={onClose}>
               <Button variant="underlined" w="70px">
-                Menu
+                {t("navbar.menu")} 
               </Button>
             </Link>
             <Link to="/about" onClick={onClose}>
               <Button variant="underlined" w="70px">
-                About
+                {t("navbar.about")} 
               </Button>
             </Link>
-            <Button 
-              variant="underlined" 
-              w="70px" 
+            <Link to="/premium" onClick={onClose}>
+              <Button variant="underlined" w="70px">
+                {t("premium.getPremium")} 
+              </Button>
+            </Link>
+            <Button
+              variant="underlined"
+              w="70px"
               onClick={onProfileModalOpen}
             >
-              Profile
+              {t("navbar.profile")} 
+            </Button>
+            <Button onClick={toggleLanguage} variant="ghost" w="70px">
+              {language}
             </Button>
           </VStack>
         </Box>
       )}
-        
+
       {/* Mobile Profile Modal */}
-      {isProfileModalOpen && 
-        <ProfileModal 
-          isOpen={isProfileModalOpen} 
-          onClose={onProfileModalClose} 
+      {isProfileModalOpen && (
+        <ProfileModal
+          isOpen={isProfileModalOpen}
+          onClose={onProfileModalClose}
         />
-      }
+      )}
     </Box>
   );
 };

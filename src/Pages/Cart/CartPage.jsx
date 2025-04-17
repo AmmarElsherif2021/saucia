@@ -1,49 +1,49 @@
-import { use, useState } from "react";
+import { useState } from "react";
 import {
   Box,
-  Heading,
-  Text,
-  Flex,
-  Button,
-  Input,
-  Divider,
-  SimpleGrid,
-  Badge,
   useColorMode,
-  Image,
 } from "@chakra-ui/react";
-import { CartCard } from "../../Components/Cards";
 import fruitsA from "../../assets/menu/fruits1.jpg";
-import fruitsB from "../../assets/menu/fruits2.jpg";
 import vegeA from "../../assets/menu/vegetables1.jpg";
-import vegeB from "../../assets/menu/vegetables2.jpg";
 import grainsA from "../../assets/menu/grains1.jpg";
-import grainsB from "../../assets/menu/grains2.jpg";
-import cartIcon from "../../assets/cart.svg";
+import cartBg from "../../assets/CartBg.png";
 import { CRT } from "../../Components/Cart";
 import { useNavigate } from "react-router";
-import cartBg from "../../assets/CartBg.png";
+import { useTranslation } from "react-i18next"; // Import useTranslation
+
 export const CartPage = () => {
   const { colorMode } = useColorMode();
-  const navigate=useNavigate()
+  const navigate = useNavigate();
+  const { t, i18n } = useTranslation(); // Initialize useTranslation
+
+  // Temporary cart items with English and Arabic data
   const [cartItems, setCartItems] = useState([
     {
       id: 1,
-      name: "Avocado Salad",
+      name: {
+        en: "Avocado Salad",
+        ar: "سلطة الأفوكادو",
+      },
       price: 12.99,
       quantity: 2,
       image: fruitsA,
     },
     {
       id: 2,
-      name: "Mexican Salad",
+      name: {
+        en: "Mexican Salad",
+        ar: "سلطة مكسيكية",
+      },
       price: 14.99,
       quantity: 1,
       image: vegeA,
     },
     {
       id: 3,
-      name: "Quinoa Bowl",
+      name: {
+        en: "Quinoa Bowl",
+        ar: "وعاء الكينوا",
+      },
       price: 10.99,
       quantity: 1,
       image: grainsA,
@@ -72,27 +72,38 @@ export const CartPage = () => {
     setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
   };
 
-  const handleApplyPromoCode = () => {
-    alert(`Promo code "${promoCode}" applied!`);
-  };
-
   const totalPrice = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
+
   const handleCheckOut = () => {
-    alert("Proceeding to checkout...");
-    navigate("/checkout")
+    alert(t("cart.proceedToCheckout")); // Translate "Proceeding to checkout..."
+    navigate("/checkout");
   };
+
   return (
-    <Box p={4} bg={colorMode === "dark" ? "brand.900" : "gray.50"}
-       bgImage={`url(${cartBg})`}
-          bgSize="cover"
-          bgPosition="center"
-          w={"100vw"}
-          h={"100vh"}
+    <Box
+      p={4}
+      bg={colorMode === "dark" ? "brand.900" : "gray.50"}
+      bgImage={`url(${cartBg})`}
+      bgSize="cover"
+      bgPosition="center"
+      w={"100vw"}
+      h={"100vh"}
     >
-    <CRT items={cartItems} totalPrice={totalPrice} onIncrease={handleIncrease} onDecrease={handleDecrease} onCheckout={handleCheckOut} onRemove={handleRemove} checkoutButton={true} />
+      <CRT
+        items={cartItems.map((item) => ({
+          ...item,
+          name: item.name[i18n.language], // Use the appropriate language for the item name
+        }))}
+        totalPrice={totalPrice}
+        onIncrease={handleIncrease}
+        onDecrease={handleDecrease}
+        onCheckout={handleCheckOut}
+        onRemove={handleRemove}
+        checkoutButton={true}
+      />
     </Box>
   );
 };

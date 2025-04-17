@@ -2,6 +2,7 @@ import { Box, Heading, SimpleGrid } from "@chakra-ui/react";
 import { ACC } from "../../Components/ComponentsTrial";
 import { FeaturedItemCard } from "../../Components/Cards";
 import menuData from "./menuData.json";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 // Import all images
 import greensA from "../../assets/menu/greens1.JPEG";
@@ -41,10 +42,11 @@ const iconsMap = {
   "Cheese": cheeseIcon,
   "Toppings & Extras": extrasIcon,
   "Dressings": dressingsIcon,
-  "Signature Salads": saladIcon
+  "Signature Salads": saladIcon,
 };
 
 export const MenuPage = () => {
+  const { t } = useTranslation(); // Initialize useTranslation
   const images = [
     greensA,
     greensB,
@@ -73,7 +75,7 @@ export const MenuPage = () => {
 
   // Generate accordion sections dynamically from menuData.json
   const menuSections = menuData.menu.categories.map((category) => ({
-    title: category.name,
+    title: t(`menuPage.${category.name}`), // Translate category name
     icon: iconsMap[category.name], // Use the proper icon based on category name
     content: (
       <Box>
@@ -82,7 +84,7 @@ export const MenuPage = () => {
           ? category.subcategories.map((subcategory, subIndex) => (
               <Box key={subIndex} mb={6}>
                 <Heading size="md" mb={4}>
-                  {subcategory.name}
+                  {t(`menuPage.${subcategory.name}`)} {/* Translate subcategory name */}
                 </Heading>
                 <SimpleGrid columns={{ base: 1, md: 3, lg: 4 }} spacing={1}>
                   {subcategory.items.map((item, itemIndex) => {
@@ -92,8 +94,10 @@ export const MenuPage = () => {
                       <FeaturedItemCard
                         key={itemIndex}
                         name={item.name}
-                        description={`Weight: ${item.weight || "N/A"}, Calories: ${
-                          item.calories || "N/A"
+                        description={`${t("menuPage.weight")}: ${
+                          item.weight || t("common.n/a")
+                        }, ${t("menuPage.calories")}: ${
+                          item.calories || t("common.n/a")
                         }`}
                         price={Math.random() * 10 + 5} // Random price for demo
                         image={assignedImage}
@@ -117,8 +121,10 @@ export const MenuPage = () => {
                 <FeaturedItemCard
                   key={itemIndex}
                   name={item.name}
-                  description={`Weight: ${item.weight || "N/A"}, Calories: ${
-                    item.calories || "N/A"
+                  description={`${t("menuPage.weight")}: ${
+                    item.weight || t("common.n/a")
+                  }, ${t("menuPage.calories")}: ${
+                    item.calories || t("common.n/a")
                   }`}
                   price={Math.random() * 10 + 5} // Random price for demo
                   image={assignedImage}
@@ -136,7 +142,7 @@ export const MenuPage = () => {
   return (
     <Box p={4}>
       <Heading mb={6} textStyle="heading">
-        {menuData.menu.name}
+        {t("menuPage.title")} {/* Translate "Salad Menu" */}
       </Heading>
       <ACC sections={menuSections} />
     </Box>

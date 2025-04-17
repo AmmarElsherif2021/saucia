@@ -1,27 +1,31 @@
-// This component displays a carousel of exclusive offers using the ItemsCarousel component.
 import { Box, Heading, useColorMode } from "@chakra-ui/react";
 import { ItemsCarousel } from "../../Components/ItemsCarousel";
-import { FeaturedItemCard, OfferCard } from "../../Components/Cards";
+import { OfferCard } from "../../Components/Cards";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 import dessertPic from "../../assets/dessert.JPG";
 import fruitPic from "../../assets/fruits.JPG";
 import leavesPic from "../../assets/leaves.JPG";
+
 export const OffersSlide = ({ offers = [] }) => {
   const { colorMode } = useColorMode();
+  const { t } = useTranslation(); // Initialize useTranslation
 
   return (
-    <Box p={4}bg="transparent">
+    <Box p={4} bg="transparent">
       <Heading fontSize={"3em"} mb={6} textStyle="heading">
-        Exclusive Offers
+        {t("offerSlide.title")} {/* Translate "Exclusive Offers" */}
       </Heading>
 
       {/* Carousel */}
-      <ItemsCarousel visibleCount={offers?.length} items={offers} CardComponent={OfferCard}/>
+      <ItemsCarousel visibleCount={offers?.length} items={offers} CardComponent={OfferCard} />
     </Box>
   );
 };
 
 // Example Usage
 export const OffersSlideDemo = () => {
+  const { t } = useTranslation(); // Initialize useTranslation
+
   const sampleOffers = [
     {
       name: "Buy 1 Get 1 Free",
@@ -55,3 +59,4 @@ export const OffersSlideDemo = () => {
 
   return <OffersSlide offers={sampleOffers} />;
 };
+

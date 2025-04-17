@@ -1,33 +1,25 @@
-// Featured Food Items Component with Image-Based Cards
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import {
   Box,
-  Image,
   Text,
   Flex,
-  Badge,
   Heading,
   Button,
-  IconButton,
-  useColorMode,
-  VStack
+  VStack,
 } from "@chakra-ui/react";
-import { ChevronLeftIcon, ChevronRightIcon, StarIcon } from "@chakra-ui/icons";
+import { useTranslation } from "react-i18next"; // Import useTranslation
+import { FeaturedItemCard } from "../../Components/Cards";
+import { ItemsCarousel } from "../../Components/ItemsCarousel";
 import dessertPic from "../../assets/dessert.JPG";
 import fruitPic from "../../assets/fruits.JPG";
 import leavesPic from "../../assets/leaves.JPG";
-import saladIcon from "../../assets/salad.svg";
-import { FeaturedItemCard } from "../../Components/Cards";
-import { ItemsCarousel } from "../../Components/ItemsCarousel"; 
-
-// Main Featured Food Items Component
 
 export const FEAT = ({
   trendingItems = [],
   recommendedItems = [],
   seasonalSpecials = [],
 }) => {
-  const { colorMode } = useColorMode();
+  const { t } = useTranslation(); // Initialize useTranslation
 
   // Default items in case none are provided
   const defaultItems = [
@@ -109,43 +101,25 @@ export const FEAT = ({
   return (
     <VStack p={4} bg="transparent" alignItems={"center"}>
       <Heading mb={6} fontSize={"3em"} textStyle="heading">
-        Featured Food Items
+        {t("featuredSlide.title")} {/* Translate "Featured Food Items" */}
       </Heading>
 
-    {/* Buttons to control the displayed category */}
-        <Flex mb={6} gap={1} wrap="wrap">
-          {["all", "trending", "recommended", "seasonal"].map((category) => (
-            <Button
+      {/* Buttons to control the displayed category */}
+      <Flex mb={6} gap={1} wrap="wrap" alignItems={"center"} justifyContent="center">
+        {["all", "trending", "recommended", "seasonal"].map((category) => (
+          <Button
             key={category}
             colorScheme={selectedCategory === category ? "brand" : "gray"}
             onClick={() => setSelectedCategory(category)}
-            variant={selectedCategory === category ? "outline":"underlined"}
+            variant={selectedCategory === category ? "outline" : "underlined"}
             size={"xs"}
-            >
-            {category.charAt(0).toUpperCase() + category.slice(1)}
-            </Button>
-          ))}
-        </Flex>
+          >
+            {t(`featuredSlide.${category}`)} {/* Translate category buttons */}
+          </Button>
+        ))}
+      </Flex>
 
-        {/* Display the filtered items */}
-            {/* title={
-            selectedCategory === "trending"
-              ? "Trending Now"
-              : selectedCategory === "recommended"
-              ? "Recommended For You"
-              : selectedCategory === "seasonal"
-              ? "Seasonal Specials"
-              : "All Items"
-          }
-          subtitle={
-            selectedCategory === "trending"
-              ? "Our most popular items this week"
-              : selectedCategory === "recommended"
-              ? "Handpicked selections you might enjoy"
-              : selectedCategory === "seasonal"
-              ? "Limited time offerings with seasonal ingredients"
-              : "Explore all our featured items"
-          }*/}
+      {/* Display the filtered items */}
       {displayedItems.length > 0 ? (
         <ItemsCarousel
           items={displayedItems}
@@ -153,7 +127,7 @@ export const FEAT = ({
           visibleCount={4}
         />
       ) : (
-        <Text>No items available for this category.</Text>
+        <Text>{t("featuredSlide.noItems")}</Text> 
       )}
     </VStack>
   );
@@ -161,60 +135,34 @@ export const FEAT = ({
 
 // Example usage
 export const FeaturedFoodsDemo = () => {
+  const { t } = useTranslation(); // Initialize useTranslation
+
   const sampleItems = [
     {
-      name: "Artisan Sourdough Pizza",
-      description: "Hand-stretched sourdough crust with fresh mozzarella and basil",
+      name: t("featuredSlide.sampleItem1.name"),
+      description: t("featuredSlide.sampleItem1.description"),
       price: 14.99,
       image: leavesPic,
       rating: 4.9,
-      category: "Pizza",
-      isTrending: true
+      category: t("foodCategories.pizza"),
+      isTrending: true,
     },
     {
-      name: "Avocado Toast Deluxe",
-      description: "Artisan bread topped with avocado, poached eggs, and microgreens",
+      name: t("featuredSlide.sampleItem2.name"),
+      description: t("featuredSlide.sampleItem2.description"),
       price: 11.99,
       image: fruitPic,
       rating: 4.6,
-      category: "Breakfast",
-      isRecommended: true
+      category: t("foodCategories.breakfast"),
+      isRecommended: true,
     },
-    {
-      name: "Triple Chocolate Brownie",
-      description: "Decadent brownie with dark, milk, and white chocolate chunks",
-      price: 5.99,
-      image: dessertPic,
-      rating: 4.8,
-      category: "Dessert",
-      isSpecial: true,
-      isTrending: true
-    },
-    {
-      name: "Mediterranean Bowl",
-      description: "Quinoa, hummus, falafel, and roasted vegetables with tahini dressing",
-      price: 13.49,
-      image: leavesPic,
-      rating: 4.5,
-      category: "Healthy",
-      isRecommended: true
-    },
-    {
-      name: "Mango Tango Smoothie",
-      description: "Fresh mango blended with pineapple, banana and a hint of lime",
-      price: 6.49,
-      image: fruitPic,
-      rating: 4.7,
-      category: "Drinks",
-      isSpecial: true
-    }
   ];
 
   return (
-    <FEAT 
-      trendingItems={sampleItems.filter(item => item.isTrending)}
-      recommendedItems={sampleItems.filter(item => item.isRecommended)}
-      seasonalSpecials={sampleItems.filter(item => item.isSpecial)}
+    <FEAT
+      trendingItems={sampleItems.filter((item) => item.isTrending)}
+      recommendedItems={sampleItems.filter((item) => item.isRecommended)}
+      seasonalSpecials={sampleItems.filter((item) => item.isSpecial)}
     />
   );
 };

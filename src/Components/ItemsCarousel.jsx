@@ -1,19 +1,19 @@
-import { useState, useEffect, useRef } from 'react';
-import { Box, Flex, IconButton, useColorMode, Button } from '@chakra-ui/react';
-import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
-import { FeaturedItemCard } from './Cards';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from "react";
+import { Box, Flex, IconButton, useColorMode, Button } from "@chakra-ui/react";
+import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
+import { useTranslation } from "react-i18next";
+import { FeaturedItemCard } from "./Cards";
+import { motion } from "framer-motion";
 
-// Animation variants defined outside the component
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
       delayChildren: 0.3,
-      staggerChildren: 0.2
-    }
-  }
+      staggerChildren: 0.2,
+    },
+  },
 };
 
 const itemVariants = {
@@ -22,21 +22,25 @@ const itemVariants = {
     x: 0,
     opacity: 1,
     transition: {
-      duration: 0.3
-    }
-  }
+      duration: 0.3,
+    },
+  },
 };
 
-export const ItemsCarousel = ({ items, CardComponent = FeaturedItemCard, visibleCount = 1, auto = false }) => {
+export const ItemsCarousel = ({
+  items,
+  CardComponent = FeaturedItemCard,
+  visibleCount = 1,
+  auto = false,
+}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsToShow, setItemsToShow] = useState(visibleCount);
   const { colorMode } = useColorMode();
+  const { t } = useTranslation();
   const carouselRef = useRef(null);
 
-  // Calculate the total number of slides needed
   const totalSlides = Math.max(1, Math.ceil(items.length / itemsToShow));
 
-  // Responsive items to show based on container width
   useEffect(() => {
     const handleResize = () => {
       if (visibleCount > 0) {
@@ -55,22 +59,25 @@ export const ItemsCarousel = ({ items, CardComponent = FeaturedItemCard, visible
     return () => window.removeEventListener("resize", handleResize);
   }, [visibleCount]);
 
-  // Auto display
   useEffect(() => {
     if (auto && items.length > itemsToShow) {
       const interval = setInterval(() => {
         nextSlide();
-      }, 6000); // Change slide every 6 seconds
+      }, 6000);
       return () => clearInterval(interval);
     }
   }, [auto, items.length, itemsToShow]);
 
   const nextSlide = () => {
-    setCurrentIndex((prevIndex) => (prevIndex >= totalSlides - 1 ? 0 : prevIndex + 1));
+    setCurrentIndex((prevIndex) =>
+      prevIndex >= totalSlides - 1 ? 0 : prevIndex + 1
+    );
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prevIndex) => (prevIndex <= 0 ? totalSlides - 1 : prevIndex - 1));
+    setCurrentIndex((prevIndex) =>
+      prevIndex <= 0 ? totalSlides - 1 : prevIndex - 1
+    );
   };
 
   const getCircularItems = () => {
@@ -80,14 +87,11 @@ export const ItemsCarousel = ({ items, CardComponent = FeaturedItemCard, visible
 
     const startIdx = (currentIndex * itemsToShow) % items.length;
     const endIdx = startIdx + itemsToShow;
-    
+
     if (endIdx > items.length) {
-      return [
-        ...items.slice(startIdx),
-        ...items.slice(0, endIdx - items.length)
-      ];
+      return [...items.slice(startIdx), ...items.slice(0, endIdx - items.length)];
     }
-    
+
     return items.slice(startIdx, endIdx);
   };
 
@@ -107,10 +111,9 @@ export const ItemsCarousel = ({ items, CardComponent = FeaturedItemCard, visible
       justify="center"
       height="100%"
     >
-      {/* Previous Button */}
       <IconButton
         icon={<ChevronLeftIcon />}
-        aria-label="Previous"
+        aria-label={t("buttons.previous")} // Translated "Previous" button
         onClick={prevSlide}
         isDisabled={items.length <= itemsToShow}
         as={Button}
@@ -120,15 +123,14 @@ export const ItemsCarousel = ({ items, CardComponent = FeaturedItemCard, visible
         sx={{ borderRadius: "50%" }}
       />
 
-      {/* Carousel Content */}
-      <Flex 
+      <Flex
         as={motion.div}
         width="100%"
         justify="center"
         align="center"
         wrap="wrap"
         gap={2}
-        variants={visibleCount==1 && containerVariants}
+        variants={visibleCount === 1 && containerVariants}
         initial="hidden"
         animate="visible"
       >
@@ -136,10 +138,9 @@ export const ItemsCarousel = ({ items, CardComponent = FeaturedItemCard, visible
           <Box
             key={`item-${index}-${currentIndex}`}
             flex={`0 0 calc(${100 / itemsToShow}% - 5%)`}
-          
             minWidth="250px"
             as={motion.div}
-            variants={visibleCount==1 && itemVariants}
+            variants={visibleCount === 1 && itemVariants}
             display="flex"
           >
             {item ? (
@@ -151,10 +152,9 @@ export const ItemsCarousel = ({ items, CardComponent = FeaturedItemCard, visible
         ))}
       </Flex>
 
-      {/* Next Button */}
       <IconButton
         icon={<ChevronRightIcon />}
-        aria-label="Next"
+        aria-label={t("buttons.next")} // Translated "Next" button
         onClick={nextSlide}
         isDisabled={items.length <= itemsToShow}
         as={Button}

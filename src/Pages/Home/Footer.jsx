@@ -9,16 +9,13 @@ import {
     Button,
     VStack,
     HStack,
-    Divider,
-    Accordion,
-    AccordionItem,
-    AccordionButton,
-    AccordionPanel,
-    AccordionIcon,
     Stack,
 } from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 export const Footer = () => {
+    const { t } = useTranslation(); // Initialize useTranslation
+
     return (
         <Box as="footer" bg="gray.900" color="brand.400" py={10} px={6}>
             <VStack spacing={10} align="stretch">
@@ -27,22 +24,28 @@ export const Footer = () => {
                     justify="space-between"
                     align="flex-start"
                     spacing={8}
-                    
                 >
+                    {/* Contact Us Section */}
                     <Box flex="1" textAlign="left">
                         <Heading as="h3" size="md" mb={4} color="brand.400">
-                            Contact Us
+                            {t("footer.contactUs")} {/* Translate "Contact Us" */}
                         </Heading>
-                        <Text color="brand.400" fontSize="sm" mb={1}>Email: info@example.com</Text>
-                        <Text color="brand.400" fontSize="sm">Phone: +1 (123) 456-7890</Text>
+                        <Text color="brand.400" fontSize="sm" mb={1}>
+                            {t("footer.email")}: info@example.com {/* Translate "Email" */}
+                        </Text>
+                        <Text color="brand.400" fontSize="sm">
+                            {t("footer.phone")}: +1 (123) 456-7890 {/* Translate "Phone" */}
+                        </Text>
                     </Box>
-                    <Box flex="1" textAlign="left" >
+
+                    {/* Follow Us Section */}
+                    <Box flex="1" textAlign="left">
                         <Heading as="h3" size="md" mb={4} color="brand.400">
-                            Follow Us
+                            {t("footer.followUs")} {/* Translate "Follow Us" */}
                         </Heading>
                         <List spacing={2} textAlign="left" fontSize="sm" pl={0}>
                             <ListItem>
-                                <Link href="https://facebook.com" isExternal textAlign={"left"} fontSize="sm" >
+                                <Link href="https://facebook.com" isExternal textAlign={"left"} fontSize="sm">
                                     Facebook
                                 </Link>
                             </ListItem>
@@ -58,17 +61,19 @@ export const Footer = () => {
                             </ListItem>
                         </List>
                     </Box>
+
+                    {/* Subscribe Section */}
                     <Box flex="1" textAlign="left">
                         <Heading as="h3" size="md" mb={4} color="brand.400">
-                            Subscribe
+                            {t("footer.subscribe")} {/* Translate "Subscribe" */}
                         </Heading>
                         <Text fontSize="sm" color="brand.400" mb={4}>
-                            Get updates and offers:
+                            {t("footer.getUpdates")} {/* Translate "Get updates and offers:" */}
                         </Text>
                         <HStack as="form" spacing={3}>
                             <Input
                                 type="email"
-                                placeholder="Your email"
+                                placeholder={t("footer.yourEmail")} // Translate "Your email"
                                 size="md"
                                 bg="brand.900"
                                 borderColor="gray.700"
@@ -77,29 +82,20 @@ export const Footer = () => {
                                 required
                             />
                             <Button type="submit" size="md" colorScheme="teal">
-                                Subscribe
+                                {t("footer.subscribe")} {/* Translate "Subscribe" */}
                             </Button>
                         </HStack>
                     </Box>
                 </Stack>
             </VStack>
             <Box textAlign="center" py={4} mt={10}>
-                    <Text color="brand.400" fontSize="xs">
-                        
-                        &copy; {new Date().getFullYear()} Saucia. All rights reserved. |{' '}
-                        <Link  href="/terms" >
-                            Terms of Service
-                        </Link>{' '}
-                        |{' '}
-                        <Link href="/privacy" >
-                            Privacy Policy
-                        </Link>
-                        |{' '}
-                        <Link href="/faqs">
-                            FAQs
-                        </Link>
-                    </Text>
-                </Box>
+                <Text color="brand.400" fontSize="xs">
+                    &copy; {new Date().getFullYear()} {t("brandNames.saucia")}. {t("footer.allRightsReserved")} |{' '}
+                    <Link href="/terms">{t("footer.termsOfService")}</Link> |{' '}
+                    <Link href="/privacy">{t("footer.privacyPolicy")}</Link> |{' '}
+                    <Link href="/faqs">{t("footer.faqs")}</Link>
+                </Text>
+            </Box>
         </Box>
     );
 };

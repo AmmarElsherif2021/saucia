@@ -3,11 +3,11 @@
     "name": "Salad Menu",
     "categories": [
       {
-        "name": "Base Ingredients",
+        "name": "baseIngredients",
         "icon": "ingredient.svg",
         "subcategories": [
           {
-            "name": "Greens",
+            "name": "greens",
             "items": [
               {
                 "name": "Lettuce",
@@ -32,7 +32,7 @@
             ]
           },
           {
-            "name": "Vegetables",
+            "name": "vegetables",
             "items": [
               {
                 "name": "Cucumber",
@@ -84,7 +84,7 @@
         ]
       },
       {
-        "name": "Proteins",
+        "name": "proteins",
         "icon": "protein.svg",
         "items": [
           {
@@ -115,7 +115,7 @@
         ]
       },
       {
-        "name": "Cheese",
+        "name": "cheese",
         "icon": "cheese.svg",
         "items": [
           {
@@ -141,7 +141,7 @@
         ]
       },
       {
-        "name": "Toppings & Extras",
+        "name": "toppingsExtras",
         "icon": "extras.svg",
         "subcategories": [
           {
@@ -165,7 +165,7 @@
             ]
           },
           {
-            "name": "Grains & Legumes",
+            "name": "grainsLegumes",
             "items": [
               {
                 "name": "Lentils",
@@ -222,7 +222,7 @@
         ]
       },
       {
-        "name": "Dressings",
+        "name": "dressings",
         "icon": "dressings.svg",
         "items": [
           {
@@ -260,7 +260,7 @@
         ]
       },
       {
-        "name": "Signature Salads",
+        "name": "signatureSalads",
         "icon": "salad.svg",
         "items": [
           {

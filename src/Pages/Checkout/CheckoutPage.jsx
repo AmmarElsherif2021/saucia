@@ -8,12 +8,12 @@ import {
   Stack,
   Select,
   useColorMode,
-  Icon,
 } from "@chakra-ui/react";
 import { ALT, TXT, BTN } from "../../Components/ComponentsTrial";
 import saladIcon from "../../assets/menu/salad.svg";
 import paymentIcon from "../../assets/payment.svg";
 import orderIcon from "../../assets/order.svg";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 const Section = ({ title, children, bgColor, titleColor, icon }) => {
   const { colorMode } = useColorMode();
@@ -42,6 +42,7 @@ const Section = ({ title, children, bgColor, titleColor, icon }) => {
 
 export const CheckoutPage = () => {
   const { colorMode } = useColorMode();
+  const { t } = useTranslation(); // Initialize useTranslation
 
   return (
     <Box
@@ -50,33 +51,33 @@ export const CheckoutPage = () => {
       minHeight="100vh"
     >
       <Heading mb={6} textStyle="heading" textAlign="center">
-        Checkout
+        {t("checkout.deliveryInformation")} {/* Translate "Checkout" */}
       </Heading>
 
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
         {/* Delivery Information */}
         <Section
-          title="Delivery Information"
+          title={t("checkout.deliveryInformation")} // Translate "Delivery Information"
           bgColor="brand.300"
           titleColor="brand.900"
           icon={saladIcon}
         >
           <Stack spacing={1}>
             <TXT
-              placeholder="Full Name"
+              placeholder={t("checkout.fullName")} // Translate "Full Name"
               name="fullName"
               variant="outline"
               maxLength={50}
             />
             <TXT
-              placeholder="Phone Number"
+              placeholder={t("checkout.phoneNumber")} // Translate "Phone Number"
               name="phoneNumber"
               variant="outline"
               maxLength={15}
               mt={4}
             />
             <TXT
-              placeholder="Delivery Address"
+              placeholder={t("checkout.deliveryAddress")} // Translate "Delivery Address"
               name="address"
               variant="outline"
               maxLength={100}
@@ -84,7 +85,7 @@ export const CheckoutPage = () => {
             />
           </Stack>
           <Select
-            placeholder="Select City"
+            placeholder={t("checkout.selectCity")} // Translate "Select City"
             mt={4}
             sx={{
               borderColor: "brand.300",
@@ -93,23 +94,23 @@ export const CheckoutPage = () => {
               bg: colorMode === "dark" ? "brand.900" : "brand.200",
             }}
           >
-            <option value="new-york">New York</option>
-            <option value="los-angeles">Los Angeles</option>
-            <option value="chicago">Chicago</option>
+            <option value="new-york">{t("checkout.newYork")}</option> {/* Translate "New York" */}
+            <option value="los-angeles">{t("checkout.losAngeles")}</option> {/* Translate "Los Angeles" */}
+            <option value="chicago">{t("checkout.chicago")}</option> {/* Translate "Chicago" */}
           </Select>
           <Checkbox mt={4} colorScheme="brand">
-            Save this address for future orders
+            {t("checkout.saveAddress")} {/* Translate "Save this address for future orders" */}
           </Checkbox>
         </Section>
 
         {/* Payment Details */}
         <Section
-          title="Payment Details"
+          title={t("checkout.paymentDetails")} // Translate "Payment Details"
           bgColor="warning.200"
           icon={paymentIcon}
         >
           <Select
-            placeholder="Select Payment Method"
+            placeholder={t("checkout.paymentMethod")} // Translate "Select Payment Method"
             focusBorderColor="warning.500"
             variant="outline"
             _hover={{ borderColor: "warning.400" }}
@@ -122,13 +123,13 @@ export const CheckoutPage = () => {
               mb: 2,
             }}
           >
-            <option value="credit-card">Credit Card</option>
-            <option value="paypal">PayPal</option>
-            <option value="cash-on-delivery">Cash on Delivery</option>
+            <option value="credit-card">{t("checkout.creditCard")}</option> {/* Translate "Credit Card" */}
+            <option value="paypal">{t("checkout.paypal")}</option> {/* Translate "PayPal" */}
+            <option value="cash-on-delivery">{t("checkout.cashOnDelivery")}</option> {/* Translate "Cash on Delivery" */}
           </Select>
           <Stack spacing={1}>
             <TXT
-              placeholder="Card Number"
+              placeholder={t("checkout.cardNumber")} // Translate "Card Number"
               name="cardNumber"
               variant="outline"
               maxLength={16}
@@ -136,13 +137,13 @@ export const CheckoutPage = () => {
             />
             <Flex gap={2} mt={4}>
               <TXT
-                placeholder="MM/YY"
+                placeholder={t("checkout.expiryDate")} // Translate "MM/YY"
                 name="expiryDate"
                 variant="outline"
                 maxLength={5}
               />
               <TXT
-                placeholder="CVV"
+                placeholder={t("checkout.cvv")} // Translate "CVV"
                 name="cvv"
                 variant="outline"
                 maxLength={3}
@@ -150,39 +151,40 @@ export const CheckoutPage = () => {
             </Flex>
           </Stack>
           <Checkbox mt={4} colorScheme="brand">
-            Save this card for future payments
+            {t("checkout.saveCard")} {/* Translate "Save this card for future payments" */}
           </Checkbox>
         </Section>
 
         {/* Order Summary */}
         <Section
-          title="Order Summary"
+          title={t("checkout.orderSummary")} // Translate "Order Summary"
           bgColor="accent.700"
           icon={orderIcon}
         >
-          <Text>Subtotal:</Text>
-          <Text fontWeight="bold">$45.99</Text>
-
           <Flex justify="space-between" mb={2}>
-            <Text>Delivery Fee:</Text>
+            <Text>{t("checkout.subtotal")}:</Text> {/* Translate "Subtotal" */}
+            <Text fontWeight="bold">$45.99</Text>
+          </Flex>
+          <Flex justify="space-between" mb={2}>
+            <Text>{t("checkout.deliveryFee")}:</Text> {/* Translate "Delivery Fee" */}
             <Text fontWeight="bold">$5.00</Text>
           </Flex>
           <Flex justify="space-between" mb={2}>
-            <Text>Promo Discount:</Text>
+            <Text>{t("checkout.promoDiscount")}:</Text> {/* Translate "Promo Discount" */}
             <Text fontWeight="bold" color="gray.900">
               -$10.00
             </Text>
           </Flex>
           <Flex justify="space-between" mb={4}>
-            <Text fontWeight="bold">Total:</Text>
+            <Text fontWeight="bold">{t("checkout.total")}:</Text> {/* Translate "Total" */}
             <Text fontWeight="bold" fontSize="lg" color="gray.900">
               $40.99
             </Text>
           </Flex>
           <ALT
             message={{
-              title: "Order Minimum",
-              description: "Your order must be at least $20.00 to proceed.",
+              title: t("checkout.orderMinimum"), // Translate "Order Minimum"
+              description: t("checkout.orderMinimumDescription"), // Translate "Your order must be at least $20.00 to proceed."
             }}
             type="error"
             dismissible
@@ -194,7 +196,7 @@ export const CheckoutPage = () => {
             variant="outline"
             width="full"
           >
-            Place Order
+            {t("checkout.placeOrder")} {/* Translate "Place Order" */}
           </BTN>
         </Section>
       </SimpleGrid>

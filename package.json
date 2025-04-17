@@ -19,9 +19,11 @@
     "@emotion/styled": "^11.14.0",
     "@types/react-datepicker": "^6.2.0",
     "framer-motion": "^6.5.1",
+    "i18next": "^25.0.0",
     "react": "^19.0.0",
     "react-datepicker": "^8.2.1",
     "react-dom": "^19.0.0",
+    "react-i18next": "^15.4.1",
     "react-minimal-pie-chart": "^9.1.0",
     "react-router": "^7.5.0",
     "react-router-dom": "^7.5.0"

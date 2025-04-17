@@ -1,6 +1,11 @@
-import { border, color, extendTheme } from "@chakra-ui/react";
-import "../index.css"
-const theme = extendTheme({
+import { extendTheme } from "@chakra-ui/react";
+import "./index.css"
+import { getCurrentLanguage } from "./i18n";
+
+
+const createTheme = () => {
+  const isArabic = getCurrentLanguage() === 'ar';
+  return extendTheme({
   colors: {
     brand: {
       50: "#ebfaf5",
@@ -128,13 +133,16 @@ const theme = extendTheme({
         initialColorMode: "light",
         useSystemColorMode: false,
       },
-
+      fonts: {
+        heading: isArabic ? "'Readex Pro', sans-serif" : "'Montserrat', sans-serif", 
+        body: isArabic ? "'Lalezar', sans-serif" : "'Outfit', sans-serif", 
+      },
       styles: {
         global: (props) => ({
           body: {
+            fontFamily: isArabic ? "'Lalezar', sans-serif" : "'Outfit', sans-serif",
             backgroundColor: props.colorMode === "dark" ? "brand.900" : "gray.50",
             color: props.colorMode === "dark" ? "gray.100" : "brand.900",
-            fontFamily: "'Outfit', sans-serif",
             lineHeight: "base",
           },
           "*::placeholder": {
@@ -145,13 +153,10 @@ const theme = extendTheme({
           },
         }),
       },
-      fonts: {
-        heading: "'Montserrat', sans-serif",
-        body: "'Outfit', sans-serif",
-      },
+     
       components: {
         Box: {
-      baseStyle: (props) => ({
+      baseStyle: () => ({
         color: props.colorMode === "dark" ? "gray.100" : "brand.900",
         borderRadius: "md",
         boxShadow: "none",
@@ -223,7 +228,7 @@ const theme = extendTheme({
             bg: props.colorScheme ? `${props.colorScheme}.50` : 'gray.50',
           },
         }),
-        center: (props) => ({
+        center: () => ({
           alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center',
@@ -245,6 +250,7 @@ const theme = extendTheme({
       baseStyle: {
         fontWeight: "semibold",
         borderRadius: "md",
+        fontFamily: isArabic ? "'Readex Pro', sans-serif" : "'Outfit', sans-serif",
         _focus: {
           boxShadow: "none",
         },
@@ -406,7 +412,7 @@ const theme = extendTheme({
         margin: 0,
         padding: 0,
         color: props.colorMode === "dark" ? "gray.100" : "brand.900",
-        fontFamily: "'Outfit', sans-serif",
+        fontFamily: isArabic ? "'Readex Pro', sans-serif" : "'Outfit', sans-serif",
       }),
       variants: {
         muted: (props) => ({
@@ -715,6 +721,7 @@ const theme = extendTheme({
 
   },
 });
+}
+export const getTheme = () => createTheme();
 
-export default theme;
-
+export default createTheme;

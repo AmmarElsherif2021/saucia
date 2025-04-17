@@ -1,6 +1,7 @@
 import { Box, Heading, Text } from "@chakra-ui/react";
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
-const StylizedBox = ({ colorScheme,children }) => {
+const StylizedBox = ({ colorScheme, children }) => {
   return (
     <Box p="20px" my="20px" borderRadius="30px" bg={`${colorScheme}.300`}>
       {children}
@@ -9,54 +10,40 @@ const StylizedBox = ({ colorScheme,children }) => {
 };
 
 export const AboutPage = () => {
+  const { t, i18n } = useTranslation(); // Initialize useTranslation
+
+  const isArabic = i18n.language === "ar"; // Check if the current language is Arabic
+
   return (
     <div>
       <StylizedBox colorScheme={"brand"}>
         <Heading as="h1" size="lg" mb="4">
-          About Us
+          {t("about.aboutUs")} {/* Translate "About Us" */}
         </Heading>
         <Text>
-          Welcome to our Healthy Salad Store App! We are dedicated to providing
-          fresh, nutritious, and delicious salads to help you maintain a healthy
-          lifestyle.
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-          Pellentesque porta consequat tincidunt. 
-          Nunc et felis mi. Maecenas et hendrerit elit, 
-          non sagittis dui. Ut non mauris in nibh fringilla accumsan.
-           Suspendisse iaculis laoreet varius. Maecenas bibendum, 
-           neque volutpat posuere tristique, dui purus semper lorem,
+          {isArabic
+            ? "مرحبًا بكم في تطبيق متجر السلطات الصحية الخاص بنا! نحن ملتزمون بتقديم سلطات طازجة ومغذية ولذيذة لمساعدتك في الحفاظ على نمط حياة صحي."
+            : "Welcome to our Healthy Salad Store App! We are dedicated to providing fresh, nutritious, and delicious salads to help you maintain a healthy lifestyle."}
         </Text>
       </StylizedBox>
       <StylizedBox colorScheme={"warning"}>
         <Heading as="h2" size="md" mb="4">
-          Our Mission
+          {t("about.ourMission")} {/* Translate "Our Mission" */}
         </Heading>
         <Text>
-          Our mission is to make healthy eating accessible and enjoyable for
-          everyone. We believe in the power of wholesome ingredients and
-          sustainable practices.
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-          Pellentesque porta consequat tincidunt. 
-          Nunc et felis mi. Maecenas et hendrerit elit, 
-          non sagittis dui. Ut non mauris in nibh fringilla accumsan.
-           Suspendisse iaculis laoreet varius. Maecenas bibendum, 
-           neque volutpat posuere tristique, dui purus semper lorem, 
+          {isArabic
+            ? "مهمتنا هي جعل الأكل الصحي متاحًا وممتعًا للجميع. نحن نؤمن بقوة المكونات الطبيعية والممارسات المستدامة."
+            : "Our mission is to make healthy eating accessible and enjoyable for everyone. We believe in the power of wholesome ingredients and sustainable practices."}
         </Text>
       </StylizedBox>
       <StylizedBox colorScheme={"info"}>
         <Heading as="h2" size="md" mb="4">
-          Why Choose Us?
+          {t("about.whyChooseUs")} {/* Translate "Why Choose Us?" */}
         </Heading>
         <Text>
-          We offer a wide variety of salads made from the freshest ingredients,
-          customizable to your taste and dietary needs. Your health is our
-          priority!
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-          Pellentesque porta consequat tincidunt. 
-          Nunc et felis mi. Maecenas et hendrerit elit, 
-          non sagittis dui. Ut non mauris in nibh fringilla accumsan.
-           Suspendisse iaculis laoreet varius. Maecenas bibendum, 
-           neque volutpat posuere tristique, dui purus semper lorem,
+          {isArabic
+            ? "نحن نقدم مجموعة واسعة من السلطات المصنوعة من أجود المكونات، قابلة للتخصيص حسب ذوقك واحتياجاتك الغذائية. صحتك هي أولويتنا!"
+            : "We offer a wide variety of salads made from the freshest ingredients, customizable to your taste and dietary needs. Your health is our priority!"}
         </Text>
       </StylizedBox>
     </div>
