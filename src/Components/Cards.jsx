@@ -8,10 +8,11 @@ import {
   Heading,
   Button,
   Stack,
-  SimpleGrid,
+  HStack,
   Card,
   CardBody,
   Tag,
+  TagLabel,
   useColorMode,
 } from "@chakra-ui/react";
 import { IconButton, StarIcon, AddIcon, MinusIcon, DeleteIcon } from "@chakra-ui/icons";
@@ -19,9 +20,10 @@ import dessertPic from "../assets/dessert.JPG";
 import fruitPic from "../assets/fruits.JPG";
 import leavesPic from "../assets/leaves.JPG"
 import saladIcon from "../assets/salad.svg";
-
+import { getCurrentLanguage } from "../i18n";
 import { useTranslation } from 'react-i18next';
-
+import { AnimatedText } from "../Pages/Home/Hero";
+import saladImage from "../assets/premium/dailySalad.png"
 // Basic Food Card - Simple design with image, title, price
 export const FoodCard = ({ name, description, price, image, rating, category }) => {
   const { colorMode } = useColorMode();
@@ -614,3 +616,95 @@ export const OfferCard = ({
     </Box>
   );
 };
+//Plan card
+export const PlanCard = ({ name, description, image }) => {
+  const { colorMode } = useColorMode();
+  const isArabic = getCurrentLanguage() === 'ar'; 
+  return (
+    <Box 
+      bgImage={`url(${image})`}
+      bgSize="cover"
+      bgPosition="center"
+      width={"50vw"}
+      height={"60vh"}
+      display="flex"
+      flexDirection="column"
+      justifyContent="center"
+      alignItems="center"
+      color="white"
+      textAlign="center"
+      borderRadius={"3xl"}
+      px={8}
+      mx={-12}
+    >
+      <Heading as="h1" opacity={"0.9"} color="brand.900" mb={1} p={4} sx={{ fontSize: "3em" }} className={isArabic ? "readex-pro" : "montserrat"}>
+        <AnimatedText text={name} />
+      </Heading>
+      <Text fontSize="1.5em" bg="black" color="brand.500" sx={{ paddingY: 0 }} className={isArabic ? "lalezar" : "outfit"}>
+        <AnimatedText text={description} delay={2} />
+      </Text>
+    </Box>
+  );
+};
+
+//Tiny plan card
+export const PlanTinyCard = ({ recommendedPlan, handleChoosePlan, selected = false }) => (
+  <Box
+      sx={{
+          width: "auto",
+          maxWidth: "20vw",
+          minWidth: "10vw",
+          bgImage: `url(${recommendedPlan?.image || saladImage})`,
+          bgSize: "cover",
+          bgPosition: "center",
+          borderRadius: "30px",
+          overflow: "hidden",
+          transition: "transform 300ms",
+          _hover: !selected && {
+              transform: "scale(1.1)",
+          },
+      }}
+      p="4"
+      color="white"
+      onClick={handleChoosePlan}
+  >
+      <Box>
+          <Heading size="md" mt="4" color="brand.800" isTruncated>
+              {recommendedPlan?.name}
+          </Heading>
+      </Box>
+      <Box>
+          <Flex align="start" spacing="2" mt="4" wrap="wrap">
+              {["Carbs", "Protein", "Snacks", "Soups"].map((label, i) => (
+                  <HStack key={i} spacing="1">
+                      <Box
+                          px="3"
+                          my="1"
+                          bg={"gray.900"}
+                          borderRadius="md"
+                          color={["brand.500", "secondary.500", "orange.500", "error.500"][i]}
+                          fontWeight="bold"
+                      >
+                          {label}
+                      </Box>
+                      <Text fontSize="sm" isTruncated>
+                          {label === "Carbs" || label === "Protein"
+                              ? `${recommendedPlan?.[label.toLowerCase()]}g`
+                              : `Choose your ${label.toLowerCase()}`}
+                      </Text>
+                  </HStack>
+              ))}
+          </Flex>
+      </Box>
+      {selected && (
+        <Box mt={8}>
+         <Text>{recommendedPlan.description}</Text>
+          <Box>
+              <Button mt="6" colorScheme="teal" onClick={handleChoosePlan}>
+                  Select Plan
+              </Button>
+          </Box>
+        </Box>
+      )}
+  </Box>
+);

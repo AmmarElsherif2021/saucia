@@ -32,6 +32,7 @@ export const ItemsCarousel = ({
   CardComponent = FeaturedItemCard,
   visibleCount = 1,
   auto = false,
+  visibleButtons = true, // New prop with default value
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsToShow, setItemsToShow] = useState(visibleCount);
@@ -103,25 +104,28 @@ export const ItemsCarousel = ({
       overflow="hidden"
       ref={carouselRef}
       mb={8}
-      w="100%"
-      px={1}
+      width="100%"
+      height="auto"
+      px={0}
       bg={colorMode === "dark" ? "brand.900" : "brand.200"}
       borderRadius="3xl"
       align="center"
       justify="center"
-      height="100%"
+      
     >
-      <IconButton
-        icon={<ChevronLeftIcon />}
-        aria-label={t("buttons.previous")} // Translated "Previous" button
-        onClick={prevSlide}
-        isDisabled={items.length <= itemsToShow}
-        as={Button}
-        variant="solid"
-        colorScheme="brand"
-        zIndex={5}
-        sx={{ borderRadius: "50%" }}
-      />
+      {visibleButtons && (
+        <IconButton
+          icon={<ChevronLeftIcon />}
+          aria-label={t("buttons.previous")} // Translated "Previous" button
+          onClick={prevSlide}
+          isDisabled={items.length <= itemsToShow}
+          as={Button}
+          variant="solid"
+          colorScheme="brand"
+          zIndex={5}
+          sx={{ borderRadius: "50%" }}
+        />
+      )}
 
       <Flex
         as={motion.div}
@@ -152,17 +156,19 @@ export const ItemsCarousel = ({
         ))}
       </Flex>
 
-      <IconButton
-        icon={<ChevronRightIcon />}
-        aria-label={t("buttons.next")} // Translated "Next" button
-        onClick={nextSlide}
-        isDisabled={items.length <= itemsToShow}
-        as={Button}
-        variant="solid"
-        colorScheme="brand"
-        zIndex={5}
-        sx={{ borderRadius: "50%" }}
-      />
+      {visibleButtons && (
+        <IconButton
+          icon={<ChevronRightIcon />}
+          aria-label={t("buttons.next")} // Translated "Next" button
+          onClick={nextSlide}
+          isDisabled={items.length <= itemsToShow}
+          as={Button}
+          variant="solid"
+          colorScheme="brand"
+          zIndex={5}
+          sx={{ borderRadius: "50%" }}
+        />
+      )}
     </Flex>
   );
 };

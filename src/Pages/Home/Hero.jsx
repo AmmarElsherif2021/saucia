@@ -7,7 +7,7 @@ import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next"; // Import useTranslation
 import { getCurrentLanguage } from "../../i18n";
-const AnimatedText = ({ text, delay = 0 }) => {
+export const AnimatedText = ({ text, delay = 0 }) => {
   const [displayText, setDisplayText] = useState("");
   const count = useMotionValue(0);
   const rounded = useTransform(count, (latest) => Math.round(latest));
@@ -91,7 +91,7 @@ export const Hero = () => {
       bg="transparent"
       color="white"
     >
-      <ItemsCarousel items={heroSlides} CardComponent={HeroCard} visibleCount={1} auto={true} />
+      <ItemsCarousel items={heroSlides} CardComponent={HeroCard} visibleCount={1} auto={true} visibleButtons={false} />
     </Box>
   );
 };

@@ -18,6 +18,7 @@ import { CheckoutPage } from "./Pages/Checkout/CheckoutPage.jsx";
 import { InfoPage } from "./Pages/InfoPage.jsx";
 import { AboutPage } from "./Pages/About/AboutPage.jsx";
 import {PremiumPage} from "./Pages/Premium/PremiumPage.jsx";
+import JoinPlanPage from "./Pages/Premium/JoinPlan/JoinPlanPage.jsx";
 
 // Layout component to include Navbar
 const Layout = ({ children }) => {
@@ -98,6 +99,14 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <PremiumPage/>
+      </Layout>
+    ),
+  },
+  {
+    path: "/premium/join",
+    element: (
+      <Layout>
+        <JoinPlanPage/>
       </Layout>
     ),
   },
