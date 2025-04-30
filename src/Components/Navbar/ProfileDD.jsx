@@ -36,7 +36,7 @@ export const ProfileDD = ({
             <MenuList p={4} minW="300px">
                 <VStack align="center" spacing={4}>
                     <VStack spacing={4}>
-                        <Image src={profileIcon} alt="Profile" boxSize="100px" borderRadius="full" />
+                        <Image src={profileIcon} alt="Profile" boxSize="100px" borderRadius="full" onClick={() => navigate("/auth")}/>
                         <VStack align="center" spacing={0}>
                             <Text fontWeight="bold">{user.name}</Text>
                             <Text fontSize="sm" color="gray.500">{user.planTitle}</Text>
