@@ -2,6 +2,7 @@ import { Box, Button, Menu, MenuButton, MenuList, Text, Image, VStack, HStack } 
 import { PieChart } from "react-minimal-pie-chart";
 import profileIcon from "../../assets/profile-b.svg";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useDisclosure } from "@chakra-ui/react";
 
 export const ProfileDD = ({
@@ -18,7 +19,7 @@ export const ProfileDD = ({
     },
 }) => {
     const { isOpen, onOpen, onClose } = useDisclosure();
-
+    const navigate = useNavigate();
     return (
         <Menu
        
