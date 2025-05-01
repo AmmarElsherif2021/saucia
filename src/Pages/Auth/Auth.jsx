@@ -1,24 +1,112 @@
-import React, { useEffect } from "react";
-import * as firebaseui from "firebaseui";
-import "firebaseui/dist/firebaseui.css";
-import { auth } from "../../../firebase";
+// Auth.jsx
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import { auth, googleProvider } from "../../../firebaseConfig";
+import {
+  Box,
+  Container,
+  VStack,
+  Heading,
+  Text,
+  Center,
+  useColorModeValue,
+  Button,
+  Icon
+} from "@chakra-ui/react";
+import { FcGoogle } from "react-icons/fc";
+import "./Auth.css";
 
 const Auth = () => {
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const textColor = useColorModeValue('gray.800', 'white');
+  const cardBg = useColorModeValue('rgba(255, 255, 255, 0.95)', 'rgba(26, 32, 44, 0.95)');
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
   useEffect(() => {
-    const ui = new firebaseui.auth.AuthUI(auth);
-    ui.start("#firebaseui-auth-container", {
-      signInOptions: [
-        firebaseui.auth.EmailAuthProvider.PROVIDER_ID,
-        firebaseui.auth.GoogleAuthProvider.PROVIDER_ID
-      ],
-      signInFlow: "popup",
-      callbacks: {
-        signInSuccessWithAuthResult: () => false
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+        console.log("User is logged in:", user.email);
+      } else {
+        setUser(null);
+        console.log("User is logged out");
       }
     });
+
+    // Cleanup subscription
+    return () => unsubscribe();
   }, []);
 
-  return <div id="firebaseui-auth-container"></div>;
+  const signInWithGoogle = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      console.log("User signed in:", result.user);
+    } catch (error) {
+      console.error("Error signing in with Google:", error.message);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      console.log("User signed out");
+    } catch (error) {
+      console.error("Error signing out:", error.message);
+    }
+  };
+
+  return (
+    <div className="auth-container">
+      <div className="auth-card" style={{ background: cardBg }}>
+        <div className="auth-logo">
+          <span className="logo-text">🔐</span>
+        </div>
+        
+        <Heading color={textColor}>Welcome Back</Heading>
+        <Text color={textColor} mb={6}>Secure access to your account</Text>
+
+        {!user ? (
+          <Button
+            w="full"
+            variant="outline"
+            leftIcon={<Icon as={FcGoogle} boxSize={5} />}
+            borderRadius="12px"
+            height="52px"
+            borderColor="gray.200"
+            boxShadow="sm"
+            onClick={signInWithGoogle}
+            _hover={{
+              transform: "translateY(-1px)",
+              boxShadow: "md"
+            }}
+            transition="all 0.2s"
+          >
+            Sign in with Google
+          </Button>
+        ) : (
+          <VStack spacing={4}>
+            <Text>Welcome, {user.email}!</Text>
+            <Button onClick={logout}>
+              Sign Out
+            </Button>
+            <Button onClick={() => navigate('/')}>
+              Go to Home
+            </Button>
+          </VStack>
+        )}
+
+        <div className="auth-footer">
+          <p>New user? Access is automatic with Google sign in</p>
+          <p className="auth-terms">
+            By continuing, you agree to our <a href="/terms" className="auth-link">Terms</a> 
+            and <a href="/privacy" className="auth-link">Privacy Policy</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Auth;
