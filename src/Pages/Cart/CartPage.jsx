@@ -9,12 +9,12 @@ import grainsA from "../../assets/menu/grains1.jpg";
 import cartBg from "../../assets/CartBg.png";
 import { CRT } from "../../Components/Cart";
 import { useNavigate } from "react-router";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useI18nContext } from "../../Contexts/I18nContext";
 
 export const CartPage = () => {
   const { colorMode } = useColorMode();
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation(); // Initialize useTranslation
+  const { t, currentLanguage}=useI18nContext();
 
   // Temporary cart items with English and Arabic data
   const [cartItems, setCartItems] = useState([

@@ -16,7 +16,7 @@ import dessertPic from "../assets/dessert.JPG";
 import fruitPic from "../assets/fruits.JPG";
 import leavesPic from "../assets/leaves.JPG";
 import { CartCard } from "./Cards";
-import { useTranslation } from "react-i18next";
+import { useI18nContext } from "../Contexts/I18nContext";
 
 export const CRT = ({
   items = [],
@@ -30,7 +30,7 @@ export const CRT = ({
   const { colorMode } = useColorMode();
   const toast = useToast();
   const [promoCode, setPromoCode] = useState("");
-  const { t } = useTranslation(); // Initialize useTranslation
+  const { t } = useI18nContext(); 
 
   const handleIncrease = (itemId) => {
     onIncrease(itemId);
@@ -213,7 +213,7 @@ export const CRT = ({
 };
 
 export const CartDemo = () => {
-  const { t } = useTranslation();
+  const { t } = useI18nContext();
   const [cartItems, setCartItems] = useState([
     {
       id: 1,

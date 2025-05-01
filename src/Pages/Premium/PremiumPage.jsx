@@ -1,6 +1,6 @@
 import { Box, Heading, Text, Button, VStack, Collapse, Flex } from '@chakra-ui/react';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useI18nContext } from '../../Contexts/I18nContext';
 import { getPlans } from './plansData';
 import { JoinPremiumTeaser } from './JoinPremiumTeaser';
 import gainWeightPlanImage from "../../assets/premium/gainWeight.png";

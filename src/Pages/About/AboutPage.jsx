@@ -1,5 +1,5 @@
 import { Box, Heading, Text } from "@chakra-ui/react";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useI18nContext } from "../../Contexts/I18nContext";
 
 const StylizedBox = ({ colorScheme, children }) => {
   return (
@@ -10,9 +10,9 @@ const StylizedBox = ({ colorScheme, children }) => {
 };
 
 export const AboutPage = () => {
-  const { t, i18n } = useTranslation(); // Initialize useTranslation
+  const { t, currentLanguage}=useI18nContext();
 
-  const isArabic = i18n.language === "ar"; // Check if the current language is Arabic
+  const isArabic = currentLanguage === "ar"; // Check if the current language is Arabic
 
   return (
     <div>

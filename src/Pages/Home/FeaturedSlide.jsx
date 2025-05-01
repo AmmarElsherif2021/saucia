@@ -7,7 +7,7 @@ import {
   Button,
   VStack,
 } from "@chakra-ui/react";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useI18nContext } from "../../Contexts/I18nContext";
 import { FeaturedItemCard } from "../../Components/Cards";
 import { ItemsCarousel } from "../../Components/ItemsCarousel";
 import dessertPic from "../../assets/dessert.JPG";
@@ -19,7 +19,7 @@ export const FEAT = ({
   recommendedItems = [],
   seasonalSpecials = [],
 }) => {
-  const { t } = useTranslation(); // Initialize useTranslation
+  const { t } = useI18nContext()
 
   // Default items in case none are provided
   const defaultItems = [
@@ -135,7 +135,7 @@ export const FEAT = ({
 
 // Example usage
 export const FeaturedFoodsDemo = () => {
-  const { t } = useTranslation(); // Initialize useTranslation
+  const { t } = useI18nContext()
 
   const sampleItems = [
     {

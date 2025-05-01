@@ -11,10 +11,11 @@ import {
     HStack,
     Stack,
 } from '@chakra-ui/react';
-import { useTranslation } from 'react-i18next'; // Import useTranslation
+
+import { useI18nContext } from '../../Contexts/I18nContext';
 
 export const Footer = () => {
-    const { t } = useTranslation(); // Initialize useTranslation
+    const { t } = useI18nContext()
 
     return (
         <Box as="footer" bg="gray.900" color="brand.400" py={10} px={6}>

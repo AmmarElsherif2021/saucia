@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom"; // Import useNavigate
-import { useTranslate } from "react-i18next"; // Import useTranslate from react-i18next
+import { useI18nContext } from "../Contexts/I18nContext";
+
 
 export const PROF = ({
   name = "John Doe",
@@ -22,7 +23,7 @@ export const PROF = ({
   onUpdateProfile,
 }) => {
   const navigate = useNavigate();
-  const { t } = useTranslate(); // Initialize useTranslate
+  const { t } = useI18nContext()
 
   const handleGoToSettings = () => {
     navigate("/settings"); // Navigate to the settings page

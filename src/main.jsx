@@ -1,35 +1,81 @@
-import React from "react";
+import React, { Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { ChakraProvider } from "@chakra-ui/react";
-import DynamicThemeProvider from "./ThemeProvider.jsx";
-import theme from "./theme.jsx";
-import './i18n';
+import DynamicThemeProvider from "./Contexts/ThemeProvider.jsx";
+import { I18nProvider } from "./Contexts/I18nContext.jsx";
 import { Navbar } from "./Components/Navbar/Navbar.jsx";
-import { useEffect } from "react";
-import { useTranslation } from "react-i18next"; 
 import "./index.css";
-// Imported page components
-import { HomePage } from "./Pages/Home/HomePage.jsx";
-import { MenuPage } from "./Pages/Menu/MenuPage.jsx";
-import { UserAccountPage } from "./Pages/UserAccountPage.jsx";
-import { CartPage } from "./Pages/Cart/CartPage.jsx";
-import { CheckoutPage } from "./Pages/Checkout/CheckoutPage.jsx";
-import { InfoPage } from "./Pages/InfoPage.jsx";
-import { AboutPage } from "./Pages/About/AboutPage.jsx";
-import {PremiumPage} from "./Pages/Premium/PremiumPage.jsx";
-import Auth from "./Pages/Auth/Auth.jsx";
-import JoinPlanPage from "./Pages/Premium/JoinPlan/JoinPlanPage.jsx";
+import { Spinner } from "@chakra-ui/react";
 
-// Layout component to include Navbar
+// Modified lazy imports with proper export handling
+const HomePage = React.lazy(() => 
+  import("./Pages/Home/HomePage.jsx").then(module => ({
+    default: module.HomePage || module.default
+  }))
+);
+
+const MenuPage = React.lazy(() => 
+  import("./Pages/Menu/MenuPage.jsx").then(module => ({
+    default: module.MenuPage || module.default
+  }))
+);
+
+const UserAccountPage = React.lazy(() => 
+  import("./Pages/UserAccountPage.jsx").then(module => ({
+    default: module.UserAccountPage || module.default
+  }))
+);
+
+const CartPage = React.lazy(() => 
+  import("./Pages/Cart/CartPage.jsx").then(module => ({
+    default: module.CartPage || module.default
+  }))
+);
+
+const CheckoutPage = React.lazy(() => 
+  import("./Pages/Checkout/CheckoutPage.jsx").then(module => ({
+    default: module.CheckoutPage || module.default
+  }))
+);
+
+const InfoPage = React.lazy(() => 
+  import("./Pages/InfoPage.jsx").then(module => ({
+    default: module.InfoPage || module.default
+  }))
+);
+
+const AboutPage = React.lazy(() => 
+  import("./Pages/About/AboutPage.jsx").then(module => ({
+    default: module.AboutPage || module.default
+  }))
+);
+
+const PremiumPage = React.lazy(() => 
+  import("./Pages/Premium/PremiumPage.jsx").then(module => ({
+    default: module.PremiumPage || module.default
+  }))
+);
+
+const Auth = React.lazy(() => 
+  import("./Pages/Auth/Auth.jsx").then(module => ({
+    default: module.Auth || module.default
+  }))
+);
+
+const JoinPlanPage = React.lazy(() => 
+  import("./Pages/Premium/JoinPlan/JoinPlanPage.jsx").then(module => ({
+    default: module.JoinPlanPage || module.default
+  }))
+);
+
+// Rest of the file remains unchanged
+const PageLoader = () => (
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+    <Spinner/>
+  </div>
+);
+
 const Layout = ({ children }) => {
-  const { i18n } = useTranslation();
-
-  useEffect(() => {
-    document.documentElement.lang = i18n.language;
-    document.documentElement.dir = i18n.language === "ar" ? "rtl" : "ltr";
-  }, [i18n.language]);
-
   return (
     <div style={{ backgroundColor: "white", width: "100%", minWidth: "320px", height: "fit-content", paddingX: "0", marginX: "0", position: "absolute", top: "0", left: "0", right: "0", bottom: "0" }}>
       <Navbar />
@@ -43,21 +89,27 @@ const router = createBrowserRouter([
     path: "/",
     element: (
       <Layout>
-        <HomePage />
+        <Suspense fallback={<PageLoader />}>
+          <HomePage />
+        </Suspense>
       </Layout>
     ),
   },
   {
     path: "/auth",
     element: (
-      <Auth />
+      <Suspense fallback={<PageLoader />}>
+        <Auth />
+      </Suspense>
     ),
   },
   {
     path: "/menu",
     element: (
       <Layout>
-        <MenuPage />
+        <Suspense fallback={<PageLoader />}>
+          <MenuPage />
+        </Suspense>
       </Layout>
     ),
   },
@@ -65,7 +117,9 @@ const router = createBrowserRouter([
     path: "/account",
     element: (
       <Layout>
-        <UserAccountPage />
+        <Suspense fallback={<PageLoader />}>
+          <UserAccountPage />
+        </Suspense>
       </Layout>
     ),
   },
@@ -73,7 +127,9 @@ const router = createBrowserRouter([
     path: "/cart",
     element: (
       <Layout>
-        <CartPage />
+        <Suspense fallback={<PageLoader />}>
+          <CartPage />
+        </Suspense>
       </Layout>
     ),
   },
@@ -123,8 +179,10 @@ const root = document.getElementById("root");
 
 ReactDOM.createRoot(root).render(
   <React.StrictMode>
-    <DynamicThemeProvider>
-      <RouterProvider router={router} />
-    </DynamicThemeProvider>
+    <I18nProvider>
+      <DynamicThemeProvider>
+        <RouterProvider router={router} />
+      </DynamicThemeProvider>
+    </I18nProvider>
   </React.StrictMode>
 );

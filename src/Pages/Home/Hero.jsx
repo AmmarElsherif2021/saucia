@@ -5,8 +5,7 @@ import heroB from "../../assets/hero-2.JPG";
 import heroC from "../../assets/hero-3.JPG";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next"; // Import useTranslation
-import { getCurrentLanguage } from "../../i18n";
+import { useI18nContext } from "../../Contexts/I18nContext";
 export const AnimatedText = ({ text, delay = 0 }) => {
   const [displayText, setDisplayText] = useState("");
   const count = useMotionValue(0);
@@ -34,7 +33,8 @@ export const AnimatedText = ({ text, delay = 0 }) => {
 
 const HeroCard = ({ name, description, image }) => {
   const { colorMode } = useColorMode();
-  const isArabic = getCurrentLanguage() === 'ar'; 
+  const {currentLanguage}=useI18nContext();
+  const isArabic = currentLanguage === 'ar'; 
   return (
     <Box
       bgImage={`url(${image})`}
@@ -62,8 +62,7 @@ const HeroCard = ({ name, description, image }) => {
 };
 
 export const Hero = () => {
-  const { t } = useTranslation(); // Initialize useTranslation
-
+  const { t } = useI18nContext();
   const heroSlides = [
     {
       name: t("hero.welcomeToWebsite"), // Translate "Welcome to Our Website"

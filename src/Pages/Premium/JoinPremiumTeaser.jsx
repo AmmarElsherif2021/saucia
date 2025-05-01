@@ -3,9 +3,10 @@ import { ItemsCarousel } from "../../Components/ItemsCarousel"
 import { getPlans } from "./plansData"
 import { PlanCard } from "../../Components/Cards";
 import { useColorMode } from '@chakra-ui/react';
-import { getCurrentLanguage } from '../../i18n';
-import { useTranslation } from "react-i18next";
+
+import { useI18nContext } from "../../Contexts/I18nContext";
 export const JoinPremiumTeaser=({explorePlans,newMember})=>{
+    const {t,currentLanguage}=useI18nContext();
     const plansCards= getPlans()
     return(
         <Box bg="white" p={6} borderRadius="md">

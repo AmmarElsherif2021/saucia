@@ -2,8 +2,7 @@ import { Box, Heading, SimpleGrid } from "@chakra-ui/react";
 import { ACC } from "../../Components/ComponentsTrial";
 import { FeaturedItemCard } from "../../Components/Cards";
 import menuData from "./menuData.json";
-import { useTranslation } from "react-i18next"; // Import useTranslation
-
+import { useI18nContext } from "../../Contexts/I18nContext";
 // Import all images
 import greensA from "../../assets/menu/greens1.JPEG";
 import greensB from "../../assets/menu/greens2.JPG";
@@ -46,7 +45,7 @@ const iconsMap = {
 };
 
 export const MenuPage = () => {
-  const { t } = useTranslation(); // Initialize useTranslation
+  const { t } = useI18nContext();
   const images = [
     greensA,
     greensB,

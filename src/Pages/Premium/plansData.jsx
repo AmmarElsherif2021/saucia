@@ -3,10 +3,10 @@ import keepWeightPlanImage from "../../assets/premium/keepWeight.png";
 import loseWeightPlanImage from "../../assets/premium/loseWeight.png";
 import dailyMealPlanImage from "../../assets/premium/dailyMeal.png";
 import saladsPlanImage from "../../assets/premium/saladMeal.png"; 
-import { useTranslation } from "react-i18next";
+import {useI18nContext } from "../../Contexts/I18nContext";
 
 export const getPlans = () => {
-  const { t } = useTranslation(); 
+  const { t } = useI18nContext
 
   return ([
     {

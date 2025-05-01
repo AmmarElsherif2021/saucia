@@ -1,9 +1,9 @@
 import { Box, Heading, Text, Button, VStack } from '@chakra-ui/react';
 import premiumBg from '../../assets/PremiumBG.JPG';
-import { useTranslation } from 'react-i18next'; // Import useTranslation
+import { useI18nContext } from '../../Contexts/I18nContext';
 
 export const GetPremium = () => {
-  const { t } = useTranslation(); // Initialize useTranslation
+  const { t } = useI18nContext()
 
   return (
     <Box

@@ -1,14 +1,14 @@
 import { Box, Heading, useColorMode } from "@chakra-ui/react";
 import { ItemsCarousel } from "../../Components/ItemsCarousel";
 import { OfferCard } from "../../Components/Cards";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useI18nContext } from "../../Contexts/I18nContext";
 import dessertPic from "../../assets/dessert.JPG";
 import fruitPic from "../../assets/fruits.JPG";
 import leavesPic from "../../assets/leaves.JPG";
 
 export const OffersSlide = ({ offers = [] }) => {
   const { colorMode } = useColorMode();
-  const { t } = useTranslation(); // Initialize useTranslation
+  const { t } = useI18nContext();
 
   return (
     <Box p={4} bg="transparent">
@@ -24,7 +24,7 @@ export const OffersSlide = ({ offers = [] }) => {
 
 // Example Usage
 export const OffersSlideDemo = () => {
-  const { t } = useTranslation(); // Initialize useTranslation
+  const { t } = useI18nContext()
 
   const sampleOffers = [
     {

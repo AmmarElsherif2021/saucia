@@ -16,7 +16,7 @@ import { Link } from "react-router-dom";
 import logoIcon from "../../assets/logo.png";
 import { ProfileDD } from "./profileDD.jsx";
 import { ProfileModal } from "./ProfileModal";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useI18nContext } from "../../Contexts/I18nContext.jsx";
 
 export const Navbar = () => {
   const { colorMode, toggleColorMode } = useColorMode();
@@ -27,15 +27,14 @@ export const Navbar = () => {
     onClose: onProfileModalClose,
   } = useDisclosure();
   const [language, setLanguage] = useState("EN");
-  const { t, i18n } = useTranslation(); // Initialize useTranslation
+  const { t, currentLanguage, changeLanguage}= useI18nContext() 
 
   const bgColor = useColorModeValue("white", "brand.900");
   const textColor = useColorModeValue("brand.900", "white");
 
   const toggleLanguage = () => {
-    const newLanguage = i18n.language === "en" ? "ar" : "en";
-    setLanguage(newLanguage.toUpperCase());
-    i18n.changeLanguage(newLanguage); // Change language in i18n
+    const newLanguage = currentLanguage === "en" ? "ar" : "en";
+    changeLanguage(newLanguage);
   };
 
   return (

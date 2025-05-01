@@ -1,10 +1,10 @@
 import { extendTheme } from "@chakra-ui/react";
 import "./index.css"
-import { getCurrentLanguage } from "./i18n";
+import { useI18nContext } from "./Contexts/I18nContext";
 
 
-const createTheme = () => {
-  const isArabic = getCurrentLanguage() === 'ar';
+const createTheme = (config) => {
+  const isArabic = config?.language === 'ar';
   return extendTheme({
   colors: {
     brand: {

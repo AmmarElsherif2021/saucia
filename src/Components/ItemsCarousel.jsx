@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Box, Flex, IconButton, useColorMode, Button } from "@chakra-ui/react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
-import { useTranslation } from "react-i18next";
+import { useI18nContext } from "../Contexts/I18nContext";
 import { FeaturedItemCard } from "./Cards";
 import { motion } from "framer-motion";
 
@@ -32,12 +32,12 @@ export const ItemsCarousel = ({
   CardComponent = FeaturedItemCard,
   visibleCount = 1,
   auto = false,
-  visibleButtons = true, // New prop with default value
+  visibleButtons = true, 
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsToShow, setItemsToShow] = useState(visibleCount);
   const { colorMode } = useColorMode();
-  const { t } = useTranslation();
+  const { t } = useI18nContext();
   const carouselRef = useRef(null);
 
   const totalSlides = Math.max(1, Math.ceil(items.length / itemsToShow));

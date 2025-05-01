@@ -20,14 +20,13 @@ import dessertPic from "../assets/dessert.JPG";
 import fruitPic from "../assets/fruits.JPG";
 import leavesPic from "../assets/leaves.JPG"
 import saladIcon from "../assets/salad.svg";
-import { getCurrentLanguage } from "../i18n";
-import { useTranslation } from 'react-i18next';
+import { useI18nContext } from "../Contexts/I18nContext";
 import { AnimatedText } from "../Pages/Home/Hero";
 import saladImage from "../assets/premium/dailySalad.png"
 // Basic Food Card - Simple design with image, title, price
 export const FoodCard = ({ name, description, price, image, rating, category }) => {
   const { colorMode } = useColorMode();
-  const { t } = useTranslation();
+  const {t}=useI18nContext();
   
   return (
     <Box
@@ -64,7 +63,7 @@ export const FoodCard = ({ name, description, price, image, rating, category }) 
 // Premium Food Card - More detailed with rating, tag, and action buttons
 export const PremiumFoodCard = ({ name, description, price, image, rating, category, isPopular }) => {
   const { colorMode } = useColorMode();
-  const { t } = useTranslation();
+  const {t}=useI18nContext()
   
   return (
     <Box
@@ -136,7 +135,7 @@ export const PremiumFoodCard = ({ name, description, price, image, rating, categ
 // Minimalist Food Card - Clean design with horizontal layout
 export const MinimalistFoodCard = ({ name, description, price, image, prepTime, dietaryInfo }) => {
   const { colorMode } = useColorMode();
-  const { t } = useTranslation();
+  const {t}=useI18nContext()
   
   return (
     <Flex
@@ -211,7 +210,7 @@ export const CartCard = ({
   onRemove 
 }) => {
   const { colorMode } = useColorMode();
-  const { t } = useTranslation();
+  const {t}=useI18nContext()
 
   return (
     <Flex
@@ -325,7 +324,7 @@ export const CartCard = ({
 // Food Cards Demo Component
 export const FoodCards = () => {
   const { colorMode } = useColorMode();
-  const { t } = useTranslation();
+  const {t}=useI18nContext()
   
   return (
     <Box p={4} bg={colorMode === "dark" ? "brand.900" : "gray.50"}>
@@ -392,7 +391,7 @@ export const FeaturedItemCard = ({
   isRecommended 
 }) => {
   const { colorMode } = useColorMode();
-  const { t } = useTranslation();
+  const {t}=useI18nContext()
   
   return (
     <Box
@@ -506,7 +505,7 @@ export const OfferCard = ({
   isRecommended 
 }) => {
   const { colorMode } = useColorMode();
-  const { t } = useTranslation();
+  const {t, currentLanguage}=useI18nContext()
   
   return (
     <Box
@@ -619,7 +618,8 @@ export const OfferCard = ({
 //Plan card
 export const PlanCard = ({ name, description, image }) => {
   const { colorMode } = useColorMode();
-  const isArabic = getCurrentLanguage() === 'ar'; 
+  const {currentLanguage}=useI18nContext();
+  const isArabic = currentLanguage === 'ar'; 
   return (
     <Box 
       bgImage={`url(${image})`}
