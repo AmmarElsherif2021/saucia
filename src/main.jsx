@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import DynamicThemeProvider from "./Contexts/ThemeProvider.jsx";
 import { I18nProvider } from "./Contexts/I18nContext.jsx";
+import { UserProvider } from "./Contexts/UserContext.jsx";
 import { Navbar } from "./Components/Navbar/Navbar.jsx";
 import "./index.css";
 import { Spinner } from "@chakra-ui/react";
@@ -21,7 +22,7 @@ const MenuPage = React.lazy(() =>
 );
 
 const UserAccountPage = React.lazy(() => 
-  import("./Pages/UserAccountPage.jsx").then(module => ({
+  import("./Pages/Dashboard/UserAccountPage.jsx").then(module => ({
     default: module.UserAccountPage || module.default
   }))
 );
@@ -134,10 +135,12 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: "checkout",
+    path: "/checkout",
     element: (
       <Layout>
-        <CheckoutPage />
+        <Suspense fallback={<PageLoader />}>
+          <CheckoutPage />
+        </Suspense>
       </Layout>
     ),
   },
@@ -145,7 +148,9 @@ const router = createBrowserRouter([
     path: "/info",
     element: (
       <Layout>
-        <InfoPage />
+        <Suspense fallback={<PageLoader />}>
+          <InfoPage />
+        </Suspense>
       </Layout>
     ),
   },
@@ -153,7 +158,9 @@ const router = createBrowserRouter([
     path: "/about",
     element: (
       <Layout>
-        <AboutPage/>
+        <Suspense fallback={<PageLoader />}>
+          <AboutPage />
+        </Suspense>
       </Layout>
     ),
   },
@@ -161,7 +168,9 @@ const router = createBrowserRouter([
     path: "/premium",
     element: (
       <Layout>
-        <PremiumPage/>
+        <Suspense fallback={<PageLoader />}>
+          <PremiumPage/>
+        </Suspense>
       </Layout>
     ),
   },
@@ -169,7 +178,9 @@ const router = createBrowserRouter([
     path: "/premium/join",
     element: (
       <Layout>
-        <JoinPlanPage/>
+        <Suspense fallback={<PageLoader />}>
+          <JoinPlanPage/>
+        </Suspense>
       </Layout>
     ),
   },
@@ -181,7 +192,9 @@ ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <I18nProvider>
       <DynamicThemeProvider>
+        <UserProvider>
         <RouterProvider router={router} />
+        </UserProvider>
       </DynamicThemeProvider>
     </I18nProvider>
   </React.StrictMode>

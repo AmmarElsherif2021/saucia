@@ -5,8 +5,9 @@ import { PlanCard } from "../../Components/Cards";
 import { useColorMode } from '@chakra-ui/react';
 
 import { useI18nContext } from "../../Contexts/I18nContext";
+import { useTranslation } from "react-i18next";
 export const JoinPremiumTeaser=({explorePlans,newMember})=>{
-    const {t,currentLanguage}=useI18nContext();
+    const {t} =useTranslation()
     const plansCards= getPlans()
     return(
         <Box bg="white" p={6} borderRadius="md">
@@ -20,7 +21,7 @@ export const JoinPremiumTeaser=({explorePlans,newMember})=>{
                                         You can discover and join any of the daily meal plans based on your preferences.
                                         Enjoy exclusive benefits and features tailored for you!
                                     </Text>
-                                    <Button colorScheme="teal" onClick={explorePlans}>
+                                    <Button colorScheme="brand" onClick={explorePlans}>
                                         Explore plans
                                     </Button>
                                 </Box>

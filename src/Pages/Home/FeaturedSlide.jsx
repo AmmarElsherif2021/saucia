@@ -13,13 +13,14 @@ import { ItemsCarousel } from "../../Components/ItemsCarousel";
 import dessertPic from "../../assets/dessert.JPG";
 import fruitPic from "../../assets/fruits.JPG";
 import leavesPic from "../../assets/leaves.JPG";
+import { useTranslation } from "react-i18next";
 
 export const FEAT = ({
   trendingItems = [],
   recommendedItems = [],
   seasonalSpecials = [],
 }) => {
-  const { t } = useI18nContext()
+  const { t } = useTranslation();
 
   // Default items in case none are provided
   const defaultItems = [
@@ -135,7 +136,7 @@ export const FEAT = ({
 
 // Example usage
 export const FeaturedFoodsDemo = () => {
-  const { t } = useI18nContext()
+  const { t } = useTranslation()
 
   const sampleItems = [
     {

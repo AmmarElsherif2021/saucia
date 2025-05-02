@@ -4,22 +4,19 @@ import { useI18nContext } from './I18nContext';
 import createTheme from '../theme'; 
 
 const DynamicThemeProvider = ({ children }) => {
-  // Get language from context HERE (inside the component)
-  const { currentLanguage = 'en' } = useI18nContext() || {};
-
-  // Pass language to createTheme (no hooks inside createTheme)
-  const [currentTheme, setCurrentTheme] = useState(
+  const { currentLanguage, isI18nInitialized, isRTL } = useI18nContext();
+  
+  // Create theme with language parameter
+  const [currentTheme, setCurrentTheme] = useState(() => 
     createTheme({ language: currentLanguage })
   );
-
+  
+  // Update theme only when language changes and i18n is fully initialized
   useEffect(() => {
-    // Update theme when language changes
-    setCurrentTheme(createTheme({ language: currentLanguage }));
-    
-    // Update document direction
-    document.documentElement.lang = currentLanguage;
-    document.documentElement.dir = currentLanguage === "ar" ? "rtl" : "ltr";
-  }, [currentLanguage]);
+    if (isI18nInitialized) {
+      setCurrentTheme(createTheme({ language: currentLanguage }));
+    }
+  }, [currentLanguage, isI18nInitialized]);
 
   return (
     <ChakraProvider theme={currentTheme} resetCSS={false}>

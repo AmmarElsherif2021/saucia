@@ -82,7 +82,7 @@ return (
                     </RadioGroup>
                 </FormControl>
 
-                <Button type="submit" colorScheme="teal" width="full" onClick={setApplicationPhase}>
+                <Button type="submit" colorScheme="brand" width="full" onClick={setApplicationPhase}>
                     Submit
                 </Button>
             </VStack>

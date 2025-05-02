@@ -1,4 +1,4 @@
-import { extendTheme } from "@chakra-ui/react";
+import { extendTheme, Input } from "@chakra-ui/react";
 import "./index.css"
 import { useI18nContext } from "./Contexts/I18nContext";
 
@@ -620,7 +620,9 @@ const createTheme = (config) => {
             bg: props.colorMode === "dark" ? "brand.900" : "white",
             borderRadius: "xl",
             boxShadow: props.colorMode === "dark" ? "dark-lg" : "lg",
+            padding:"5rem"
             },
+         
         }),
         },
         CloseButton: {
@@ -688,6 +690,7 @@ const createTheme = (config) => {
     baseStyle: (props) => ({
       shadow:"none",
       color: props.colorMode === "dark" ? "white" : "brand.900",
+      
     }),
   },
   FormHelperText: {

@@ -33,6 +33,7 @@ import cheeseIcon from "../../assets/menu/cheese.svg";
 import extrasIcon from "../../assets/menu/extras.svg";
 import dressingsIcon from "../../assets/menu/dressings.svg";
 import saladIcon from "../../assets/menu/salad.svg";
+import { useTranslation } from "react-i18next";
 
 // Map category names to their respective icons
 const iconsMap = {
@@ -45,7 +46,7 @@ const iconsMap = {
 };
 
 export const MenuPage = () => {
-  const { t } = useI18nContext();
+  const { t } = useTranslation()
   const images = [
     greensA,
     greensB,

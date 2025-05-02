@@ -1,9 +1,10 @@
 import { Box, Heading, Text, Button, VStack } from '@chakra-ui/react';
 import premiumBg from '../../assets/PremiumBG.JPG';
 import { useI18nContext } from '../../Contexts/I18nContext';
+import { useTranslation } from 'react-i18next';
 
 export const GetPremium = () => {
-  const { t } = useI18nContext()
+  const { t } = useTranslation()
 
   return (
     <Box
@@ -28,10 +29,10 @@ export const GetPremium = () => {
           {t("premium.benefitsDescription")} {/* Translate "Enjoy exclusive benefits..." */}
         </Text>
         <VStack spacing={4}>
-          <Button colorScheme="teal" size="md" variant="solid">
+          <Button colorScheme="brand" size="md" variant="solid">
             {t("premium.joinWeeklyPlan")} {/* Translate "Join Weekly Plan" */}
           </Button>
-          <Button colorScheme="teal" size="md" variant="outline">
+          <Button colorScheme="brand" size="md" variant="outline">
             {t("premium.joinMonthlyPlan")} {/* Translate "Join Monthly Plan" */}
           </Button>
         </VStack>

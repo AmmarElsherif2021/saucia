@@ -17,7 +17,8 @@ import logoIcon from "../../assets/logo.png";
 import { ProfileDD } from "./profileDD.jsx";
 import { ProfileModal } from "./ProfileModal";
 import { useI18nContext } from "../../Contexts/I18nContext.jsx";
-
+import { useTranslation } from "react-i18next";
+import { useUser } from "../../Contexts/UserContext.jsx";
 export const Navbar = () => {
   const { colorMode, toggleColorMode } = useColorMode();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -26,9 +27,9 @@ export const Navbar = () => {
     onOpen: onProfileModalOpen,
     onClose: onProfileModalClose,
   } = useDisclosure();
-  const [language, setLanguage] = useState("EN");
-  const { t, currentLanguage, changeLanguage}= useI18nContext() 
-
+  const { currentLanguage, changeLanguage}= useI18nContext();
+  const {t}=useTranslation();
+  const { user, loading, logout } = useUser(); // use this
   const bgColor = useColorModeValue("white", "brand.900");
   const textColor = useColorModeValue("brand.900", "white");
 
@@ -57,17 +58,17 @@ export const Navbar = () => {
         <Flex display={{ base: "none", md: "flex"}} alignItems="center" gap={2} mx="20%" >
           <Link to="/cart">
             <Button variant="underlined" colorScheme="brand" size={"sm"}>
-              {t("navbar.cart")} {/* Translate "Cart" */}
+              {t("navbar.cart")} 
             </Button>
           </Link>
           <Link to="/menu">
             <Button variant="underlined" colorScheme="brand" size={"sm"}>
-              {t("navbar.menu")} {/* Translate "Menu" */}
+              {t("navbar.menu")} 
             </Button>
           </Link>
           <Link to="/about">
             <Button variant="underlined" colorScheme="brand" size={"sm"}>
-              {t("navbar.about")} {/* Translate "About" */}
+              {t("navbar.about")} 
             </Button>
           </Link>
           <Link to="/premium" onClick={onClose} >
@@ -79,7 +80,7 @@ export const Navbar = () => {
 
         {/* User Menu, Theme Toggle, and Language Toggle - Desktop */}
         <HStack spacing={2} display={{ base: "none", md: "flex" }}>
-          <ProfileDD />
+          <ProfileDD/>
           <IconButton
             aria-label={t("common.toggleDarkMode")} // Translate "Toggle Dark Mode"
             icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
@@ -87,7 +88,7 @@ export const Navbar = () => {
             variant="ghost"
           />
           <Button onClick={toggleLanguage} variant="ghost">
-            {language}
+            {currentLanguage}
           </Button>
         </HStack>
 
@@ -149,7 +150,7 @@ export const Navbar = () => {
               {t("navbar.profile")} 
             </Button>
             <Button onClick={toggleLanguage} variant="ghost" w="70px">
-              {language}
+              {currentLanguage}
             </Button>
           </VStack>
         </Box>

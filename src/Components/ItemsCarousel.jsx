@@ -4,6 +4,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import { useI18nContext } from "../Contexts/I18nContext";
 import { FeaturedItemCard } from "./Cards";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -37,7 +38,7 @@ export const ItemsCarousel = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsToShow, setItemsToShow] = useState(visibleCount);
   const { colorMode } = useColorMode();
-  const { t } = useI18nContext();
+  const { t } = useTranslation()
   const carouselRef = useRef(null);
 
   const totalSlides = Math.max(1, Math.ceil(items.length / itemsToShow));
@@ -116,7 +117,7 @@ export const ItemsCarousel = ({
       {visibleButtons && (
         <IconButton
           icon={<ChevronLeftIcon />}
-          aria-label={t("buttons.previous")} // Translated "Previous" button
+          aria-label={t("buttons.previous")}
           onClick={prevSlide}
           isDisabled={items.length <= itemsToShow}
           as={Button}

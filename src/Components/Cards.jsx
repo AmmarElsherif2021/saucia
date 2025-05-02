@@ -23,10 +23,11 @@ import saladIcon from "../assets/salad.svg";
 import { useI18nContext } from "../Contexts/I18nContext";
 import { AnimatedText } from "../Pages/Home/Hero";
 import saladImage from "../assets/premium/dailySalad.png"
+import { useTranslation } from "react-i18next";
 // Basic Food Card - Simple design with image, title, price
 export const FoodCard = ({ name, description, price, image, rating, category }) => {
   const { colorMode } = useColorMode();
-  const {t}=useI18nContext();
+  const {t}=useTranslation()
   
   return (
     <Box
@@ -63,7 +64,7 @@ export const FoodCard = ({ name, description, price, image, rating, category }) 
 // Premium Food Card - More detailed with rating, tag, and action buttons
 export const PremiumFoodCard = ({ name, description, price, image, rating, category, isPopular }) => {
   const { colorMode } = useColorMode();
-  const {t}=useI18nContext()
+  const {t}=useTranslation()
   
   return (
     <Box
@@ -135,7 +136,7 @@ export const PremiumFoodCard = ({ name, description, price, image, rating, categ
 // Minimalist Food Card - Clean design with horizontal layout
 export const MinimalistFoodCard = ({ name, description, price, image, prepTime, dietaryInfo }) => {
   const { colorMode } = useColorMode();
-  const {t}=useI18nContext()
+  const {t}=useTranslation()
   
   return (
     <Flex
@@ -210,7 +211,7 @@ export const CartCard = ({
   onRemove 
 }) => {
   const { colorMode } = useColorMode();
-  const {t}=useI18nContext()
+  const {t}=useTranslation()
 
   return (
     <Flex
@@ -324,7 +325,7 @@ export const CartCard = ({
 // Food Cards Demo Component
 export const FoodCards = () => {
   const { colorMode } = useColorMode();
-  const {t}=useI18nContext()
+  const {t}=useTranslation()
   
   return (
     <Box p={4} bg={colorMode === "dark" ? "brand.900" : "gray.50"}>
@@ -391,7 +392,7 @@ export const FeaturedItemCard = ({
   isRecommended 
 }) => {
   const { colorMode } = useColorMode();
-  const {t}=useI18nContext()
+  const {t}=useTranslation()
   
   return (
     <Box
@@ -505,7 +506,7 @@ export const OfferCard = ({
   isRecommended 
 }) => {
   const { colorMode } = useColorMode();
-  const {t, currentLanguage}=useI18nContext()
+  const {t}=useTranslation()
   
   return (
     <Box
@@ -700,7 +701,7 @@ export const PlanTinyCard = ({ recommendedPlan, handleChoosePlan, selected = fal
         <Box mt={8}>
          <Text>{recommendedPlan.description}</Text>
           <Box>
-              <Button mt="6" colorScheme="teal" onClick={handleChoosePlan}>
+              <Button mt="6" colorScheme="brand" onClick={handleChoosePlan}>
                   Select Plan
               </Button>
           </Box>

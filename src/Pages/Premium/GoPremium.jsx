@@ -39,7 +39,7 @@ export const GoPremium = () => {
                         voluptatem iusto animi eveniet nobis quidem!
                     </Text>
                     <Link to="/premium/join" style={{ textDecoration: "none" }}>
-                        <Button colorScheme="teal">Explore plans</Button>
+                        <Button colorScheme="brand">Explore plans</Button>
                     </Link>
                 </Flex>
                 <Flex direction="column" alignItems={"center"}>
@@ -67,7 +67,7 @@ export const GoPremium = () => {
                         voluptatem iusto animi eveniet nobis quidem!
                     </Text>
                     <Link to="/premium/join" style={{ textDecoration: "none" }}>
-                        <Button colorScheme="teal">Explore plans</Button>
+                        <Button colorScheme="brand">Explore plans</Button>
                     </Link>
                 </Flex>
             </Flex>

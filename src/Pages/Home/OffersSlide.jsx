@@ -5,10 +5,11 @@ import { useI18nContext } from "../../Contexts/I18nContext";
 import dessertPic from "../../assets/dessert.JPG";
 import fruitPic from "../../assets/fruits.JPG";
 import leavesPic from "../../assets/leaves.JPG";
+import { useTranslation } from "react-i18next";
 
 export const OffersSlide = ({ offers = [] }) => {
   const { colorMode } = useColorMode();
-  const { t } = useI18nContext();
+  const { t } = useTranslation()
 
   return (
     <Box p={4} bg="transparent">
@@ -24,7 +25,7 @@ export const OffersSlide = ({ offers = [] }) => {
 
 // Example Usage
 export const OffersSlideDemo = () => {
-  const { t } = useI18nContext()
+  const { t } = useTranslation()
 
   const sampleOffers = [
     {

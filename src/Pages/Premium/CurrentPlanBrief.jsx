@@ -26,7 +26,7 @@ export const CurrentPlanBrief=({userPlan})=>{
                                         <strong>Location:</strong> Home Delivery
                                     </Text>
                                 </Box>
-                                <Button mt={4} onClick={handlePlanToggle} colorScheme="teal">
+                                <Button mt={4} onClick={handlePlanToggle} colorScheme="brand">
                                 {showPlan ? "Hide Plan Details" : "Show Plan Details"}
                             </Button>
                             </Flex>

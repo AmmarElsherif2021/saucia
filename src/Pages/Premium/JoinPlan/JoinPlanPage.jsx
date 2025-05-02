@@ -19,7 +19,7 @@ const JoinPlanPage = () => {
     
     return (
         <>
-            <Heading as="h1" size="xl" textAlign="center" color="teal.500">
+            <Heading as="h1" size="xl" textAlign="center" color="brand.500">
                 Join Premium Plan
             </Heading>
             {applicationPhase=== 0 && <CommonQuestions setApplicationPhase={handlePhaseChange} />}

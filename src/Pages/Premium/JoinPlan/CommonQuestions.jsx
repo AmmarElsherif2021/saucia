@@ -84,7 +84,7 @@ return (
                     />
                 </FormControl>
 
-            <Button type={"button"} colorScheme="teal" width="full" onClick={setApplicationPhase}>
+            <Button type={"button"} colorScheme="brand" width="full" onClick={setApplicationPhase}>
                     next
                 </Button>
             </VStack>

@@ -6,6 +6,7 @@ import heroC from "../../assets/hero-3.JPG";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useI18nContext } from "../../Contexts/I18nContext";
+import { useTranslation } from "react-i18next";
 export const AnimatedText = ({ text, delay = 0 }) => {
   const [displayText, setDisplayText] = useState("");
   const count = useMotionValue(0);
@@ -62,7 +63,7 @@ const HeroCard = ({ name, description, image }) => {
 };
 
 export const Hero = () => {
-  const { t } = useI18nContext();
+  const { t } = useTranslation()
   const heroSlides = [
     {
       name: t("hero.welcomeToWebsite"), // Translate "Welcome to Our Website"

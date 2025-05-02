@@ -4,9 +4,10 @@ import loseWeightPlanImage from "../../assets/premium/loseWeight.png";
 import dailyMealPlanImage from "../../assets/premium/dailyMeal.png";
 import saladsPlanImage from "../../assets/premium/saladMeal.png"; 
 import {useI18nContext } from "../../Contexts/I18nContext";
+import { useTranslation } from "react-i18next";
 
 export const getPlans = () => {
-  const { t } = useI18nContext
+  const { t } = useTranslation()
 
   return ([
     {

@@ -14,6 +14,7 @@ import saladIcon from "../../assets/menu/salad.svg";
 import paymentIcon from "../../assets/payment.svg";
 import orderIcon from "../../assets/order.svg";
 import { useI18nContext } from "../../Contexts/I18nContext";
+import { useTranslation } from "react-i18next";
 
 const Section = ({ title, children, bgColor, titleColor, icon }) => {
   const { colorMode } = useColorMode();
@@ -42,7 +43,7 @@ const Section = ({ title, children, bgColor, titleColor, icon }) => {
 
 export const CheckoutPage = () => {
   const { colorMode } = useColorMode();
-  const { t } = useI18nContext();
+  const { t } = useTranslation();
 
   return (
     <Box

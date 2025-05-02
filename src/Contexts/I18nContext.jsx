@@ -1,67 +1,93 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import i18n from '../i18n';
-import { getCurrentLanguage } from '../i18n';
 import translations from '../dict.json';
+import { I18nextProvider } from 'react-i18next'; // Add this import
 
-// Create context
 const I18nContext = createContext();
 
 export const useI18nContext = () => useContext(I18nContext);
 
 export const I18nProvider = ({ children }) => {
-  const [isI18nInitialized, setIsI18nInitialized] = useState(i18n.isInitialized);
-  const [currentLanguage, setCurrentLanguage] = useState(getCurrentLanguage());
-
-  // Check if i18n is initialized on mount
-  useEffect(() => {
-    if (i18n.isInitialized) {
-      setIsI18nInitialized(true);
+  const getInitialLanguage = () => {
+    const storedLang = localStorage.getItem('i18nextLng');
+    if (storedLang && Object.keys(translations).includes(storedLang)) {
+      return storedLang;
     }
+    return i18n.language || 'en';
+  };
+
+  const [currentLanguage, setCurrentLanguage] = useState(getInitialLanguage());
+  const [isReady, setIsReady] = useState(false);
+
+  // Initialize i18n on mount
+  useEffect(() => {
+    const initializeI18n = async () => {
+      try {
+        if (!i18n.isInitialized) {
+          await i18n.init({
+            resources: translations,
+            lng: currentLanguage,
+            fallbackLng: 'en',
+            interpolation: { escapeValue: false },
+            keySeparator: '.',
+            ns: ['translation'],
+            defaultNS: 'translation'
+          });
+        }
+        setIsReady(true);
+      } catch (error) {
+        console.error('i18n initialization failed:', error);
+        setIsReady(true);
+      }
+    };
+
+    initializeI18n();
   }, []);
 
+  // Handle language changes
   useEffect(() => {
-    if (i18n.isInitialized && i18n.language !== currentLanguage) {
-      i18n.changeLanguage(currentLanguage);
-      
-      // Store language preference
-      localStorage.setItem('i18nextLng', currentLanguage);
-    }
-    
-    // Update document attributes for RTL/LTR support
-    if (i18n.isInitialized) {
-      document.documentElement.lang = currentLanguage;
-      document.documentElement.dir = currentLanguage === "ar" ? "rtl" : "ltr";
-    }
-  }, [currentLanguage, isI18nInitialized]);
+    const updateLanguage = async () => {
+      if (i18n.isInitialized && i18n.language !== currentLanguage) {
+        try {
+          await i18n.changeLanguage(currentLanguage);
+          localStorage.setItem('i18nextLng', currentLanguage);
+          document.documentElement.lang = currentLanguage;
+          document.documentElement.dir = currentLanguage === "ar" ? "rtl" : "ltr";
+        } catch (error) {
+          console.error('Language change failed:', error);
+        }
+      }
+    };
+
+    updateLanguage();
+  }, [currentLanguage]);
 
   const changeLanguage = (lang) => {
     if (Object.keys(translations).includes(lang)) {
       setCurrentLanguage(lang);
     } else {
-      console.warn(`Language '${lang}' not available, falling back to '${i18n.options.fallbackLng}'`);
-      setCurrentLanguage(i18n.options.fallbackLng);
+      console.warn(`Language '${lang}' not available, falling back to 'en'`);
+      setCurrentLanguage('en');
     }
   };
 
-  // Get available languages from dict.json
-  const availableLanguages = Object.keys(translations);
-
   const contextValue = {
-    isI18nInitialized,
+    isI18nInitialized: isReady,
     currentLanguage,
     changeLanguage,
-    availableLanguages,
-    t: i18n.t.bind(i18n),
+    availableLanguages: Object.keys(translations),
+    isRTL: currentLanguage === 'ar',
   };
 
-  // Show loading state while initializing
-  if (!isI18nInitialized) {
+  if (!isReady) {
     return <div>Loading translations...</div>;
   }
 
   return (
-    <I18nContext.Provider value={contextValue}>
-      {children}
-    </I18nContext.Provider>
+    <I18nextProvider i18n={i18n}>
+      <I18nContext.Provider value={contextValue}>
+        {children}
+      </I18nContext.Provider>
+    </I18nextProvider>
   );
 };

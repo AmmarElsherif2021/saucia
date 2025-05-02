@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import { useI18nContext } from "../Contexts/I18nContext";
+import { useTranslation } from "react-i18next";
 
 
 export const PROF = ({
@@ -23,7 +24,7 @@ export const PROF = ({
   onUpdateProfile,
 }) => {
   const navigate = useNavigate();
-  const { t } = useI18nContext()
+  const { t } = useTranslation()
 
   const handleGoToSettings = () => {
     navigate("/settings"); // Navigate to the settings page
@@ -47,7 +48,7 @@ export const PROF = ({
             <Text>{phoneNumber}</Text>
           </Box>
           <BTN
-            aria-label={t("editProfile")} // Use translation for aria-label
+            aria-label={t("editProfile")} 
             icon={<EditIcon />}
             ml={{ base: 0, md: "auto" }}
             mt={{ base: 4, md: 0 }}

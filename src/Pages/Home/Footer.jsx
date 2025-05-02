@@ -13,9 +13,10 @@ import {
 } from '@chakra-ui/react';
 
 import { useI18nContext } from '../../Contexts/I18nContext';
+import { useTranslation } from 'react-i18next';
 
 export const Footer = () => {
-    const { t } = useI18nContext()
+    const { t } = useTranslation()
 
     return (
         <Box as="footer" bg="gray.900" color="brand.400" py={10} px={6}>
@@ -82,7 +83,7 @@ export const Footer = () => {
                                 _focus={{ borderColor: 'brand.400' }}
                                 required
                             />
-                            <Button type="submit" size="md" colorScheme="teal">
+                            <Button type="submit" size="md" colorScheme="brand">
                                 {t("footer.subscribe")} {/* Translate "Subscribe" */}
                             </Button>
                         </HStack>

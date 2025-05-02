@@ -16,46 +16,48 @@ import {
 } from "@chakra-ui/react";
 import { FcGoogle } from "react-icons/fc";
 import "./Auth.css";
-
+import { useUser } from "../../Contexts/UserContext";
 const Auth = () => {
+  const { user, loading, logout } = useUser();
   const bgColor = useColorModeValue('white', 'gray.800');
   const textColor = useColorModeValue('gray.800', 'white');
   const cardBg = useColorModeValue('rgba(255, 255, 255, 0.95)', 'rgba(26, 32, 44, 0.95)');
-  const [user, setUser] = useState(null);
+  //const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  
+  // useEffect(() => {
+  //   const unsubscribe = onAuthStateChanged(auth, (user) => {
+  //     if (user) {
+  //       setUser(user);
+  //       console.log("User is logged in:",user.email);
+  //     } else {
+  //       setUser(null);
+  //       console.log("User is logged out");
+  //     }
+  //   });
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-        console.log("User is logged in:", user.email);
-      } else {
-        setUser(null);
-        console.log("User is logged out");
-      }
-    });
-
-    // Cleanup subscription
-    return () => unsubscribe();
-  }, []);
+  //   // Cleanup subscription
+  //   return () => unsubscribe();
+  // }, []);
 
   const signInWithGoogle = async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      console.log("User signed in:", result.user);
+      await signInWithPopup(auth, googleProvider);
+      // Context will auto-update through onAuthStateChanged listener
+      navigate('/');  // Redirect after successful login
     } catch (error) {
       console.error("Error signing in with Google:", error.message);
     }
   };
 
-  const logout = async () => {
-    try {
-      await signOut(auth);
-      console.log("User signed out");
-    } catch (error) {
-      console.error("Error signing out:", error.message);
-    }
-  };
+  // const logout = async () => {
+  //   try {
+  //     await signOut(auth);
+  //     console.log("User signed out");
+  //   } catch (error) {
+  //     console.error("Error signing out:", error.message);
+  //   }
+  // };
 
   return (
     <div className="auth-container">

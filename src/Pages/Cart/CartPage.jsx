@@ -10,11 +10,13 @@ import cartBg from "../../assets/CartBg.png";
 import { CRT } from "../../Components/Cart";
 import { useNavigate } from "react-router";
 import { useI18nContext } from "../../Contexts/I18nContext";
+import { useTranslation } from "react-i18next";
 
 export const CartPage = () => {
   const { colorMode } = useColorMode();
   const navigate = useNavigate();
-  const { t, currentLanguage}=useI18nContext();
+  const {currentLanguage}=useI18nContext()
+  const {t}=useTranslation();
 
   // Temporary cart items with English and Arabic data
   const [cartItems, setCartItems] = useState([
@@ -95,7 +97,7 @@ export const CartPage = () => {
       <CRT
         items={cartItems.map((item) => ({
           ...item,
-          name: item.name[i18n.language], // Use the appropriate language for the item name
+          name: item.name[currentLanguage], 
         }))}
         totalPrice={totalPrice}
         onIncrease={handleIncrease}

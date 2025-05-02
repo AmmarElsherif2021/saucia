@@ -1,0 +1,122 @@
+[
+  {
+    "name": "Heaven fruit salad dish",
+    "price": 13,
+    "isPremium": "False",
+    "plan": null,
+    "kcal": 150,
+    "protein": 0,
+    "carb": 0,
+    "ingredients": "Mango, Apple, Orange, Pineapple, Blueberry, Strawberry"
+  },
+  {
+    "name": "SaladSaucia fruit salad dish",
+    "price": 15,
+    "isPremium": "False",
+    "plan": null,
+    "kcal": 116,
+    "protein": 0,
+    "carb": 0,
+    "ingredients": "Kiwi, Melon, Watermelon, Mango, Mixed Grapes"
+  },
+  {
+    "name": "Salad Saucia",
+    "price": 35,
+    "isPremium": "False",
+    "plan": null,
+    "kcal": 687,
+    "protein": 0,
+    "carb": 0,
+    "ingredients": "Custom blend of fresh ingredients with our signature dressing"
+  },
+  {
+    "name": "Avocado & Coriander Salad",
+    "price": 32,
+    "isPremium": "False",
+    "plan": null,
+    "kcal": 306,
+    "protein": 0,
+    "carb": 0,
+    "ingredients": "Fresh avocado with coriander and complementary ingredients"
+  },
+  {
+    "name": "Traditional Caesar Salad",
+    "price": 35,
+    "isPremium": "False",
+    "plan": null,
+    "kcal": 459,
+    "protein": 0,
+    "carb": 0,
+    "ingredients": "Lettuce, croutons, parmesan cheese, Caesar dressing"
+  },
+  {
+    "name": "Mexican Salad",
+    "price": 34,
+    "isPremium": "False",
+    "plan": null,
+    "kcal": 331,
+    "protein": 0,
+    "carb": 0,
+    "ingredients": "Lettuce, grilled peppers, cucumber, tomatoes, black olives, grilled broccoli, cheese, quinoa"
+  },
+  {
+    "name": "Bustan Salad",
+    "price": 25,
+    "isPremium": "False",
+    "plan": null,
+    "kcal": 379,
+    "protein": 0,
+    "carb": 0,
+    "ingredients": "Garden-fresh vegetables with house dressing"
+  },
+  {
+    "name": "Cold Pasta Salad",
+    "price": 34,
+    "isPremium": "False",
+    "plan": null,
+    "kcal": 397,
+    "protein": 0,
+    "carb": 0,
+    "ingredients": "Chilled pasta with fresh vegetables and light dressing"
+  },
+  {
+    "name": "Fitness Gym Salad",
+    "price": 24,
+    "isPremium": "True",
+    "plan": "fitness",
+    "kcal": 535,
+    "protein": 0,
+    "carb": 0,
+    "ingredients": "Protein-rich ingredients optimized for fitness enthusiasts"
+  },
+  {
+    "name": "1001 Nights Salad",
+    "price": 24,
+    "isPremium": "False",
+    "plan": null,
+    "kcal": 424,
+    "protein": 0,
+    "carb": 0,
+    "ingredients": "Middle Eastern inspired salad with traditional flavors"
+  },
+  {
+    "name": "Antioxidant Salad",
+    "price": 32,
+    "isPremium": "False",
+    "plan": null,
+    "kcal": 392,
+    "protein": 0,
+    "carb": 0,
+    "ingredients": "Blend of antioxidant-rich fruits and vegetables"
+  },
+  {
+    "name": "Protein Salad",
+    "price": 25,
+    "isPremium": "True",
+    "plan": "fitness",
+    "kcal": 301,
+    "protein": 0,
+    "carb": 0,
+    "ingredients": "Lettuce, arugula, grilled eggplant, tomatoes, onions, grilled peppers, chicken, crispy potatoes, sunflower seeds"
+  }
+]
