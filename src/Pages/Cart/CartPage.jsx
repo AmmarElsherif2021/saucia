@@ -12,7 +12,7 @@ import { useNavigate } from "react-router";
 import { useI18nContext } from "../../Contexts/I18nContext";
 import { useTranslation } from "react-i18next";
 
-export const CartPage = () => {
+const CartPage = () => {
   const { colorMode } = useColorMode();
   const navigate = useNavigate();
   const {currentLanguage}=useI18nContext()
@@ -109,3 +109,4 @@ export const CartPage = () => {
     </Box>
   );
 };
+export default CartPage

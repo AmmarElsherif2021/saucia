@@ -10,66 +10,48 @@ import { Spinner } from "@chakra-ui/react";
 
 // Modified lazy imports with proper export handling
 const HomePage = React.lazy(() => 
-  import("./Pages/Home/HomePage.jsx").then(module => ({
-    default: module.HomePage || module.default
-  }))
+  import("./Pages/Home/HomePage.jsx")
 );
 
 const MenuPage = React.lazy(() => 
-  import("./Pages/Menu/MenuPage.jsx").then(module => ({
-    default: module.MenuPage || module.default
-  }))
+  import("./Pages/Menu/MenuPage.jsx")
 );
 
 const UserAccountPage = React.lazy(() => 
-  import("./Pages/Dashboard/UserAccountPage.jsx").then(module => ({
-    default: module.UserAccountPage || module.default
-  }))
+  import("./Pages/Dashboard/UserAccountPage.jsx")
 );
 
 const CartPage = React.lazy(() => 
-  import("./Pages/Cart/CartPage.jsx").then(module => ({
-    default: module.CartPage || module.default
-  }))
+  import("./Pages/Cart/CartPage.jsx")
 );
 
 const CheckoutPage = React.lazy(() => 
-  import("./Pages/Checkout/CheckoutPage.jsx").then(module => ({
-    default: module.CheckoutPage || module.default
-  }))
+  import("./Pages/Checkout/CheckoutPage.jsx")
 );
 
 const InfoPage = React.lazy(() => 
-  import("./Pages/InfoPage.jsx").then(module => ({
-    default: module.InfoPage || module.default
-  }))
+  import("./Pages/InfoPage.jsx")
 );
 
 const AboutPage = React.lazy(() => 
-  import("./Pages/About/AboutPage.jsx").then(module => ({
-    default: module.AboutPage || module.default
-  }))
+  import("./Pages/About/AboutPage.jsx")
 );
 
 const PremiumPage = React.lazy(() => 
-  import("./Pages/Premium/PremiumPage.jsx").then(module => ({
-    default: module.PremiumPage || module.default
-  }))
+  import("./Pages/Premium/PremiumPage.jsx")
 );
 
 const Auth = React.lazy(() => 
-  import("./Pages/Auth/Auth.jsx").then(module => ({
-    default: module.Auth || module.default
-  }))
+  import("./Pages/Auth/Auth.jsx")
 );
-
+const Admin = React.lazy(() => 
+  import("./Pages/Auth/Admin.jsx")
+);
 const JoinPlanPage = React.lazy(() => 
-  import("./Pages/Premium/JoinPlan/JoinPlanPage.jsx").then(module => ({
-    default: module.JoinPlanPage || module.default
-  }))
+  import("./Pages/Premium/JoinPlan/JoinPlanPage.jsx")
 );
 
-// Rest of the file remains unchanged
+
 const PageLoader = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
     <Spinner/>
@@ -101,6 +83,14 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageLoader />}>
         <Auth />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/admin",
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <Admin/>
       </Suspense>
     ),
   },

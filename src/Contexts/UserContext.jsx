@@ -1,64 +1,78 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { auth } from '../../firebaseConfig';
-import { onAuthStateChanged } from 'firebase/auth';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "../../firebaseConfig"; // Import initialized Firebase services
+import { getUserInfo } from "../API/users"; // Import Firestore API calls from users.js
 
+// Create context
 const UserContext = createContext();
 
-// UserContext.jsx
 export const UserProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-  
-    useEffect(() => {
-      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-        setLoading(true);
-        if (firebaseUser) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Logout function
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
+  // Auth state listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          // Get user data from Firestore via users.js
+          const userData = await getUserInfo(firebaseUser.uid);
+
+          // Combine Firebase Auth user with Firestore user data
           setUser({
             uid: firebaseUser.uid,
             email: firebaseUser.email,
             displayName: firebaseUser.displayName,
             photoURL: firebaseUser.photoURL,
             emailVerified: firebaseUser.emailVerified,
-            providerData: firebaseUser.providerData,
-            planTitle: "Premium Plan",
-              nextMeal: {
-                    time: "12:30 PM",
-                    location: "Cafeteria",
-        },
-        timeRemaining: 75, 
-        dietaryPreferences: [],  
-        allergies: []              
+            // Include Firestore data if available
+            ...(userData || {}),
           });
-        } else {
+        } catch (error) {
+          console.error("Error in auth state change:", error);
           setUser(null);
         }
-        setLoading(false);
-      });
-  
-      return unsubscribe;
-    }, []);
-  
-    const logout = async () => {
-      try {
-        await auth.signOut();
-        // No need to manually setUser(null) - listener will handle it
-      } catch (error) {
-        console.error('Logout error:', error);
+      } else {
+        setUser(null);
       }
-    };
-  
-    return (
-      <UserContext.Provider value={{ user, loading, logout }}>
-        {!loading && children}
-        {loading && <div>Loading user state...</div>}
-      </UserContext.Provider>
-    );
+      setLoading(false);
+    });
+
+    // Cleanup subscription
+    return () => unsubscribe();
+  }, []);
+
+  const contextValue = {
+    user,
+    setUser,
+    logout,
+    loading,
   };
 
+  return (
+    <UserContext.Provider value={contextValue}>
+      {children}
+    </UserContext.Provider>
+  );
+};
+
+// Custom hook to use the user context
 export const useUser = () => {
   const context = useContext(UserContext);
-  if (!context) {
-    throw new Error('useUser must be used within a UserProvider');
+  if (context === undefined) {
+    throw new Error("useUser must be used within a UserProvider");
   }
   return context;
 };
+
+export default UserContext;

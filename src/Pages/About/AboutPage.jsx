@@ -1,6 +1,7 @@
 import { Box, Heading, Text } from "@chakra-ui/react";
 import { useI18nContext } from "../../Contexts/I18nContext";
 import { useTranslation } from "react-i18next";
+import ApiTester from "../../API/APITester";
 
 const StylizedBox = ({ colorScheme, children }) => {
   return (
@@ -10,13 +11,14 @@ const StylizedBox = ({ colorScheme, children }) => {
   );
 };
 
-export const AboutPage = () => {
+const AboutPage = () => {
   const {currentLanguage}=useI18nContext();
   const {t}=useTranslation();
   const isArabic = currentLanguage === "ar"; // Check if the current language is Arabic
 
   return (
     <div>
+      <ApiTester/>
       <StylizedBox colorScheme={"brand"}>
         <Heading as="h1" size="lg" mb="4">
           {t("about.aboutUs")} {/* Translate "About Us" */}
@@ -50,3 +52,4 @@ export const AboutPage = () => {
     </div>
   );
 };
+export default AboutPage;

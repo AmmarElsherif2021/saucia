@@ -6,7 +6,7 @@ import {GetPremium} from "./GetPremium";
 import { Footer } from "./Footer";
 import { useUser } from "../../Contexts/UserContext";
 import { useEffect } from "react";
-export const HomePage = () => {
+ const HomePage = () => {
   const { user, loading, logout }=useUser();
   useEffect(()=>{
     console.log(`From home user is ${user?.displayName}`)
@@ -25,4 +25,5 @@ export const HomePage = () => {
       </Box>
 
   );
-}
+};
+export default HomePage

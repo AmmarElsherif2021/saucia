@@ -40,8 +40,7 @@ const Section = ({ title, children, bgColor, titleColor, icon }) => {
     </Box>
   );
 };
-
-export const CheckoutPage = () => {
+const CheckoutPage = () => {
   const { colorMode } = useColorMode();
   const { t } = useTranslation();
 
@@ -204,3 +203,4 @@ export const CheckoutPage = () => {
     </Box>
   );
 };
+export default CheckoutPage;

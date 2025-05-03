@@ -1,10 +1,11 @@
-import { AdminDashboard } from "./Admindashboard"
+//import { AdminDashboard } from "./Admindashboard"
 import { UserDashboard } from "./UserDashboard"
 //<UserDashboard/>
-export const UserAccountPage=()=>{
+const UserAccountPage=()=>{
     return(
         <>
-         <AdminDashboard/>
+         <UserDashboard/>
         </>
     )
-}
+};
+export default UserAccountPage

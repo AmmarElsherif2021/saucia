@@ -11,7 +11,7 @@ import saladsPlanImage from "../../assets/premium/saladMeal.png";
 import { GoPremium } from './GoPremium';
 import { CurrentPlanBrief } from './CurrentPlanBrief';
 
-export const PremiumPage = () => {
+const PremiumPage = () => {
      
     //explorePlans
     const plansCards = getPlans()
@@ -45,3 +45,4 @@ export const PremiumPage = () => {
         </Box>
     );
 };
+export default PremiumPage;

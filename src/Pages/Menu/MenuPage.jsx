@@ -45,7 +45,7 @@ const iconsMap = {
   "Signature Salads": saladIcon,
 };
 
-export const MenuPage = () => {
+const MenuPage = () => {
   const { t } = useTranslation()
   const images = [
     greensA,
@@ -148,3 +148,4 @@ export const MenuPage = () => {
     </Box>
   );
 };
+export default MenuPage
