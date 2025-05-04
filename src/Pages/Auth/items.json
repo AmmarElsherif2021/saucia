@@ -2,7 +2,7 @@
   {
     "name": "Cucumber",
     "section": "Vegetables",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 4,
     "kcal": 16,
     "protein": 0
@@ -10,7 +10,7 @@
   {
     "name": "Broccoli",
     "section": "Vegetables",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 4,
     "kcal": 10,
     "protein": 0
@@ -18,7 +18,7 @@
   {
     "name": "Halbino",
     "section": "Vegetables",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 4,
     "kcal": 5,
     "protein": 0
@@ -26,7 +26,7 @@
   {
     "name": "Cabbage",
     "section": "Vegetables",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 4,
     "kcal": 15,
     "protein": 0
@@ -34,7 +34,7 @@
   {
     "name": "Red Cabbage",
     "section": "Vegetables",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 4,
     "kcal": 10,
     "protein": 0
@@ -42,7 +42,7 @@
   {
     "name": "Carrot",
     "section": "Vegetables",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 4,
     "kcal": 20,
     "protein": 0
@@ -50,7 +50,7 @@
   {
     "name": "Sweet Potato",
     "section": "Vegetables",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 4,
     "kcal": 10,
     "protein": 0
@@ -58,7 +58,7 @@
   {
     "name": "Corn",
     "section": "Vegetables",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 4,
     "kcal": 5,
     "protein": 0
@@ -66,7 +66,7 @@
   {
     "name": "Cherry Tomatoes",
     "section": "Vegetables",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 4,
     "kcal": 15,
     "protein": 0
@@ -74,7 +74,7 @@
   {
     "name": "Olives",
     "section": "Vegetables",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 4,
     "kcal": 75,
     "protein": 0
@@ -82,7 +82,7 @@
   {
     "name": "Bell Peppers",
     "section": "Vegetables",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 4,
     "kcal": 10,
     "protein": 0
@@ -90,7 +90,7 @@
   {
     "name": "Onions",
     "section": "Vegetables",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 4,
     "kcal": 12,
     "protein": 0
@@ -98,7 +98,7 @@
   {
     "name": "Red Beans",
     "section": "Vegetables",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 4,
     "kcal": 100,
     "protein": 0
@@ -106,7 +106,7 @@
   {
     "name": "Avocado fruit",
     "section": "Toppings",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 3,
     "kcal": 48,
     "protein": 0
@@ -114,7 +114,7 @@
   {
     "name": "Pumpkin",
     "section": "Toppings",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 3,
     "kcal": 20,
     "protein": 0
@@ -122,7 +122,7 @@
   {
     "name": "Eggplant",
     "section": "Toppings",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 3,
     "kcal": 20,
     "protein": 0
@@ -130,7 +130,7 @@
   {
     "name": "Cheddar",
     "section": "Toppings",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 3,
     "kcal": 50,
     "protein": 0
@@ -138,7 +138,7 @@
   {
     "name": "Egg",
     "section": "Toppings",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 3,
     "kcal": 77,
     "protein": 0
@@ -146,7 +146,7 @@
   {
     "name": "Lentils",
     "section": "Toppings",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 3,
     "kcal": 150,
     "protein": 0
@@ -154,7 +154,7 @@
   {
     "name": "Bulgur",
     "section": "Toppings",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 3,
     "kcal": 75,
     "protein": 0
@@ -162,7 +162,7 @@
   {
     "name": "Quinoa",
     "section": "Toppings",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 3,
     "kcal": 120,
     "protein": 0
@@ -170,7 +170,7 @@
   {
     "name": "Chickpeas",
     "section": "Toppings",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 3,
     "kcal": 75,
     "protein": 0
@@ -178,7 +178,7 @@
   {
     "name": "Arugula",
     "section": "Greens",
-    "item_charge": 6,
+    "price": 6,
     "free_count": 2,
     "kcal": 12.5,
     "protein": 0
@@ -186,7 +186,7 @@
   {
     "name": "Lettuce",
     "section": "Greens",
-    "item_charge": 6,
+    "price": 6,
     "free_count": 2,
     "kcal": 17,
     "protein": 0
@@ -194,7 +194,7 @@
   {
     "name": "Mixed Lettuce",
     "section": "Greens",
-    "item_charge": 6,
+    "price": 6,
     "free_count": 2,
     "kcal": 17,
     "protein": 0
@@ -202,7 +202,7 @@
   {
     "name": "Kale",
     "section": "Greens",
-    "item_charge": 6,
+    "price": 6,
     "free_count": 2,
     "kcal": 17,
     "protein": 0
@@ -210,7 +210,7 @@
   {
     "name": "Chicken",
     "section": "Protein",
-    "item_charge": 7,
+    "price": 7,
     "free_count": 0,
     "kcal": 120,
     "protein": 0
@@ -218,7 +218,7 @@
   {
     "name": "Shrimp",
     "section": "Protein",
-    "item_charge": 10,
+    "price": 10,
     "free_count": 0,
     "kcal": 80,
     "protein": 0
@@ -226,7 +226,7 @@
   {
     "name": "Tuna",
     "section": "Protein",
-    "item_charge": 5,
+    "price": 5,
     "free_count": 0,
     "kcal": 100,
     "protein": 0
@@ -234,7 +234,7 @@
   {
     "name": "Salmon",
     "section": "Protein",
-    "item_charge": 20,
+    "price": 20,
     "free_count": 0,
     "kcal": 100,
     "protein": 0
@@ -242,7 +242,7 @@
   {
     "name": "Parmesan",
     "section": "Cheese",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 0,
     "kcal": 180,
     "protein": 0
@@ -250,7 +250,7 @@
   {
     "name": "Halloumi",
     "section": "Cheese",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 0,
     "kcal": 180,
     "protein": 0
@@ -258,7 +258,7 @@
   {
     "name": "Feta",
     "section": "Cheese",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 0,
     "kcal": 180,
     "protein": 0
@@ -266,7 +266,7 @@
   {
     "name": "Cheddar cheese",
     "section": "Cheese",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 0,
     "kcal": 180,
     "protein": 0
@@ -274,7 +274,7 @@
   {
     "name": "Apple fruit",
     "section": "Fruits",
-    "item_charge": 3,
+    "price": 3,
     "free_count": 1,
     "kcal": 26,
     "protein": 0
@@ -282,7 +282,7 @@
   {
     "name": "Banana",
     "section": "Fruits",
-    "item_charge": 3,
+    "price": 3,
     "free_count": 1,
     "kcal": 42,
     "protein": 0
@@ -290,7 +290,7 @@
   {
     "name": "Strawberry fruit",
     "section": "Fruits",
-    "item_charge": 3,
+    "price": 3,
     "free_count": 1,
     "kcal": 16,
     "protein": 0
@@ -298,7 +298,7 @@
   {
     "name": "Watermelon fruit",
     "section": "Fruits",
-    "item_charge": 3,
+    "price": 3,
     "free_count": 1,
     "kcal": 10,
     "protein": 0
@@ -306,7 +306,7 @@
   {
     "name": "Orange fruit",
     "section": "Fruits",
-    "item_charge": 3,
+    "price": 3,
     "free_count": 1,
     "kcal": 24,
     "protein": 0
@@ -314,7 +314,7 @@
   {
     "name": "Melon fruit",
     "section": "Fruits",
-    "item_charge": 3,
+    "price": 3,
     "free_count": 1,
     "kcal": 34,
     "protein": 0
@@ -322,7 +322,7 @@
   {
     "name": "salad saucia",
     "section": "Dressings",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 1,
     "kcal": 70,
     "protein": 0
@@ -330,7 +330,7 @@
   {
     "name": "Caesar",
     "section": "Dressings",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 1,
     "kcal": 88,
     "protein": 0
@@ -338,7 +338,7 @@
   {
     "name": "Mexican",
     "section": "Dressings",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 1,
     "kcal": 40,
     "protein": 0
@@ -346,7 +346,7 @@
   {
     "name": "Balsamic",
     "section": "Dressings",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 1,
     "kcal": 75,
     "protein": 0
@@ -354,7 +354,7 @@
   {
     "name": "Honey & Yogurt & Mustard",
     "section": "Dressings",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 1,
     "kcal": 50,
     "protein": 0
@@ -362,7 +362,7 @@
   {
     "name": "Lemon & Sumac & Olive Oil",
     "section": "Dressings",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 1,
     "kcal": 55,
     "protein": 0
@@ -370,7 +370,7 @@
   {
     "name": "Orange & Olive Oil",
     "section": "Dressings",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 1,
     "kcal": 60,
     "protein": 0
@@ -378,7 +378,7 @@
   {
     "name": "Pomegranate molasses",
     "section": "Dressings",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 1,
     "kcal": 95,
     "protein": 0
@@ -386,7 +386,7 @@
   {
     "name": "Taheena",
     "section": "Dressings",
-    "item_charge": 2,
+    "price": 2,
     "free_count": 1,
     "kcal": 30,
     "protein": 0
@@ -394,7 +394,7 @@
   {
     "name": "Roasted Corn",
     "section": "Nuts",
-    "item_charge": 0,
+    "price": 0,
     "free_count": 1,
     "kcal": 47,
     "protein": 0
@@ -402,7 +402,7 @@
   {
     "name": "Toasted bread cubes",
     "section": "Nuts",
-    "item_charge": 0,
+    "price": 0,
     "free_count": 1,
     "kcal": 15,
     "protein": 0
@@ -410,7 +410,7 @@
   {
     "name": "Crunchy Potato",
     "section": "Nuts",
-    "item_charge": 0,
+    "price": 0,
     "free_count": 1,
     "kcal": 63,
     "protein": 0
@@ -418,7 +418,7 @@
   {
     "name": "Dried figs",
     "section": "Nuts",
-    "item_charge": 0,
+    "price": 0,
     "free_count": 1,
     "kcal": 63,
     "protein": 0
@@ -426,7 +426,7 @@
   {
     "name": "caramelized walnuts",
     "section": "Nuts",
-    "item_charge": 0,
+    "price": 0,
     "free_count": 1,
     "kcal": 71,
     "protein": 0
@@ -434,7 +434,7 @@
   {
     "name": "Sumac",
     "section": "Nuts",
-    "item_charge": 0,
+    "price": 0,
     "free_count": 1,
     "kcal": 56,
     "protein": 0
@@ -442,7 +442,7 @@
   {
     "name": "flax seeds",
     "section": "Nuts",
-    "item_charge": 0,
+    "price": 0,
     "free_count": 1,
     "kcal": 55,
     "protein": 0
@@ -450,7 +450,7 @@
   {
     "name": "Pumpkin Seeds",
     "section": "Nuts",
-    "item_charge": 0,
+    "price": 0,
     "free_count": 1,
     "kcal": 56,
     "protein": 0
@@ -458,7 +458,7 @@
   {
     "name": "Chia Seeds",
     "section": "Nuts",
-    "item_charge": 0,
+    "price": 0,
     "free_count": 1,
     "kcal": 60,
     "protein": 0
@@ -466,7 +466,7 @@
   {
     "name": "Sesame",
     "section": "Nuts",
-    "item_charge": 0,
+    "price": 0,
     "free_count": 1,
     "kcal": 15,
     "protein": 0
@@ -474,7 +474,7 @@
   {
     "name": "Avocado",
     "section": "salad-fruits",
-    "item_charge": 4,
+    "price": 4,
     "free_count": 5,
     "kcal": 48,
     "protein": 0
@@ -482,7 +482,7 @@
   {
     "name": "Kiwi",
     "section": "salad-fruits",
-    "item_charge": 4,
+    "price": 4,
     "free_count": 5,
     "kcal": 26,
     "protein": 0
@@ -490,7 +490,7 @@
   {
     "name": "Grapes (Green)",
     "section": "salad-fruits",
-    "item_charge": 4,
+    "price": 4,
     "free_count": 5,
     "kcal": 34,
     "protein": 0
@@ -498,7 +498,7 @@
   {
     "name": "Grapes (Red)",
     "section": "salad-fruits",
-    "item_charge": 4,
+    "price": 4,
     "free_count": 5,
     "kcal": 34,
     "protein": 0
@@ -506,7 +506,7 @@
   {
     "name": "Apple",
     "section": "salad-fruits",
-    "item_charge": 4,
+    "price": 4,
     "free_count": 5,
     "kcal": 26,
     "protein": 0
@@ -514,7 +514,7 @@
   {
     "name": "Watermelon",
     "section": "salad-fruits",
-    "item_charge": 4,
+    "price": 4,
     "free_count": 5,
     "kcal": 10,
     "protein": 0
@@ -522,7 +522,7 @@
   {
     "name": "Strawberry",
     "section": "salad-fruits",
-    "item_charge": 4,
+    "price": 4,
     "free_count": 5,
     "kcal": 16,
     "protein": 0
@@ -530,7 +530,7 @@
   {
     "name": "Blueberry",
     "section": "salad-fruits",
-    "item_charge": 4,
+    "price": 4,
     "free_count": 5,
     "kcal": 16,
     "protein": 0
@@ -538,7 +538,7 @@
   {
     "name": "Blackberry",
     "section": "salad-fruits",
-    "item_charge": 4,
+    "price": 4,
     "free_count": 5,
     "kcal": 25,
     "protein": 0
@@ -546,7 +546,7 @@
   {
     "name": "Pomegranate",
     "section": "salad-fruits",
-    "item_charge": 4,
+    "price": 4,
     "free_count": 5,
     "kcal": 42,
     "protein": 0
@@ -554,7 +554,7 @@
   {
     "name": "Orange",
     "section": "salad-fruits",
-    "item_charge": 4,
+    "price": 4,
     "free_count": 5,
     "kcal": 24,
     "protein": 0
@@ -562,7 +562,7 @@
   {
     "name": "Mango",
     "section": "salad-fruits",
-    "item_charge": 4,
+    "price": 4,
     "free_count": 5,
     "kcal": 32,
     "protein": 0
@@ -570,7 +570,7 @@
   {
     "name": "Melon",
     "section": "salad-fruits",
-    "item_charge": 4,
+    "price": 4,
     "free_count": 5,
     "kcal": 34,
     "protein": 0
@@ -578,7 +578,7 @@
   {
     "name": "Pineapple",
     "section": "salad-fruits",
-    "item_charge": 4,
+    "price": 4,
     "free_count": 5,
     "kcal": 25,
     "protein": 0

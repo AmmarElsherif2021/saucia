@@ -4,63 +4,54 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import DynamicThemeProvider from "./Contexts/ThemeProvider.jsx";
 import { I18nProvider } from "./Contexts/I18nContext.jsx";
 import { UserProvider } from "./Contexts/UserContext.jsx";
+import { AuthProvider } from "./Contexts/AuthContext.jsx";
 import { Navbar } from "./Components/Navbar/Navbar.jsx";
 import "./index.css";
 import { Spinner } from "@chakra-ui/react";
 
-// Modified lazy imports with proper export handling
-const HomePage = React.lazy(() => 
-  import("./Pages/Home/HomePage.jsx")
-);
-
-const MenuPage = React.lazy(() => 
-  import("./Pages/Menu/MenuPage.jsx")
-);
-
-const UserAccountPage = React.lazy(() => 
-  import("./Pages/Dashboard/UserAccountPage.jsx")
-);
-
-const CartPage = React.lazy(() => 
-  import("./Pages/Cart/CartPage.jsx")
-);
-
-const CheckoutPage = React.lazy(() => 
-  import("./Pages/Checkout/CheckoutPage.jsx")
-);
-
-const InfoPage = React.lazy(() => 
-  import("./Pages/InfoPage.jsx")
-);
-
-const AboutPage = React.lazy(() => 
-  import("./Pages/About/AboutPage.jsx")
-);
-
-const PremiumPage = React.lazy(() => 
-  import("./Pages/Premium/PremiumPage.jsx")
-);
-
-const Auth = React.lazy(() => 
-  import("./Pages/Auth/Auth.jsx")
-);
-const Admin = React.lazy(() => 
-  import("./Pages/Auth/Admin.jsx")
-);
-const JoinPlanPage = React.lazy(() => 
-  import("./Pages/Premium/JoinPlan/JoinPlanPage.jsx")
-);
-
+// Lazy-loaded pages
+const HomePage = React.lazy(() => import("./Pages/Home/HomePage.jsx"));
+const MenuPage = React.lazy(() => import("./Pages/Menu/MenuPage.jsx"));
+const UserAccountPage = React.lazy(() => import("./Pages/Dashboard/UserAccountPage.jsx"));
+const CartPage = React.lazy(() => import("./Pages/Cart/CartPage.jsx"));
+const CheckoutPage = React.lazy(() => import("./Pages/Checkout/CheckoutPage.jsx"));
+const InfoPage = React.lazy(() => import("./Pages/InfoPage.jsx"));
+const AboutPage = React.lazy(() => import("./Pages/About/AboutPage.jsx"));
+const PremiumPage = React.lazy(() => import("./Pages/Premium/PremiumPage.jsx"));
+const Auth = React.lazy(() => import("./Pages/Auth/Auth.jsx"));
+const Admin = React.lazy(() => import("./Pages/Auth/Admin.jsx"));
+const JoinPlanPage = React.lazy(() => import("./Pages/Premium/JoinPlan/JoinPlanPage.jsx"));
 
 const PageLoader = () => (
-  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-    <Spinner/>
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "100vh",
+    }}
+  >
+    <Spinner />
   </div>
 );
 
 const Layout = ({ children }) => {
   return (
-    <div style={{ backgroundColor: "white", width: "100%", minWidth: "320px", height: "fit-content", paddingX: "0", marginX: "0", position: "absolute", top: "0", left: "0", right: "0", bottom: "0" }}>
+    <div
+      style={{
+        backgroundColor: "white",
+        width: "100%",
+        minWidth: "320px",
+        height: "fit-content",
+        paddingX: "0",
+        marginX: "0",
+        position: "absolute",
+        top: "0",
+        left: "0",
+        right: "0",
+        bottom: "0",
+      }}
+    >
       <Navbar />
       <main style={{ marginTop: "70px" }}>{children}</main>
     </div>
@@ -90,7 +81,7 @@ const router = createBrowserRouter([
     path: "/admin",
     element: (
       <Suspense fallback={<PageLoader />}>
-        <Admin/>
+        <Admin />
       </Suspense>
     ),
   },
@@ -159,7 +150,7 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <Suspense fallback={<PageLoader />}>
-          <PremiumPage/>
+          <PremiumPage />
         </Suspense>
       </Layout>
     ),
@@ -169,7 +160,7 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <Suspense fallback={<PageLoader />}>
-          <JoinPlanPage/>
+          <JoinPlanPage />
         </Suspense>
       </Layout>
     ),
@@ -183,7 +174,9 @@ ReactDOM.createRoot(root).render(
     <I18nProvider>
       <DynamicThemeProvider>
         <UserProvider>
-        <RouterProvider router={router} />
+          <AuthProvider>
+            <RouterProvider router={router} />
+          </AuthProvider>
         </UserProvider>
       </DynamicThemeProvider>
     </I18nProvider>

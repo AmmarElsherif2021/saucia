@@ -4,6 +4,10 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoute.js';
+import mealRoutes from './routes/mealRoutes.js';
+import planRoutes from './routes/planRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
+import itemRoutes from './routes/itemRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -31,6 +35,10 @@ app.get("/api/health", (req, res) => {
 // Routes - Note the /api prefix to match frontend expectations
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/meals", mealRoutes);
+app.use("/api/plans", planRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/items", itemRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {

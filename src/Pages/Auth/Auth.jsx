@@ -1,14 +1,6 @@
-// Auth.jsx - Firestore Version
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { signInWithPopup } from "firebase/auth";
-import { auth, googleProvider } from "../../../firebaseConfig";
-import { 
-  doc, 
-  getDoc, 
-  setDoc, 
-  getFirestore 
-} from "firebase/firestore";
+// components/Auth.jsx
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   VStack,
   Heading,
@@ -17,156 +9,97 @@ import {
   Icon,
   useToast,
   Spinner,
-  Box
+  Alert,
+  AlertIcon,
 } from "@chakra-ui/react";
 import { FcGoogle } from "react-icons/fc";
 import "./Auth.css";
-import { useUser } from "../../Contexts/UserContext";
+import { useAuthContext } from "../../Contexts/AuthContext";
 
 const Auth = () => {
-  const { user, logout, setUser } = useUser();
+  const { user, loading, authError, loginWithGoogle, logout } = useAuthContext();
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   
-  // Initialize Firestore
-  const db = getFirestore();
+  // Get redirect location if any
+  const from = location.state?.from?.pathname || "/";
 
-  const getUserInfo = async (uid) => {
-    try {
-      console.log("Getting user info from Firestore for UID:", uid);
-      
-      // Reference to the user document in Firestore
-      const userRef = doc(db, "users", uid);
-      
-      // Get the user document
-      const userSnap = await getDoc(userRef);
-      
-      if (!userSnap.exists()) {
-        console.log("No user found with this UID");
-        throw new Error("User not found");
+  useEffect(() => {
+    // If user is already logged in, redirect them
+    if (user && !loading) {
+      // Check if user is admin to redirect to appropriate page
+      if (user.isAdmin) {
+        navigate("/admin");
+      } else {
+        navigate(from);
       }
-      
-      // Get user data
-      const userData = userSnap.data();
-      console.log("User data retrieved:", userData);
-      
-      return userData;
-    } catch (error) {
-      console.error("Error getting user info from Firestore:", error);
-      throw error;
     }
-  };
+  }, [user, loading, navigate, from]);
 
-  const createUser = async (uid, userData) => {
+  const handleGoogleSignIn = async () => {
+    setIsLoggingIn(true);
     try {
-      console.log("Creating new user in Firestore:", userData);
+      const result = await loginWithGoogle();
       
-      // Reference to the user document in Firestore
-      const userRef = doc(db, "users", uid);
-      
-      // Default user data structure
-      const userDataToSave = {
-        email: userData.email,
-        displayName: userData.displayName,
-        isAdmin: false, // Default to non-admin
-        createdAt: new Date().toISOString(),
-        lastLogin: new Date().toISOString()
-      };
-      
-      // Save the user document to Firestore
-      await setDoc(userRef, userDataToSave);
-      console.log("User created successfully in Firestore");
-      
-      return userDataToSave;
-    } catch (error) {
-      console.error("Error creating user in Firestore:", error);
-      throw error;
-    }
-  };
-
-  const signInWithGoogle = async () => {
-    setIsLoading(true);
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const uid = result.user.uid;
-      console.log("Signed in with Google. User ID:", uid);
-
-      try {
-        // Try to get existing user
-        const userData = await getUserInfo(uid);
-        
-        // Update last login timestamp
-        const userRef = doc(db, "users", uid);
-        await setDoc(userRef, { lastLogin: new Date().toISOString() }, { merge: true });
-        
-        setUser({
-          ...userData,
-          uid,
-          email: result.user.email,
-          displayName: result.user.displayName || userData.displayName
-        });
-
+      if (result.success) {
         toast({
           title: "Login successful",
-          description: `Welcome back, ${userData.displayName || result.user.displayName}!`,
+          description: `Welcome${user?.displayName ? `, ${user.displayName}` : ""}!`,
           status: "success",
           duration: 3000,
           isClosable: true,
         });
-
-        navigate(userData.isAdmin ? '/admin' : '/');
-        //navigate("/")
-      } catch (error) {
-        console.log("Error in get user flow:", error.message);
         
-        if (error.message.includes('User not found')) {
-          console.log("Creating new user");
-          
-          // Create new user in Firestore
-          const newUserData = await createUser(uid, {
-            displayName: result.user.displayName,
-            email: result.user.email
-          });
-
-          setUser({
-            ...newUserData,
-            uid,
-            email: result.user.email,
-            displayName: result.user.displayName
-          });
-
-          toast({
-            title: "Account created",
-            description: "Your account was created successfully!",
-            status: "success",
-            duration: 3000,
-            isClosable: true,
-          });
-
-          navigate('/');
+        // Navigate based on admin status
+        if (result.isAdmin) {
+          navigate("/admin");
         } else {
-          console.error("Error handling user:", error);
-          toast({
-            title: "Login failed",
-            description: `There was an error logging you in: ${error.message}. Please try again.`,
-            status: "error",
-            duration: 5000,
-            isClosable: true,
-          });
+          navigate(from);
         }
+      } else {
+        toast({
+          title: "Login failed",
+          description: result.error || "An error occurred during login",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
       }
     } catch (error) {
-      console.error("Error signing in:", error);
+      console.error("Error during Google sign in:", error);
       toast({
         title: "Authentication error",
-        description: `Could not sign in with Google: ${error.message}. Please try again.`,
+        description: error.message || "Failed to sign in with Google",
         status: "error",
         duration: 5000,
         isClosable: true,
       });
     } finally {
-      setIsLoading(false);
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+        status: "info",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error during logout:", error);
+      toast({
+        title: "Logout error",
+        description: "There was an issue logging you out.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
@@ -180,34 +113,54 @@ const Auth = () => {
         <Heading>Welcome</Heading>
         <Text mb={6}>Secure access to your account</Text>
 
-        {!user ? (
+        {authError && (
+          <Alert status="error" mb={4} borderRadius="md">
+            <AlertIcon />
+            {authError}
+          </Alert>
+        )}
+
+        {loading ? (
+          <VStack spacing={4}>
+            <Spinner size="xl" color="blue.500" />
+            <Text>Checking authentication...</Text>
+          </VStack>
+        ) : !user ? (
           <Button
             w="full"
             variant="outline"
-            leftIcon={isLoading ? <Spinner size="sm" /> : <Icon as={FcGoogle} boxSize={5} />}
+            leftIcon={isLoggingIn ? <Spinner size="sm" /> : <Icon as={FcGoogle} boxSize={5} />}
             borderRadius="12px"
             height="52px"
             borderColor="gray.200"
             boxShadow="sm"
-            onClick={signInWithGoogle}
-            isDisabled={isLoading}
+            onClick={handleGoogleSignIn}
+            isDisabled={isLoggingIn}
             _hover={{
               transform: "translateY(-1px)",
               boxShadow: "md"
             }}
             transition="all 0.2s"
           >
-            {isLoading ? "Signing in..." : "Sign in with Google"}
+            {isLoggingIn ? "Signing in..." : "Sign in with Google"}
           </Button>
         ) : (
           <VStack spacing={4}>
-            <Text>Welcome, {user.displayName || user.email}!</Text>
-            <Button onClick={logout}>
+            <Text>
+              Welcome, {user.displayName || user.email}!
+              {user.isAdmin && " (Admin)"}
+            </Text>
+            <Button onClick={handleLogout} colorScheme="red" variant="outline">
               Sign Out
             </Button>
-            <Button onClick={() => navigate('/')}>
+            <Button onClick={() => navigate('/')} colorScheme="blue">
               Go to Home
             </Button>
+            {user.isAdmin && (
+              <Button onClick={() => navigate('/admin')} colorScheme="green">
+                Admin Dashboard
+              </Button>
+            )}
           </VStack>
         )}
 

@@ -26,8 +26,15 @@ export const db = getFirestore(firebaseApp);
 export const auth = getAuth(firebaseApp);
 
 // Admin claims function
-export const setAdminClaim = async (uid) => {
-  await auth.setCustomUserClaims(uid, { admin: true });
+export const setAdminClaim = async (uid, isAdmin) => {
+  try {
+    // Set custom claims for the user
+    await auth.setCustomUserClaims(uid, { admin: isAdmin });
+    console.log(`Admin claim set for user ${uid}: ${isAdmin}`);
+  } catch (error) {
+    console.error("Error setting admin claim:", error);
+    throw error;
+  }
 };
 
 // Firestore settings
