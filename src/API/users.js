@@ -6,7 +6,7 @@ export const setAdminStatus = async (uid, isAdmin) => {
     const auth = getAuth();
     const idToken = await auth.currentUser.getIdToken(true);
 
-    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/users/set-admin`, {
+    const res = await fetch(`${import.meta.env.VITE_BASE_URL}/api/users/set-admin`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -28,7 +28,7 @@ export const setAdminStatus = async (uid, isAdmin) => {
 };
 export const login = async ({ username, password }) => {
   try {
-    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/login`, {
+    const res = await fetch(`${import.meta.env.VITE_BASE_URL}/api/user/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
@@ -55,7 +55,7 @@ export const getUserInfo = async (uid) => {
     
     if (!idToken) throw new Error('No authenticated user');
     
-    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/users/${uid}`, {
+    const res = await fetch(`${import.meta.env.VITE_BASE_URL}/api/users/${uid}`, {
       method: 'GET',
       headers: { 
         'Content-Type': 'application/json',
@@ -98,7 +98,7 @@ export const createUser = async (userData) => {
     
     if (!idToken) throw new Error('No authenticated user');
     
-    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/users`, {
+    const res = await fetch(`${import.meta.env.VITE_BASE_URL}/api/users`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ export const updateUserProfile = async (uid, userData) => {
     
     if (!idToken) throw new Error('No authenticated user');
     
-    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/users/${uid}`, {
+    const res = await fetch(`${import.meta.env.VITE_BASE_URL}/api/users/${uid}`, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
@@ -174,7 +174,7 @@ export const getAllUsers = async () => {
     
     if (!idToken) throw new Error('No authenticated user');
     
-    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/admin/users`, {
+    const res = await fetch(`${import.meta.env.VITE_BASE_URL}/api/admin/users`, {
       method: 'GET',
       headers: { 
         'Content-Type': 'application/json',

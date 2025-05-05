@@ -1,5 +1,5 @@
 // hooks/useAuth.js
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   signInWithPopup,
   signOut,
@@ -21,53 +21,67 @@ export function useAuth() {
   const [authError, setAuthError] = useState(null);
 
   // Refresh the user's token to get the latest claims
-  const refreshToken = async () => {
+  const refreshToken = useCallback(async () => {
     try {
       if (auth.currentUser) {
+        // Force refresh to get latest claims
         await auth.currentUser.getIdToken(true);
         const tokenResult = await getIdTokenResult(auth.currentUser);
+        console.log("Token refreshed, claims:", tokenResult.claims);
         return tokenResult.claims;
       }
     } catch (error) {
       console.error("Error refreshing token:", error);
     }
     return null;
-  };
+  }, []);
 
-// Check if user has admin role
-const checkAdminStatus = async () => {
-  try {
-    const result = await verifyAdmin();
-    const isAdmin = result?.isAdmin ?? false;
-    setUser((prevUser) => ({ ...prevUser, isAdmin }));
-    return isAdmin; // Return the isAdmin value
-  } catch (error) {
-    console.error("Error checking admin status:", error);
-    setUser((prevUser) => ({ ...prevUser, isAdmin: false }));
-    return false; // Return false on error
-  }
-};
+  // Check if user has admin role with the backend
+  const checkAdminStatus = useCallback(async () => {
+    try {
+      console.log("Checking admin status with backend");
+      const result = await verifyAdmin();
+      const isAdmin = result?.isAdmin ?? false;
+      
+      console.log("Admin status from backend:", isAdmin);
+      
+      setUser((prevUser) => {
+        if (!prevUser) return null;
+        return { ...prevUser, isAdmin };
+      });
+      
+      return isAdmin;
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      setUser((prevUser) => {
+        if (!prevUser) return null;
+        return { ...prevUser, isAdmin: false };
+      });
+      return false;
+    }
+  }, []);
 
   // Save or update user in Firestore
-  const saveUserToFirestore = async (firebaseUser) => {
+  const saveUserToFirestore = useCallback(async (firebaseUser) => {
     try {
+      if (!firebaseUser || !firebaseUser.uid) {
+        console.error("Invalid firebase user object");
+        return null;
+      }
+      
       const userRef = doc(db, "users", firebaseUser.uid);
       const userSnap = await getDoc(userRef);
       
       if (userSnap.exists()) {
-        // Update existing user
+        // Update existing user - only update last login
         await setDoc(userRef, {
           lastLogin: serverTimestamp(),
-          // Update additional fields only if they don't exist
-          displayName: firebaseUser.displayName || userSnap.data().displayName,
-          email: firebaseUser.email || userSnap.data().email,
-          photoURL: firebaseUser.photoURL || userSnap.data().photoURL
         }, { merge: true });
       } else {
-        // Create new user
+        // Create new user with default fields
         await setDoc(userRef, {
           uid: firebaseUser.uid,
-          email: firebaseUser.email,
+          email: firebaseUser.email || '',
           displayName: firebaseUser.displayName || '',
           photoURL: firebaseUser.photoURL || '',
           isAdmin: false, // Default to non-admin
@@ -78,12 +92,12 @@ const checkAdminStatus = async () => {
       
       // Get the updated user doc
       const updatedSnap = await getDoc(userRef);
-      return updatedSnap.data();
+      return updatedSnap.exists() ? updatedSnap.data() : null;
     } catch (error) {
       console.error("Error saving user to Firestore:", error);
       throw error;
     }
-  };
+  }, []);
 
   // Sign in with Google
   const loginWithGoogle = async () => {
@@ -94,22 +108,30 @@ const checkAdminStatus = async () => {
       const result = await signInWithPopup(auth, googleProvider);
       const firebaseUser = result.user;
       
+      if (!firebaseUser) {
+        throw new Error("Sign in failed - no user returned");
+      }
+      
+      console.log("Google sign in successful:", firebaseUser.uid);
+      
       // Save user to Firestore
-      await saveUserToFirestore(firebaseUser);
+      const firestoreData = await saveUserToFirestore(firebaseUser);
       
       // Force refresh token to get updated claims
-      await refreshToken();
+      const claims = await refreshToken();
       
       // Check admin status with backend
       const isAdmin = await checkAdminStatus();
       
-      // Set user state with admin status
+      // Set user state with all available data
       setUser({
         uid: firebaseUser.uid,
-        email: firebaseUser.email,
-        displayName: firebaseUser.displayName,
-        photoURL: firebaseUser.photoURL,
-        isAdmin: Boolean(isAdmin),
+        email: firebaseUser.email || '',
+        displayName: firebaseUser.displayName || '',
+        photoURL: firebaseUser.photoURL || '',
+        emailVerified: firebaseUser.emailVerified,
+        isAdmin: Boolean(isAdmin || claims?.admin),
+        ...(firestoreData || {})
       });
       
       return { success: true, isAdmin };
@@ -142,29 +164,41 @@ const checkAdminStatus = async () => {
       
       try {
         if (firebaseUser) {
+          console.log("Auth state changed - user signed in:", firebaseUser.uid);
+          
           // Get Firestore data
           const userRef = doc(db, "users", firebaseUser.uid);
           const userSnap = await getDoc(userRef);
           
+          let firestoreData = null;
+          
           // If user doesn't exist in Firestore, create them
           if (!userSnap.exists()) {
-            await saveUserToFirestore(firebaseUser);
+            firestoreData = await saveUserToFirestore(firebaseUser);
+          } else {
+            firestoreData = userSnap.data();
+            // Update lastLogin time
+            await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
           }
           
           // Get token to check admin status
           const tokenResult = await getIdTokenResult(firebaseUser);
-          const isAdmin = tokenResult.claims.admin === true;
+          const isAdminClaim = tokenResult.claims?.admin === true;
+          
+          // Check admin status with backend
+          const isAdminBackend = await checkAdminStatus();
           
           setUser({
             uid: firebaseUser.uid,
-            email: firebaseUser.email,
+            email: firebaseUser.email || '',
             displayName: firebaseUser.displayName || '',
             photoURL: firebaseUser.photoURL || '',
             emailVerified: firebaseUser.emailVerified,
-            isAdmin,
-            ...(userSnap.exists() ? userSnap.data() : {})
+            isAdmin: Boolean(isAdminClaim || isAdminBackend || (firestoreData?.isAdmin === true)),
+            ...(firestoreData || {})
           });
         } else {
+          console.log("Auth state changed - user signed out");
           setUser(null);
         }
       } catch (error) {
@@ -178,7 +212,7 @@ const checkAdminStatus = async () => {
     
     // Cleanup subscription
     return () => unsubscribe();
-  }, []);
+  }, [saveUserToFirestore, checkAdminStatus, refreshToken]);
 
   return {
     user,

@@ -2,7 +2,7 @@
 export const listOrders = async (token, queryParams = {}) => {
   try {
     const res = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/orders?` +
+      `${import.meta.env.VITE_BASE_URL}/orders?` +
         new URLSearchParams(queryParams),
       {
         method: "GET",
@@ -28,7 +28,7 @@ export const listOrders = async (token, queryParams = {}) => {
 export const getUserOrders = async (token) => {
   try {
     const res = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/orders/user`,
+      `${import.meta.env.VITE_BASE_URL}/orders/user`,
       {
         method: "GET",
         headers: {
@@ -52,7 +52,7 @@ export const getUserOrders = async (token) => {
 // Create a new order
 export const createOrder = async (token, orderData) => {
   try {
-    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/orders`, {
+    const res = await fetch(`${import.meta.env.VITE_BASE_URL}/orders`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -76,7 +76,7 @@ export const createOrder = async (token, orderData) => {
 export const getOrderById = async (token, orderId) => {
   try {
     const res = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/orders/${orderId}`,
+      `${import.meta.env.VITE_BASE_URL}/orders/${orderId}`,
       {
         method: "GET",
         headers: {
@@ -101,7 +101,7 @@ export const getOrderById = async (token, orderId) => {
 export const updateOrder = async (token, orderId, orderData) => {
   try {
     const res = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/orders/${orderId}`,
+      `${import.meta.env.VITE_BASE_URL}/orders/${orderId}`,
       {
         method: "PUT",
         headers: {
@@ -127,7 +127,7 @@ export const updateOrder = async (token, orderId, orderData) => {
 export const deleteOrder = async (token, orderId) => {
   try {
     const res = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/orders/${orderId}`,
+      `${import.meta.env.VITE_BASE_URL}/orders/${orderId}`,
       {
         method: "DELETE",
         headers: {

@@ -2,7 +2,7 @@
 export const listItems = async (queryParams = {}) => {
   try {
     const res = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/items?` +
+      `${import.meta.env.VITE_BASE_URL}/items?` +
         new URLSearchParams(queryParams)
     );
 
@@ -20,7 +20,7 @@ export const listItems = async (queryParams = {}) => {
 export const getItemById = async (itemId) => {
   try {
     const res = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/items/${itemId}`
+      `${import.meta.env.VITE_BASE_URL}/items/${itemId}`
     );
 
     if (!res.ok) {
@@ -39,7 +39,7 @@ export const getItemById = async (itemId) => {
 export const getItemsBySection = async (section) => {
   try {
     const res = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/items/section/${section}`
+      `${import.meta.env.VITE_BASE_URL}/items/section/${section}`
     );
 
     if (!res.ok) {
@@ -57,7 +57,7 @@ export const getItemsBySection = async (section) => {
 // Create a new item
 export const createItem = async (token, itemData) => {
   try {
-    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/items`, {
+    const res = await fetch(`${import.meta.env.VITE_BASE_URL}/items`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -80,7 +80,7 @@ export const createItem = async (token, itemData) => {
 export const updateItem = async (token, itemId, updates) => {
   try {
     const res = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/items/${itemId}`,
+      `${import.meta.env.VITE_BASE_URL}/items/${itemId}`,
       {
         method: "PUT",
         headers: {
@@ -105,7 +105,7 @@ export const updateItem = async (token, itemId, updates) => {
 export const deleteItem = async (token, itemId) => {
   try {
     const res = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/items/${itemId}`,
+      `${import.meta.env.VITE_BASE_URL}/items/${itemId}`,
       {
         method: "DELETE",
         headers: {

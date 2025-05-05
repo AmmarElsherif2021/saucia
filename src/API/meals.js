@@ -3,7 +3,7 @@ export const getMeals = async (token, queryParams = {}) => {
   const searchParams = new URLSearchParams(queryParams);
 
   const res = await fetch(
-    `${import.meta.env.VITE_BACKEND_URL}/meals?${searchParams}`,
+    `${import.meta.env.VITE_BASE_URL}/meals?${searchParams}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -23,7 +23,7 @@ export const getPlanMeals = async (token, planId, queryParams = {}) => {
   const searchParams = new URLSearchParams(queryParams);
 
   const res = await fetch(
-    `${import.meta.env.VITE_BACKEND_URL}/meals/plan/${planId}?${searchParams}`,
+    `${import.meta.env.VITE_BASE_URL}/meals/plan/${planId}?${searchParams}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -41,7 +41,7 @@ export const getPlanMeals = async (token, planId, queryParams = {}) => {
 // Get a specific meal by ID
 export const getMealById = async (token, mealId) => {
   const res = await fetch(
-    `${import.meta.env.VITE_BACKEND_URL}/meals/${mealId}`,
+    `${import.meta.env.VITE_BASE_URL}/meals/${mealId}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -58,7 +58,7 @@ export const getMealById = async (token, mealId) => {
 
 // Create a new meal
 export const createMeal = async (token, mealData) => {
-  const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/meals`, {
+  const res = await fetch(`${import.meta.env.VITE_BASE_URL}/meals`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -77,7 +77,7 @@ export const createMeal = async (token, mealData) => {
 // Update a meal
 export const updateMeal = async (token, mealId, mealData) => {
   const res = await fetch(
-    `${import.meta.env.VITE_BACKEND_URL}/meals/${mealId}`,
+    `${import.meta.env.VITE_BASE_URL}/meals/${mealId}`,
     {
       method: "PUT",
       headers: {
@@ -98,7 +98,7 @@ export const updateMeal = async (token, mealId, mealData) => {
 // Delete a meal
 export const deleteMeal = async (token, mealId) => {
   const res = await fetch(
-    `${import.meta.env.VITE_BACKEND_URL}/meals/${mealId}`,
+    `${import.meta.env.VITE_BASE_URL}/meals/${mealId}`,
     {
       method: "DELETE",
       headers: {
@@ -123,7 +123,7 @@ export const getFavMealsOfClient = async (token, userId) => {
   });
 
   const res = await fetch(
-    `${import.meta.env.VITE_BACKEND_URL}/users/${userId}/meals?${searchParams}`,
+    `${import.meta.env.VITE_BASE_URL}/users/${userId}/meals?${searchParams}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,

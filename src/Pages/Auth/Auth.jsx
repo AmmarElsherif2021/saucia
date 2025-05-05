@@ -17,7 +17,7 @@ import "./Auth.css";
 import { useAuthContext } from "../../Contexts/AuthContext";
 
 const Auth = () => {
-  const { user, loading, authError, loginWithGoogle, logout } = useAuthContext();
+  const { user, loading, authError, loginWithGoogle, logout } = useAuthContext(); 
   const navigate = useNavigate();
   const location = useLocation();
   const toast = useToast();

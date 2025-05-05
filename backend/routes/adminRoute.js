@@ -1,28 +1,17 @@
-import express from "express";
-import { authenticate, requireAdmin } from "../middlewares/authMiddleware.js";
-import { verifyAdmin } from "../controllers/verifyAdmin.js";
-import { getAllUsers } from "../controllers/users.js";
+// routes/adminRoute.js
+import express from 'express';
+import { authenticate, requireAdmin } from '../middlewares/authMiddleware.js';
+import { getDashboardData, setUserAdminStatus, getAllUsers } from '../controllers/admin.js';
+import { verifyAdmin } from '../controllers/verifyAdmin.js';
 
 const router = express.Router();
 
-// All routes require authentication
-router.use(authenticate);
+// Verify if user is admin - only requires authentication
+router.get('/verify', authenticate, verifyAdmin);
 
-// Verify admin status
-router.get("/verify", verifyAdmin);
-
-// Admin-only routes
-router.get("/dashboard", requireAdmin, async (req, res) => {
-  try {
-    res.json({
-      totalUsers: 100, // Replace with actual logic
-    });
-  } catch (error) {
-    console.error("Error fetching admin dashboard:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-router.get("/users", requireAdmin, getAllUsers);
+// Routes that require both authentication and admin permissions
+router.get('/dashboard', authenticate, requireAdmin, getDashboardData);
+router.get('/users', authenticate, requireAdmin, getAllUsers);
+router.post('/set-admin', authenticate, requireAdmin, setUserAdminStatus);
 
 export default router;
