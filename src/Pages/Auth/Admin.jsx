@@ -535,52 +535,60 @@ const Admin = () => {
             </Box>
 
             {/* Meals Section */}
-          <Box 
-              gap={6} 
-              m={12}
-              maxW={"90%"}
-              backgroundColor={"#ffffff"}
-              p={8}
-          >
-            <SectionHeading 
-              title="Meals" 
-              onAddClick={mealModals.add.onOpen} 
-              buttonText="Add New Meal" 
-            />
-            <TableContainer overflowX={isTableScrollable ? "auto" : "visible"}>
-              <Table variant="simple" size={{ base: "sm", md: "md" }}>
-            <Thead>
-              <Tr>
-                <Th>Name</Th>
-                <Th>Price</Th>
-                <Th>Premium</Th>
-                <Th>Plan</Th>
-                <Th>Calories</Th>
-                <Th>Protein</Th>
-                <Th>Carbohydrates</Th>
-                <Th>Ingredients</Th>
-                <Th>Image</Th>
-                <Th>Actions</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {meals.map((meal) => (
-                <Tr key={meal.id}>
-              <Td>{meal.name}</Td>
-              <Td>{meal.price}</Td>
-              <Td>{meal.isPremium === "True" ? "Yes" : "No"}</Td>
-              <Td>{meal.plan}</Td>
-              <Td>{meal.kcal}</Td>
-              <Td>{meal.protein}</Td>
-              <Td>{meal.carb}</Td>
-              <Td>{meal.ingredients}</Td>
-              <Td maxW="150px" isTruncated>{meal.image}</Td>
-              <Td>
-                <Stack direction="row" spacing={2}>
-                  <Button
-                size="sm"
-                colorScheme="brand"
-                onClick={() => {
+                  <Box 
+                    gap={6} 
+                    m={12}
+                    maxW={"90%"}
+                    backgroundColor={"#ffffff"}
+                    p={8}
+                  >
+                  <SectionHeading 
+                    title="Meals" 
+                    onAddClick={mealModals.add.onOpen} 
+                    buttonText="Add New Meal" 
+                  />
+                  <TableContainer overflowX={isTableScrollable ? "auto" : "visible"}>
+                    <Table variant="simple" size={{ base: "sm", md: "md" }}>
+                  <Thead>
+                    <Tr>
+                    <Th>Name</Th>
+                    <Th>Price</Th>
+                    <Th>Premium</Th>
+                    <Th>Plan</Th>
+                    <Th>Calories</Th>
+                    <Th>Protein</Th>
+                    <Th>Carbohydrates</Th>
+                    <Th>Featured</Th>
+                    <Th>Offer Ratio</Th>
+                    <Th>Offer Limit</Th>
+                    <Th>Rate</Th>
+                    <Th>Ingredients</Th>
+                    <Th>Image</Th>
+                    <Th>Actions</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {meals.map((meal) => (
+                    <Tr key={meal.id}>
+                    <Td>{meal.name}</Td>
+                    <Td>{meal.price}</Td>
+                    <Td>{meal.isPremium === "True" ? "Yes" : "No"}</Td>
+                    <Td>{meal.plan}</Td>
+                    <Td>{meal.kcal}</Td>
+                    <Td>{meal.protein}</Td>
+                    <Td>{meal.carb}</Td>
+                    <Td>{meal.featured? "featured": "notr featured"}</Td>
+                    <Td>{meal.offerRatio}</Td>
+                    <Td>{meal.offerLimit}</Td>
+                    <Td>{meal.rate}</Td>
+                    <Td>{meal.ingredients.join(", ")}</Td>
+                    <Td maxW="150px" isTruncated>{meal.image}</Td>
+                    <Td>
+                    <Stack direction="row" spacing={2}>
+                      <Button
+                    size="sm"
+                    colorScheme="brand"
+                    onClick={() => {
                   selectMeal(meal);
                   mealModals.edit.onOpen();
                 }}
@@ -772,7 +780,11 @@ const Admin = () => {
           kcal: 350,
           protein: 25,
           carb: 10,
-          ingredients: "Chicken, lettuce, olive oil",
+          rate:4.5,
+          featured:false,
+          offerRatio:1,
+        
+          ingredients: ["Chicken", "lettuce", "olive oil"],
           image:"https://drive.google.com/file/d/1pJzEej9ZWuYgEmDWtLQjaMFInA4vwIGB/view?usp=drive_link"
         }}
         FormComponent={MealForm}

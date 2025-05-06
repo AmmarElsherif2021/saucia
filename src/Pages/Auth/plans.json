@@ -1,110 +1,121 @@
 [
   {
-    "id": 1,
-    "title": "Dry body plan - Weekly",
+  "title": "Dry body plan - Weekly",
+    "description":"",
     "period": 5,
     "carb": 130,
     "protein": 160,
     "kcal": 0,
-    "members": ""
+    "members": [],
+    "avatar":""
   },
   {
-    "id": 2,
-    "title": "Dry body plan - Monthly",
+  "title": "Dry body plan - Monthly",
+    "description":"",
     "period": 24,
     "carb": 130,
     "protein": 160,
     "kcal": 0,
-    "members": ""
+    "members": [],
+    "avatar":""
   },
   {
-    "id": 3,
-    "title": "Lose weight plan - Weekly",
+  "title": "Lose weight plan - Weekly",
+    "description":"",
     "period": 5,
     "carb": 100,
     "protein": 150,
+    "kcal": 0,
+    "members": [],
+    "avatar":""
+  },
+  {
+  "title": "Lose weight plan - Monthly",
+    "description":"",
+    "period": 24,
+    "carb": 100,
+    "protein": 150,
+    "kcal": 0,
+    "members": [],
+    "avatar":""
+  },
+  {
+  "title": "Gain weight plan - Weekly",
+    "description":"",
+    "period": 5,
+    "carb": 200,
+    "protein": 150,
+    "kcal": 0,
+    "members": [],
+    "avatar":""
+  },
+  {
+  "title": "Gain weight plan - Monthly",
+    "description":"",
+    "period": 24,
+    "carb": 200,
+    "protein": 150,
+    "kcal": 0,
+    "members": [],
+    "avatar":""
+  },
+  {
+  "title": "Work-day plan - Weekly",
+    "description":"",
+    "period": 5,
+    "carb": 120,
+    "protein": 120,
+    "kcal": 0,
+    "members": [],
+    "avatar":""
+  },
+  {
+  "title": "Work-day plan - Monthly",
+    "description":"",
+    "period": 24,
+    "carb": 120,
+    "protein": 120,
+    "kcal": 0,
+    "members": [],
+    "avatar":""
+  },
+  {
+  "title": "Daily salad plan - 24 protein meals",
+    "description":"",
+    "period": 24,
+    "carb": 0,
+    "protein": 0,
+    "kcal": 0,
+    "members": [],
+    "avatar":""
+  },
+  {
+    "title": "Daily salad plan - 5 protein meals",
+    "description":"",
+    "period": 5,
+    "carb": 0,
+    "protein": 0,
+    "kcal": 0,
+    "members": [],
+    "avatar":""
+  },
+  {
+    "title": "Daily salad plan - 24 non-protein meals",
+    "description":"",
+    "period": 24,
+    "carb": 0,
+    "protein": 0,
+    "kcal": 0,
+    "members": [],
+    "avatar":""
+  },
+  {
+    "title": "Daily salad plan - 5 non-protein meals",
+    "description":"",
+    "period": 5,
+    "carb": 0,
+    "protein": 0,
     "kcal": 0,
     "members": []
-  },
-  {
-    "id": 4,
-    "title": "Lose weight plan - Monthly",
-    "period": 24,
-    "carb": 100,
-    "protein": 150,
-    "kcal": 0,
-    "members": ""
-  },
-  {
-    "id": 5,
-    "title": "Gain weight plan - Weekly",
-    "period": 5,
-    "carb": 200,
-    "protein": 150,
-    "kcal": 0,
-    "members": ""
-  },
-  {
-    "id": 6,
-    "title": "Gain weight plan - Monthly",
-    "period": 24,
-    "carb": 200,
-    "protein": 150,
-    "kcal": 0,
-    "members": ""
-  },
-  {
-    "id": 7,
-    "title": "Work-day plan - Weekly",
-    "period": 5,
-    "carb": 120,
-    "protein": 120,
-    "kcal": 0,
-    "members": ""
-  },
-  {
-    "id": 8,
-    "title": "Work-day plan - Monthly",
-    "period": 24,
-    "carb": 120,
-    "protein": 120,
-    "kcal": 0,
-    "members": ""
-  },
-  {
-    "id": 9,
-    "title": "Daily salad plan - 24 protein meals",
-    "period": 24,
-    "carb": 0,
-    "protein": 0,
-    "kcal": 0,
-    "members": ""
-  },
-  {
-    "id": 10,
-    "title": "Daily salad plan - 5 protein meals",
-    "period": 5,
-    "carb": 0,
-    "protein": 0,
-    "kcal": 0,
-    "members": ""
-  },
-  {
-    "id": 11,
-    "title": "Daily salad plan - 24 non-protein meals",
-    "period": 24,
-    "carb": 0,
-    "protein": 0,
-    "kcal": 0,
-    "members": ""
-  },
-  {
-    "id": 12,
-    "title": "Daily salad plan - 5 non-protein meals",
-    "period": 5,
-    "carb": 0,
-    "protein": 0,
-    "kcal": 0,
-    "members": ""
   }
 ]
