@@ -30,6 +30,7 @@ export const getAllItems = async (req, res) => {
     const items = await Item.getAll();
     res.json(items);
   } catch (error) {
+    console.error("Error fetching items:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -46,12 +47,14 @@ export const getItemsBySection = async (req, res) => {
 };
 
 // Update an item by ID
+
 export const updateItem = async (req, res) => {
   try {
     const { id } = req.params;
     const updatedItem = await Item.update(id, req.body);
     res.json(updatedItem);
   } catch (error) {
+    console.error("Error updating item:", error);
     res.status(500).json({ error: error.message });
   }
 };

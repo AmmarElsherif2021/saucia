@@ -39,7 +39,7 @@ export const Navbar = () => {
   };
 
   return (
-    <Box bg={bgColor} py={1} px={4} position="fixed" w="97%" paddingX={6} zIndex="10">
+    <Box bg={bgColor} py={1} position="fixed" w={"100%"} maxW="100vw" paddingRight={12} zIndex="10">
       <Flex
         h={16}
         alignItems="center"
@@ -48,64 +48,48 @@ export const Navbar = () => {
         mx="auto"
       >
         {/* Logo */}
-        <Box fontWeight="bold" fontSize="lg" color={textColor}>
+        <Box fontWeight="bold" fontSize="lg" color={textColor} mx={4}>
           <Link to="/">
-            <Img src={logoIcon} w={20} />
+            <Img src={logoIcon} w={20} alt={t("navbar.logoAlt")} />
           </Link>
         </Box>
 
         {/* Desktop Menu */}
-        <Flex display={{ base: "none", md: "flex"}} alignItems="center" gap={2} mx="20%" >
-          <Link to="/cart">
-            <Button variant="underlined" colorScheme="brand" size={"sm"}>
-              {t("navbar.cart")} 
-            </Button>
-          </Link>
-          <Link to="/menu">
-            <Button variant="underlined" colorScheme="brand" size={"sm"}>
-              {t("navbar.menu")} 
-            </Button>
-          </Link>
-          <Link to="/about">
-            <Button variant="underlined" colorScheme="brand" size={"sm"}>
-              {t("navbar.about")} 
-            </Button>
-          </Link>
-          <Link to="/premium" onClick={onClose} >
-              <Button variant="underlined" w="70px" size={"sm"}>
-                {t("premium.getPremium")} 
+        <Flex display={{ base: "none", md: "flex" }} alignItems="center" gap={4}>
+          {["cart", "menu", "about", "premium"].map((item) => (
+            <Link key={item} to={`/${item}`} onClick={onClose}>
+              <Button variant="underlined" colorScheme="brand" size="sm">
+                {t(`navbar.${item}`)}
               </Button>
             </Link>
+          ))}
         </Flex>
 
         {/* User Menu, Theme Toggle, and Language Toggle - Desktop */}
-        <HStack spacing={2} display={{ base: "none", md: "flex" }}>
-          <ProfileDD/>
+        <HStack spacing={4} display={{ base: "none", md: "flex" }}>
+          <ProfileDD />
           <IconButton
-            aria-label={t("common.toggleDarkMode")} // Translate "Toggle Dark Mode"
+            aria-label={t("common.toggleDarkMode")}
             icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
             onClick={toggleColorMode}
             variant="ghost"
           />
           <Button onClick={toggleLanguage} variant="ghost">
-            {currentLanguage}
+            {currentLanguage.toUpperCase()}
           </Button>
         </HStack>
 
         {/* Mobile Controls */}
         <Flex display={{ base: "flex", md: "none" }}>
-          {/* Theme Toggle - Mobile */}
           <IconButton
-            aria-label={t("common.toggleDarkMode")} // Translate "Toggle Dark Mode"
+            aria-label={t("common.toggleDarkMode")}
             icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
             onClick={toggleColorMode}
             variant="ghost"
             mr={2}
           />
-
-          {/* Hamburger Menu - Mobile */}
           <IconButton
-            aria-label={isOpen ? t("common.close") : t("common.open")} // Translate "Close" and "Open"
+            aria-label={isOpen ? t("common.close") : t("common.open")}
             icon={isOpen ? <CloseIcon /> : <HamburgerIcon />}
             onClick={isOpen ? onClose : onOpen}
             variant="ghost"
@@ -117,40 +101,22 @@ export const Navbar = () => {
       {isOpen && (
         <Box pb={4} display={{ base: "block", md: "none" }}>
           <VStack alignItems="center" spacing={4} w="100%">
-            <Link to="/" onClick={onClose}>
-              <Button variant="underlined" w="70px">
-                {t("navbar.home")} 
-              </Button>
-            </Link>
-            <Link to="/cart" onClick={onClose}>
-              <Button variant="underlined" w="70px">
-                {t("navbar.cart")} 
-              </Button>
-            </Link>
-            <Link to="/menu" onClick={onClose}>
-              <Button variant="underlined" w="70px">
-                {t("navbar.menu")} 
-              </Button>
-            </Link>
-            <Link to="/about" onClick={onClose}>
-              <Button variant="underlined" w="70px">
-                {t("navbar.about")} 
-              </Button>
-            </Link>
-            <Link to="/premium" onClick={onClose}>
-              <Button variant="underlined" w="70px">
-                {t("premium.getPremium")} 
-              </Button>
-            </Link>
+            {["home", "cart", "menu", "about", "premium"].map((item) => (
+              <Link key={item} to={`/${item}`} onClick={onClose}>
+                <Button variant="underlined" w="70px">
+                  {t(`navbar.${item}`)}
+                </Button>
+              </Link>
+            ))}
             <Button
               variant="underlined"
               w="70px"
               onClick={onProfileModalOpen}
             >
-              {t("navbar.profile")} 
+              {t("navbar.profile")}
             </Button>
             <Button onClick={toggleLanguage} variant="ghost" w="70px">
-              {currentLanguage}
+              {currentLanguage.toUpperCase()}
             </Button>
           </VStack>
         </Box>

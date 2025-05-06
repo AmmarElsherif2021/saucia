@@ -9,26 +9,29 @@ export const createMeal = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 // Get a meal by ID
 export const getMealById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const meal = await Meal.getById(id);
-        if (!meal) {
-            return res.status(404).json({ error: "Meal not found" });
-        }
-        res.json(meal);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+  try {
+    const { id } = req.params;
+    const meal = await Meal.getById(id);
+    if (!meal) {
+      return res.status(404).json({ error: "Meal not found" });
     }
+    res.json(meal);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
+
 // Get all meals
 export const getAllMeals = async (req, res) => {
   try {
     const meals = await Meal.getAll();
     res.json(meals);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error fetching meals:", error);
+    res.status(500).json({ error: "Failed to fetch meals" });
   }
 };
 

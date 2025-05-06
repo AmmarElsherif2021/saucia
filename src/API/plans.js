@@ -20,41 +20,35 @@ const fetchWithAuth = async (url, options = {}, token) => {
   }
 };
 
-// Get all items
-export const listItems = async (queryParams = {}) => {
+// Get all plans
+export const listPlans = async (queryParams = {}) => {
   const searchParams = new URLSearchParams(queryParams);
-  const url = `${import.meta.env.VITE_BASE_URL}/api/items?${searchParams}`;
+  const url = `${import.meta.env.VITE_BASE_URL}/api/plans?${searchParams}`;
   return await fetchWithAuth(url);
 };
 
-// Get an item by ID
-export const getItemById = async (itemId) => {
-  const url = `${import.meta.env.VITE_BASE_URL}/api/items/${itemId}`;
+// Get a plan by ID
+export const getPlanById = async (planId) => {
+  const url = `${import.meta.env.VITE_BASE_URL}/api/plans/${planId}`;
   return await fetchWithAuth(url);
 };
 
-// Get items by section
-export const getItemsBySection = async (section) => {
-  const url = `${import.meta.env.VITE_BASE_URL}/api/items/section/${section}`;
-  return await fetchWithAuth(url);
-};
-
-// Create a new item
-export const createItem = async (token, itemData) => {
-  const url = `${import.meta.env.VITE_BASE_URL}/api/items`;
+// Create a new plan
+export const createPlan = async (token, planData) => {
+  const url = `${import.meta.env.VITE_BASE_URL}/api/plans`;
   return await fetchWithAuth(
     url,
     {
       method: "POST",
-      body: JSON.stringify(itemData),
+      body: JSON.stringify(planData),
     },
     token
   );
 };
 
-// Update an item by ID
-export const updateItem = async (token, itemId, updates) => {
-  const url = `${import.meta.env.VITE_BASE_URL}/api/items/${itemId}`;
+// Update a plan by ID
+export const updatePlan = async (token, planId, updates) => {
+  const url = `${import.meta.env.VITE_BASE_URL}/api/plans/${planId}`;
   return await fetchWithAuth(
     url,
     {
@@ -65,9 +59,9 @@ export const updateItem = async (token, itemId, updates) => {
   );
 };
 
-// Delete an item by ID
-export const deleteItem = async (token, itemId) => {
-  const url = `${import.meta.env.VITE_BASE_URL}/api/items/${itemId}`;
+// Delete a plan by ID
+export const deletePlan = async (token, planId) => {
+  const url = `${import.meta.env.VITE_BASE_URL}/api/plans/${planId}`;
   return await fetchWithAuth(
     url,
     {

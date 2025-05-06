@@ -1,117 +1,81 @@
+// Helper function to handle API requests
+const fetchWithAuth = async (url, options = {}, token) => {
+  try {
+    const headers = {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    };
+
+    const res = await fetch(url, { ...options, headers });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "API request failed");
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error(`Error in API request to ${url}:`, error);
+    throw error;
+  }
+};
+
 // Get all meals
 export const getMeals = async (token, queryParams = {}) => {
   const searchParams = new URLSearchParams(queryParams);
-
-  const res = await fetch(
-    `${import.meta.env.VITE_BASE_URL}/meals?${searchParams}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch Meals");
-  }
-
-  return await res.json();
+  const url = `${import.meta.env.VITE_BASE_URL}/api/meals?${searchParams}`;
+  return await fetchWithAuth(url, {}, token);
 };
 
 // Get meals for a specific plan
 export const getPlanMeals = async (token, planId, queryParams = {}) => {
   const searchParams = new URLSearchParams(queryParams);
-
-  const res = await fetch(
-    `${import.meta.env.VITE_BASE_URL}/meals/plan/${planId}?${searchParams}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch Plan Meals");
-  }
-
-  return await res.json();
+  const url = `${import.meta.env.VITE_BASE_URL}/api/meals/plan/${planId}?${searchParams}`;
+  return await fetchWithAuth(url, {}, token);
 };
 
 // Get a specific meal by ID
 export const getMealById = async (token, mealId) => {
-  const res = await fetch(
-    `${import.meta.env.VITE_BASE_URL}/meals/${mealId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch meal");
-  }
-
-  return await res.json();
+  const url = `${import.meta.env.VITE_BASE_URL}/api/meals/${mealId}`;
+  return await fetchWithAuth(url, {}, token);
 };
 
 // Create a new meal
 export const createMeal = async (token, mealData) => {
-  const res = await fetch(`${import.meta.env.VITE_BASE_URL}/meals`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const url = `${import.meta.env.VITE_BASE_URL}/api/meals`;
+  return await fetchWithAuth(
+    url,
+    {
+      method: "POST",
+      body: JSON.stringify(mealData),
     },
-    body: JSON.stringify(mealData),
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to create meal");
-  }
-
-  return await res.json();
+    token
+  );
 };
 
 // Update a meal
 export const updateMeal = async (token, mealId, mealData) => {
-  const res = await fetch(
-    `${import.meta.env.VITE_BASE_URL}/meals/${mealId}`,
+  const url = `${import.meta.env.VITE_BASE_URL}/api/meals/${mealId}`;
+  return await fetchWithAuth(
+    url,
     {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
       body: JSON.stringify(mealData),
-    }
+    },
+    token
   );
-
-  if (!res.ok) {
-    throw new Error("Failed to update meal");
-  }
-
-  return await res.json();
 };
 
 // Delete a meal
 export const deleteMeal = async (token, mealId) => {
-  const res = await fetch(
-    `${import.meta.env.VITE_BASE_URL}/meals/${mealId}`,
+  const url = `${import.meta.env.VITE_BASE_URL}/api/meals/${mealId}`;
+  return await fetchWithAuth(
+    url,
     {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
+    },
+    token
   );
-
-  if (!res.ok) {
-    throw new Error("Failed to delete meal");
-  }
-
-  return { success: true, id: mealId };
 };
 
 // Get favorite meals of a client
@@ -121,19 +85,6 @@ export const getFavMealsOfClient = async (token, userId) => {
     sortBy: "createdAt",
     sortOrder: "descending",
   });
-
-  const res = await fetch(
-    `${import.meta.env.VITE_BASE_URL}/users/${userId}/meals?${searchParams}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch favorite meals");
-  }
-
-  return await res.json();
+  const url = `${import.meta.env.VITE_BASE_URL}/api/users/${userId}/meals?${searchParams}`;
+  return await fetchWithAuth(url, {}, token);
 };
