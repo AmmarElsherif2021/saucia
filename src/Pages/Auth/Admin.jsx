@@ -253,30 +253,36 @@ const Admin = () => {
   }, []);
 
   const fetchAdminData = async () => {
-    dispatch({ type: "FETCH_START" });
-    try {
-      const token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
-      const [dashboardData, users, items, meals, plans, orders] = await Promise.all([
-        getAdminDashboard(),
-        getAllUsers(),
-        listItems(),
-        getMeals(token),
-        listPlans(),
-        getAllOrders(token),
-      ]);
+  dispatch({ type: "FETCH_START" });
+  try {
+    const token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+    const [dashboardData, users, items, meals, plans, orders] = await Promise.all([
+      getAdminDashboard(),
+      getAllUsers(),
+      listItems(),
+      getMeals(),
+      listPlans(),
+      getAllOrders(token),
+    ]);
 
-      dispatch({
-        type: "FETCH_SUCCESS",
-        payload: { dashboardData, users, items, meals, plans, orders },
-      });
-    } catch (error) {
-      dispatch({
-        type: "FETCH_ERROR",
-        payload: error.message || "Failed to load admin data",
-      });
-    }
-  };
-
+    dispatch({
+      type: "FETCH_SUCCESS",
+      payload: { 
+        dashboardData,
+        users: users || [],
+        items: items || [], // Add fallback empty array
+        meals: meals || [], // Add fallback empty array
+        plans: plans || [], // Add fallback empty array
+        orders 
+      },
+    });
+  } catch (error) {
+    dispatch({
+      type: "FETCH_ERROR",
+      payload: error.message || "Failed to load admin data",
+    });
+  }
+};
   // Item handlers
   const handleAddItem = async (itemData) => {
     try {
@@ -392,6 +398,48 @@ const Admin = () => {
     dispatch({ type: "SET_SELECTED_PLAN", payload: plan });
   };
 
+  //Temporary importing JSON utils
+  const handleImportItems = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const items = JSON.parse(e.target.result);
+      const token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+      for (const itemData of items) {
+        const newItem = await createItem(token, itemData);
+        dispatch({ type: "ADD_ITEM", payload: newItem });
+      }
+      alert('Items imported successfully!');
+    } catch (error) {
+      alert('Failed to import items: ' + error.message);
+    }
+  };
+  reader.readAsText(file);
+};
+
+const handleImportMeals = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const meals = JSON.parse(e.target.result);
+      const token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+      for (const mealData of meals) {
+        const newMeal = await createMeal(token, mealData);
+        dispatch({ type: "ADD_MEAL", payload: newMeal });
+      }
+      alert('Meals imported successfully!');
+    } catch (error) {
+      alert('Failed to import meals: ' + error.message);
+    }
+  };
+  reader.readAsText(file);
+};
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorAlert message={error} retry={fetchAdminData} />;
 
@@ -467,154 +515,176 @@ const Admin = () => {
           </Box>
 
           {/* Items Section */}
-            <Box 
-            gap={6} 
-            m={12}
-            maxW={"90%"}
-            backgroundColor={"#ffffff"}
-            p={8}
-            >
-              <SectionHeading 
-            title="Items" 
-            onAddClick={itemModals.add.onOpen} 
-            buttonText="Add New Item" 
-              />
-              <TableContainer overflowX="auto">
-            <Table variant="simple" size="sm">
-              <Thead>
-            <Tr>
-              <Th w="15%">Name</Th>
-              <Th w="10%">Section</Th>
-              <Th w="10%">Price</Th>
-              <Th w="10%">Free Count</Th>
-              <Th w="10%">Calories</Th>
-              <Th w="10%">Protein</Th>
-              <Th w="15%">Image</Th>
-              <Th w="15%">Action</Th>
-            </Tr>
-              </Thead>
-              <Tbody>
-            {items.map((item) => (
-              <Tr key={item.id}>
-            <Td w="15%">{item.name}</Td>
-            <Td w="10%">{item.section}</Td>
-            <Td w="10%">{item.price}</Td>
-            <Td w="10%">{item.free_count}</Td>
-            <Td w="10%">{item.kcal}</Td>
-            <Td w="10%">{item.protein}</Td>
-            <Td w="15%" isTruncated maxW="150px">{item.image}</Td>
-            <Td w="15%">
-              <Stack direction="row" spacing={2}>
-                <Button
-              size="xs"
-              colorScheme="blue"
-              onClick={() => {
-                selectItem(item);
-                itemModals.edit.onOpen();
-              }}
+                <Box 
+                gap={6} 
+                m={12}
+                maxW={"90%"}
+                backgroundColor={"#ffffff"}
+                p={8}
                 >
-              Edit
-                </Button>
-                <Button
-              size="xs"
-              colorScheme="red"
-              onClick={() => {
-                selectItem(item);
-                itemModals.delete.onOpen();
-              }}
-                >
-              Delete
-                </Button>
-              </Stack>
-            </Td>
-              </Tr>
-            ))}
-              </Tbody>
-            </Table>
-              </TableContainer>
-            </Box>
-
-            {/* Meals Section */}
-                  <Box 
-                    gap={6} 
-                    m={12}
-                    maxW={"90%"}
-                    backgroundColor={"#ffffff"}
-                    p={8}
-                  >
                   <SectionHeading 
-                    title="Meals" 
-                    onAddClick={mealModals.add.onOpen} 
-                    buttonText="Add New Meal" 
+                title="Items" 
+                onAddClick={itemModals.add.onOpen} 
+                buttonText="Add New Item" 
                   />
-                  <TableContainer overflowX={isTableScrollable ? "auto" : "visible"}>
-                    <Table variant="simple" size={{ base: "sm", md: "md" }}>
+    <Button as="label" colorScheme="blue" cursor="pointer">
+      Import Items
+      <input
+        type="file"
+        hidden
+        accept=".json"
+        onChange={handleImportItems}
+      />
+    </Button>
+                  <TableContainer overflowX="auto">
+                <Table variant="simple" size="sm">
                   <Thead>
-                    <Tr>
-                    <Th>Name</Th>
-                    <Th>Price</Th>
-                    <Th>Premium</Th>
-                    <Th>Plan</Th>
-                    <Th>Calories</Th>
-                    <Th>Protein</Th>
-                    <Th>Carbohydrates</Th>
-                    <Th>Featured</Th>
-                    <Th>Offer Ratio</Th>
-                    <Th>Offer Limit</Th>
-                    <Th>Rate</Th>
-                    <Th>Ingredients</Th>
-                    <Th>Image</Th>
-                    <Th>Actions</Th>
-                    </Tr>
+                <Tr>
+                  <Th w="15%">Name</Th>
+                  <Th w="15%">Name (Arabic)</Th>
+                  <Th w="10%">Section</Th>
+                  <Th w="10%">Section (Arabic)</Th>
+                  <Th w="10%">Addon Price</Th>
+                  <Th w="10%">Free Count</Th>
+                  <Th w="10%">Calories</Th>
+                  <Th w="10%">Protein</Th>
+                  <Th w="15%">Image</Th>
+                  <Th w="15%">Action</Th>
+                </Tr>
                   </Thead>
                   <Tbody>
-                    {meals.map((meal) => (
-                    <Tr key={meal.id}>
-                    <Td>{meal.name}</Td>
-                    <Td>{meal.price}</Td>
-                    <Td>{meal.isPremium === "True" ? "Yes" : "No"}</Td>
-                    <Td>{meal.plan}</Td>
-                    <Td>{meal.kcal}</Td>
-                    <Td>{meal.protein}</Td>
-                    <Td>{meal.carb}</Td>
-                    <Td>{meal.featured? "featured": "notr featured"}</Td>
-                    <Td>{meal.offerRatio}</Td>
-                    <Td>{meal.offerLimit}</Td>
-                    <Td>{meal.rate}</Td>
-                    <Td>{meal.ingredients.join(", ")}</Td>
-                    <Td maxW="150px" isTruncated>{meal.image}</Td>
-                    <Td>
-                    <Stack direction="row" spacing={2}>
-                      <Button
-                    size="sm"
-                    colorScheme="brand"
-                    onClick={() => {
-                  selectMeal(meal);
-                  mealModals.edit.onOpen();
-                }}
+                {items.map((item) => (
+                  <Tr key={item.id}>
+                <Td w="15%">{item.name}</Td>
+                <Td w="15%">{item.name_arabic}</Td>
+                <Td w="10%">{item.section}</Td>
+                <Td w="10%">{item.section_arabic}</Td>
+                <Td w="10%">{item.addon_price}</Td>
+                <Td w="10%">{item.free_count}</Td>
+                <Td w="10%">{item.item_kcal}</Td>
+                <Td w="10%">{item.item_protein}</Td>
+                <Td w="15%" isTruncated maxW="150px">{item.image}</Td>
+                <Td w="15%">
+                  <Stack direction="row" spacing={2}>
+                  <Button
+                  size="xs"
+                  colorScheme="blue"
+                  onClick={() => {
+                  selectItem(item);
+                  itemModals.edit.onOpen();
+                  }}
                   >
-                Edit
+                  Edit
                   </Button>
                   <Button
-                size="sm"
-                colorScheme="red"
-                onClick={() => {
-                  selectMeal(meal);
-                  mealModals.delete.onOpen();
-                }}
+                  size="xs"
+                  colorScheme="red"
+                  onClick={() => {
+                  selectItem(item);
+                  itemModals.delete.onOpen();
+                  }}
                   >
-                Delete
+                  Delete
                   </Button>
-                </Stack>
-              </Td>
-                </Tr>
-              ))}
-            </Tbody>
-              </Table>
-            </TableContainer>
-          </Box>
+                  </Stack>
+                </Td>
+                  </Tr>
+                ))}
+                  </Tbody>
+                </Table>
+                  </TableContainer>
+                </Box>
 
-          {/* Plans Section */}
+                {/* Meals Section */}
+                          <Box 
+                          gap={6} 
+                          m={12}
+                          maxW={"90%"}
+                          backgroundColor={"#ffffff"}
+                          p={8}
+                          >
+                          <SectionHeading 
+                          title="Meals" 
+                          onAddClick={mealModals.add.onOpen} 
+                          buttonText="Add New Meal" 
+                          />
+  <Button as="label" colorScheme="blue" cursor="pointer">
+      Import Meals
+      <input
+        type="file"
+        hidden
+        accept=".json"
+        onChange={handleImportMeals}
+      />
+    </Button>
+                          <TableContainer overflowX={isTableScrollable ? "auto" : "visible"}>
+                          <Table variant="simple" size={{ base: "sm", md: "md" }}>
+                          <Thead>
+                          <Tr>
+                          <Th>Name</Th>
+                          <Th>Name (Arabic)</Th>
+                          <Th>Section</Th>
+                          <Th>Section (Arabic)</Th>
+                          <Th>Price</Th>
+                          <Th>Calories</Th>
+                          <Th>Protein</Th>
+                          <Th>Carbohydrates</Th>
+                          <Th>Policy</Th>
+                          <Th>Ingredients</Th>
+                          <Th>Ingredients (Arabic)</Th>
+                          <Th>Items</Th>
+                          <Th>Image</Th>
+                          <Th>Actions</Th>
+                          </Tr>
+                          </Thead>
+                          <Tbody>
+                          {meals.map((meal) => (
+                          <Tr key={meal.id}>
+                          <Td>{meal.name}</Td>
+                          <Td>{meal.name_arabic}</Td>
+                          <Td>{meal.section || "N/A"}</Td>
+                          <Td>{meal.section_arabic || "N/A"}</Td>
+                          <Td>{meal.price}</Td>
+                          <Td>{meal.kcal}</Td>
+                          <Td>{meal.protein}</Td>
+                          <Td>{meal.carb}</Td>
+                          <Td>{meal.policy}</Td>
+                          <Td>{meal.ingredients}</Td>
+                          <Td>{meal.ingredients_arabic}</Td>
+                          <Td>{meal?.items?.length > 0 ? meal.items.join(", ") : "N/A"}</Td>
+                          <Td>{meal?.image}</Td>
+                          <Td>
+                          <Stack direction="row" spacing={2}>
+                            <Button
+                          size="sm"
+                          colorScheme="brand"
+                          onClick={() => {
+                          selectMeal(meal);
+                          mealModals.edit.onOpen();
+                        }}
+                          >
+                        Edit
+                          </Button>
+                          <Button
+                        size="sm"
+                        colorScheme="red"
+                        onClick={() => {
+                          selectMeal(meal);
+                          mealModals.delete.onOpen();
+                        }}
+                          >
+                        Delete
+                          </Button>
+                        </Stack>
+                        </Td>
+                        </Tr>
+                        ))}
+                      </Tbody>
+                        </Table>
+                      </TableContainer>
+                      </Box>
+
+                      {/* Plans Section */}
           <Box gap={6} m={12} maxW="90%" bg="white" p={8}>
             <SectionHeading 
               title="Plans" 
@@ -730,85 +800,84 @@ const Admin = () => {
           </Box>
 
           {/* Item Modals */}
-      <FormModal
-        isOpen={itemModals.add.isOpen}
-        onClose={itemModals.add.onClose}
-        title="Add New Item"
-        onSubmit={handleAddItem}
-        initialData={{
-          name: "Sample Item",
-          section: "fruits",
-          price: 0,
-          free_count: 0,
-          kcal: 0,
-          protein: 0,
-          image:"https://drive.google.com/file/d/1C85wJLJaXWWZ4tvRrA0RDZ5WCQvrCiMX/view?usp=drive_link"
-        }}
-        FormComponent={ItemForm}
-      />
+            <FormModal
+              isOpen={itemModals.add.isOpen}
+              onClose={itemModals.add.onClose}
+              title="Add New Item"
+              onSubmit={handleAddItem}
+              initialData={{
+                name: "",
+                name_arabic: "",
+                section: "",
+                section_arabic: "",
+                addon_price: 0,
+                free_count: 0,
+                item_kcal: 0,
+                item_protein: 0,
+                image: "",
+              }}
+              FormComponent={ItemForm}
+            />
 
-      <FormModal
-        isOpen={itemModals.edit.isOpen}
-        onClose={itemModals.edit.onClose}
-        title="Edit Item"
-        onSubmit={(data) => handleEditItem(state.selectedItem?.id, data)}
-        initialData={state.selectedItem}
-        FormComponent={ItemForm}
-        isEdit={true}
-      />
+            <FormModal
+              isOpen={itemModals.edit.isOpen}
+              onClose={itemModals.edit.onClose}
+              title="Edit Item"
+              onSubmit={(data) => handleEditItem(state.selectedItem?.id, data)}
+              initialData={state.selectedItem}
+              FormComponent={ItemForm}
+              isEdit={true}
+            />
 
-      <ConfirmationModal
-        isOpen={itemModals.delete.isOpen}
-        onClose={itemModals.delete.onClose}
-        onConfirm={() => state.selectedItem?.id && handleDeleteItem(state.selectedItem.id)}
-        title="Confirm Delete"
-        message="Are you sure you want to delete this item?"
-      />
+            <ConfirmationModal
+              isOpen={itemModals.delete.isOpen}
+              onClose={itemModals.delete.onClose}
+              onConfirm={() => state.selectedItem?.id && handleDeleteItem(state.selectedItem.id)}
+              title="Confirm Delete"
+              message="Are you sure you want to delete this item?"
+            />
 
-      {/* Meal Modals */}
-      <FormModal
-        isOpen={mealModals.add.isOpen}
-        onClose={mealModals.add.onClose}
-        title="Add New Meal"
-        onSubmit={handleAddMeal}
-        initialData={{
-          name: "Chicken Salad",
-          description:"add description",
-          price: 12.99,
-          isPremium: "True",
-          plan: "Keto",
-          kcal: 350,
-          protein: 25,
-          carb: 10,
-          rate:4.5,
-          featured:false,
-          offerRatio:1,
-        
-          ingredients: ["Chicken", "lettuce", "olive oil"],
-          image:"https://drive.google.com/file/d/1pJzEej9ZWuYgEmDWtLQjaMFInA4vwIGB/view?usp=drive_link"
-        }}
-        FormComponent={MealForm}
-      />
+            {/* Meal Modals */}
+              <FormModal
+                isOpen={mealModals.add.isOpen}
+                onClose={mealModals.add.onClose}
+                title="Add New Meal"
+                onSubmit={handleAddMeal}
+                initialData={{
+                  name: "",
+                  name_arabic: "",
+                  section: "",
+                  section_arabic: "",
+                  price: 0,
+                  kcal: 0,
+                  protein: 0,
+                  carb: 0,
+                  policy: "",
+                  ingredients: "",
+                  ingredients_arabic: "",
+                  items: [],
+                  image: "",
+                }}
+                FormComponent={MealForm}
+              />
 
-      <FormModal
-        isOpen={mealModals.edit.isOpen}
-        onClose={mealModals.edit.onClose}
-        title="Edit Meal"
-        onSubmit={(data) => state.selectedMeal?.id && handleEditMeal(state.selectedMeal.id, data)}
-        initialData={state.selectedMeal}
-        FormComponent={MealForm}
-        isEdit={true}
-      />
+              <FormModal
+                isOpen={mealModals.edit.isOpen}
+                onClose={mealModals.edit.onClose}
+                title="Edit Meal"
+                onSubmit={(data) => state.selectedMeal?.id && handleEditMeal(state.selectedMeal.id, data)}
+                initialData={state.selectedMeal}
+                FormComponent={MealForm}
+                isEdit={true}
+              />
 
-      <ConfirmationModal
-        isOpen={mealModals.delete.isOpen}
-        onClose={mealModals.delete.onClose}
-        onConfirm={() => state.selectedMeal?.id && handleDeleteMeal(state.selectedMeal.id)}
-        title="Confirm Delete"
-        message="Are you sure you want to delete this meal?"
-      />
-
-      {/* Plan Modals */}
+              <ConfirmationModal
+                isOpen={mealModals.delete.isOpen}
+                onClose={mealModals.delete.onClose}
+                onConfirm={() => state.selectedMeal?.id && handleDeleteMeal(state.selectedMeal.id)}
+                title="Confirm Delete"
+                message="Are you sure you want to delete this meal?"
+              />
       <FormModal
         isOpen={planModals.add.isOpen}
         onClose={planModals.add.onClose}
@@ -821,7 +890,7 @@ const Admin = () => {
           carb: 150,
           protein: 120,
           kcal: 2000,
-          avatar: "https://drive.google.com/file/d/1DYkLiD8F3MUzqax9BCNhRzCU87qRKuvd/view?usp=drive_link",
+          avatar: "",
           members: [],
         }}
         FormComponent={PlanForm}

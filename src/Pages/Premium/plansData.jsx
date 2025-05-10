@@ -11,6 +11,7 @@ export const getPlans = () => {
 
   return ([
     {
+    id:1,
     name: t("plans.dailyMealPlan"), 
     description: t("plans.dailyMealDescription"), 
     image: dailyMealPlanImage,
@@ -33,6 +34,7 @@ export const getPlans = () => {
     snacks: ["Hummus", "Veggie Sticks", "Cheese", "Protein Bars"],
     },
     {
+    id:2,
     name: t("plans.gainWeightPlan"),
     description: t("plans.gainWeightDescription"),
     image: gainWeightPlanImage, 
@@ -44,6 +46,7 @@ export const getPlans = () => {
     snacks: ["Trail Mix", "Peanut Butter", "Smoothies", "Dark Chocolate"],
     },
     {
+    id:3,
     name: t("plans.loseWeightPlan"),
     description: t("plans.loseWeightDescription"),
     image: loseWeightPlanImage,
@@ -55,6 +58,7 @@ export const getPlans = () => {
     snacks: ["Celery Sticks", "Hard-Boiled Eggs", "Rice Cakes", "Popcorn"],
     },
     {
+    id:4,
     name: t("plans.saldsPlan"),
     description: t("plans.saldsDescription"),
     image: saladsPlanImage, 

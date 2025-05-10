@@ -1,24 +1,24 @@
-import { FormControl, FormLabel, Input, Button, Flex } from "@chakra-ui/react"; // Ensure Chakra UI is installed
+import { FormControl, FormLabel, Input, Button, Flex } from "@chakra-ui/react";
 import { useState } from "react";
-// Form Component
+
 const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
     const [formData, setFormData] = useState({
         name: initialData.name || "",
+        name_arabic: initialData.name_arabic || "",
         section: initialData.section || "",
-        price: initialData.price || 0,
+        section_arabic: initialData.section_arabic || "",
+        addon_price: initialData.addon_price || 0,
         free_count: initialData.free_count || 0,
-        kcal: initialData.kcal || 0,
-        protein: initialData.protein || 0,
+        item_kcal: initialData.item_kcal || 0,
+        item_protein: initialData.item_protein || 0,
         image: initialData.image || ""
     });
 
-    // Handle input changes
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    // Handle form submission
     const handleSubmit = (e) => {
         e.preventDefault();
         onSubmit(formData);
@@ -37,6 +37,15 @@ const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
                 />
             </FormControl>
             <FormControl mb={4}>
+                <FormLabel>Name (Arabic)</FormLabel>
+                <Input
+                    type="text"
+                    name="name_arabic"
+                    value={formData.name_arabic}
+                    onChange={handleChange}
+                />
+            </FormControl>
+            <FormControl mb={4}>
                 <FormLabel>Section</FormLabel>
                 <Input
                     type="text"
@@ -47,13 +56,21 @@ const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
                 />
             </FormControl>
             <FormControl mb={4}>
-                <FormLabel>Price</FormLabel>
+                <FormLabel>Section (Arabic)</FormLabel>
+                <Input
+                    type="text"
+                    name="section_arabic"
+                    value={formData.section_arabic}
+                    onChange={handleChange}
+                />
+            </FormControl>
+            <FormControl mb={4}>
+                <FormLabel>Addon Price</FormLabel>
                 <Input
                     type="number"
-                    name="price"
-                    value={formData.price}
+                    name="addon_price"
+                    value={formData.addon_price}
                     onChange={handleChange}
-                    required
                 />
             </FormControl>
             <FormControl mb={4}>
@@ -69,8 +86,8 @@ const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
                 <FormLabel>Calories (kcal)</FormLabel>
                 <Input
                     type="number"
-                    name="kcal"
-                    value={formData.kcal}
+                    name="item_kcal"
+                    value={formData.item_kcal}
                     onChange={handleChange}
                 />
             </FormControl>
@@ -78,8 +95,8 @@ const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
                 <FormLabel>Protein (g)</FormLabel>
                 <Input
                     type="number"
-                    name="protein"
-                    value={formData.protein}
+                    name="item_protein"
+                    value={formData.item_protein}
                     onChange={handleChange}
                 />
             </FormControl>
@@ -106,38 +123,3 @@ const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
 };
 
 export default ItemForm;
-
-// Usage Example:
-// Import the component and use it in your application
-/*
-
-const App = () => {
-    const handleFormSubmit = (data) => {
-        console.log("Form submitted with data:", data);
-    };
-
-    const handleCancel = () => {
-        console.log("Form canceled");
-    };
-
-    return (
-        <div>
-            <h1>Item Form</h1>
-            <ItemForm
-                onSubmit={handleFormSubmit}
-                onCancel={handleCancel}
-                initialData={{
-                    name: "Sample Item",
-                    section: "Food",
-                    price: 10,
-                    free_count: 2,
-                    kcal: 200,
-                    protein: 10,
-                }}
-            />
-        </div>
-    );
-};
-
-export default App;
-*/

@@ -9,15 +9,158 @@ import {
   useColorMode,
   useToast,
   Input,
+  Stack
 } from "@chakra-ui/react";
-import { AddIcon } from "@chakra-ui/icons";
-import { useState } from "react";
-import dessertPic from "../assets/dessert.JPG";
-import fruitPic from "../assets/fruits.JPG";
-import leavesPic from "../assets/leaves.JPG";
-import { CartCard } from "./Cards";
-import { useI18nContext } from "../Contexts/I18nContext";
+import { IconButton, AddIcon, MinusIcon, DeleteIcon } from "@chakra-ui/icons";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import dailySaladIcon from "../assets/premium/dailySalad.png"
+import { useElements } from "../Contexts/ElementsContext";
+// Compact cart card
+export const CartCard = ({ 
+  name, 
+  price, 
+  image, 
+  addOns=[],
+  quantity,
+  onIncrease,
+  onDecrease,
+  onRemove 
+}) => {
+  const { colorMode } = useColorMode();
+  const {t}=useTranslation();
+  const {items}=useElements();
+  
+  useEffect(() => {
+    console.log(`addOns from cart`, addOns);
+  }, [addOns]);
+  
+  return (
+    <Flex
+      direction="row"
+      align="center"
+      bg={colorMode === "dark" ? "gray.700" : "white"}
+      borderRadius="27px"
+      p={2}
+      mb={2}
+      width="90%"
+      position="relative"
+      _hover={{ 
+        transform: "scale(1.01)"
+      }}
+      transition="all 0.2s"
+    >
+      <Box
+        position="relative"
+        width="100px"
+        height="100px"
+        overflow="hidden"
+        borderRadius="25px"
+        flexShrink={0}
+      >
+        <Box
+          as="img"
+          src={image}
+          alt={name}
+          objectFit="cover"
+          width="100%"
+          height="100%"
+          filter="brightness(0.95)"
+        />
+        <Badge
+          position="absolute"
+          bottom="2"
+          right="2"
+          bg="brand.600"
+          color="white"
+          borderRadius="full"
+          px={2}
+          py={1}
+          fontSize="xs"
+        >
+          ×{quantity}
+        </Badge>
+      </Box>
+
+      <Box textAlign="left" flex="3" px={3} minW="50">
+        <Text 
+          fontWeight="bold" 
+          fontSize="lg" 
+          color={colorMode === "dark" ? "white" : "brand.900"}
+          noOfLines={1}
+          py={0.5}
+          my={0.5}
+        >
+          {name}
+        </Text>
+        <Text 
+          fontSize="md" 
+          color="brand.900"
+          fontWeight="bold"
+          py={0.5}
+          my={0.5}
+        >
+          ${(price * quantity)?.toFixed(2)}
+        </Text>
+        <Flex wrap="wrap" gap={1} py={0.5} my={0.5}>
+          {Array.isArray(addOns) && addOns.length > 0 && addOns.map((addOnId, index) => {
+            const addOn = items.find((item) => item.id === addOnId);
+            return addOn ? (
+              <Badge
+                key={`${addOnId}-${index}`}
+                colorScheme="teal"
+                borderRadius="full"
+                px={2}
+                py={1}
+                fontSize="xs"
+              >
+                {addOn.name}
+              </Badge>
+            ) : null;
+          })}
+        </Flex>
+        <Text 
+          fontSize="sm" 
+          color={colorMode === "dark" ? "gray.400" : "gray.500"}
+          py={0.5}
+          my={0.5}
+        >
+          ${price?.toFixed(2)} {t('common.each')}
+        </Text>
+      </Box>
+
+      <Flex align="center">
+        <IconButton
+          icon={<MinusIcon />}
+          aria-label={t('buttons.decreaseQuantity')}
+          size="xs"
+          as={Button}
+          variant="outlined"
+          onClick={onDecrease}
+        />
+        <Text mx={1} fontSize="sm" minW="20px" textAlign="center">
+          {quantity}
+        </Text>
+        <IconButton
+          icon={<AddIcon />}
+          as={Button}
+          aria-label={t('buttons.increaseQuantity')}
+          size="xs"
+          variant="outlined"
+          onClick={onIncrease}
+        />
+        <Button
+          aria-label={t('buttons.removeItem')}
+          size="xs"
+          variant="solid"
+          onClick={onRemove}
+          colorScheme="error"
+          ml={2}
+        ><DeleteIcon /></Button>
+      </Flex>
+    </Flex>
+  );
+};
 
 export const CRT = ({
   items = [],
@@ -36,7 +179,7 @@ export const CRT = ({
   const handleIncrease = (itemId) => {
     onIncrease(itemId);
     toast({
-      title: t("toasts.quantityUpdated"), // Translate "Quantity updated"
+      title: t("toasts.quantityUpdated"),
       status: "success",
       duration: 1000,
       isClosable: true,
@@ -47,8 +190,8 @@ export const CRT = ({
     const item = items.find((i) => i.id === itemId);
     if (item.quantity <= 1) {
       toast({
-        title: t("toasts.minQuantity"), // Translate "Minimum quantity is 1"
-        description: t("toasts.cantReduceQuantity"), // Translate "Cannot reduce quantity further"
+        title: t("toasts.minQuantity"),
+        description: t("toasts.cantReduceQuantity"),
         status: "warning",
         duration: 2000,
         isClosable: true,
@@ -61,8 +204,8 @@ export const CRT = ({
   const handleRemove = (itemId, itemName) => {
     onRemove(itemId);
     toast({
-      title: t("toasts.itemRemoved"), // Translate "Item removed from cart"
-      description: t("toasts.itemRemovedDescription", { itemName }), // Translate "Removed {itemName} from cart"
+      title: t("toasts.mealRemoved"),
+      description: t("toasts.mealRemovedDescription", { mealName: itemName }),
       status: "info",
       duration: 2000,
       isClosable: true,
@@ -72,16 +215,16 @@ export const CRT = ({
   const handleApplyPromoCode = () => {
     if (promoCode === "DISCOUNT10") {
       toast({
-        title: t("toasts.promoApplied"), // Translate "Promo code applied"
-        description: t("toasts.discountApplied"), // Translate "Discount applied successfully"
+        title: t("toasts.promoApplied"),
+        description: t("toasts.discountApplied"),
         status: "success",
         duration: 2000,
         isClosable: true,
       });
     } else {
       toast({
-        title: t("toasts.invalidPromo"), // Translate "Invalid promo code"
-        description: t("toasts.checkPromoCode"), // Translate "Please check the promo code and try again"
+        title: t("toasts.invalidPromo"),
+        description: t("toasts.checkPromoCode"),
         status: "error",
         duration: 2000,
         isClosable: true,
@@ -89,196 +232,121 @@ export const CRT = ({
     }
   };
 
-  return (
+  return(
     <Box
-      bg={colorMode === "dark" ? "gray.700" : "brand.400"}
-      borderRadius="50px"
-      boxShadow="none"
-      p={6}
-      width="100%"
-      maxW="500px"
+      bg={colorMode === "dark" ? "gray.800" : "brand.200"}
+      borderRadius="25px"
+      p={{ base: 8, md: 12}}
+      width="80%"
+      maxW="600px"
       mx="auto"
     >
-      <Heading size="lg" mb={0.5} color="brand.900">
-        {t("cart.yourCart")} {/* Translate "Your Cart" */}
-        <Badge ml={3} colorScheme="warning" fontSize="md">
-          {items.length} {items.length === 1 ? t("cart.item") : t("cart.items")} {/* Translate "item/items" */}
+      <Flex align="center" justify="space-between" mb={4}>
+        <Heading size="lg" fontWeight="semibold">
+          {t("cart.yourCart")}
+        </Heading>
+        <Badge colorScheme="warning" fontSize="md" px={3} py={1} borderRadius="full">
+          {items.length} {items.length === 1 ? t("cart.meal") : t("cart.meals")}
         </Badge>
-      </Heading>
+      </Flex>
 
       {items.length === 0 ? (
-        <Text color={colorMode === "dark" ? "gray.300" : "gray.600"} py={4}>
-          {t("cart.emptyCart")} {/* Translate "Your cart is empty" */}
+        <Text color="gray.500" py={4} textAlign="center">
+          {t("cart.emptyCart")}
         </Text>
       ) : (
-        <Box mb={4}>
+        <Stack spacing={3} mb={6}>
           {items.map((item) => (
             <CartCard
               key={item.id}
               name={item.name}
               price={item.price}
-              image={item.image}
-              quantity={item.quantity}
+              image={item.image || dailySaladIcon}
+              quantity={item?.quantity || item?.qty}
+              addOns={item.addOns || []}
               onIncrease={() => handleIncrease(item.id)}
               onDecrease={() => handleDecrease(item.id)}
               onRemove={() => handleRemove(item.id, item.name)}
             />
           ))}
-        </Box>
+        </Stack>
       )}
 
       {items.length > 0 && (
         <>
-          <Divider my={2} />
-          <Flex justify="space-between" align="center" mb={0.5}>
-            <Text fontWeight="bold" fontSize="lg">
-              {t("cart.subtotal")} {/* Translate "Subtotal" */}
-            </Text>
-            <Text fontWeight="bold" fontSize="xl" color="brand.900">
-              ${totalPrice.toFixed(2)}
-            </Text>
-          </Flex>
-          <Flex justify="space-between" align="center" mb={0.5}>
-            <Text fontSize="md" color={colorMode === "dark" ? "gray.300" : "gray.900"}>
-              {t("cart.deliveryFee")} {/* Translate "Delivery Fee" */}
-            </Text>
-            <Text color="brand.900">$2.99</Text>
-          </Flex>
-          <Divider my={1} />
-          <Flex justify="space-between" align="center" mb={0.5}>
-            <Text fontWeight="bold" fontSize="lg">
-              {t("cart.total")} {/* Translate "Total" */}
-            </Text>
-            <Text fontWeight="bold" fontSize="xl" color="brand.900">
-              ${(totalPrice + 2.99).toFixed(2)}
-            </Text>
-          </Flex>
+          <Divider my={4} />
+          <Stack spacing={2} mb={6}>
+            <Flex justify="space-between">
+              <Text fontWeight="medium">{t("cart.subtotal")}</Text>
+              <Text fontWeight="medium">${totalPrice.toFixed(2)}</Text>
+            </Flex>
+            <Flex justify="space-between">
+              <Text color="gray.500">{t("cart.deliveryFee")}</Text>
+              <Text color="gray.600">$2.99</Text>
+            </Flex>
+            <Divider my={2} />
+            <Flex justify="space-between" fontSize="lg">
+              <Text fontWeight="bold">{t("cart.total")}</Text>
+              <Text fontWeight="bold" color="teal.600">
+                ${(totalPrice + 2.99).toFixed(2)}
+              </Text>
+            </Flex>
+          </Stack>
         </>
       )}
 
-      {/* Special Instructions */}
-      <Box mb={6}>
-        <Heading size="md" mb={4}>
-          {t("cart.specialInstructions")} {/* Translate "Special Instructions" */}
-        </Heading>
-        <Input
-          placeholder={t("cart.specialInstructionsPlaceholder")} 
-          variant="outline"
-          size="md"
-          w={"md"}
-          sx={{
-            borderColor: "brand.800",
-            borderWidth: "2px",
-            bg: colorMode === "dark" ? "brand.900" : "brand.200",
-          }}
-        />
-      </Box>
-
-      {/* Promo Code */}
-      <Box mb={6}>
-        <Heading size="md" mb={4}>
-          {t("cart.promoCode")} {/* Translate "Promo Code" */}
-        </Heading>
-        <Flex gap={2}>
+      <Stack spacing={6}>
+        <Box>
+          <Text fontWeight="medium" mb={2}>
+            {t("cart.specialInstructions")}
+          </Text>
           <Input
-            placeholder={t("cart.enterPromoCode")} 
-            value={promoCode}
-            onChange={(e) => setPromoCode(e.target.value)}
-            variant="outline"
-            size="md"
-            sx={{
-              borderColor: "brand.800",
-              borderWidth: "2px",
-              bg: colorMode === "dark" ? "brand.900" : "brand.200",
-            }}
+            placeholder={t("cart.specialInstructionsPlaceholder")}
+            variant="filled"
+            size="sm"
+            w={"90%"}
+            _focus={{ borderColor: "teal.500" }}
           />
-          <Button colorScheme="brand" onClick={handleApplyPromoCode}>
-            {t("buttons.apply")} {/* Translate "Apply" */}
+        </Box>
+
+        <Box>
+          <Text fontWeight="medium" mb={2}>
+            {t("cart.promoCode")}
+          </Text>
+          <Flex gap={2} direction={{ base: "column", sm: "row" }}>
+            <Input
+              placeholder={t("cart.enterPromoCode")}
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value)}
+              variant="filled"
+              flex={1}
+              w={"90%"}
+              _focus={{ borderColor: "teal.500" }}
+            />
+            <Button
+              colorScheme="teal"
+              onClick={handleApplyPromoCode}
+              px={6}
+              flexShrink={0}
+            >
+              {t("buttons.apply")}
+            </Button>
+          </Flex>
+        </Box>
+
+        {checkoutButton && items.length > 0 && (
+          <Button
+            colorScheme="teal"
+            size="lg"
+            width="full"
+            onClick={onCheckout}
+            height="48px"
+            fontWeight="bold"
+          >
+            {t("buttons.proceedToCheckout")}
           </Button>
-        </Flex>
-      </Box>
-
-      {checkoutButton && items.length > 0 && (
-        <Button
-          colorScheme="brand"
-          size="lg"
-          width="full"
-          rightIcon={<AddIcon />}
-          onClick={onCheckout}
-        >
-          {t("buttons.proceedToCheckout")} {/* Translate "Proceed to Checkout" */}
-        </Button>
-      )}
-    </Box>
-  );
-};
-
-export const CartDemo = () => {
-  const { t } = useTranslation()
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: t("classicChocolateCake"),
-      price: 8.99,
-      quantity: 2,
-      image: dessertPic,
-    },
-    {
-      id: 2,
-      name: t("freshFruitPlatter"),
-      price: 12.99,
-      quantity: 1,
-      image: fruitPic,
-    },
-    {
-      id: 3,
-      name: t("freshLeavesPlatter"),
-      price: 15.99,
-      quantity: 3,
-      image: leavesPic,
-    },
-  ]);
-
-  const handleIncrease = (itemId) => {
-    setCartItems(
-      cartItems.map((item) =>
-        item.id === itemId ? { ...item, quantity: item.quantity + 1 } : item
-      )
-    );
-  };
-
-  const handleDecrease = (itemId) => {
-    setCartItems(
-      cartItems.map((item) =>
-        item.id === itemId ? { ...item, quantity: item.quantity - 1 } : item
-      )
-    );
-  };
-
-  const handleRemove = (itemId) => {
-    setCartItems(cartItems.filter((item) => item.id !== itemId));
-  };
-
-  const handleCheckout = () => {
-    console.log(t("proceedingToCheckout"), cartItems);
-    // Add your checkout logic here
-  };
-
-  const totalPrice = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-
-  return (
-    <Box p={4}>
-      <CRT
-        items={cartItems}
-        totalPrice={totalPrice}
-        onIncrease={handleIncrease}
-        onDecrease={handleDecrease}
-        onRemove={handleRemove}
-        onCheckout={handleCheckout}
-      />
+        )}
+      </Stack>
     </Box>
   );
 };

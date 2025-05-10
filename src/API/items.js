@@ -20,23 +20,24 @@ const fetchWithAuth = async (url, options = {}, token) => {
   }
 };
 
-// Get all items
+// In items.js update these functions:
 export const listItems = async (queryParams = {}) => {
   const searchParams = new URLSearchParams(queryParams);
   const url = `${import.meta.env.VITE_BASE_URL}/api/items?${searchParams}`;
-  return await fetchWithAuth(url);
+  const response = await fetch(url);
+  return await response.json(); // Add JSON parsing
 };
 
-// Get an item by ID
 export const getItemById = async (itemId) => {
   const url = `${import.meta.env.VITE_BASE_URL}/api/items/${itemId}`;
-  return await fetchWithAuth(url);
+  const response = await fetch(url);
+  return await response.json(); // Add JSON parsing
 };
 
-// Get items by section
 export const getItemsBySection = async (section) => {
   const url = `${import.meta.env.VITE_BASE_URL}/api/items/section/${section}`;
-  return await fetchWithAuth(url);
+  const response = await fetch(url);
+  return await response.json(); 
 };
 
 // Create a new item

@@ -1,184 +1,70 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { onAuthStateChanged, signOut, getIdTokenResult } from "firebase/auth";
-import { auth } from "../../firebaseConfig"; // Import initialized Firebase services
-import { doc, getDoc, getFirestore } from "firebase/firestore";
+import { createContext, useState, useEffect, useContext } from "react";
+import { listItems, getItemsBySection } from "../API/items";
+import { getMeals } from "../API/meals";
+import { listPlans } from "../API/plans";
 
-// Create context
 const ElementsContext = createContext();
 
 export const ElementsProvider = ({ children }) => {
-  const elementsReducer = (state, action) => {
-  switch (action.type) {
-    case "FETCH_START":
-      return { ...state, loading: true, error: null };
-    case "FETCH_SUCCESS":
-      return {
-        ...state,
-        loading: false,
-        heroData: action.payload.heroData|| state.heroData,
-        featuredData: action.payload.featuredData || state.featuredData,
-        offeredData: action.payload.offeredData || state.offeredData,
-        items: action.payload.items || state.items,
-        meals: action.payload.meals || state.meals,
-        plans: action.payload.plans || state.plans,
-      };
-    case "FETCH_ERROR":
-      return { ...state, loading: false, error: action.payload };
-    case "ADD_ITEM":
-      return { ...state, items: [...state.items, action.payload] };
-    case "ADD_MEAL":
-      return { ...state, meals: [...state.meals, action.payload] };
-    case "ADD_PLAN":
-      return { ...state, plans: [...state.plans, action.payload] };
-    case "EDIT_ITEM":
-      return {
-        ...state,
-        items: state.items.map(item =>
-          item.id === action.payload.id ? action.payload : item
-        ),
-      };
-    case "DELETE_ITEM":
-      return {
-        ...state,
-        items: state.items.filter(item => item.id !== action.payload),
-      };
-    case "EDIT_MEAL":
-      return {
-        ...state,
-        meals: state.meals.map(meal =>
-          meal.id === action.payload.id ? action.payload : meal
-        ),
-      };
-    case "DELETE_MEAL":
-      return {
-        ...state,
-        meals: state.meals.filter(meal => meal.id !== action.payload),
-      };
-    case "EDIT_PLAN":
-      return {
-        ...state,
-        plans: state.plans.map(plan =>
-          plan.id === action.payload.id ? action.payload : plan
-        ),
-      };
-    case "DELETE_PLAN":
-      return {
-        ...state,
-        plans: state.plans.filter(plan => plan.id !== action.payload),
-      };
-    case "SET_SELECTED_ITEM":
-      return { ...state, selectedItem: action.payload };
-    case "SET_SELECTED_MEAL":
-      return { ...state, selectedMeal: action.payload };
-    case "SET_SELECTED_PLAN":
-      return { ...state, selectedPlan: action.payload };
-    default:
-      return state;
-  }
-};
+  const [elementsState, setElementsState] = useState({
+    items: [],
+    meals: [],
+    plans: [],
+    featuredMeals: [],
+    offersMeals: [],
+    saladItems: [],
+    fruitItems: [],
+    elementsLoading: true
+  });
 
-const initialState = {
-  dashboardData: null,
-  users: [],
-  items: [],
-  meals: [],
-  plans: [],
-  orders: [],
-  loading: true,
-  error: null,
-  selectedItem: null,
-  selectedMeal: null,
-  selectedPlan: null,
-};
-
-
-  // Get user data directly from Firestore instead of API
-  const getUserInfoFromFirestore = async (uid) => {
+  const fetchElements = async () => {
     try {
-      const userRef = doc(db, "users", uid);
-      const userSnap = await getDoc(userRef);
+      // Fetch all base data
+      const [items, meals, plans] = await Promise.all([
+        listItems(),
+        getMeals(),
+        listPlans()
+      ]);
       
-      if (!userSnap.exists()) {
-        console.log("No user document found in Firestore");
-        return null;
-      }
+      // Filter featured and offer meals
+      const featuredMeals = meals.filter((x) => x.rate > 4.5);
+      const offersMeals = meals.filter((x) => x.offerRatio < 1);
       
-      return userSnap.data();
+      // Fetch section-specific items for selective meals
+      const saladItems = items.filter(item => item.section !== "salad-fruits");
+      const fruitItems = items.filter(item => item.section === "salad-fruits");
+      
+      setElementsState({
+        items: items || [],
+        meals: meals || [],
+        plans: plans || [],
+        featuredMeals: featuredMeals || [],
+        offersMeals: offersMeals || [],
+        saladItems: saladItems || [],
+        fruitItems: fruitItems || [],
+        elementsLoading: false
+      });
     } catch (error) {
-      console.error("Error getting user from Firestore:", error);
-      return null;
+      console.error("Error fetching elements:", error);
+      setElementsState(prev => ({ ...prev, elementsLoading: false }));
     }
   };
 
-  // Logout function
-  const logout = async () => {
-    try {
-      await signOut(auth);
-      setUser(null);
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
-
-  // Auth state listener
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        try {
-          // Get token result to check for admin claim
-          const tokenResult = await getIdTokenResult(firebaseUser);
-          const isAdmin = !!tokenResult.claims.admin;
-          
-          // Get user data from Firestore
-          const userData = await getUserInfoFromFirestore(firebaseUser.uid);
-
-          // Combine Firebase Auth user with Firestore user data
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName || (userData?.displayName || ''),
-            photoURL: firebaseUser.photoURL,
-            emailVerified: firebaseUser.emailVerified,
-            // Include admin status from token claim
-            isAdmin: isAdmin,
-            // Include Firestore data if available
-            ...(userData || {}),
-          });
-        } catch (error) {
-          console.error("Error in auth state change:", error);
-          setUser(null);
-        }
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
-
-    // Cleanup subscription
-    return () => unsubscribe();
+    fetchElements();
   }, []);
 
-  const contextValue = {
-    user,
-    setUser,
-    logout,
-    loading,
-  };
-
   return (
-    <ElementsContext.Provider value={contextValue}>
+    <ElementsContext.Provider value={elementsState}>
       {children}
     </ElementsContext.Provider>
   );
 };
 
-// Custom hook to use the user context
-export const useUser = () => {
+export const useElements = () => {
   const context = useContext(ElementsContext);
-  if (context === undefined) {
-    throw new Error("useUser must be used within a ElementsProvider");
+  if (!context) {
+    throw new Error("useElements must be used within an ElementsProvider");
   }
   return context;
 };
-
-export default ElementsContext;

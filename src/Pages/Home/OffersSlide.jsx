@@ -1,63 +1,27 @@
-import { Box, Heading, useColorMode } from "@chakra-ui/react";
+import { Heading, VStack, Text } from "@chakra-ui/react";
 import { ItemsCarousel } from "../../Components/ItemsCarousel";
 import { OfferCard } from "../../Components/Cards";
-import { useI18nContext } from "../../Contexts/I18nContext";
-import dessertPic from "../../assets/dessert.JPG";
-import fruitPic from "../../assets/fruits.JPG";
-import leavesPic from "../../assets/leaves.JPG";
 import { useTranslation } from "react-i18next";
-
-export const OffersSlide = ({ offers = [] }) => {
-  const { colorMode } = useColorMode();
-  const { t } = useTranslation()
+import { useEffect } from "react";
+export const OffersSlide = ({offersMeals}) => {
+  const { t } = useTranslation();
+  useEffect(() => console.log(`From offers items ${(JSON.stringify(offersMeals))}`), [offersMeals]);
 
   return (
-    <Box p={4} bg="transparent">
+    <VStack p={4} bg="transparent" alignItems="center">
       <Heading fontSize={"3em"} mb={6} textStyle="heading">
-        {t("offerSlide.title")} {/* Translate "Exclusive Offers" */}
+        {t("offerSlide.title")}
       </Heading>
 
-      {/* Carousel */}
-      <ItemsCarousel visibleCount={offers?.length} items={offers} CardComponent={OfferCard} />
-    </Box>
+      {offersMeals?.length > 0 ? (
+        <ItemsCarousel
+          items={offersMeals}
+          CardComponent={OfferCard}
+          visibleCount={3}
+        />
+      ) : (
+        <Text>{t("offerSlide.noOffers")}</Text>
+      )}
+    </VStack>
   );
 };
-
-// Example Usage
-export const OffersSlideDemo = () => {
-  const { t } = useTranslation()
-
-  const sampleOffers = [
-    {
-      name: "Buy 1 Get 1 Free",
-      description: "Applicable on select items only.",
-      price: 0,
-      image: dessertPic,
-      rating: 4.5,
-    },
-    {
-      name: "20% Off on Combos",
-      description: "Get 20% off on all combo meals.",
-      price: 0,
-      image: fruitPic,
-      rating: 4.8,
-    },
-    {
-      name: "Limited-Time Dessert Offer",
-      description: "Flat 50% off on desserts.",
-      price: 0,
-      image:leavesPic,
-      rating: 4.7,
-    },
-    {
-      name: "Loyalty Program Discount",
-      description: "Extra 10% off for loyalty members.",
-      price: 0,
-      image: dessertPic,
-      rating: 4.9,
-    },
-  ];
-
-  return <OffersSlide offers={sampleOffers} />;
-};
-

@@ -17,20 +17,26 @@ import { useState } from "react";
 
 const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
   const [formData, setFormData] = useState({
-     name: initialData.name || "",
-    price: initialData.price || 0,
-    isPremium: initialData.isPremium || "False",
-    plan: initialData.plan || "",
-    kcal: initialData.kcal || 0,
-    protein: initialData.protein || 0,
-    carb: initialData.carb || 0,
+    name: initialData?.name || "",
+    name_arabic: initialData?.name_arabic || "",
+    section: initialData?.section || "",
+    section_arabic: initialData?.section_arabic || "",
+    price: initialData?.price || 0,
+    kcal: initialData?.kcal || 0,
+    protein: initialData?.protein || 0,
+    carb: initialData?.carb || 0,
+    policy: initialData?.policy || "",
+    ingredients: initialData?.ingredients || "",
+    ingredients_arabic: initialData?.ingredients_arabic || "",
+    items: initialData?.items || [],
+    image: initialData?.image || "",
+    isPremium: initialData?.isPremium || false,
+    plan: initialData?.plan || "",
     rate: 4.5,
-    featured: initialData.featured || false,
-    offerRatio: initialData.offerRatio || 1,
-    offerLimit: initialData.offerLimit || "",
-    description: initialData.description || "",
-    ingredients: initialData.ingredients || [],
-    image: initialData.image || "",
+    featured: initialData?.featured || false,
+    offerRatio: initialData?.offerRatio || 1,
+    offerLimit: initialData?.offerLimit || "",
+    description: initialData?.description || "",
   });
 
   const handleChange = (e) => {
@@ -38,32 +44,14 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleIngredientChange = (index, value) => {
-    const updatedIngredients = [...formData.ingredients];
-    updatedIngredients[index] = value;
-    setFormData((prev) => ({ ...prev, ingredients: updatedIngredients }));
-  };
-
-  const addIngredient = () => {
-    setFormData((prev) => ({
-      ...prev,
-      ingredients: [...prev.ingredients, ""],
-    }));
-  };
-
-  const removeIngredient = (index) => {
-    const updatedIngredients = formData.ingredients.filter(
-      (_, i) => i !== index
-    );
-    setFormData((prev) => ({ ...prev, ingredients: updatedIngredients }));
-  };
-   const handleSliderChange = (value) => {
+  const handleSliderChange = (value) => {
     setFormData((prev) => ({ ...prev, offerRatio: value }));
   };
 
   const handleSwitchChange = (e) => {
     setFormData((prev) => ({ ...prev, featured: e.target.checked }));
   };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(formData);
@@ -79,6 +67,74 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
           value={formData.name}
           onChange={handleChange}
           required
+        />
+      </FormControl>
+      <FormControl mb={4}>
+        <FormLabel>Name (Arabic)</FormLabel>
+        <Input
+          type="text"
+          name="name_arabic"
+          value={formData.name_arabic}
+          onChange={handleChange}
+        />
+      </FormControl>
+      <FormControl mb={4}>
+        <FormLabel>Section</FormLabel>
+        <Input
+          type="text"
+          name="section"
+          value={formData.section}
+          onChange={handleChange}
+        />
+      </FormControl>
+      <FormControl mb={4}>
+        <FormLabel>Section (Arabic)</FormLabel>
+        <Input
+          type="text"
+          name="section_arabic"
+          value={formData.section_arabic}
+          onChange={handleChange}
+        />
+      </FormControl>
+      <FormControl mb={4}>
+        <FormLabel>Policy</FormLabel>
+        <Textarea
+          name="policy"
+          value={formData.policy}
+          onChange={handleChange}
+          rows="3"
+        />
+      </FormControl>
+      <FormControl mb={4}>
+        <FormLabel>Ingredients</FormLabel>
+        <Textarea
+          name="ingredients"
+          value={formData?.ingredients}
+          onChange={handleChange}
+          rows="3"
+        />
+      </FormControl>
+      <FormControl mb={4}>
+        <FormLabel>Ingredients (Arabic)</FormLabel>
+        <Textarea
+          name="ingredients_arabic"
+          value={formData?.ingredients_arabic}
+          onChange={handleChange}
+          rows="3"
+        />
+      </FormControl>
+      <FormControl mb={4}>
+        <FormLabel>Items</FormLabel>
+        <Textarea
+          name="items"
+          value={formData.items.join(", ")}
+          onChange={(e) =>
+            setFormData((prev) => ({
+              ...prev,
+              items: e.target.value.split(",").map((item) => item.trim()),
+            }))
+          }
+          placeholder="Enter items separated by commas"
         />
       </FormControl>
       <FormControl mb={4}>
@@ -99,11 +155,13 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
           onChange={handleChange}
           required
         >
-          <option value="False">No</option>
-          <option value="True">Yes</option>
+          <option value={false}>No</option>
+          <option value={true}>Yes</option>
         </Select>
       </FormControl>
-      <FormControl mb={4}>
+      {
+        formData.isPremium ? 
+         <FormControl mb={4}>
         <FormLabel>Plan</FormLabel>
         <Input
           type="text"
@@ -112,6 +170,9 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
           onChange={handleChange}
         />
       </FormControl>
+      :
+      <></>
+      }
       <FormControl mb={4}>
         <FormLabel>Calories (kcal)</FormLabel>
         <Input
@@ -150,27 +211,13 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
       </FormControl>
       <FormControl mb={4}>
         <FormLabel>Ingredients</FormLabel>
-        {formData.ingredients.map((ingredient, index) => (
-          <Flex key={index} mb={2} align="center">
-            <Input
-              type="text"
-              value={ingredient}
-              onChange={(e) => handleIngredientChange(index, e.target.value)}
-              placeholder={`Ingredient ${index + 1}`}
-            />
-            <Button
-              ml={2}
-              onClick={() => removeIngredient(index)}
-              colorScheme="red"
-              size="sm"
-            >
-              Remove
-            </Button>
-          </Flex>
-        ))}
-        <Button onClick={addIngredient} colorScheme="green" size="sm">
-          Add Ingredient
-        </Button>
+        <Textarea
+          name="ingredients"
+          value={formData.ingredients}
+          onChange={handleChange}
+          rows="3"
+          placeholder="Enter ingredients as a comma-separated list"
+        />
       </FormControl>
       <FormControl mb={4}>
         <FormLabel>Image Link</FormLabel>
@@ -214,7 +261,7 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
           value={formData.offerLimit}
           onChange={handleChange}
         />
-      </FormControl>
+        </FormControl>
       <Flex justify="flex-end" gap={2}>
         <Button onClick={onCancel} variant="outline">
           Cancel

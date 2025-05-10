@@ -1,30 +1,12 @@
-import { Box, Heading, SimpleGrid } from "@chakra-ui/react";
+import { useState, useEffect } from "react";
+// Removed unused import
+import {CustomizableMealCard } from "./CustomizableCard" 
+import { Box, Heading, SimpleGrid, Text as ChakraText, Spinner, Center } from "@chakra-ui/react"; // Renamed Text to ChakraText to avoid conflicts
 import { ACC } from "../../Components/ComponentsTrial";
-import { FeaturedItemCard } from "../../Components/Cards";
-import menuData from "./menuData.json";
-import { useI18nContext } from "../../Contexts/I18nContext";
-// Import all images
-import greensA from "../../assets/menu/greens1.JPEG";
-import greensB from "../../assets/menu/greens2.JPG";
-import greensC from "../../assets/menu/greens3.JPG";
-import greensD from "../../assets/menu/greens4.JPG";
-import greensF from "../../assets/menu/greens5.JPG";
-import grainsA from "../../assets/menu/grains1.JPG";
-import grainsB from "../../assets/menu/grains2.JPG";
-import grainsC from "../../assets/menu/grains3.JPG";
-import grainsD from "../../assets/menu/grains4.JPG";
-import fruitsA from "../../assets/menu/fruits1.JPG";
-import fruitsB from "../../assets/menu/fruits2.JPG";
-import fruitsC from "../../assets/menu/fruits3.JPG";
-import fruitsD from "../../assets/menu/fruits4.JPG";
-import vegetablesA from "../../assets/menu/vegetables1.JPG";
-import vegetablesB from "../../assets/menu/vegetables2.JPG";
-import vegetablesC from "../../assets/menu/vegetables3.JPG";
-import vegetablesD from "../../assets/menu/vegetables4.JPG";
-import cheeseA from "../../assets/menu/cheese1.JPG";
-import cheeseB from "../../assets/menu/cheese2.JPG";
-import cheeseC from "../../assets/menu/cheese3.JPG";
-import cheeseD from "../../assets/menu/cheese4.JPG";
+import { FoodCard } from "../../Components/Cards";
+import { useTranslation } from "react-i18next";
+import { useElements } from "../../Contexts/ElementsContext";
+// Removed unused import
 
 // Import icons
 import ingredientIcon from "../../assets/menu/ingredient.svg";
@@ -33,119 +15,172 @@ import cheeseIcon from "../../assets/menu/cheese.svg";
 import extrasIcon from "../../assets/menu/extras.svg";
 import dressingsIcon from "../../assets/menu/dressings.svg";
 import saladIcon from "../../assets/menu/salad.svg";
-import { useTranslation } from "react-i18next";
+import soupIcon from "../../assets/menu/soup.svg"; // You might need to add this icon
+import { useCart } from "../../Contexts/CartContext";
 
 // Map category names to their respective icons
 const iconsMap = {
-  "Base Ingredients": ingredientIcon,
+  "Salads": saladIcon,
+  "Soups": soupIcon,
   "Proteins": proteinIcon,
   "Cheese": cheeseIcon,
-  "Toppings & Extras": extrasIcon,
+  "Extras": extrasIcon,
   "Dressings": dressingsIcon,
-  "Signature Salads": saladIcon,
+  "Fruits": ingredientIcon,
 };
-
+const selectiveSectionMap = {
+  "make your own fruit salad": "salad-fruits",
+  "make your own salad": "salad-items",
+};
 const MenuPage = () => {
-  const { t } = useTranslation()
-  const images = [
-    greensA,
-    greensB,
-    greensC,
-    greensD,
-    greensF,
-    grainsA,
-    grainsB,
-    grainsC,
-    grainsD,
-    fruitsA,
-    fruitsB,
-    fruitsC,
-    fruitsD,
-    vegetablesA,
-    vegetablesB,
-    vegetablesC,
-    vegetablesD,
-    cheeseA,
-    cheeseB,
-    cheeseC,
-    cheeseD,
-  ];
+  const { t } = useTranslation();
+  const {addToCart}=useCart();
+  const { meals, fruitItems, saladItems, elementsLoading } = useElements();
+  const [sections, setSections] = useState([]);
+  const [selectiveItems, setSelectiveItems] = useState({
+    "salad-fruits": [],
+    "salad-items": []
+  });
+  const [loading] = useState(false); 
+  
+  const handleAddToCart = (meal) => {
+    // This is the correct format to add a new item to cart
+    const itemToAdd = {
+      id: meal.id,
+      name: meal.name,
+      price: meal.price,
+      image: meal.image,
+      qty: meal.qty || 1,
+      addOns: meal.addOns || [] // Make sure we use the correct property name
+    };
+    
+    console.log("Adding to cart with addOns:", itemToAdd.addOns); // Debug logging
+    addToCart(itemToAdd);
+  };
+  
+  // Use the items from context
+  useEffect(() => {
+    if (!elementsLoading) {
+      setSelectiveItems({
+        "salad-fruits": fruitItems || [],
+        "salad-items": saladItems || []
+      });
+    }
+  }, [fruitItems, saladItems, elementsLoading]);
 
-  let imageIndex = 0;
+  // Organize meals by sections
+  useEffect(() => {
+    if (!elementsLoading && !loading && meals.length > 0) {
+      // Group meals by section
+      const sectionsMap = {};
+      
+      meals.forEach(meal => {
+        const section = meal.section || "Other";
+        if (!sectionsMap[section]) {
+          sectionsMap[section] = [];
+        }
+        sectionsMap[section].push(meal);
+      });
+      
+      // Convert to array format for accordion
+      const sectionsArray = Object.keys(sectionsMap).map(sectionName => {
+        return {
+          name: sectionName,
+          name_arabic: sectionsMap[sectionName][0].section_arabic || sectionName,
+          meals: sectionsMap[sectionName]
+        };
+      });
+      
+      setSections(sectionsArray);
+    }
+  }, [meals, elementsLoading, loading]);
 
-  // Generate accordion sections dynamically from menuData.json
-  const menuSections = menuData.menu.categories.map((category) => ({
-    title: t(`menuPage.${category.name}`), // Translate category name
-    icon: iconsMap[category.name], // Use the proper icon based on category name
+  // Generate menu sections for the accordion
+  const menuSections = sections.map(section => ({
+    title: t(`menuPage.${section.name}`, { defaultValue: section.name }),
+    icon: iconsMap[section.name] || ingredientIcon,
     content: (
       <Box>
-        {/* Render subcategories if they exist */}
-        {category.subcategories
-          ? category.subcategories.map((subcategory, subIndex) => (
-              <Box key={subIndex} mb={6}>
-                <Heading size="md" mb={4}>
-                  {t(`menuPage.${subcategory.name}`)} {/* Translate subcategory name */}
-                </Heading>
-                <SimpleGrid columns={{ base: 1, md: 3, lg: 4 }} spacing={1}>
-                  {subcategory.items.map((item, itemIndex) => {
-                    const assignedImage = images[imageIndex % images.length];
-                    imageIndex++;
-                    return (
-                      <FeaturedItemCard
-                        key={itemIndex}
-                        name={item.name}
-                        description={`${t("menuPage.weight")}: ${
-                          item.weight || t("common.n/a")
-                        }, ${t("menuPage.calories")}: ${
-                          item.calories || t("common.n/a")
-                        }`}
-                        price={Math.random() * 10 + 5} // Random price for demo
-                        image={assignedImage}
-                        rating={Math.floor(Math.random() * 5) + 1} // Random rating for demo
-                        category={subcategory.name}
-                      />
-                    );
-                  })}
-                </SimpleGrid>
-              </Box>
-            ))
-          : null}
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+          {section.meals.map((meal, index) => {
+            const isSelective = meal.policy === "selective";
+            let selectableItems = [];
+            let sectionRules = {};
 
-        {/* Render items directly if no subcategories */}
-        {category.items && (
-          <SimpleGrid columns={{ base: 1, md: 3, lg: 4 }} spacing={1}>
-            {category.items.map((item, itemIndex) => {
-              const assignedImage = images[imageIndex % images.length];
-              imageIndex++;
-              return (
-                <FeaturedItemCard
-                  key={itemIndex}
-                  name={item.name}
-                  description={`${t("menuPage.weight")}: ${
-                    item.weight || t("common.n/a")
-                  }, ${t("menuPage.calories")}: ${
-                    item.calories || t("common.n/a")
-                  }`}
-                  price={Math.random() * 10 + 5} // Random price for demo
-                  image={assignedImage}
-                  rating={Math.floor(Math.random() * 5) + 1} // Random rating for demo
-                  category={category.name}
-                />
-              );
-            })}
-          </SimpleGrid>
-        )}
+            if (isSelective) {
+              const itemSection = selectiveSectionMap[meal.name.toLowerCase()];
+              if (itemSection) {
+                selectableItems = selectiveItems[itemSection];
+                sectionRules = selectableItems[0] || {};
+              }
+            }
+
+            return isSelective ? (
+              <CustomizableMealCard
+                key={index}
+                meal={meal}
+                sectionRules={sectionRules}
+                selectableItems={selectableItems}
+                onhandleAddToCart={handleAddToCart}
+              />
+            ) : (
+              <FoodCard
+                key={meal.id || index}
+                id={meal.id}
+                name={meal.name}
+                description={
+                  <Box>
+                    <ChakraText>{meal.ingredients || meal.description}</ChakraText>
+                    <ChakraText>
+                      {t("menuPage.calories")}: {meal.kcal || "N/A"}
+                    </ChakraText>
+                    {meal.protein > 0 && (
+                      <ChakraText>
+                        {t("menuPage.protein")}: {meal.protein}g
+                      </ChakraText>
+                    )}
+                    {meal.carb > 0 && (
+                      <ChakraText>
+                        {t("menuPage.carbs")}: {meal.carb}g
+                      </ChakraText>
+                    )}
+                    {isSelective && (
+                      <ChakraText color="green.500">
+                        {t("menuPage.customizable")}
+                      </ChakraText>
+                    )}
+                  </Box>
+                }
+                price={meal.price}
+                image={meal.image || null}
+                rating={meal.rating || 4}
+                category={section.name}
+                isSelective={isSelective}
+                policy={meal.policy}
+              />
+            );
+          })}
+        </SimpleGrid>
       </Box>
     ),
   }));
 
+  if (elementsLoading || loading) {
+    return (
+      <Center h="300px">
+        <Spinner size="xl" />
+      </Center>
+    );
+  }
+
   return (
     <Box p={4}>
       <Heading mb={6} textStyle="heading">
-        {t("menuPage.title")} {/* Translate "Salad Menu" */}
+        {t("menuPage.title", { defaultValue: "Menu" })}
       </Heading>
       <ACC sections={menuSections} />
     </Box>
   );
 };
-export default MenuPage
+
+export default MenuPage;

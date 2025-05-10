@@ -4,9 +4,9 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import {ComponentsTrial} from './Components/ComponentsTrial'
 import { FoodCards } from './Components/Cards'
-import { CartDemo } from './Components/Cart'
+//import { CartDemo } from './Components/Cart'
 import { ProfileDemo } from './Components/ProfileComponent'
-import { FeaturedFoodsDemo } from './Components/FeaturedSlide'
+import { FeaturedMeals } from './Components/FeaturedSlide'
 import { Navbar } from './Components/Navbar'
 
 function App() {
@@ -18,8 +18,8 @@ function App() {
     <ProfileDemo/>
      <ComponentsTrial/>
      <FoodCards/>
-     <CartDemo/>
-     <FeaturedFoodsDemo/>
+
+     <FeaturedMeals/>
     </>
   )
 }

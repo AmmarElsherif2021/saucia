@@ -1,5 +1,6 @@
-//import { useState } from "react";
+import { useState } from "react";
 import {
+  Skeleton,
   Box,
   Image,
   Text,
@@ -24,40 +25,93 @@ import { useI18nContext } from "../Contexts/I18nContext";
 import { AnimatedText } from "../Pages/Home/Hero";
 import saladImage from "../assets/premium/dailySalad.png"
 import { useTranslation } from "react-i18next";
+import { useCart } from "../Contexts/CartContext";
 // Basic Food Card - Simple design with image, title, price
-export const FoodCard = ({ name, description, price, image, rating, category }) => {
+export const FoodCard = ({id, name, description, price, image, rating, category }) => {
   const { colorMode } = useColorMode();
-  const {t}=useTranslation()
-  
+  const { t } = useTranslation();
+  const { addToCart } = useCart();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+
+  const handleConfirm = () => {
+    addToCart({id, name, price, image, qty: quantity });
+    setIsModalOpen(false);
+  };
+
   return (
-    <Box
-      maxW="300px"
-      borderWidth="1px"
-      borderRadius="lg"
-      overflow="hidden"
-      bg={colorMode === "dark" ? "gray.700" : "gray.100"}
-      transition="transform 0.3s"
-      _hover={{ transform: "translateY(-5px)" }}
-    >
-      <Image src={image? image:saladIcon} alt={name} height="200px" width="100%" objectFit="cover" />
-      
-      <Box p="4">
-        <Flex variant="solid" justify="space-between" align="baseline" mb="2">
-          <Heading size="md" color="brand.700" textAlign="left">{name}</Heading>
-          <Text fontWeight="bold" fontSize="md" color="brand.900">
-            ${price.toFixed(2)}
+    <>
+      <Box
+        maxW="300px"
+        borderWidth="1px"
+        borderRadius="lg"
+        overflow="hidden"
+        bg={colorMode === "dark" ? "gray.700" : "gray.100"}
+        transition="transform 0.3s"
+        _hover={{ transform: "translateY(-5px)" }}
+      >
+        <Image src={image ? image : saladIcon} alt={name} height="200px" width="100%" objectFit="cover" />
+
+        <Box p="4">
+          <Flex variant="solid" justify="space-between" align="baseline" mb="2">
+            <Heading size="md" color="brand.700" textAlign="left">{name}</Heading>
+            <Text fontWeight="bold" fontSize="md" color="brand.900">
+              ${price?.toFixed(2)}
+            </Text>
+          </Flex>
+
+          <Text color={colorMode === "dark" ? "gray.300" : "gray.600"} fontSize="sm" mb="3">
+            {description}
           </Text>
-        </Flex>
-        
-        <Text color={colorMode === "dark" ? "gray.300" : "gray.600"} fontSize="sm" mb="3">
-          {description}
-        </Text>
-        
-        <Button colorScheme="brand" size="sm" width="full">
-          {t('buttons.addToCart')}
-        </Button>
+
+          <Button colorScheme="brand" size="sm" width="full" onClick={() => setIsModalOpen(true)}>
+            {t('buttons.addToCart')}
+          </Button>
+        </Box>
       </Box>
-    </Box>
+
+      {isModalOpen && (
+        <Box
+          position="fixed"
+          top="0"
+          left="0"
+          width="100vw"
+          height="100vh"
+          bg="rgba(0, 0, 0, 0.5)"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          zIndex="1000"
+        >
+          <Box
+            bg={colorMode === "dark" ? "gray.800" : "white"}
+            p="6"
+            borderRadius="lg"
+            boxShadow="lg"
+            width="90%"
+            maxW="400px"
+          >
+            <Heading size="md" mb="4">{t('modals.addToCart')}</Heading>
+            <Flex align="center" justify="space-between" mb="4">
+              <Text>{t('common.quantity')}:</Text>
+              <Flex align="center">
+                <Button size="sm" onClick={() => setQuantity((prev) => Math.max(prev - 1, 1))}>-</Button>
+                <Text mx="2">{quantity}</Text>
+                <Button size="sm" onClick={() => setQuantity((prev) => prev + 1)}>+</Button>
+              </Flex>
+            </Flex>
+            <Flex justify="space-between">
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                {t('buttons.cancel')}
+              </Button>
+              <Button colorScheme="brand" onClick={handleConfirm}>
+                {t('buttons.confirm')}
+              </Button>
+            </Flex>
+          </Box>
+        </Box>
+      )}
+    </>
   );
 };
 
@@ -122,7 +176,7 @@ export const PremiumFoodCard = ({ name, description, price, image, rating, categ
         
         <Flex justify="space-between" align="center" mt="4">
           <Text fontWeight="bold" fontSize="xl" color="brand.700">
-            ${price.toFixed(2)}
+            ${price?.toFixed(2)}
           </Text>
           <Button colorScheme="brand" size="md">
             {t('buttons.addToCart')}
@@ -185,7 +239,7 @@ export const MinimalistFoodCard = ({ name, description, price, image, prepTime, 
         <Flex justify="space-between" align="center" mt="2">
           <Box>
             <Text fontWeight="bold" fontSize="md" color="brand.700">
-              ${price.toFixed(2)}
+              ${price?.toFixed(2)}
             </Text>
             <Text fontSize="xs" color={colorMode === "dark" ? "gray.400" : "gray.500"}>
               {prepTime} {t('common.minPrepTime')}
@@ -200,133 +254,27 @@ export const MinimalistFoodCard = ({ name, description, price, image, prepTime, 
   );
 };
 
-// Compact cart card
-export const CartCard = ({ 
-  name, 
-  price, 
-  image, 
-  quantity,
-  onIncrease,
-  onDecrease,
-  onRemove 
-}) => {
-  const { colorMode } = useColorMode();
-  const {t}=useTranslation()
-
-  return (
-    <Flex
-      direction="row"
-      align="center"
-      bg={colorMode === "dark" ? "gray.700" : "brand.100"}
-      borderRadius="27px"
-      p={2}
-      mb={2}
-      width="100%"
-      position="relative"
-      _hover={{ 
-        transform: "scale(1.01)"
-      }}
-      transition="all 0.2s"
-    >
-      <Box
-        position="relative"
-        width="100px"
-        height="100px"
-        overflow="hidden"
-        borderRadius="25px"
-        flexShrink={0}
-      >
-        <Image
-          src={image}
-          alt={name}
-          objectFit="cover"
-          width="100%"
-          height="100%"
-          filter="brightness(0.95)"
-        />
-        <Badge
-          position="absolute"
-          bottom="2"
-          right="2"
-          bg="brand.600"
-          color="white"
-          borderRadius="full"
-          px={2}
-          py={1}
-          fontSize="xs"
-        >
-          ×{quantity}
-        </Badge>
-      </Box>
-
-      <Box textAlign="left" flex="3" px={3} minW="50">
-        <Text 
-          fontWeight="bold" 
-          fontSize="lg" 
-          color={colorMode === "dark" ? "white" : "brand.900"}
-          noOfLines={1}
-          py={0.5}
-          my={0.5}
-        >
-          {name}
-        </Text>
-        <Text 
-          fontSize="md" 
-          color="brand.900"
-          fontWeight="bold"
-          py={0.5}
-          my={0.5}
-        >
-          ${(price * quantity).toFixed(2)}
-        </Text>
-        <Text 
-          fontSize="sm" 
-          color={colorMode === "dark" ? "gray.400" : "gray.500"}
-          py={0.5}
-          my={0.5}
-        >
-          ${price.toFixed(2)} {t('common.each')}
-        </Text>
-      </Box>
-
-      <Flex align="center">
-        <IconButton
-          icon={<MinusIcon />}
-          aria-label={t('buttons.decreaseQuantity')}
-          size="xs"
-          as={Button}
-          variant="outlined"
-          onClick={onDecrease}
-        />
-        <Text mx={1} fontSize="sm" minW="20px" textAlign="center">
-          {quantity}
-        </Text>
-        <IconButton
-          icon={<AddIcon />}
-          as={Button}
-          aria-label={t('buttons.increaseQuantity')}
-          size="xs"
-          variant="outlined"
-          onClick={onIncrease}
-        />
-        <Button
-          aria-label={t('buttons.removeItem')}
-          size="xs"
-          variant="solid"
-          onClick={onRemove}
-          colorScheme="error"
-          ml={2}
-        ><DeleteIcon /></Button>
-      </Flex>
-    </Flex>
-  );
-};
 
 // Food Cards Demo Component
 export const FoodCards = () => {
   const { colorMode } = useColorMode();
-  const {t}=useTranslation()
-  
+  const { t, i18n } = useTranslation();
+  const isArabic = i18n.language === "ar";
+
+  const foodItem = {
+    name: "Shrimp soup",
+    name_arabic: "شوربة الروبيان",
+    section: "Soups",
+    section_arabic: "الشوربات",
+    price: 30,
+    kcal: 153,
+    protein: 0,
+    carb: 0,
+    policy: "ready dish",
+    ingredients: "Shrimp soup",
+    ingredients_arabic: "شوربة الروبيان",
+  };
+
   return (
     <Box p={4} bg={colorMode === "dark" ? "brand.900" : "gray.50"}>
       <Heading mb={6} textStyle="heading">{t('widgets.foodCards')}</Heading>
@@ -336,12 +284,12 @@ export const FoodCards = () => {
           <Heading size="md" mb={4}>{t('widgets.basicFoodCard')}</Heading>
           <Flex wrap="wrap" gap={6} justify="center">
             <FoodCard 
-              name="Classic Chocolate Cake" 
-              description="Rich chocolate cake with a delicious ganache topping and a hint of espresso."
-              price={8.99}
-              image={dessertPic}
+              name={isArabic ? foodItem.name_arabic : foodItem.name}
+              description={isArabic ? foodItem.ingredients_arabic : foodItem.ingredients}
+              price={foodItem.price}
+              image={null}
               rating={4.5}
-              category="Dessert"
+              category={isArabic ? foodItem.section_arabic : foodItem.section}
             />
           </Flex>
         </Box>
@@ -350,12 +298,12 @@ export const FoodCards = () => {
           <Heading size="md" mb={4}>{t('widgets.premiumFoodCard')}</Heading>
           <Flex wrap="wrap" gap={6} justify="center">
             <PremiumFoodCard 
-              name="Fresh Fruit Platter" 
-              description="A seasonal selection of fresh fruits, carefully arranged for maximum visual appeal."
-              price={12.99}
-              image={fruitPic}
+              name={isArabic ? foodItem.name_arabic : foodItem.name}
+              description={isArabic ? foodItem.ingredients_arabic : foodItem.ingredients}
+              price={foodItem.price}
+              image={null}
               rating={5}
-              category="Healthy"
+              category={isArabic ? foodItem.section_arabic : foodItem.section}
               isPopular={true}
             />
           </Flex>
@@ -365,12 +313,12 @@ export const FoodCards = () => {
           <Heading size="md" mb={4}>{t('widgets.minimalistFoodCard')}</Heading>
           <Flex wrap="wrap" gap={6} justify="center">
             <MinimalistFoodCard 
-              name="Garden Salad" 
-              description="Fresh mixed greens with seasonal vegetables, topped with our signature vinaigrette."
-              price={7.49}
-              image={leavesPic}
+              name={isArabic ? foodItem.name_arabic : foodItem.name}
+              description={isArabic ? foodItem.ingredients_arabic : foodItem.ingredients}
+              price={foodItem.price}
+              image={null}
               prepTime={10}
-              dietaryInfo={["Vegan", "Gluten-Free", "Low-Carb"]}
+              dietaryInfo={["Low-Carb"]}
             />
           </Flex>
         </Box>
@@ -379,135 +327,140 @@ export const FoodCards = () => {
   );
 };
 
-// Featured Item Card with Image Prominence
-export const FeaturedItemCard = ({ 
-  name, 
-  description, 
-  price, 
-  image, 
-  rating, 
-  category, 
-  isSpecial, 
-  isTrending,
-  isRecommended 
-}) => {
+export const FeaturedItemCard = ({ item }) => {
   const { colorMode } = useColorMode();
-  const {t}=useTranslation()
-  
+  const { t, i18n } = useTranslation();
+  const isArabic = i18n.language === "ar";
+
+  // Calculate pricing based on offer ratio
+  const originalPrice = item?.price || 0;
+  const hasOffer = item?.offerRatio < 1;
+  const discountedPrice = hasOffer ? originalPrice * item.offerRatio : originalPrice;
+
   return (
     <Box
-      maxW="250px"
+      maxW={["200px", "250px", "300px"]}
+      minW={["180px", "220px", "250px"]}
       borderRadius="xl"
       overflow="hidden"
       bg={colorMode === "dark" ? "gray.700" : "white"}
       position="relative"
-      transition="transform 0.3s"
-      _hover={{ transform: "translateY(-5px)" }}
-      height="300px"
+      transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+      _hover={{
+        transform: "translateY(-8px) scale(1.02)",
+        boxShadow: "xl",
+      }}
+      height={["320px", "340px", "360px"]}
       my={2}
+      mx={1}
+      cursor="pointer"
     >
-      <Box position="relative" height="220px">
-        <Image 
-          src={image || saladIcon} 
-          alt={name} 
-          height="100%" 
-          width="100%" 
+      <Box position="relative" height={["180px", "200px", "220px"]}>
+        <Image
+          src={item?.image || saladIcon}
+          alt={isArabic ? item?.name_arabic : item?.name}
+          height="100%"
+          width="100%"
           objectFit="cover"
+          fallback={<Skeleton height="100%" />}
         />
-        
-        <Flex 
-          position="absolute" 
-          top="0" 
-          left="0" 
-          right="0" 
-          p="2" 
-          justifyContent="space-between"
-        >
-          <Flex gap="2">
-            {isSpecial && (
-              <Badge colorScheme="accent" variant="solid" borderRadius="full" px="2">
-                {t('common.seasonal')}
-              </Badge>
-            )}
-            {isTrending && (
-              <Badge colorScheme="highlight" variant="solid" borderRadius="full" px="2">
-                {t('common.trending')}
-              </Badge>
-            )}
-          </Flex>
-          {isRecommended && (
-            <Badge colorScheme="success" variant="solid" borderRadius="full" px="2">
-              {t('common.recommended')}
-            </Badge>
-          )}
-        </Flex>
-        
-        <Badge
+
+        <Flex
           position="absolute"
-          bottom="2"
-          right="2"
-          bg="brand.600"
-          color="white"
-          borderRadius="full"
-          px="2"
+          top="0"
+          left="0"
+          right="0"
+          p={2}
+          justifyContent="space-between"
+          bg="linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%)"
         >
-          {t(`foodCategories.${category?.toLowerCase()}`)}
-        </Badge>
-      </Box>
-      
-      <Box p="3" bg={colorMode === "dark" ? "gray.700" : "white"}>
-        <Flex justify="space-between" align="center" mb="1">
-          <Heading size="sm" color={colorMode === "dark" ? "white" : "brand.900"} noOfLines={1}>
-            {name}
-          </Heading>
-          <Text fontWeight="bold" fontSize="md" color="brand.700">
-            ${price.toFixed(2)}
-          </Text>
-        </Flex>
-        
-        <Text color={colorMode === "dark" ? "gray.300" : "gray.600"} fontSize="xs" mb="2" noOfLines={2}>
-          {description}
-        </Text>
-        
-        <Flex justify="space-between" align="center">
-          <Flex align="center">
-            {Array(5)
-              .fill("")
-              .map((_, i) => (
-                <StarIcon
-                  key={i}
-                  color={i < rating ? "brand.500" : "gray.300"}
-                  boxSize="3"
-                />
-              ))}
-            <Text ml="1" fontSize="xs" color={colorMode === "dark" ? "gray.400" : "gray.500"}>
-              ({rating})
-            </Text>
+          <Flex gap={1} flexWrap="wrap">
+            {item?.rate > 4.5 && (
+              <Badge colorScheme="yellow" variant="solid" borderRadius="md" px={2}>
+                {t("common.featured")}
+              </Badge>
+            )}
+            {hasOffer && (
+              <Badge colorScheme="green" variant="solid" borderRadius="md" px={2}>
+                {t("common.offer")} {(100 - item.offerRatio * 100).toFixed(0)}%
+              </Badge>
+            )}
           </Flex>
-          <Button colorScheme="brand" size="xs">
-            {t('buttons.addToCart')}
+
+          <Badge
+            bg="brand.600"
+            color="white"
+            borderRadius="md"
+            px={2}
+            fontSize={["xs", "sm"]}
+          >
+            {isArabic ? item?.section_arabic : t(`foodCategories.${item?.section?.toLowerCase()}`)}
+          </Badge>
+        </Flex>
+      </Box>
+
+      <Box p={[2, 3]} bg={colorMode === "dark" ? "gray.700" : "white"}>
+        <Flex direction="column" gap={1}>
+          <Heading
+            fontSize={["sm", "md"]}
+            color={colorMode === "dark" ? "white" : "brand.900"}
+            noOfLines={1}
+          >
+            {isArabic ? item?.name_arabic : item?.name}
+          </Heading>
+
+          <Text fontSize={["xx-small", "xs"]} color="brand.500" noOfLines={1}>
+            {isArabic ? item?.ingredients_arabic : item?.ingredients}
+          </Text>
+
+          <Flex justify="space-between" align="center">
+            <Flex direction="column">
+              {hasOffer && (
+                <Text fontSize="xs" color="gray.500" textDecoration="line-through">
+                  SAR {originalPrice.toFixed(2)}
+                </Text>
+              )}
+              <Text
+                fontWeight="bold"
+                fontSize={["md", "lg"]}
+                color={hasOffer ? "green.500" : "brand.700"}
+              >
+                SAR {discountedPrice.toFixed(2)}
+              </Text>
+            </Flex>
+
+            <Flex align="center">
+              {Array(5)
+                .fill("")
+                .map((_, i) => (
+                  <StarIcon
+                    key={i}
+                    color={i < item?.rate ? "brand.500" : "gray.300"}
+                    boxSize={[2.5, 3]}
+                  />
+                ))}
+            </Flex>
+          </Flex>
+
+          <Button colorScheme="brand" size={["xs", "sm"]} mt={1} width="full">
+            {t("buttons.addToCart")}
           </Button>
         </Flex>
       </Box>
     </Box>
   );
 };
-
 // Offer Card with Image Prominence
-export const OfferCard = ({ 
-  name, 
-  description, 
-  price, 
-  image, 
-  rating, 
-  category, 
-  isSpecial, 
-  isTrending,
-  isRecommended 
-}) => {
+export const OfferCard = ({ item }) => {
   const { colorMode } = useColorMode();
-  const {t}=useTranslation()
-  
+  const { t, i18n } = useTranslation();
+  const isArabic = i18n.language === "ar";
+
+  // Calculate pricing based on offer ratio
+  const originalPrice = item?.price || 0;
+  const hasOffer = item?.offerRatio < 1;
+  const discountedPrice = hasOffer ? originalPrice * item.offerRatio : originalPrice;
+
   return (
     <Box
       maxW="500px"
@@ -520,79 +473,70 @@ export const OfferCard = ({
       my={2}
     >
       <Box position="relative" height="100%" zIndex={0}>
-        <Image 
-          src={image || saladIcon} 
-          alt={name} 
-          height="100%" 
-          width="100%" 
+        <Image
+          src={item?.image || saladIcon}
+          alt={isArabic ? item?.name_arabic : item?.name}
+          height="100%"
+          width="100%"
           objectFit="cover"
           filter="brightness(0.7)"
         />
-        
-        <Flex 
-          position="absolute" 
-          top="4" 
-          left="4" 
-          right="4" 
+
+        <Flex
+          position="absolute"
+          top="4"
+          left="4"
+          right="4"
           justifyContent="space-between"
           zIndex={2}
         >
           <Flex gap="2">
-            {isSpecial && (
+            {item?.isPremium && (
               <Badge colorScheme="accent" variant="solid" borderRadius="full" px="2">
-                {t('common.seasonal')}
+                {t("common.premium")}
               </Badge>
             )}
-            {isTrending && (
+            {hasOffer && (
               <Badge colorScheme="highlight" variant="solid" borderRadius="full" px="2">
-                {t('common.trending')}
+                {t("common.offer")} {(100 - item.offerRatio * 100).toFixed(0)}%
               </Badge>
             )}
           </Flex>
-          {isRecommended && (
-            <Badge colorScheme="success" variant="solid" borderRadius="full" px="2">
-              {t('common.recommended')}
-            </Badge>
-          )}
+          <Badge
+            bg="brand.600"
+            color="white"
+            borderRadius="full"
+            px="2"
+            fontSize="xs"
+          >
+            {isArabic ? item?.section_arabic : t(`foodCategories.${item?.section?.toLowerCase()}`)}
+          </Badge>
         </Flex>
-        
-        <Badge
-          position="absolute"
-          bottom="4"
-          right="4"
-          bg="brand.600"
-          color="white"
-          borderRadius="full"
-          px="2"
-          zIndex={2}
-        >
-          {t(`foodCategories.${category?.toLowerCase()}`)}
-        </Badge>
       </Box>
-      
-      <Box 
-        position="absolute" 
-        bottom="0" 
-        left="0" 
-        right="0" 
-        bg={colorMode === "dark" ? "rgba(0, 0, 0, 0.8)" : "rgba(255, 255, 255, 0.9)"} 
-        p="4" 
+
+      <Box
+        position="absolute"
+        bottom="0"
+        left="0"
+        right="0"
+        bg={colorMode === "dark" ? "rgba(0, 0, 0, 0.8)" : "rgba(255, 255, 255, 0.9)"}
+        p="4"
         borderTopRadius="lg"
         zIndex={2}
       >
         <Flex justify="space-between" align="center" mb="2">
           <Heading size="md" color={colorMode === "dark" ? "white" : "brand.900"} noOfLines={1}>
-            {name}
+            {isArabic ? item?.name_arabic : item?.name}
           </Heading>
           <Text fontWeight="bold" fontSize="lg" color="brand.700">
-            ${price.toFixed(2)}
+            SAR {discountedPrice.toFixed(2)}
           </Text>
         </Flex>
-        
+
         <Text color={colorMode === "dark" ? "gray.300" : "gray.600"} fontSize="sm" mb="2" noOfLines={2}>
-          {description}
+          {isArabic ? item?.ingredients_arabic : item?.ingredients}
         </Text>
-        
+
         <Flex justify="space-between" align="center">
           <Flex align="center">
             {Array(5)
@@ -600,16 +544,16 @@ export const OfferCard = ({
               .map((_, i) => (
                 <StarIcon
                   key={i}
-                  color={i < rating ? "brand.500" : "gray.300"}
+                  color={i < item?.rate ? "brand.500" : "gray.300"}
                   boxSize="3"
                 />
               ))}
             <Text ml="1" fontSize="xs" color={colorMode === "dark" ? "gray.400" : "gray.500"}>
-              ({rating})
+              ({item?.rate})
             </Text>
           </Flex>
           <Button colorScheme="brand" size="sm">
-            {t('buttons.addToCart')}
+            {t("buttons.addToCart")}
           </Button>
         </Flex>
       </Box>

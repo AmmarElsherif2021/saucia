@@ -21,23 +21,23 @@ const fetchWithAuth = async (url, options = {}, token) => {
 };
 
 // Get all meals
-export const getMeals = async (token, queryParams = {}) => {
+export const getMeals = async (queryParams = {}) => {
   const searchParams = new URLSearchParams(queryParams);
   const url = `${import.meta.env.VITE_BASE_URL}/api/meals?${searchParams}`;
-  return await fetchWithAuth(url, {}, token);
+  return await fetchWithAuth(url);
 };
 
 // Get meals for a specific plan
-export const getPlanMeals = async (token, planId, queryParams = {}) => {
+export const getPlanMeals = async (planId, queryParams = {}) => {
   const searchParams = new URLSearchParams(queryParams);
   const url = `${import.meta.env.VITE_BASE_URL}/api/meals/plan/${planId}?${searchParams}`;
-  return await fetchWithAuth(url, {}, token);
+  return await fetchWithAuth(url);
 };
 
 // Get a specific meal by ID
-export const getMealById = async (token, mealId) => {
+export const getMealById = async (mealId) => {
   const url = `${import.meta.env.VITE_BASE_URL}/api/meals/${mealId}`;
-  return await fetchWithAuth(url, {}, token);
+  return await fetchWithAuth(url);
 };
 
 // Create a new meal

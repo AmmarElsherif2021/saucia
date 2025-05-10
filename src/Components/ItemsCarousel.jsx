@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { Box, Flex, IconButton, useColorMode, Button } from "@chakra-ui/react";
+import { Box, Flex, IconButton, useColorMode, Button, useBreakpointValue } from "@chakra-ui/react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
-import { useI18nContext } from "../Contexts/I18nContext";
+import { useTranslation } from "react-i18next";
 import { FeaturedItemCard } from "./Cards";
 import { motion } from "framer-motion";
-import { useTranslation } from "react-i18next";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -23,52 +22,48 @@ const itemVariants = {
     x: 0,
     opacity: 1,
     transition: {
-      duration: 0.3,
+      type: "spring",
+      stiffness: 150, 
+      damping: 30,    
     },
   },
 };
+
 
 export const ItemsCarousel = ({
   items,
   CardComponent = FeaturedItemCard,
   visibleCount = 1,
   auto = false,
-  visibleButtons = true, 
+  visibleButtons = true,
+  transitionDuration = 15000,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [itemsToShow, setItemsToShow] = useState(visibleCount);
   const { colorMode } = useColorMode();
-  const { t } = useTranslation()
+  const { t } = useTranslation();
   const carouselRef = useRef(null);
+  const carouselContentRef = useRef(null);
+
+  // Use Chakra UI's useBreakpointValue to handle responsiveness
+  const itemsToShow = useBreakpointValue({
+    base: 1, // Mobile screens
+    sm: visibleCount === 1 ? 1 : 2,   // Small screens
+    md: visibleCount === 1 ? 1 : 3,   // Medium screens
+    lg: visibleCount === 1 ? 1 : 4,   // Large screens
+    xl: visibleCount === 1 ? 1 : 5,   // Extra-large screens
+  }) || visibleCount;
 
   const totalSlides = Math.max(1, Math.ceil(items.length / itemsToShow));
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (visibleCount > 0) {
-        setItemsToShow(visibleCount);
-      } else {
-        const width = window.innerWidth;
-        if (width < 600) setItemsToShow(1);
-        else if (width < 900) setItemsToShow(2);
-        else if (width < 1200) setItemsToShow(3);
-        else setItemsToShow(4);
-      }
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [visibleCount]);
+  const showControls = visibleButtons && items.length > itemsToShow;
 
   useEffect(() => {
     if (auto && items.length > itemsToShow) {
       const interval = setInterval(() => {
         nextSlide();
-      }, 6000);
+      }, transitionDuration);
       return () => clearInterval(interval);
     }
-  }, [auto, items.length, itemsToShow]);
+  }, [auto, items.length, itemsToShow, currentIndex, transitionDuration]);
 
   const nextSlide = () => {
     setCurrentIndex((prevIndex) =>
@@ -82,14 +77,15 @@ export const ItemsCarousel = ({
     );
   };
 
-  const getCircularItems = () => {
+  const getVisibleItems = () => {
     if (items.length <= itemsToShow) {
       return items;
     }
 
     const startIdx = (currentIndex * itemsToShow) % items.length;
-    const endIdx = startIdx + itemsToShow;
+    let endIdx = startIdx + itemsToShow;
 
+    // Handle circular wrap around
     if (endIdx > items.length) {
       return [...items.slice(startIdx), ...items.slice(0, endIdx - items.length)];
     }
@@ -97,77 +93,96 @@ export const ItemsCarousel = ({
     return items.slice(startIdx, endIdx);
   };
 
-  const visibleItems = getCircularItems();
+  const visibleItems = getVisibleItems();
 
   return (
     <Flex
       position="relative"
-      overflow="hidden"
-      ref={carouselRef}
-      mb={8}
       width="100%"
       height="auto"
-      px={0}
-      bg={colorMode === "dark" ? "brand.900" : "brand.200"}
-      borderRadius="3xl"
+      ref={carouselRef}
       align="center"
       justify="center"
-      
+      overflow="hidden"
+      bg={colorMode === "dark" ? "brand.900" : "brand.200"}
+      borderRadius="lg"
+      py={4}
     >
-      {visibleButtons && (
+      {showControls && (
         <IconButton
           icon={<ChevronLeftIcon />}
           aria-label={t("buttons.previous")}
           onClick={prevSlide}
-          isDisabled={items.length <= itemsToShow}
+          position="absolute"
+          left={2}
+          zIndex={5}
           as={Button}
           variant="solid"
           colorScheme="brand"
-          zIndex={5}
-          sx={{ borderRadius: "50%" }}
+          sx={{
+            borderRadius: "50%",
+            //boxShadow: "lg",
+          }}
         />
       )}
 
-      <Flex
-        as={motion.div}
+      <Box
         width="100%"
-        justify="center"
-        align="center"
-        wrap="wrap"
-        gap={2}
-        variants={visibleCount === 1 && containerVariants}
-        initial="hidden"
-        animate="visible"
+        overflow="hidden"
+        px={4}
       >
-        {visibleItems.map((item, index) => (
-          <Box
-            key={`item-${index}-${currentIndex}`}
-            flex={`0 0 calc(${100 / itemsToShow}% - 5%)`}
-            minWidth="250px"
-            as={motion.div}
-            variants={visibleCount === 1 && itemVariants}
-            display="flex"
-          >
-            {item ? (
-              <CardComponent {...item} />
-            ) : (
-              <Box height="100%" visibility="hidden" />
-            )}
-          </Box>
-        ))}
-      </Flex>
+        <Flex
+          as={motion.div}
+          ref={carouselContentRef}
+          width="100%"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          alignItems="center"
+          justifyContent="center"
+          flexDirection="row"
+          flexWrap="nowrap"
+          gap={4}
+        >
+          {visibleItems.map((item, index) => (
+            <Box
+              key={`item-${index}-${currentIndex}`}
+              as={motion.div}
+              variants={itemVariants}
+              flex={`0 0 ${100 / itemsToShow}%`}
+              maxWidth={`${100 / itemsToShow}%`}
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              px={0}
+            >
+              <Box width="100%" px={0}>
+                {item ? (
+                  <CardComponent key={item.id} item={item} />
+                ) : (
+                  <Box visibility="hidden" />
+                )}
+              </Box>
+            </Box>
+          ))}
+        </Flex>
+      </Box>
 
-      {visibleButtons && (
+      {showControls && (
         <IconButton
           icon={<ChevronRightIcon />}
-          aria-label={t("buttons.next")} // Translated "Next" button
+          aria-label={t("buttons.next")}
           onClick={nextSlide}
-          isDisabled={items.length <= itemsToShow}
+          position="absolute"
+          right={2}
+          zIndex={5}
           as={Button}
           variant="solid"
           colorScheme="brand"
-          zIndex={5}
-          sx={{ borderRadius: "50%" }}
+          sx={{
+            borderRadius: "50%",
+            //boxShadow: "lg",
+          }}
         />
       )}
     </Flex>

@@ -1,81 +1,42 @@
-import { useState } from "react";
-import {
-  Box,
-  useColorMode,
-} from "@chakra-ui/react";
-import fruitsA from "../../assets/menu/fruits1.jpg";
-import vegeA from "../../assets/menu/vegetables1.jpg";
-import grainsA from "../../assets/menu/grains1.jpg";
+import { Box, useColorMode } from "@chakra-ui/react";
 import cartBg from "../../assets/CartBg.png";
 import { CRT } from "../../Components/Cart";
 import { useNavigate } from "react-router";
-import { useI18nContext } from "../../Contexts/I18nContext";
 import { useTranslation } from "react-i18next";
+import { useCart } from "../../Contexts/CartContext";
 
 const CartPage = () => {
   const { colorMode } = useColorMode();
   const navigate = useNavigate();
-  const {currentLanguage}=useI18nContext()
-  const {t}=useTranslation();
-
-  // Temporary cart items with English and Arabic data
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: {
-        en: "Avocado Salad",
-        ar: "سلطة الأفوكادو",
-      },
-      price: 12.99,
-      quantity: 2,
-      image: fruitsA,
-    },
-    {
-      id: 2,
-      name: {
-        en: "Mexican Salad",
-        ar: "سلطة مكسيكية",
-      },
-      price: 14.99,
-      quantity: 1,
-      image: vegeA,
-    },
-    {
-      id: 3,
-      name: {
-        en: "Quinoa Bowl",
-        ar: "وعاء الكينوا",
-      },
-      price: 10.99,
-      quantity: 1,
-      image: grainsA,
-    },
-  ]);
+  const { t } = useTranslation();
+  const { cart, addToCart, removeFromCart } = useCart();
 
   const handleIncrease = (id) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
-      )
-    );
+    const item = cart.find((item) => item.id === id);
+    if (item) {
+      // We're updating an existing item's quantity by 1
+      const updatedItem = { ...item };
+      updatedItem.qty = 1; // Just pass 1 as the qty to increment by one
+      addToCart(updatedItem);
+    }
   };
 
   const handleDecrease = (id) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id && item.quantity > 1
-          ? { ...item, quantity: item.quantity - 1 }
-          : item
-      )
-    );
+    const item = cart.find((item) => item.id === id);
+    if (item && item.qty > 1) {
+      // We're decreasing the quantity, so we pass a negative value
+      const updatedItem = { ...item };
+      updatedItem.qty = -1; // Negative value to decrement
+      addToCart(updatedItem);
+    }
   };
 
   const handleRemove = (id) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
+    removeFromCart(id);
   };
 
-  const totalPrice = cartItems.reduce(
-    (total, item) => total + item.price * item.quantity,
+  const totalPrice = cart.reduce(
+    (total, item) => total + item.price * item.qty, // Use qty instead of quantity
     0
   );
 
@@ -88,16 +49,14 @@ const CartPage = () => {
     <Box
       p={4}
       bg={colorMode === "dark" ? "brand.900" : "gray.50"}
-      bgImage={`url(${cartBg})`}
-      bgSize="cover"
-      bgPosition="center"
       w={"100vw"}
       h={"100vh"}
     >
       <CRT
-        items={cartItems.map((item) => ({
+        items={cart.map((item) => ({
           ...item,
-          name: item.name[currentLanguage], 
+          name: item.name,
+          quantity: item.qty, // Map qty to quantity for the CRT component
         }))}
         totalPrice={totalPrice}
         onIncrease={handleIncrease}
@@ -109,4 +68,5 @@ const CartPage = () => {
     </Box>
   );
 };
-export default CartPage
+
+export default CartPage;

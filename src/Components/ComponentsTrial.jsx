@@ -69,7 +69,7 @@ import {
 import { StarIcon, EditIcon } from "@chakra-ui/icons";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { CartDemo } from "./Cart";
+//import { CartDemo } from "./Cart";
 
 // Button Component - Fully leveraging theme variants
 export const BTN = ({ type = "button", size = "md", colorScheme = "brand", variant = "solid", disabled = false, icon, onClick, children }) => {
@@ -797,7 +797,7 @@ export const ComponentsTrial = () => {
       </Stack>
       <Box mt={6}>
         <Heading size="md" mb={4} textStyle="heading">Cart</Heading>
-        <CartDemo/>
+        
         </Box>
     </Box>
     

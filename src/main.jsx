@@ -5,9 +5,11 @@ import DynamicThemeProvider from "./Contexts/ThemeProvider.jsx";
 import { I18nProvider } from "./Contexts/I18nContext.jsx";
 import { UserProvider } from "./Contexts/UserContext.jsx";
 import { AuthProvider } from "./Contexts/AuthContext.jsx";
+import { ElementsProvider } from "./Contexts/ElementsContext.jsx";
 import { Navbar } from "./Components/Navbar/Navbar.jsx";
 import "./index.css";
 import { Spinner } from "@chakra-ui/react";
+import { CartProvider } from "./Contexts/CartContext.jsx";
 
 // Lazy-loaded pages
 const HomePage = React.lazy(() => import("./Pages/Home/HomePage.jsx"));
@@ -173,11 +175,15 @@ ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <I18nProvider>
       <DynamicThemeProvider>
+      <ElementsProvider>
+        <CartProvider>
         <UserProvider>
           <AuthProvider>
             <RouterProvider router={router} />
           </AuthProvider>
         </UserProvider>
+        </CartProvider>
+      </ElementsProvider>
       </DynamicThemeProvider>
     </I18nProvider>
   </React.StrictMode>
