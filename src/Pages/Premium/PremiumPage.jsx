@@ -21,7 +21,14 @@ const PremiumPage = () => {
    
     return (
         <Box p={8} bg="gray.50" minH="100vh">
-            <VStack spacing={8} align="stretch">
+            <Heading> Updating the premium section backend..... </Heading>
+            <Heading> جاري تحديث نظام الاشتراكات .... </Heading>
+        </Box>
+    );
+};
+export default PremiumPage;
+/*
+<VStack spacing={8} align="stretch">
                 <Heading as="h1" size="xl" textAlign="center" color="brand.500">
                     Premium Page
                 </Heading>
@@ -42,7 +49,4 @@ const PremiumPage = () => {
                     )}
                 </Box>
             </VStack>
-        </Box>
-    );
-};
-export default PremiumPage;
+*/

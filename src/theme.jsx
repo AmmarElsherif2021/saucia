@@ -141,6 +141,7 @@ const createTheme = (config) => {
         global: (props) => ({
           body: {
             fontFamily: isArabic ? "'Lalezar', sans-serif" : "'Outfit', sans-serif",
+            direction: isArabic ? 'rtl' : 'ltr',
             backgroundColor: props.colorMode === "dark" ? "brand.900" : "gray.50",
             color: props.colorMode === "dark" ? "gray.100" : "brand.900",
             lineHeight: "base",

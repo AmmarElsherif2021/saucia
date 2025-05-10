@@ -1,10 +1,10 @@
 import { Box, Heading, Text, useColorMode, useBreakpointValue, Flex, Container, Button, VStack } from "@chakra-ui/react";
 import { ItemsCarousel } from "../../Components/ItemsCarousel";
-import heroA from "../../assets/hero/heroA.svg";
-import heroB from "../../assets/hero/heroB.svg";
+import heroA from "../../assets/hero/heroA.JPG";
+import heroB from "../../assets/hero/heroB.JPG";
 import heroC from "../../assets/hero/heroC.JPG";
 import heroD from "../../assets/hero/heroD.svg";
-import heroE from "../../assets/hero/heroE.svg";
+import heroE from "../../assets/hero/heroE.JPG";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
 import { useI18nContext } from "../../Contexts/I18nContext";
@@ -179,8 +179,9 @@ const HeroCard = ({item}) => {
                 className={isArabic ? "readex-pro" : "montserrat"}
                 margin={0}
                 lineHeight={1.2}
+                color={"white"}
               >
-                <AnimatedText text={name} color="#ffffff" />
+                <AnimatedText text={name} color="white" />
               </Heading>
             </Box>
 
@@ -201,6 +202,7 @@ const HeroCard = ({item}) => {
                   className={isArabic ? "lalezar" : "outfit"}
                   margin={0}
                   lineHeight={1.4}
+                  color={"brand.400"}
                 >
                   <AnimatedText
                     text={description}
@@ -236,7 +238,7 @@ const HeroCard = ({item}) => {
                   color="white"
                   _hover={{ bgColor: "green.600" }}
                 >
-                  {t("buttons.explore")}
+                  {t("hero.explore")}
                 </Button>
               </Box>
             )}
@@ -278,48 +280,65 @@ const HeroCard = ({item}) => {
 // Hero
 export const Hero = () => {
   const { t } = useTranslation();
+  const {currentLanguage}=useI18nContext();
   const heroSlides = useMemo(
     () => [
-      { id:1,
-        name: "Welcome to SauciaSalad!",
-        description:
-          "! طعم لذيذ واختيارات صحية بإشراف خبراء التغذية، جرب معنا واستمتع بالطعم الصح.",
+      {
+        id: 1,
+        name: currentLanguage === "en" 
+          ? "Welcome to SauciaSalad!" 
+          : "مرحبًا بكم في سوسيا سالاد!",
+        description: currentLanguage === "en" 
+          ? "Delicious taste and healthy choices supervised by nutrition experts. Try us and enjoy the perfect flavor!" 
+          : "!طعم لذيذ واختيارات صحية بإشراف خبراء التغذية، جرب معنا واستمتع بالطعم الصح.",
         image: heroA,
       },
-      { 
-        id:2,
-        name: "Create Your Own Salad & Fruit Bowl",
-        description:
-          "Pick your favorite ingredients and craft your perfect salad—fresh, tasty, and personalized!",
+      {
+        id: 2,
+        name: currentLanguage === "en" 
+          ? "Create Your Own Salad & Fruit Bowl" 
+          : "اصنع سلطتك وطبق الفواكه الخاص بك",
+        description: currentLanguage === "en" 
+          ? "Pick your favorite ingredients and craft your perfect salad—fresh, tasty, and personalized!" 
+          : "اختر مكوناتك المفضلة واصنع سلطتك المثالية - طازجة ولذيذة ومخصصة لك!",
         image: heroB,
-        path: "/menu"
+        path: "/menu",
       },
       {
-        id:3,
-        name: "Signature Salads, Crafted to Perfection",
-        description:
-          "Our expertly designed salads, packed with fresh ingredients and unique flavors—ready for you to enjoy.",
+        id: 3,
+        name: currentLanguage === "en" 
+          ? "Signature Salads, Crafted to Perfection" 
+          : "سلطات مميزة، مصنوعة بإتقان",
+        description: currentLanguage === "en" 
+          ? "Our expertly designed salads, packed with fresh ingredients and unique flavors—ready for you to enjoy." 
+          : "سلطاتنا المصممة بعناية، مليئة بالمكونات الطازجة والنكهات الفريدة - جاهزة لتستمتع بها.",
         image: heroC,
-        path: "/menu"
+        path: "/menu",
       },
       {
-        id:4,
-        name: "Meet Our Nutrition Expert",
-        description:
-          "Balance, taste, and nutrition—our expert ensures every meal is both healthy and delicious!",
+        id: 4,
+        name: currentLanguage === "en" 
+          ? "Meet Our Nutrition Expert" 
+          : "تعرف على خبير التغذية لدينا",
+        description: currentLanguage === "en" 
+          ? "Balance, taste, and nutrition—our expert ensures every meal is both healthy and delicious!" 
+          : "التوازن والطعم والتغذية - خبيرنا يضمن أن كل وجبة صحية ولذيذة!",
         image: heroD,
-        path: "/"
+        path: "/",
       },
       {
-        id:5,
-        name: "Exclusive Offers & Premium Meal Plans",
-        description:
-          "Enjoy personalized meal plans, loyalty rewards, and unbeatable offers—crafted for your lifestyle.",
+        id: 5,
+        name: currentLanguage === "en" 
+          ? "Exclusive Offers & Premium Meal Plans" 
+          : "عروض حصرية وخطط وجبات مميزة",
+        description: currentLanguage === "en" 
+          ? "Enjoy personalized meal plans, loyalty rewards, and unbeatable offers—crafted for your lifestyle." 
+          : "استمتع بخطط وجبات مخصصة، ومكافآت ولاء، وعروض لا تقاوم - مصممة لأسلوب حياتك.",
         image: heroE,
-        path: "/premium"
+        path: "/premium",
       },
     ],
-    [t]
+    [t, currentLanguage]
   );
 
   return (

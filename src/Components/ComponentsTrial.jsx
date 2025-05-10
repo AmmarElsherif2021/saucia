@@ -403,7 +403,7 @@ export const ACC = ({ sections = [], expandedItem, onToggle }) => {
             </Box>
             <AccordionIcon />
           </AccordionButton>
-          <AccordionPanel pb={4}>{section.content}</AccordionPanel>
+          <AccordionPanel style={{overflowY:"auto", height:"50vh"}} pb={4}>{section.content}</AccordionPanel>
         </AccordionItem>
       ))}
     </Accordion>

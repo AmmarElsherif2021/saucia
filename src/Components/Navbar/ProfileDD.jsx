@@ -12,7 +12,7 @@ export const ProfileDD = ({ disabled = false }) => {
 
     const handleProfileClick = () => {
         if (user) {
-            navigate("/account");
+            navigate("/");
             onClose();
         }
     };

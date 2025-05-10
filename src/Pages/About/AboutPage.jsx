@@ -14,11 +14,10 @@ const StylizedBox = ({ colorScheme, children }) => {
 const AboutPage = () => {
   const {currentLanguage}=useI18nContext();
   const {t}=useTranslation();
-  const isArabic = currentLanguage === "ar"; // Check if the current language is Arabic
+  const isArabic = currentLanguage === "ar"; 
 
   return (
     <div>
-      <ApiTester/>
       <StylizedBox colorScheme={"brand"}>
         <Heading as="h1" size="lg" mb="4">
           {t("about.aboutUs")} {/* Translate "About Us" */}

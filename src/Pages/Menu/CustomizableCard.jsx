@@ -19,16 +19,20 @@ import {
   Flex,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-const SECTION_FREE_COUNTS = {
-  "Protein": 0,
-  "salad-fruit": 5,
-  "Nuts": 1,
-  "Dressings": 2,
-  "Fruits": 1,
-  "Cheese": 0,
-  "Greens": 2,
-  "Toppings": 3,
-  "Vegetables": 4
+import { useI18nContext } from "../../Contexts/I18nContext";
+const SALAD_SECTION_FREE_COUNTS = {
+  "Protein": {value: 0, key_arabic: "بروتين"},
+  "Nuts": {value: 1, key_arabic: "مكسرات"},
+  "Dressings": {value: 2, key_arabic: "الصلصات"},
+  "Fruits": {value: 1, key_arabic: "الفواكه"},
+  "Cheese": {value: 0, key_arabic: "جبن"},
+  "Greens": {value: 2, key_arabic: "الخضار الورقية"},
+  "Toppings": {value: 3, key_arabic: "الإضافات"},
+  "Vegetables": {value: 4, key_arabic: "خضروات"}
+};
+
+const FRUIT_SECTION_FREE_COUNT = {
+  "salad-fruit": {value: 5, key_arabic: "سلطة فواكه"}
 };
 export const CustomizableMealCard = ({
    meal,
@@ -36,12 +40,16 @@ export const CustomizableMealCard = ({
   selectableItems,
   onhandleAddToCart
 }) => {
+  const SECTION_FREE_COUNTS = meal.name === "Make your own fruit salad" 
+  ? FRUIT_SECTION_FREE_COUNT : SALAD_SECTION_FREE_COUNTS;
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const {currentLanguage}=useI18nContext();
   const { t } = useTranslation();
+  const isArabic = currentLanguage === 'ar';
   const [selectedItems, setSelectedItems] = useState({});
   const { addon_price = 0 } = sectionRules;
   const groupedItems = selectableItems.reduce((acc, item) => {
-    const section = item.section || "Uncategorized";
+  const section = item.section || "Uncategorized";
     if (!acc[section]) {
       acc[section] = [];
     }
@@ -65,7 +73,7 @@ export const CustomizableMealCard = ({
     // Calculate total price considering free allowances
     let totalPrice = meal.price;
     Object.entries(sectionQuantities).forEach(([section, quantity]) => {
-      const freeAllowance = SECTION_FREE_COUNTS[section] || 0;
+      const freeAllowance = SECTION_FREE_COUNTS[section]?.value || 0;
       const extraItems = Math.max(quantity - freeAllowance, 0);
       totalPrice += extraItems * addon_price;
     });
@@ -151,77 +159,83 @@ export const CustomizableMealCard = ({
   return (
     <>
       {/* Customizable Meal Card */}
-      <Box
-        maxW="300px"
-        borderWidth="1px"
-        borderRadius="lg"
-        overflow="hidden"
-        bg="gray.100"
-        transition="transform 0.3s"
-        _hover={{ transform: "translateY(-5px)" }}
-        onClick={handleOpenModal}
-        cursor="pointer"
-      >
-        <Image
-          src={meal.image|| mealImage}
-          alt={meal.name}
-          height="200px"
-          width="100%"
-          objectFit="cover"
-        />
-        <Box p="4">
-          <Flex justify="space-between" align="baseline" mb="2">
-            <Heading size="md" color="brand.700" textAlign="left">
-              {meal.name}
-            </Heading>
-            <Text fontWeight="bold" fontSize="md" color="brand.900">
-              {meal.price.toFixed(2)} {t("common.currency")}
-            </Text>
-          </Flex>
-          <Text fontSize="sm" color="gray.600" mb="3">
-            {meal.description}
+        <Box
+          maxW="300px"
+          borderWidth="1px"
+          borderRadius="lg"
+          overflow="hidden"
+          bg="gray.100"
+          transition="transform 0.3s"
+          _hover={{ transform: "translateY(-5px)", boxShadow: "lg" }}
+          onClick={handleOpenModal}
+          cursor="pointer"
+        >
+          <Image
+            src={meal.image || mealImage}
+            alt={meal.name}
+            height="200px"
+            width="100%"
+            objectFit="cover"
+          />
+          <Box p="4">
+            <Flex justify="space-between" align="baseline" mb="2">
+          <Heading size="md" color="brand.700" textAlign="left" isTruncated>
+            {isArabic ? meal.name_arabic : meal.name}
+          </Heading>
+          <Text fontWeight="bold" fontSize="md" color="brand.900">
+            {meal.price.toFixed(2)} {t("common.currency")}
           </Text>
-          <Box mt={2}>
-            <Text fontWeight="bold">{t("menuPage.chooseItems")}</Text>
-            <Text>{t("menuPage.freeItems", { count: Object.values(SECTION_FREE_COUNTS).reduce((acc, count) => acc + count, 0) })}</Text>
-            <Text>
-              {t("menuPage.additionalPrice")}: {addon_price}{" "}
-              {t("common.currency")}
+            </Flex>
+            <Text fontSize="sm" color="gray.600" mb="3" noOfLines={2}>
+          {meal.description}
             </Text>
+            <Box mt={2}>
+          <Text fontWeight="bold" mb={1}>
+            {t("menuPage.chooseItems")}
+          </Text>
+          <Text fontSize="sm" color="gray.500" mb={1}>
+            {t("menuPage.freeItems", { count: Object.values(SECTION_FREE_COUNTS).reduce((acc, count) => acc + count.value, 0) })}
+          </Text>
+          <Text fontSize="sm" color="gray.500">
+            {t("menuPage.additionalPrice")}: {addon_price} {t("common.currency")}
+          </Text>
+            </Box>
           </Box>
         </Box>
-      </Box>
 
-      <Modal isOpen={isOpen} onClose={onClose} size="xl">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>
-            <Flex justify="space-between" align="center" w="100%">
-              <Text>{meal.name}</Text>
-              <Text fontWeight="bold">
-                {calculateTotal().toFixed(2)} {t("common.currency")}
-              </Text>
-            </Flex>
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <Text mb={4}>
-              {t("menuPage.selectUpTo")} {Object.entries(SECTION_FREE_COUNTS).map(([section, count]) => (
-                <span key={section}>{section}: {count} free, </span>
-              ))}
+        <Modal isOpen={isOpen} onClose={onClose} size="xl">
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>
+          <Flex justify="space-between" align="center" w="100%">
+            <Text fontSize="lg" fontWeight="bold">{isArabic?meal.name_arabic:meal.name}</Text>
+            <Text fontWeight="bold" color="green.600">
+              {calculateTotal().toFixed(2)} {t("common.currency")}
             </Text>
-           <SimpleGrid>
+          </Flex>
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+          <Text mb={4} fontSize="sm" color="gray.600">
+            {t("menuPage.selectUpTo")}{" "}
+            {Object.entries(SECTION_FREE_COUNTS).map(([section, data]) => (
+              <span key={section}>
+                <strong>{isArabic ? data.key_arabic : section}</strong>: {data.value} {t("menuPage.free")},{" "}
+              </span>
+            ))}
+          </Text>
+          <SimpleGrid columns={[1, 2]} spacing={4}>
             {Object.entries(groupedItems).map(([section, items]) => (
               <Box key={section} mb={6}>
-                <Flex justify="space-between" align="center">
-                  <Heading size="sm" mb={3} color="brand.700">
-                    {section}
-                  </Heading>
-                  <Text fontSize="sm" color="gray.500">
-                    {SECTION_FREE_COUNTS[section]} free
-                  </Text>
-                </Flex>
-              {items.map((item) => {
+            <Flex justify="space-between" align="center" mb={2}>
+              <Heading size="sm" color="brand.700">
+                {isArabic ? SECTION_FREE_COUNTS[section]?.key_arabic || section : section}
+              </Heading>
+              <Text fontSize="xs" color="gray.500">
+                {SECTION_FREE_COUNTS[section]?.value || 0} {t("menuPage.free")}
+              </Text>
+            </Flex>
+            {items.map((item) => {
                 const quantity = selectedItems[item.id] || 0;
                 const isSelected = quantity > 0;
                 

@@ -15,6 +15,7 @@ import {
 import { FcGoogle } from "react-icons/fc";
 import "./Auth.css";
 import { useAuthContext } from "../../Contexts/AuthContext";
+import logoIcon from "../../assets/logo.PNG"
 
 const Auth = () => {
   const { user, loading, authError, loginWithGoogle, logout } = useAuthContext(); 
@@ -107,7 +108,7 @@ const Auth = () => {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-logo">
-          <span className="logo-text">🔐</span>
+          <img src={logoIcon} width={"50px"}/>
         </div>
 
         <Heading>Welcome</Heading>

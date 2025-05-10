@@ -20,20 +20,21 @@ import { IconButton, StarIcon, AddIcon, MinusIcon, DeleteIcon } from "@chakra-ui
 import dessertPic from "../assets/dessert.JPG";
 import fruitPic from "../assets/fruits.JPG";
 import leavesPic from "../assets/leaves.JPG"
-import saladIcon from "../assets/salad.svg";
+import unknownDefaultImage from "../assets//menu/unknownMeal.JPG";
 import { useI18nContext } from "../Contexts/I18nContext";
 import { AnimatedText } from "../Pages/Home/Hero";
 import saladImage from "../assets/premium/dailySalad.png"
 import { useTranslation } from "react-i18next";
 import { useCart } from "../Contexts/CartContext";
 // Basic Food Card - Simple design with image, title, price
-export const FoodCard = ({id, name, description, price, image, rating, category }) => {
+export const FoodCard = ({id, name,nameArabic, description, price, image, rating, category }) => {
   const { colorMode } = useColorMode();
   const { t } = useTranslation();
+  const {currentLanguage} =useI18nContext();
   const { addToCart } = useCart();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
-
+  const isArabic = currentLanguage === 'ar';
   const handleConfirm = () => {
     addToCart({id, name, price, image, qty: quantity });
     setIsModalOpen(false);
@@ -50,11 +51,11 @@ export const FoodCard = ({id, name, description, price, image, rating, category 
         transition="transform 0.3s"
         _hover={{ transform: "translateY(-5px)" }}
       >
-        <Image src={image ? image : saladIcon} alt={name} height="200px" width="100%" objectFit="cover" />
+        <Image src={image ? image : unknownDefaultImage} alt={name} height="200px" width="100%" objectFit="cover" />
 
         <Box p="4">
           <Flex variant="solid" justify="space-between" align="baseline" mb="2">
-            <Heading size="md" color="brand.700" textAlign="left">{name}</Heading>
+            <Heading size="md" color="brand.700" textAlign="left">{isArabic?nameArabic:name}</Heading>
             <Text fontWeight="bold" fontSize="md" color="brand.900">
               ${price?.toFixed(2)}
             </Text>
@@ -91,7 +92,7 @@ export const FoodCard = ({id, name, description, price, image, rating, category 
             width="90%"
             maxW="400px"
           >
-            <Heading size="md" mb="4">{t('modals.addToCart')}</Heading>
+            <Heading size="md" mb="4">{t('modal.addToCart')}</Heading>
             <Flex align="center" justify="space-between" mb="4">
               <Text>{t('common.quantity')}:</Text>
               <Flex align="center">
@@ -116,74 +117,126 @@ export const FoodCard = ({id, name, description, price, image, rating, category 
 };
 
 // Premium Food Card - More detailed with rating, tag, and action buttons
-export const PremiumFoodCard = ({ name, description, price, image, rating, category, isPopular }) => {
+export const PremiumFoodCard = ({ id, name, description, price, image, rating, category, isPopular }) => {
   const { colorMode } = useColorMode();
-  const {t}=useTranslation()
-  
+  const { t } = useTranslation();
+  const { addToCart } = useCart();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+
+  const handleConfirm = () => {
+    addToCart({ id, name, price, image, qty: quantity });
+    setIsModalOpen(false);
+  };
+
   return (
-    <Box
-      maxW="320px"
-      borderRadius="xl"
-      overflow="hidden"
-      boxShadow="none"
-      bg={colorMode === "dark" ? "gray.700" : "white"}
-      position="relative"
-    >
-      {isPopular && (
-        <Badge 
-          position="absolute" 
-          top="10px" 
-          right="10px" 
-          bg="brand.600" 
-          color="white" 
-          borderRadius="full" 
-          px="2"
-          py="1"
-        >
-          {t('common.popular')}
-        </Badge>
-      )}
-      
-      <Image src={image?image:saladIcon} alt={name} height="180px" width="100%" objectFit="cover" />
-      
-      <Box p="5">
-        <Flex justifyContent="space-between" alignItems="center" mb="2">
-          <Heading size="md" color={colorMode === "dark" ? "white" : "brand.900"}>{name}</Heading>
-          <Badge colorScheme="brand" variant="subtle" borderRadius="full">
-            {t(`foodCategories.${category?.toLowerCase()}`)}
+    <>
+      <Box
+        maxW="320px"
+        borderRadius="xl"
+        overflow="hidden"
+        boxShadow="none"
+        bg={colorMode === "dark" ? "gray.700" : "white"}
+        position="relative"
+      >
+        {isPopular && (
+          <Badge
+            position="absolute"
+            top="10px"
+            right="10px"
+            bg="brand.600"
+            color="white"
+            borderRadius="full"
+            px="2"
+            py="1"
+          >
+            {t('common.popular')}
           </Badge>
-        </Flex>
-        
-        <Text color={colorMode === "dark" ? "gray.300" : "gray.600"} fontSize="sm" mb="3">
-          {description}
-        </Text>
-        
-        <Flex align="center" mt="2" mb="3">
-          {Array(5)
-            .fill("")
-            .map((_, i) => (
-              <StarIcon
-                key={i}
-                color={i < rating ? "brand.500" : "gray.300"}
-                boxSize="3"
-                mr="1"
-              />
-            ))}
-          <Text ml="1" fontSize="sm" color={colorMode === "dark" ? "gray.400" : "gray.500"}>
-            {rating} {t('common.stars')}
+        )}
+
+        <Image src={image ? image : unknownDefaultImage} alt={name} height="180px" width="100%" objectFit="cover" />
+
+        <Box p="5">
+          <Flex justifyContent="space-between" alignItems="center" mb="2">
+            <Heading size="md" color={colorMode === "dark" ? "white" : "brand.900"}>{name}</Heading>
+            <Badge colorScheme="brand" variant="subtle" borderRadius="full">
+              {t(`foodCategories.${category?.toLowerCase()}`)}
+            </Badge>
+          </Flex>
+
+          <Text color={colorMode === "dark" ? "gray.300" : "gray.600"} fontSize="sm" mb="3">
+            {description}
           </Text>
-        </Flex>
-        
-        <Flex justify="space-between" align="center" mt="4">
-          <Text fontWeight="bold" fontSize="xl" color="brand.700">
-            ${price?.toFixed(2)}
-          </Text>
-          <Button colorScheme="brand" size="md">
-            {t('buttons.addToCart')}
-          </Button>
-        </Flex>
+
+          <Flex align="center" mt="2" mb="3">
+            {Array(5)
+              .fill("")
+              .map((_, i) => (
+                <StarIcon
+                  key={i}
+                  color={i < rating ? "brand.500" : "gray.300"}
+                  boxSize="3"
+                  mr="1"
+                />
+              ))}
+            <Text ml="1" fontSize="sm" color={colorMode === "dark" ? "gray.400" : "gray.500"}>
+              {rating} {t('common.stars')}
+            </Text>
+          </Flex>
+
+          <Flex justify="space-between" align="center" mt="4">
+            <Text fontWeight="bold" fontSize="xl" color="brand.700">
+              ${price?.toFixed(2)}
+            </Text>
+            <Button colorScheme="brand" size="md" onClick={() => setIsModalOpen(true)}>
+              {t('buttons.addToCart')}
+            </Button>
+          </Flex>
+        </Box>
       </Box>
-    </Box>
+
+      {isModalOpen && (
+        <Box
+          position="fixed"
+          top="0"
+          left="0"
+          width="100vw"
+          height="100vh"
+          bg="rgba(0, 0, 0, 0.5)"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          zIndex="1000"
+        >
+          <Box
+            bg={colorMode === "dark" ? "gray.800" : "white"}
+            p="6"
+            borderRadius="lg"
+            boxShadow="lg"
+            width="90%"
+            maxW="400px"
+          >
+            <Heading size="md" mb="4">{t('modal.addToCart')}</Heading>
+            <Flex align="center" justify="space-between" mb="4">
+              <Text>{t('common.quantity')}:</Text>
+              <Flex align="center">
+                <Button size="sm" onClick={() => setQuantity((prev) => Math.max(prev - 1, 1))}>-</Button>
+                <Text mx="2">{quantity}</Text>
+                <Button size="sm" onClick={() => setQuantity((prev) => prev + 1)}>+</Button>
+              </Flex>
+            </Flex>
+            <Flex justify="space-between">
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                {t('buttons.cancel')}
+              </Button>
+              <Button colorScheme="brand" onClick={handleConfirm}>
+                {t('buttons.confirm')}
+              </Button>
+            </Flex>
+          </Box>
+        </Box>
+      )}
+    </>
   );
 };
 
@@ -204,7 +257,7 @@ export const MinimalistFoodCard = ({ name, description, price, image, prepTime, 
       borderColor={colorMode === "dark" ? "gray.600" : "gray.200"}
     >
       <Image 
-        src={image?image:saladIcon} 
+        src={image?image:unknownDefaultImage} 
         alt={name} 
         objectFit="cover" 
         maxW={{ base: "100%", md: "150px" }} 
@@ -330,6 +383,9 @@ export const FoodCards = () => {
 export const FeaturedItemCard = ({ item }) => {
   const { colorMode } = useColorMode();
   const { t, i18n } = useTranslation();
+  const { addToCart } = useCart();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   const isArabic = i18n.language === "ar";
 
   // Calculate pricing based on offer ratio
@@ -337,98 +393,265 @@ export const FeaturedItemCard = ({ item }) => {
   const hasOffer = item?.offerRatio < 1;
   const discountedPrice = hasOffer ? originalPrice * item.offerRatio : originalPrice;
 
+  const handleConfirm = () => {
+    addToCart({ id: item.id, name: item.name, price: discountedPrice, image: item.image, qty: quantity });
+    setIsModalOpen(false);
+  };
+
   return (
-    <Box
-      maxW={["200px", "250px", "300px"]}
-      minW={["180px", "220px", "250px"]}
-      borderRadius="xl"
-      overflow="hidden"
-      bg={colorMode === "dark" ? "gray.700" : "white"}
-      position="relative"
-      transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-      _hover={{
-        transform: "translateY(-8px) scale(1.02)",
-        boxShadow: "xl",
-      }}
-      height={["320px", "340px", "360px"]}
-      my={2}
-      mx={1}
-      cursor="pointer"
-    >
-      <Box position="relative" height={["180px", "200px", "220px"]}>
-        <Image
-          src={item?.image || saladIcon}
-          alt={isArabic ? item?.name_arabic : item?.name}
-          height="100%"
-          width="100%"
-          objectFit="cover"
-          fallback={<Skeleton height="100%" />}
-        />
+    <>
+      <Box
+        maxW={["200px", "250px", "300px"]}
+        minW={["180px", "220px", "250px"]}
+        borderRadius="xl"
+        overflow="hidden"
+        bg={colorMode === "dark" ? "gray.700" : "white"}
+        position="relative"
+        transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+        _hover={{
+          transform: "translateY(-8px) scale(1.02)",
+          boxShadow: "xl",
+        }}
+        height={["320px", "340px", "360px"]}
+        my={2}
+        mx={1}
+        cursor="pointer"
+      >
+        <Box position="relative" height={["180px", "200px", "220px"]}>
+          <Image
+            src={item?.image || unknownDefaultImage}
+            alt={isArabic ? item?.name_arabic : item?.name}
+            height="100%"
+            width="100%"
+            objectFit="cover"
+            fallback={<Skeleton height="100%" />}
+          />
 
-        <Flex
-          position="absolute"
-          top="0"
-          left="0"
-          right="0"
-          p={2}
-          justifyContent="space-between"
-          bg="linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%)"
-        >
-          <Flex gap={1} flexWrap="wrap">
-            {item?.rate > 4.5 && (
-              <Badge colorScheme="yellow" variant="solid" borderRadius="md" px={2}>
-                {t("common.featured")}
-              </Badge>
-            )}
-            {hasOffer && (
-              <Badge colorScheme="green" variant="solid" borderRadius="md" px={2}>
-                {t("common.offer")} {(100 - item.offerRatio * 100).toFixed(0)}%
-              </Badge>
-            )}
-          </Flex>
-
-          <Badge
-            bg="brand.600"
-            color="white"
-            borderRadius="md"
-            px={2}
-            fontSize={["xs", "sm"]}
+          <Flex
+            position="absolute"
+            top="0"
+            left="0"
+            right="0"
+            p={2}
+            justifyContent="space-between"
+            bg="linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%)"
           >
-            {isArabic ? item?.section_arabic : t(`foodCategories.${item?.section?.toLowerCase()}`)}
-          </Badge>
-        </Flex>
+            <Flex gap={1} flexWrap="wrap">
+              {item?.rate > 4.5 && (
+                <Badge colorScheme="yellow" variant="solid" borderRadius="md" px={2}>
+                  {t("common.featured")}
+                </Badge>
+              )}
+              {hasOffer && (
+                <Badge colorScheme="green" variant="solid" borderRadius="md" px={2}>
+                  {t("common.offer")} {(100 - item.offerRatio * 100).toFixed(0)}%
+                </Badge>
+              )}
+            </Flex>
+
+            <Badge
+              bg="brand.600"
+              color="white"
+              borderRadius="md"
+              px={2}
+              fontSize={["xs", "sm"]}
+            >
+              {isArabic ? item?.section_arabic : t(`foodCategories.${item?.section?.toLowerCase()}`)}
+            </Badge>
+          </Flex>
+        </Box>
+
+        <Box p={[2, 3]} bg={colorMode === "dark" ? "gray.700" : "white"}>
+          <Flex direction="column" gap={1}>
+            <Heading
+              fontSize={["sm", "md"]}
+              color={colorMode === "dark" ? "white" : "brand.900"}
+              noOfLines={1}
+            >
+              {isArabic ? item?.name_arabic : item?.name}
+            </Heading>
+
+            <Text fontSize={["xx-small", "xs"]} color="brand.500" noOfLines={1}>
+              {isArabic ? item?.ingredients_arabic : item?.ingredients}
+            </Text>
+
+            <Flex justify="space-between" align="center">
+              <Flex direction="column">
+                {hasOffer && (
+                  <Text fontSize="xs" color="gray.500" textDecoration="line-through">
+                    SAR {originalPrice.toFixed(2)}
+                  </Text>
+                )}
+                <Text
+                  fontWeight="bold"
+                  fontSize={["md", "lg"]}
+                  color={hasOffer ? "green.500" : "brand.700"}
+                >
+                  SAR {discountedPrice.toFixed(2)}
+                </Text>
+              </Flex>
+
+              <Flex align="center">
+                {Array(5)
+                  .fill("")
+                  .map((_, i) => (
+                    <StarIcon
+                      key={i}
+                      color={i < item?.rate ? "brand.500" : "gray.300"}
+                      boxSize={[2.5, 3]}
+                    />
+                  ))}
+              </Flex>
+            </Flex>
+
+            <Button colorScheme="brand" size={["xs", "sm"]} mt={1} width="full" onClick={() => setIsModalOpen(true)}>
+              {t("buttons.addToCart")}
+            </Button>
+          </Flex>
+        </Box>
       </Box>
 
-      <Box p={[2, 3]} bg={colorMode === "dark" ? "gray.700" : "white"}>
-        <Flex direction="column" gap={1}>
-          <Heading
-            fontSize={["sm", "md"]}
-            color={colorMode === "dark" ? "white" : "brand.900"}
-            noOfLines={1}
+      {isModalOpen && (
+        <Box
+          position="fixed"
+          top="0"
+          left="0"
+          width="100vw"
+          height="100vh"
+          bg="rgba(0, 0, 0, 0.5)"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          zIndex="1000"
+        >
+          <Box
+            bg={colorMode === "dark" ? "gray.800" : "white"}
+            p="6"
+            borderRadius="lg"
+            boxShadow="lg"
+            width="90%"
+            maxW="400px"
           >
-            {isArabic ? item?.name_arabic : item?.name}
-          </Heading>
+            <Heading size="md" mb="4">{t('modal.addToCart')}</Heading>
+            <Flex align="center" justify="space-between" mb="4">
+              <Text>{t('common.quantity')}:</Text>
+              <Flex align="center">
+                <Button size="sm" onClick={() => setQuantity((prev) => Math.max(prev - 1, 1))}>-</Button>
+                <Text mx="2">{quantity}</Text>
+                <Button size="sm" onClick={() => setQuantity((prev) => prev + 1)}>+</Button>
+              </Flex>
+            </Flex>
+            <Flex justify="space-between">
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                {t('buttons.cancel')}
+              </Button>
+              <Button colorScheme="brand" onClick={handleConfirm}>
+                {t('buttons.confirm')}
+              </Button>
+            </Flex>
+          </Box>
+        </Box>
+      )}
+    </>
+  );
+};
 
-          <Text fontSize={["xx-small", "xs"]} color="brand.500" noOfLines={1}>
+export const OfferCard = ({ item }) => {
+  const { colorMode } = useColorMode();
+  const { t, i18n } = useTranslation();
+  const { addToCart } = useCart();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const isArabic = i18n.language === "ar";
+
+  // Calculate pricing based on offer ratio
+  const originalPrice = item?.price || 0;
+  const hasOffer = item?.offerRatio < 1;
+  const discountedPrice = hasOffer ? originalPrice * item.offerRatio : originalPrice;
+
+  const handleConfirm = () => {
+    addToCart({ id: item.id, name: item.name, price: discountedPrice, image: item.image, qty: quantity });
+    setIsModalOpen(false);
+  };
+
+  return (
+    <>
+      <Box
+        maxW="500px"
+        borderRadius="15%"
+        overflow="hidden"
+        position="relative"
+        transition="transform 0.3s"
+        _hover={{ transform: "translateY(-5px)" }}
+        height="300px"
+        my={2}
+      >
+        <Box position="relative" height="100%" zIndex={0}>
+          <Image
+            src={item?.image || unknownDefaultImage}
+            alt={isArabic ? item?.name_arabic : item?.name}
+            height="100%"
+            width="100%"
+            objectFit="cover"
+            filter="brightness(0.7)"
+          />
+
+          <Flex
+            position="absolute"
+            top="4"
+            left="4"
+            right="4"
+            justifyContent="space-between"
+            zIndex={2}
+          >
+            <Flex gap="2">
+              {item?.isPremium && (
+                <Badge colorScheme="accent" variant="solid" borderRadius="full" px="2">
+                  {t("common.premium")}
+                </Badge>
+              )}
+              {hasOffer && (
+                <Badge colorScheme="highlight" variant="solid" borderRadius="full" px="2">
+                  {t("common.offer")} {(100 - item.offerRatio * 100).toFixed(0)}%
+                </Badge>
+              )}
+            </Flex>
+            <Badge
+              bg="brand.600"
+              color="white"
+              borderRadius="full"
+              px="2"
+              fontSize="xs"
+            >
+              {isArabic ? item?.section_arabic : t(`foodCategories.${item?.section?.toLowerCase()}`)}
+            </Badge>
+          </Flex>
+        </Box>
+
+        <Box
+          position="absolute"
+          bottom="0"
+          left="0"
+          right="0"
+          bg={colorMode === "dark" ? "rgba(0, 0, 0, 0.8)" : "rgba(255, 255, 255, 0.9)"}
+          p="4"
+          borderTopRadius="lg"
+          zIndex={2}
+        >
+          <Flex justify="space-between" align="center" mb="2">
+            <Heading size="md" color={colorMode === "dark" ? "white" : "brand.900"} noOfLines={1}>
+              {isArabic ? item?.name_arabic : item?.name}
+            </Heading>
+            <Text fontWeight="bold" fontSize="lg" color="brand.700">
+              SAR {discountedPrice.toFixed(2)}
+            </Text>
+          </Flex>
+
+          <Text color={colorMode === "dark" ? "gray.300" : "gray.600"} fontSize="sm" mb="2" noOfLines={2}>
             {isArabic ? item?.ingredients_arabic : item?.ingredients}
           </Text>
 
           <Flex justify="space-between" align="center">
-            <Flex direction="column">
-              {hasOffer && (
-                <Text fontSize="xs" color="gray.500" textDecoration="line-through">
-                  SAR {originalPrice.toFixed(2)}
-                </Text>
-              )}
-              <Text
-                fontWeight="bold"
-                fontSize={["md", "lg"]}
-                color={hasOffer ? "green.500" : "brand.700"}
-              >
-                SAR {discountedPrice.toFixed(2)}
-              </Text>
-            </Flex>
-
             <Flex align="center">
               {Array(5)
                 .fill("")
@@ -436,128 +659,62 @@ export const FeaturedItemCard = ({ item }) => {
                   <StarIcon
                     key={i}
                     color={i < item?.rate ? "brand.500" : "gray.300"}
-                    boxSize={[2.5, 3]}
+                    boxSize="3"
                   />
                 ))}
+              <Text ml="1" fontSize="xs" color={colorMode === "dark" ? "gray.400" : "gray.500"}>
+                ({item?.rate})
+              </Text>
             </Flex>
+            <Button colorScheme="brand" size="sm" onClick={() => setIsModalOpen(true)}>
+              {t("buttons.addToCart")}
+            </Button>
           </Flex>
-
-          <Button colorScheme="brand" size={["xs", "sm"]} mt={1} width="full">
-            {t("buttons.addToCart")}
-          </Button>
-        </Flex>
+        </Box>
       </Box>
-    </Box>
-  );
-};
-// Offer Card with Image Prominence
-export const OfferCard = ({ item }) => {
-  const { colorMode } = useColorMode();
-  const { t, i18n } = useTranslation();
-  const isArabic = i18n.language === "ar";
 
-  // Calculate pricing based on offer ratio
-  const originalPrice = item?.price || 0;
-  const hasOffer = item?.offerRatio < 1;
-  const discountedPrice = hasOffer ? originalPrice * item.offerRatio : originalPrice;
-
-  return (
-    <Box
-      maxW="500px"
-      borderRadius="15%"
-      overflow="hidden"
-      position="relative"
-      transition="transform 0.3s"
-      _hover={{ transform: "translateY(-5px)" }}
-      height="300px"
-      my={2}
-    >
-      <Box position="relative" height="100%" zIndex={0}>
-        <Image
-          src={item?.image || saladIcon}
-          alt={isArabic ? item?.name_arabic : item?.name}
-          height="100%"
-          width="100%"
-          objectFit="cover"
-          filter="brightness(0.7)"
-        />
-
-        <Flex
-          position="absolute"
-          top="4"
-          left="4"
-          right="4"
-          justifyContent="space-between"
-          zIndex={2}
+      {isModalOpen && (
+        <Box
+          position="fixed"
+          top="0"
+          left="0"
+          width="100vw"
+          height="100vh"
+          bg="rgba(0, 0, 0, 0.5)"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          zIndex="1000"
         >
-          <Flex gap="2">
-            {item?.isPremium && (
-              <Badge colorScheme="accent" variant="solid" borderRadius="full" px="2">
-                {t("common.premium")}
-              </Badge>
-            )}
-            {hasOffer && (
-              <Badge colorScheme="highlight" variant="solid" borderRadius="full" px="2">
-                {t("common.offer")} {(100 - item.offerRatio * 100).toFixed(0)}%
-              </Badge>
-            )}
-          </Flex>
-          <Badge
-            bg="brand.600"
-            color="white"
-            borderRadius="full"
-            px="2"
-            fontSize="xs"
+          <Box
+            bg={colorMode === "dark" ? "gray.800" : "white"}
+            p="6"
+            borderRadius="lg"
+            boxShadow="lg"
+            width="90%"
+            maxW="400px"
           >
-            {isArabic ? item?.section_arabic : t(`foodCategories.${item?.section?.toLowerCase()}`)}
-          </Badge>
-        </Flex>
-      </Box>
-
-      <Box
-        position="absolute"
-        bottom="0"
-        left="0"
-        right="0"
-        bg={colorMode === "dark" ? "rgba(0, 0, 0, 0.8)" : "rgba(255, 255, 255, 0.9)"}
-        p="4"
-        borderTopRadius="lg"
-        zIndex={2}
-      >
-        <Flex justify="space-between" align="center" mb="2">
-          <Heading size="md" color={colorMode === "dark" ? "white" : "brand.900"} noOfLines={1}>
-            {isArabic ? item?.name_arabic : item?.name}
-          </Heading>
-          <Text fontWeight="bold" fontSize="lg" color="brand.700">
-            SAR {discountedPrice.toFixed(2)}
-          </Text>
-        </Flex>
-
-        <Text color={colorMode === "dark" ? "gray.300" : "gray.600"} fontSize="sm" mb="2" noOfLines={2}>
-          {isArabic ? item?.ingredients_arabic : item?.ingredients}
-        </Text>
-
-        <Flex justify="space-between" align="center">
-          <Flex align="center">
-            {Array(5)
-              .fill("")
-              .map((_, i) => (
-                <StarIcon
-                  key={i}
-                  color={i < item?.rate ? "brand.500" : "gray.300"}
-                  boxSize="3"
-                />
-              ))}
-            <Text ml="1" fontSize="xs" color={colorMode === "dark" ? "gray.400" : "gray.500"}>
-              ({item?.rate})
-            </Text>
-          </Flex>
-          <Button colorScheme="brand" size="sm">
-            {t("buttons.addToCart")}
-          </Button>
-        </Flex>
-      </Box>
-    </Box>
+            <Heading size="md" mb="4">{t('modal.addToCart')}</Heading>
+            <Flex align="center" justify="space-between" mb="4">
+              <Text>{t('common.quantity')}:</Text>
+              <Flex align="center">
+                <Button size="sm" onClick={() => setQuantity((prev) => Math.max(prev - 1, 1))}>-</Button>
+                <Text mx="2">{quantity}</Text>
+                <Button size="sm" onClick={() => setQuantity((prev) => prev + 1)}>+</Button>
+              </Flex>
+            </Flex>
+            <Flex justify="space-between">
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                {t('buttons.cancel')}
+              </Button>
+              <Button colorScheme="brand" onClick={handleConfirm}>
+                {t('buttons.confirm')}
+              </Button>
+            </Flex>
+          </Box>
+        </Box>
+      )}
+    </>
   );
 };
 //Plan card

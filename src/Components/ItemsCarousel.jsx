@@ -54,8 +54,7 @@ export const ItemsCarousel = ({
   }) || visibleCount;
 
   const totalSlides = Math.max(1, Math.ceil(items.length / itemsToShow));
-  const showControls = visibleButtons && items.length > itemsToShow;
-
+  const showControls = visibleButtons;
   useEffect(() => {
     if (auto && items.length > itemsToShow) {
       const interval = setInterval(() => {

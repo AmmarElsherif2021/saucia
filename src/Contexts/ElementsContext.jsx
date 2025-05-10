@@ -27,7 +27,7 @@ export const ElementsProvider = ({ children }) => {
       ]);
       
       // Filter featured and offer meals
-      const featuredMeals = meals.filter((x) => x.rate > 4.5);
+      const featuredMeals = meals.filter((x) => x.rate > 4.7);
       const offersMeals = meals.filter((x) => x.offerRatio < 1);
       
       // Fetch section-specific items for selective meals

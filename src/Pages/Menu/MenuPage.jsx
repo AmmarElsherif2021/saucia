@@ -5,20 +5,23 @@ import { Box, Heading, SimpleGrid, Text as ChakraText, Spinner, Center } from "@
 import { ACC } from "../../Components/ComponentsTrial";
 import { FoodCard } from "../../Components/Cards";
 import { useTranslation } from "react-i18next";
+import { useI18nContext } from "../../Contexts/I18nContext";
 import { useElements } from "../../Contexts/ElementsContext";
 // Removed unused import
 
 // Import icons
-import ingredientIcon from "../../assets/menu/ingredient.svg";
+import makeSaladIcon from "../../assets/menu/ingredient.svg";
 import proteinIcon from "../../assets/menu/protein.svg";
 import cheeseIcon from "../../assets/menu/cheese.svg";
 import extrasIcon from "../../assets/menu/extras.svg";
 import dressingsIcon from "../../assets/menu/dressings.svg";
 import saladIcon from "../../assets/menu/salad.svg";
-import soupIcon from "../../assets/menu/soup.svg"; // You might need to add this icon
+import soupIcon from "../../assets/menu/soup.svg";
+import fruitIcon from "../../assets/menu/fruit.svg"; // Corrected the icon for fruits
+
 import { useCart } from "../../Contexts/CartContext";
 
-// Map category names to their respective icons
+
 const iconsMap = {
   "Salads": saladIcon,
   "Soups": soupIcon,
@@ -26,7 +29,9 @@ const iconsMap = {
   "Cheese": cheeseIcon,
   "Extras": extrasIcon,
   "Dressings": dressingsIcon,
-  "Fruits": ingredientIcon,
+  "Fruits": fruitIcon,  
+  "Make Your Own Salad": makeSaladIcon,
+  "Make Your Own Fruit Salad": fruitIcon,
 };
 const selectiveSectionMap = {
   "make your own fruit salad": "salad-fruits",
@@ -34,6 +39,7 @@ const selectiveSectionMap = {
 };
 const MenuPage = () => {
   const { t } = useTranslation();
+  const {currentLanguage}= useI18nContext();
   const {addToCart}=useCart();
   const { meals, fruitItems, saladItems, elementsLoading } = useElements();
   const [sections, setSections] = useState([]);
@@ -42,7 +48,7 @@ const MenuPage = () => {
     "salad-items": []
   });
   const [loading] = useState(false); 
-  
+  const isArabic = currentLanguage === "ar" ;
   const handleAddToCart = (meal) => {
     // This is the correct format to add a new item to cart
     const itemToAdd = {
@@ -74,13 +80,18 @@ const MenuPage = () => {
       // Group meals by section
       const sectionsMap = {};
       
-      meals.forEach(meal => {
-        const section = meal.section || "Other";
-        if (!sectionsMap[section]) {
-          sectionsMap[section] = [];
-        }
-        sectionsMap[section].push(meal);
-      });
+    meals.forEach(meal => {
+  // Normalize section name
+  const section = (meal.section || "Other")
+    .trim()
+    .replace(/\s+/g, ' ') // Remove extra spaces
+    .replace(/['"]/g, ''); // Remove special characters
+  
+  if (!sectionsMap[section]) {
+    sectionsMap[section] = [];
+  }
+  sectionsMap[section].push(meal);
+});
       
       // Convert to array format for accordion
       const sectionsArray = Object.keys(sectionsMap).map(sectionName => {
@@ -96,74 +107,79 @@ const MenuPage = () => {
   }, [meals, elementsLoading, loading]);
 
   // Generate menu sections for the accordion
-  const menuSections = sections.map(section => ({
-    title: t(`menuPage.${section.name}`, { defaultValue: section.name }),
-    icon: iconsMap[section.name] || ingredientIcon,
-    content: (
-      <Box>
-        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
-          {section.meals.map((meal, index) => {
-            const isSelective = meal.policy === "selective";
-            let selectableItems = [];
-            let sectionRules = {};
+  // Generate menu sections for the accordion
+const menuSections = sections.map((section) => ({
+  title:
+    currentLanguage === "ar"
+      ? section.name_arabic || section.name
+      : t(`menuPage.${section.name}`, { defaultValue: section.name }),
+  icon: iconsMap[section.name] || makeSaladIcon,
+  content: (
+    <Box>
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+        {section.meals.map((meal, index) => {
+          const isSelective = meal.policy === "selective";
+          let selectableItems = [];
+          let sectionRules = {};
 
-            if (isSelective) {
-              const itemSection = selectiveSectionMap[meal.name.toLowerCase()];
-              if (itemSection) {
-                selectableItems = selectiveItems[itemSection];
-                sectionRules = selectableItems[0] || {};
-              }
+          if (isSelective) {
+            const itemSection = selectiveSectionMap[meal.name.toLowerCase()];
+            if (itemSection) {
+              selectableItems = selectiveItems[itemSection];
+              sectionRules = selectableItems[0] || {};
             }
+          }
 
-            return isSelective ? (
-              <CustomizableMealCard
-                key={index}
-                meal={meal}
-                sectionRules={sectionRules}
-                selectableItems={selectableItems}
-                onhandleAddToCart={handleAddToCart}
-              />
-            ) : (
-              <FoodCard
-                key={meal.id || index}
-                id={meal.id}
-                name={meal.name}
-                description={
-                  <Box>
-                    <ChakraText>{meal.ingredients || meal.description}</ChakraText>
+          return isSelective ? (
+            <CustomizableMealCard
+              key={index}
+              meal={meal}
+              sectionRules={sectionRules}
+              selectableItems={selectableItems}
+              onhandleAddToCart={handleAddToCart}
+            />
+          ) : (
+            <FoodCard
+              key={meal.id || index}
+              id={meal.id}
+              nameArabic={meal.name_arabic}
+              name={meal.name}
+              description={
+                <Box>
+                  <ChakraText>{isArabic?meal.ingredients_arabic:meal.ingredients}</ChakraText>
+                  <ChakraText>
+                    {t("menuPage.calories")}: {meal.kcal || "N/A"}
+                  </ChakraText>
+                  {meal.protein > 0 && (
                     <ChakraText>
-                      {t("menuPage.calories")}: {meal.kcal || "N/A"}
+                      {t("menuPage.protein")}: {meal.protein}g
                     </ChakraText>
-                    {meal.protein > 0 && (
-                      <ChakraText>
-                        {t("menuPage.protein")}: {meal.protein}g
-                      </ChakraText>
-                    )}
-                    {meal.carb > 0 && (
-                      <ChakraText>
-                        {t("menuPage.carbs")}: {meal.carb}g
-                      </ChakraText>
-                    )}
-                    {isSelective && (
-                      <ChakraText color="green.500">
-                        {t("menuPage.customizable")}
-                      </ChakraText>
-                    )}
-                  </Box>
-                }
-                price={meal.price}
-                image={meal.image || null}
-                rating={meal.rating || 4}
-                category={section.name}
-                isSelective={isSelective}
-                policy={meal.policy}
-              />
-            );
-          })}
-        </SimpleGrid>
-      </Box>
-    ),
-  }));
+                  )}
+                  {meal.carb > 0 && (
+                    <ChakraText>
+                      {t("menuPage.carbs")}: {meal.carb}g
+                    </ChakraText>
+                  )}
+                  {isSelective && (
+                    <ChakraText color="green.500">
+                      {t("menuPage.customizable")}
+                    </ChakraText>
+                  )}
+                </Box>
+              }
+              price={meal.price}
+              image={meal.image || null}
+              rating={meal.rating || 4}
+              category={section.name}
+              isSelective={isSelective}
+              policy={meal.policy}
+            />
+          );
+        })}
+      </SimpleGrid>
+    </Box>
+  ),
+}));
 
   if (elementsLoading || loading) {
     return (

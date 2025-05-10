@@ -7,6 +7,7 @@ import { Footer } from "./Footer";
 import { useUser } from "../../Contexts/UserContext";
 import { useEffect } from "react";
 import { useElements } from "../../Contexts/ElementsContext";
+import ExpertPortal from "./ExpertPortal";
  const HomePage = () => {
   const { user, loading, logout }=useUser();
   const { 
@@ -36,6 +37,7 @@ import { useElements } from "../../Contexts/ElementsContext";
         <Hero/>
         <FeaturedMeals featuredMeals={featuredMeals}/>
         <OffersSlide offersMeals={offersMeals}/>
+        <ExpertPortal/>
         <AboutUs/>
         <Footer/>
       </Box>

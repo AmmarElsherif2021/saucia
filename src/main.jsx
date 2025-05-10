@@ -74,9 +74,11 @@ const router = createBrowserRouter([
   {
     path: "/auth",
     element: (
-      <Suspense fallback={<PageLoader />}>
-        <Auth />
-      </Suspense>
+      <div style={{display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <Suspense fallback={<PageLoader />}>
+          <Auth />
+        </Suspense>
+      </div>
     ),
   },
   {

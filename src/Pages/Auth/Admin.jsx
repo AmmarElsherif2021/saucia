@@ -537,7 +537,7 @@ const handleImportMeals = async (event) => {
       />
     </Button>
                   <TableContainer overflowX="auto">
-                <Table variant="simple" size="sm">
+                <Table variant="simple" size="sm" style={{overflowY:"auto", maxHeight:"70vh"}}>
                   <Thead>
                 <Tr>
                   <Th w="15%">Name</Th>
@@ -552,7 +552,7 @@ const handleImportMeals = async (event) => {
                   <Th w="15%">Action</Th>
                 </Tr>
                   </Thead>
-                  <Tbody>
+                  <Tbody >
                 {items.map((item) => (
                   <Tr key={item.id}>
                 <Td w="15%">{item.name}</Td>
@@ -618,7 +618,7 @@ const handleImportMeals = async (event) => {
       />
     </Button>
                           <TableContainer overflowX={isTableScrollable ? "auto" : "visible"}>
-                          <Table variant="simple" size={{ base: "sm", md: "md" }}>
+                          <Table variant="simple" size={{ base: "sm", md: "md" }} style={{overflowY:"auto", maxHeight:"70vh"}}>
                           <Thead>
                           <Tr>
                           <Th>Name</Th>
@@ -692,7 +692,7 @@ const handleImportMeals = async (event) => {
               buttonText="Add Plan" 
             />
             <TableContainer overflowX="auto">
-              <Table variant="simple" size="sm">
+              <Table variant="simple" size="sm" style={{overflowY:"auto", maxHeight:"70vh"}}>
             <Thead>
               <Tr>
                 <Th>Title</Th>
@@ -752,7 +752,7 @@ const handleImportMeals = async (event) => {
           >
             <SectionHeading title="Orders" />
             <TableContainer overflowX={isTableScrollable ? "auto" : "visible"}>
-              <Table variant="simple" size={{ base: "sm", md: "md" }}>
+              <Table variant="simple" size={{ base: "sm", md: "md" }} style={{overflowY:"auto", maxHeight:"70vh"}}>
             <Thead>
               <Tr>
                 <Th>Order ID</Th>

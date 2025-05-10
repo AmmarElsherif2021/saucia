@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FaShoppingCart } from "react-icons/fa";
 import {
   Box,
   Flex,
@@ -39,60 +40,92 @@ export const Navbar = () => {
   };
 
   return (
-    <Box bg={bgColor} py={1} position="fixed" w={"100%"} maxW="100vw" paddingRight={12} zIndex="10">
+    <Box bg={bgColor} px={"5%"} py={1} position="fixed" w="90%" zIndex="10">
       <Flex
         h={16}
         alignItems="center"
         justifyContent="space-between"
         w="100%"
         mx="auto"
+        px={4}
       >
         {/* Logo */}
-        <Box fontWeight="bold" fontSize="lg" color={textColor} mx={4}>
+        <Box mx={2}>
           <Link to="/">
-            <Img src={logoIcon} w={20} alt={t("navbar.logoAlt")} />
+            <Img src={logoIcon} w={{ base: 16, md: 20 }} alt={t("navbar.logoAlt")} />
           </Link>
         </Box>
 
         {/* Desktop Menu */}
-        <Flex display={{ base: "none", md: "flex" }} alignItems="center" gap={4}>
-          {["cart", "menu", "about", "premium"].map((item) => (
-            <Link key={item} to={`/${item}`} onClick={onClose}>
+        <Flex
+          display={{ base: "none", md: "flex" }}
+          alignItems="center"
+          gap={{ md: 4, lg: 6 }}
+          flexGrow={1}
+          justifyContent="center"
+        >
+          {["menu", "about", "premium"].map((item) => (
+            <Link key={item} to={`/${item}`}>
               <Button variant="underlined" colorScheme="brand" size="sm">
                 {t(`navbar.${item}`)}
               </Button>
             </Link>
           ))}
+          
+          {/* Cart IconButton */}
+          <Link to="/cart">
+            <IconButton
+              aria-label={t("navbar.cart")}
+              icon={<FaShoppingCart />}
+              variant="ghost"
+              size="sm"
+            />
+          </Link>
         </Flex>
 
-        {/* User Menu, Theme Toggle, and Language Toggle - Desktop */}
-        <HStack spacing={4} display={{ base: "none", md: "flex" }}>
+        {/* Right Controls - Desktop */}
+        <HStack spacing={{ md: 3, lg: 4 }} display={{ base: "none", md: "flex" }}>
           <ProfileDD />
           <IconButton
             aria-label={t("common.toggleDarkMode")}
             icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
             onClick={toggleColorMode}
             variant="ghost"
+            size="sm"
           />
-          <Button onClick={toggleLanguage} variant="ghost">
+          <Button 
+            onClick={toggleLanguage} 
+            variant="ghost"
+            minW="auto"
+            px={2}
+          >
             {currentLanguage.toUpperCase()}
           </Button>
         </HStack>
 
         {/* Mobile Controls */}
-        <Flex display={{ base: "flex", md: "none" }}>
+        <Flex display={{ base: "flex", md: "none" }} gap={2}>
+          <Link to="/cart">
+            <IconButton
+              aria-label={t("navbar.cart")}
+              icon={<FaShoppingCart />}
+              variant="ghost"
+              size="sm"
+            />
+          </Link>
           <IconButton
             aria-label={t("common.toggleDarkMode")}
             icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
             onClick={toggleColorMode}
             variant="ghost"
-            mr={2}
+            size="sm"
           />
           <IconButton
             aria-label={isOpen ? t("common.close") : t("common.open")}
             icon={isOpen ? <CloseIcon /> : <HamburgerIcon />}
             onClick={isOpen ? onClose : onOpen}
             variant="ghost"
+            size="sm"
           />
         </Flex>
       </Flex>
@@ -100,22 +133,18 @@ export const Navbar = () => {
       {/* Mobile Menu */}
       {isOpen && (
         <Box pb={4} display={{ base: "block", md: "none" }}>
-          <VStack alignItems="center" spacing={4} w="100%">
-            {["home", "cart", "menu", "about", "premium"].map((item) => (
-              <Link key={item} to={`/${item}`} onClick={onClose}>
-                <Button variant="underlined" w="70px">
+          <VStack spacing={3} px={4}>
+            {["home", "menu", "about", "premium"].map((item) => (
+              <Link key={item} to={`/${item}`} w="full" onClick={onClose}>
+                <Button variant="underlined" w="full">
                   {t(`navbar.${item}`)}
                 </Button>
               </Link>
             ))}
-            <Button
-              variant="underlined"
-              w="70px"
-              onClick={onProfileModalOpen}
-            >
+            <Button w="full" onClick={onProfileModalOpen}>
               {t("navbar.profile")}
             </Button>
-            <Button onClick={toggleLanguage} variant="ghost" w="70px">
+            <Button w="full" onClick={toggleLanguage}>
               {currentLanguage.toUpperCase()}
             </Button>
           </VStack>
