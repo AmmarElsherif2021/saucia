@@ -1,593 +1,594 @@
- {"items":[
+{
+  "items": [
     {
       "item": "Cucumber",
-    "item_arabic": "خيار",
-    "section": "Vegetables",
-    "section_arabic": "خضروات",
-    "addon_price": 2,
-    "free_count": 4,
-    "item_kcal": 16,
-    "item_protein": 0
-  },
-  {
-    "item": "Broccoli",
-    "item_arabic": "بروكلي",
-    "section": "Vegetables",
-    "section_arabic": "خضروات",
-    "addon_price": 2,
-    "free_count": 4,
-    "item_kcal": 10,
-    "item_protein": 0
-  },
-  {
-    "item": "Halbino",
-    "item_arabic": "هالبينو",
-    "section": "Vegetables",
-    "section_arabic": "خضروات",
-    "addon_price": 2,
-    "free_count": 4,
-    "item_kcal": 5,
-    "item_protein": 0
-  },
-  {
-    "item": "Cabbage",
-    "item_arabic": "ملفوف",
-    "section": "Vegetables",
-    "section_arabic": "خضروات",
-    "addon_price": 2,
-    "free_count": 4,
-    "item_kcal": 15,
-    "item_protein": 0
-  },
-  {
-    "item": "Red Cabbage",
-    "item_arabic": "ملفوف أحمر",
-    "section": "Vegetables",
-    "section_arabic": "خضروات",
-    "addon_price": 2,
-    "free_count": 4,
-    "item_kcal": 10,
-    "item_protein": 0
-  },
-  {
-    "item": "Carrot",
-    "item_arabic": "جزر",
-    "section": "Vegetables",
-    "section_arabic": "خضروات",
-    "addon_price": 2,
-    "free_count": 4,
-    "item_kcal": 20,
-    "item_protein": 0
-  },
-  {
-    "item": "Sweet Potato",
-    "item_arabic": "بطاطا حلوة",
-    "section": "Vegetables",
-    "section_arabic": "خضروات",
-    "addon_price": 2,
-    "free_count": 4,
-    "item_kcal": 10,
-    "item_protein": 0
-  },
-  {
-    "item": "Corn",
-    "item_arabic": "ذرة",
-    "section": "Vegetables",
-    "section_arabic": "خضروات",
-    "addon_price": 2,
-    "free_count": 4,
-    "item_kcal": 5,
-    "item_protein": 0
-  },
-  {
-    "item": "Cherry Tomatoes",
-    "item_arabic": "طماطم كرزية",
-    "section": "Vegetables",
-    "section_arabic": "خضروات",
-    "addon_price": 2,
-    "free_count": 4,
-    "item_kcal": 15,
-    "item_protein": 0
-  },
-  {
-    "item": "Olives",
-    "item_arabic": "زيتون",
-    "section": "Vegetables",
-    "section_arabic": "خضروات",
-    "addon_price": 2,
-    "free_count": 4,
-    "item_kcal": 75,
-    "item_protein": 0
-  },
-  {
-    "item": "Bell Peppers",
-    "item_arabic": "فلفل رومي",
-    "section": "Vegetables",
-    "section_arabic": "خضروات",
-    "addon_price": 2,
-    "free_count": 4,
-    "item_kcal": 10,
-    "item_protein": 0
-  },
-  {
-    "item": "Onions",
-    "item_arabic": "بصل",
-    "section": "Vegetables",
-    "section_arabic": "خضروات",
-    "addon_price": 2,
-    "free_count": 4,
-    "item_kcal": 12,
-    "item_protein": 0
-  },
-  {
-    "item": "Red Beans",
-    "item_arabic": "فاصوليا حمراء",
-    "section": "Vegetables",
-    "section_arabic": "خضروات",
-    "addon_price": 2,
-    "free_count": 4,
-    "item_kcal": 100,
-    "item_protein": 0
-  },
-  {
-    "item": "Avocado fruit",
-    "item_arabic": "فاكهة الأفوكادو",
-    "section": "Toppings",
-    "section_arabic": "إضافات",
-    "addon_price": 2,
-    "free_count": 3,
-    "item_kcal": 48,
-    "item_protein": 0
-  },
-  {
-    "item": "Pumpkin",
-    "item_arabic": "قرع",
-    "section": "Toppings",
-    "section_arabic": "إضافات",
-    "addon_price": 2,
-    "free_count": 3,
-    "item_kcal": 20,
-    "item_protein": 0
-  },
-  {
-    "item": "Eggplant",
-    "item_arabic": "باذنجان",
-    "section": "Toppings",
-    "section_arabic": "إضافات",
-    "addon_price": 2,
-    "free_count": 3,
-    "item_kcal": 20,
-    "item_protein": 0
-  },
-  {
-    "item": "Cheddar",
-    "item_arabic": "جبنة شيدر",
-    "section": "Toppings",
-    "section_arabic": "إضافات",
-    "addon_price": 2,
-    "free_count": 3,
-    "item_kcal": 50,
-    "item_protein": 0
-  },
-  {
-    "item": "Egg",
-    "item_arabic": "بيض",
-    "section": "Toppings",
-    "section_arabic": "إضافات",
-    "addon_price": 2,
-    "free_count": 3,
-    "item_kcal": 77,
-    "item_protein": 0
-  },
-  {
-    "item": "Lentils",
-    "item_arabic": "عدس",
-    "section": "Toppings",
-    "section_arabic": "إضافات",
-    "addon_price": 2,
-    "free_count": 3,
-    "item_kcal": 150,
-    "item_protein": 0
-  },
-  {
-    "item": "Bulgur",
-    "item_arabic": "برغل",
-    "section": "Toppings",
-    "section_arabic": "إضافات",
-    "addon_price": 2,
-    "free_count": 3,
-    "item_kcal": 75,
-    "item_protein": 0
-  },
-  {
-    "item": "Quinoa",
-    "item_arabic": "كينوا",
-    "section": "Toppings",
-    "section_arabic": "إضافات",
-    "addon_price": 2,
-    "free_count": 3,
-    "item_kcal": 120,
-    "item_protein": 0
-  },
-  {
-    "item": "Chickpeas",
-    "item_arabic": "حمص",
-    "section": "Toppings",
-    "section_arabic": "إضافات",
-    "addon_price": 2,
-    "free_count": 3,
-    "item_kcal": 75,
-    "item_protein": 0
-  },
-  {
-    "item": "Arugula",
-    "item_arabic": "جرجير",
-    "section": "Greens",
-    "section_arabic": "خضراوات ورقية",
-    "addon_price": 6,
-    "free_count": 2,
-    "item_kcal": 12.5,
-    "item_protein": 0
-  },
-  {
-    "item": "Lettuce",
-    "item_arabic": "خس",
-    "section": "Greens",
-    "section_arabic": "خضراوات ورقية",
-    "addon_price": 6,
-    "free_count": 2,
-    "item_kcal": 17,
-    "item_protein": 0
-  },
-  {
-    "item": "Mixed Lettuce",
-    "item_arabic": "خس مشكل",
-    "section": "Greens",
-    "section_arabic": "خضراوات ورقية",
-    "addon_price": 6,
-    "free_count": 2,
-    "item_kcal": 17,
-    "item_protein": 0
-  },
-  {
-    "item": "Kale",
-    "item_arabic": "كرنب",
-    "section": "Greens",
-    "section_arabic": "خضراوات ورقية",
-    "addon_price": 6,
-    "free_count": 2,
-    "item_kcal": 17,
-    "item_protein": 0
-  },
-  {
-    "item": "Chicken",
-    "item_arabic": "دجاج",
-    "section": "Protein",
-    "section_arabic": "بروتين",
-    "addon_price": 7,
-    "free_count": 0,
-    "item_kcal": 120,
-    "item_protein": 0
-  },
-  {
-    "item": "Shrimp",
-    "item_arabic": "روبيان",
-    "section": "Protein",
-    "section_arabic": "بروتين",
-    "addon_price": 10,
-    "free_count": 0,
-    "item_kcal": 80,
-    "item_protein": 0
-  },
-  {
-    "item": "Tuna",
-    "item_arabic": "تونة",
-    "section": "Protein",
-    "section_arabic": "بروتين",
-    "addon_price": 5,
-    "free_count": 0,
-    "item_kcal": 100,
-    "item_protein": 0
-  },
-  {
-    "item": "Salmon",
-    "item_arabic": "سلمون",
-    "section": "Protein",
-    "section_arabic": "بروتين",
-    "addon_price": 20,
-    "free_count": 0,
-    "item_kcal": 100,
-    "item_protein": 0
-  },
-  {
-    "item": "Parmesan",
-    "item_arabic": "جبنة بارميزان",
-    "section": "Cheese",
-    "section_arabic": "جبنة",
-    "addon_price": 2,
-    "free_count": 0,
-    "item_kcal": 180,
-    "item_protein": 0
-  },
-  {
-    "item": "Halloumi",
-    "item_arabic": "جبنة حلومي",
-    "section": "Cheese",
-    "section_arabic": "جبنة",
-    "addon_price": 2,
-    "free_count": 0,
-    "item_kcal": 180,
-    "item_protein": 0
-  },
-  {
-    "item": "Feta",
-    "item_arabic": "جبنة فيتا",
-    "section": "Cheese",
-    "section_arabic": "جبنة",
-    "addon_price": 2,
-    "free_count": 0,
-    "item_kcal": 180,
-    "item_protein": 0
-  },
-  {
-    "item": "Cheddar cheese",
-    "item_arabic": "جبنة شيدر",
-    "section": "Cheese",
-    "section_arabic": "جبنة",
-    "addon_price": 2,
-    "free_count": 0,
-    "item_kcal": 180,
-    "item_protein": 0
-  },
-  {
-    "item": "Apple fruit",
-    "item_arabic": "فاكهة التفاح",
-    "section": "Fruits",
-    "section_arabic": "فواكه",
-    "addon_price": 3,
-    "free_count": 1,
-    "item_kcal": 26,
-    "item_protein": 0
-  },
-  {
-    "item": "Banana",
-    "item_arabic": "موز",
-    "section": "Fruits",
-    "section_arabic": "فواكه",
-    "addon_price": 3,
-    "free_count": 1,
-    "item_kcal": 42,
-    "item_protein": 0
-  },
-  {
-    "item": "Strawberry fruit",
-    "item_arabic": "فاكهة الفراولة",
-    "section": "Fruits",
-    "section_arabic": "فواكه",
-    "addon_price": 3,
-    "free_count": 1,
-    "item_kcal": 16,
-    "item_protein": 0
-  },
-  {
-    "item": "Watermelon fruit",
-    "item_arabic": "فاكهة البطيخ",
-    "section": "Fruits",
-    "section_arabic": "فواكه",
-    "addon_price": 3,
-    "free_count": 1,
-    "item_kcal": 10,
-    "item_protein": 0
-  },
-  {
-    "item": "Orange fruit",
-    "item_arabic": "فاكهة البرتقال",
-    "section": "Fruits",
-    "section_arabic": "فواكه",
-    "addon_price": 3,
-    "free_count": 1,
-    "item_kcal": 24,
-    "item_protein": 0
-  },
-  {
-    "item": "Melon fruit",
-    "item_arabic": "فاكهة الشمام",
-    "section": "Fruits",
-    "section_arabic": "فواكه",
-    "addon_price": 3,
-    "free_count": 1,
-    "item_kcal": 34,
-    "item_protein": 0
-  },
-  {
-    "item": "salad saucia",
-    "item_arabic": "صلصة سالاد سوسيا",
-    "section": "Dressings",
-    "section_arabic": "صلصات",
-    "addon_price": 2,
-    "free_count": 1,
-    "item_kcal": 70,
-    "item_protein": 0
-  },
-  {
-    "item": "Caesar",
-    "item_arabic": "سيزر",
-    "section": "Dressings",
-    "section_arabic": "صلصات",
-    "addon_price": 2,
-    "free_count": 1,
-    "item_kcal": 88,
-    "item_protein": 0
-  },
-  {
-    "item": "Mexican",
-    "item_arabic": "مكسيكية",
-    "section": "Dressings",
-    "section_arabic": "صلصات",
-    "addon_price": 2,
-    "free_count": 1,
-    "item_kcal": 40,
-    "item_protein": 0
-  },
-  {
-    "item": "Balsamic",
-    "item_arabic": "بلسميك",
-    "section": "Dressings",
-    "section_arabic": "صلصات",
-    "addon_price": 2,
-    "free_count": 1,
-    "item_kcal": 75,
-    "item_protein": 0
-  },
-  {
-    "item": "Honey & Yogurt & Mustard",
-    "item_arabic": "عسل ولبن وخردل",
-    "section": "Dressings",
-    "section_arabic": "صلصات",
-    "addon_price": 2,
-    "free_count": 1,
-    "item_kcal": 50,
-    "item_protein": 0
-  },
-  {
-    "item": "Lemon & Sumac & Olive Oil",
-    "item_arabic": "ليمون وسماق وزيت زيتون",
-    "section": "Dressings",
-    "section_arabic": "صلصات",
-    "addon_price": 2,
-    "free_count": 1,
-    "item_kcal": 55,
-    "item_protein": 0
-  },
-  {
-    "item": "Orange & Olive Oil",
-    "item_arabic": "برتقال وزيت زيتون",
-    "section": "Dressings",
-    "section_arabic": "صلصات",
-    "addon_price": 2,
-    "free_count": 1,
-    "item_kcal": 60,
-    "item_protein": 0
-  },
-  {
-    "item": "Pomegranate molasses",
-    "item_arabic": "دبس الرمان",
-    "section": "Dressings",
-    "section_arabic": "صلصات",
-    "addon_price": 2,
-    "free_count": 1,
-    "item_kcal": 95,
-    "item_protein": 0
-  },
-  {
-    "item": "Taheena",
-    "item_arabic": "طحينة",
-    "section": "Dressings",
-    "section_arabic": "صلصات",
-    "addon_price": 2,
-    "free_count": 1,
-    "item_kcal": 30,
-    "item_protein": 0
-  },
-  {
-    "item": "Roasted Corn",
-    "item_arabic": "ذرة محمصة",
-    "section": "Nuts",
-    "section_arabic": "مكسرات",
-    "addon_price": 0,
-    "free_count": 1,
-    "item_kcal": 47,
-    "item_protein": 0
-  },
-  {
-    "item": "Toasted bread cubes",
-    "item_arabic": "مكعبات خبز محمص",
-    "section": "Nuts",
-    "section_arabic": "مكسرات",
-    "addon_price": 0,
-    "free_count": 1,
-    "item_kcal": 15,
-    "item_protein": 0
-  },
-  {
-    "item": "Crunchy Potato",
-    "item_arabic": "بطاطا مقرمشة",
-    "section": "Nuts",
-    "section_arabic": "مكسرات",
-    "addon_price": 0,
-    "free_count": 1,
-    "item_kcal": 63,
-    "item_protein": 0
-  },
-  {
-    "item": "Dried figs",
-    "item_arabic": "تين مجفف",
-    "section": "Nuts",
-    "section_arabic": "مكسرات",
-    "addon_price": 0,
-    "free_count": 1,
-    "item_kcal": 63,
-    "item_protein": 0
-  },
-  {
-    "item": "caramelized walnuts",
-    "item_arabic": "جوز بالكراميل",
-    "section": "Nuts",
-    "section_arabic": "مكسرات",
-    "addon_price": 0,
-    "free_count": 1,
-    "item_kcal": 71,
-    "item_protein": 0
-  },
-  {
-    "item": "Sumac",
-    "item_arabic": "سماق",
-    "section": "Nuts",
-    "section_arabic": "مكسرات",
-    "addon_price": 0,
-    "free_count": 1,
-    "item_kcal": 56,
-    "item_protein": 0
-  },
-  {
-    "item": "flax seeds",
-    "item_arabic": "بذور الكتان",
-    "section": "Nuts",
-    "section_arabic": "مكسرات",
-    "addon_price": 0,
-    "free_count": 1,
-    "item_kcal": 55,
-    "item_protein": 0
-  },
-  {
-    "item": "Pumpkin Seeds",
-    "item_arabic": "بذور اليقطين",
-    "section": "Nuts",
-    "section_arabic": "مكسرات",
-    "addon_price": 0,
-    "free_count": 1,
-    "item_kcal": 56,
-    "item_protein": 0
-  },
-  {
-    "item": "Chia Seeds",
-    "item_arabic": "بذور الشيا",
-    "section": "Nuts",
-    "section_arabic": "مكسرات",
-    "addon_price": 0,
-    "free_count": 1,
-    "item_kcal": 60,
-    "item_protein": 0
-  },
-  {
-    "item": "Sesame",
-    "item_arabic": "سمسم",
-    "section": "Nuts",
-    "section_arabic": "مكسرات",
-    "addon_price": 0,
-    "free_count": 1,
-    "item_kcal": 15,
-    "item_protein": 0
-  }
-  
-]}
+      "item_arabic": "خيار",
+      "section": "Vegetables",
+      "section_arabic": "خضروات",
+      "addon_price": 2,
+      "free_count": 4,
+      "item_kcal": 16,
+      "item_protein": 0
+    },
+    {
+      "item": "Broccoli",
+      "item_arabic": "بروكلي",
+      "section": "Vegetables",
+      "section_arabic": "خضروات",
+      "addon_price": 2,
+      "free_count": 4,
+      "item_kcal": 10,
+      "item_protein": 0
+    },
+    {
+      "item": "Halbino",
+      "item_arabic": "هالبينو",
+      "section": "Vegetables",
+      "section_arabic": "خضروات",
+      "addon_price": 2,
+      "free_count": 4,
+      "item_kcal": 5,
+      "item_protein": 0
+    },
+    {
+      "item": "Cabbage",
+      "item_arabic": "ملفوف",
+      "section": "Vegetables",
+      "section_arabic": "خضروات",
+      "addon_price": 2,
+      "free_count": 4,
+      "item_kcal": 15,
+      "item_protein": 0
+    },
+    {
+      "item": "Red Cabbage",
+      "item_arabic": "ملفوف أحمر",
+      "section": "Vegetables",
+      "section_arabic": "خضروات",
+      "addon_price": 2,
+      "free_count": 4,
+      "item_kcal": 10,
+      "item_protein": 0
+    },
+    {
+      "item": "Carrot",
+      "item_arabic": "جزر",
+      "section": "Vegetables",
+      "section_arabic": "خضروات",
+      "addon_price": 2,
+      "free_count": 4,
+      "item_kcal": 20,
+      "item_protein": 0
+    },
+    {
+      "item": "Sweet Potato",
+      "item_arabic": "بطاطا حلوة",
+      "section": "Vegetables",
+      "section_arabic": "خضروات",
+      "addon_price": 2,
+      "free_count": 4,
+      "item_kcal": 10,
+      "item_protein": 0
+    },
+    {
+      "item": "Corn",
+      "item_arabic": "ذرة",
+      "section": "Vegetables",
+      "section_arabic": "خضروات",
+      "addon_price": 2,
+      "free_count": 4,
+      "item_kcal": 5,
+      "item_protein": 0
+    },
+    {
+      "item": "Cherry Tomatoes",
+      "item_arabic": "طماطم كرزية",
+      "section": "Vegetables",
+      "section_arabic": "خضروات",
+      "addon_price": 2,
+      "free_count": 4,
+      "item_kcal": 15,
+      "item_protein": 0
+    },
+    {
+      "item": "Olives",
+      "item_arabic": "زيتون",
+      "section": "Vegetables",
+      "section_arabic": "خضروات",
+      "addon_price": 2,
+      "free_count": 4,
+      "item_kcal": 75,
+      "item_protein": 0
+    },
+    {
+      "item": "Bell Peppers",
+      "item_arabic": "فلفل رومي",
+      "section": "Vegetables",
+      "section_arabic": "خضروات",
+      "addon_price": 2,
+      "free_count": 4,
+      "item_kcal": 10,
+      "item_protein": 0
+    },
+    {
+      "item": "Onions",
+      "item_arabic": "بصل",
+      "section": "Vegetables",
+      "section_arabic": "خضروات",
+      "addon_price": 2,
+      "free_count": 4,
+      "item_kcal": 12,
+      "item_protein": 0
+    },
+    {
+      "item": "Red Beans",
+      "item_arabic": "فاصوليا حمراء",
+      "section": "Vegetables",
+      "section_arabic": "خضروات",
+      "addon_price": 2,
+      "free_count": 4,
+      "item_kcal": 100,
+      "item_protein": 0
+    },
+    {
+      "item": "Avocado fruit",
+      "item_arabic": "فاكهة الأفوكادو",
+      "section": "Toppings",
+      "section_arabic": "إضافات",
+      "addon_price": 2,
+      "free_count": 3,
+      "item_kcal": 48,
+      "item_protein": 0
+    },
+    {
+      "item": "Pumpkin",
+      "item_arabic": "قرع",
+      "section": "Toppings",
+      "section_arabic": "إضافات",
+      "addon_price": 2,
+      "free_count": 3,
+      "item_kcal": 20,
+      "item_protein": 0
+    },
+    {
+      "item": "Eggplant",
+      "item_arabic": "باذنجان",
+      "section": "Toppings",
+      "section_arabic": "إضافات",
+      "addon_price": 2,
+      "free_count": 3,
+      "item_kcal": 20,
+      "item_protein": 0
+    },
+    {
+      "item": "Cheddar",
+      "item_arabic": "جبنة شيدر",
+      "section": "Toppings",
+      "section_arabic": "إضافات",
+      "addon_price": 2,
+      "free_count": 3,
+      "item_kcal": 50,
+      "item_protein": 0
+    },
+    {
+      "item": "Egg",
+      "item_arabic": "بيض",
+      "section": "Toppings",
+      "section_arabic": "إضافات",
+      "addon_price": 2,
+      "free_count": 3,
+      "item_kcal": 77,
+      "item_protein": 0
+    },
+    {
+      "item": "Lentils",
+      "item_arabic": "عدس",
+      "section": "Toppings",
+      "section_arabic": "إضافات",
+      "addon_price": 2,
+      "free_count": 3,
+      "item_kcal": 150,
+      "item_protein": 0
+    },
+    {
+      "item": "Bulgur",
+      "item_arabic": "برغل",
+      "section": "Toppings",
+      "section_arabic": "إضافات",
+      "addon_price": 2,
+      "free_count": 3,
+      "item_kcal": 75,
+      "item_protein": 0
+    },
+    {
+      "item": "Quinoa",
+      "item_arabic": "كينوا",
+      "section": "Toppings",
+      "section_arabic": "إضافات",
+      "addon_price": 2,
+      "free_count": 3,
+      "item_kcal": 120,
+      "item_protein": 0
+    },
+    {
+      "item": "Chickpeas",
+      "item_arabic": "حمص",
+      "section": "Toppings",
+      "section_arabic": "إضافات",
+      "addon_price": 2,
+      "free_count": 3,
+      "item_kcal": 75,
+      "item_protein": 0
+    },
+    {
+      "item": "Arugula",
+      "item_arabic": "جرجير",
+      "section": "Greens",
+      "section_arabic": "خضراوات ورقية",
+      "addon_price": 6,
+      "free_count": 2,
+      "item_kcal": 12.5,
+      "item_protein": 0
+    },
+    {
+      "item": "Lettuce",
+      "item_arabic": "خس",
+      "section": "Greens",
+      "section_arabic": "خضراوات ورقية",
+      "addon_price": 6,
+      "free_count": 2,
+      "item_kcal": 17,
+      "item_protein": 0
+    },
+    {
+      "item": "Mixed Lettuce",
+      "item_arabic": "خس مشكل",
+      "section": "Greens",
+      "section_arabic": "خضراوات ورقية",
+      "addon_price": 6,
+      "free_count": 2,
+      "item_kcal": 17,
+      "item_protein": 0
+    },
+    {
+      "item": "Kale",
+      "item_arabic": "كرنب",
+      "section": "Greens",
+      "section_arabic": "خضراوات ورقية",
+      "addon_price": 6,
+      "free_count": 2,
+      "item_kcal": 17,
+      "item_protein": 0
+    },
+    {
+      "item": "Chicken",
+      "item_arabic": "دجاج",
+      "section": "Protein",
+      "section_arabic": "بروتين",
+      "addon_price": 7,
+      "free_count": 0,
+      "item_kcal": 120,
+      "item_protein": 0
+    },
+    {
+      "item": "Shrimp",
+      "item_arabic": "روبيان",
+      "section": "Protein",
+      "section_arabic": "بروتين",
+      "addon_price": 10,
+      "free_count": 0,
+      "item_kcal": 80,
+      "item_protein": 0
+    },
+    {
+      "item": "Tuna",
+      "item_arabic": "تونة",
+      "section": "Protein",
+      "section_arabic": "بروتين",
+      "addon_price": 5,
+      "free_count": 0,
+      "item_kcal": 100,
+      "item_protein": 0
+    },
+    {
+      "item": "Salmon",
+      "item_arabic": "سلمون",
+      "section": "Protein",
+      "section_arabic": "بروتين",
+      "addon_price": 20,
+      "free_count": 0,
+      "item_kcal": 100,
+      "item_protein": 0
+    },
+    {
+      "item": "Parmesan",
+      "item_arabic": "جبنة بارميزان",
+      "section": "Cheese",
+      "section_arabic": "جبنة",
+      "addon_price": 2,
+      "free_count": 0,
+      "item_kcal": 180,
+      "item_protein": 0
+    },
+    {
+      "item": "Halloumi",
+      "item_arabic": "جبنة حلومي",
+      "section": "Cheese",
+      "section_arabic": "جبنة",
+      "addon_price": 2,
+      "free_count": 0,
+      "item_kcal": 180,
+      "item_protein": 0
+    },
+    {
+      "item": "Feta",
+      "item_arabic": "جبنة فيتا",
+      "section": "Cheese",
+      "section_arabic": "جبنة",
+      "addon_price": 2,
+      "free_count": 0,
+      "item_kcal": 180,
+      "item_protein": 0
+    },
+    {
+      "item": "Cheddar cheese",
+      "item_arabic": "جبنة شيدر",
+      "section": "Cheese",
+      "section_arabic": "جبنة",
+      "addon_price": 2,
+      "free_count": 0,
+      "item_kcal": 180,
+      "item_protein": 0
+    },
+    {
+      "item": "Apple fruit",
+      "item_arabic": "فاكهة التفاح",
+      "section": "Fruits",
+      "section_arabic": "فواكه",
+      "addon_price": 3,
+      "free_count": 1,
+      "item_kcal": 26,
+      "item_protein": 0
+    },
+    {
+      "item": "Banana",
+      "item_arabic": "موز",
+      "section": "Fruits",
+      "section_arabic": "فواكه",
+      "addon_price": 3,
+      "free_count": 1,
+      "item_kcal": 42,
+      "item_protein": 0
+    },
+    {
+      "item": "Strawberry fruit",
+      "item_arabic": "فاكهة الفراولة",
+      "section": "Fruits",
+      "section_arabic": "فواكه",
+      "addon_price": 3,
+      "free_count": 1,
+      "item_kcal": 16,
+      "item_protein": 0
+    },
+    {
+      "item": "Watermelon fruit",
+      "item_arabic": "فاكهة البطيخ",
+      "section": "Fruits",
+      "section_arabic": "فواكه",
+      "addon_price": 3,
+      "free_count": 1,
+      "item_kcal": 10,
+      "item_protein": 0
+    },
+    {
+      "item": "Orange fruit",
+      "item_arabic": "فاكهة البرتقال",
+      "section": "Fruits",
+      "section_arabic": "فواكه",
+      "addon_price": 3,
+      "free_count": 1,
+      "item_kcal": 24,
+      "item_protein": 0
+    },
+    {
+      "item": "Melon fruit",
+      "item_arabic": "فاكهة الشمام",
+      "section": "Fruits",
+      "section_arabic": "فواكه",
+      "addon_price": 3,
+      "free_count": 1,
+      "item_kcal": 34,
+      "item_protein": 0
+    },
+    {
+      "item": "salad saucia",
+      "item_arabic": "صلصة سالاد سوسيا",
+      "section": "Dressings",
+      "section_arabic": "صلصات",
+      "addon_price": 2,
+      "free_count": 1,
+      "item_kcal": 70,
+      "item_protein": 0
+    },
+    {
+      "item": "Caesar",
+      "item_arabic": "سيزر",
+      "section": "Dressings",
+      "section_arabic": "صلصات",
+      "addon_price": 2,
+      "free_count": 1,
+      "item_kcal": 88,
+      "item_protein": 0
+    },
+    {
+      "item": "Mexican",
+      "item_arabic": "مكسيكية",
+      "section": "Dressings",
+      "section_arabic": "صلصات",
+      "addon_price": 2,
+      "free_count": 1,
+      "item_kcal": 40,
+      "item_protein": 0
+    },
+    {
+      "item": "Balsamic",
+      "item_arabic": "بلسميك",
+      "section": "Dressings",
+      "section_arabic": "صلصات",
+      "addon_price": 2,
+      "free_count": 1,
+      "item_kcal": 75,
+      "item_protein": 0
+    },
+    {
+      "item": "Honey & Yogurt & Mustard",
+      "item_arabic": "عسل ولبن وخردل",
+      "section": "Dressings",
+      "section_arabic": "صلصات",
+      "addon_price": 2,
+      "free_count": 1,
+      "item_kcal": 50,
+      "item_protein": 0
+    },
+    {
+      "item": "Lemon & Sumac & Olive Oil",
+      "item_arabic": "ليمون وسماق وزيت زيتون",
+      "section": "Dressings",
+      "section_arabic": "صلصات",
+      "addon_price": 2,
+      "free_count": 1,
+      "item_kcal": 55,
+      "item_protein": 0
+    },
+    {
+      "item": "Orange & Olive Oil",
+      "item_arabic": "برتقال وزيت زيتون",
+      "section": "Dressings",
+      "section_arabic": "صلصات",
+      "addon_price": 2,
+      "free_count": 1,
+      "item_kcal": 60,
+      "item_protein": 0
+    },
+    {
+      "item": "Pomegranate molasses",
+      "item_arabic": "دبس الرمان",
+      "section": "Dressings",
+      "section_arabic": "صلصات",
+      "addon_price": 2,
+      "free_count": 1,
+      "item_kcal": 95,
+      "item_protein": 0
+    },
+    {
+      "item": "Taheena",
+      "item_arabic": "طحينة",
+      "section": "Dressings",
+      "section_arabic": "صلصات",
+      "addon_price": 2,
+      "free_count": 1,
+      "item_kcal": 30,
+      "item_protein": 0
+    },
+    {
+      "item": "Roasted Corn",
+      "item_arabic": "ذرة محمصة",
+      "section": "Nuts",
+      "section_arabic": "مكسرات",
+      "addon_price": 0,
+      "free_count": 1,
+      "item_kcal": 47,
+      "item_protein": 0
+    },
+    {
+      "item": "Toasted bread cubes",
+      "item_arabic": "مكعبات خبز محمص",
+      "section": "Nuts",
+      "section_arabic": "مكسرات",
+      "addon_price": 0,
+      "free_count": 1,
+      "item_kcal": 15,
+      "item_protein": 0
+    },
+    {
+      "item": "Crunchy Potato",
+      "item_arabic": "بطاطا مقرمشة",
+      "section": "Nuts",
+      "section_arabic": "مكسرات",
+      "addon_price": 0,
+      "free_count": 1,
+      "item_kcal": 63,
+      "item_protein": 0
+    },
+    {
+      "item": "Dried figs",
+      "item_arabic": "تين مجفف",
+      "section": "Nuts",
+      "section_arabic": "مكسرات",
+      "addon_price": 0,
+      "free_count": 1,
+      "item_kcal": 63,
+      "item_protein": 0
+    },
+    {
+      "item": "caramelized walnuts",
+      "item_arabic": "جوز بالكراميل",
+      "section": "Nuts",
+      "section_arabic": "مكسرات",
+      "addon_price": 0,
+      "free_count": 1,
+      "item_kcal": 71,
+      "item_protein": 0
+    },
+    {
+      "item": "Sumac",
+      "item_arabic": "سماق",
+      "section": "Nuts",
+      "section_arabic": "مكسرات",
+      "addon_price": 0,
+      "free_count": 1,
+      "item_kcal": 56,
+      "item_protein": 0
+    },
+    {
+      "item": "flax seeds",
+      "item_arabic": "بذور الكتان",
+      "section": "Nuts",
+      "section_arabic": "مكسرات",
+      "addon_price": 0,
+      "free_count": 1,
+      "item_kcal": 55,
+      "item_protein": 0
+    },
+    {
+      "item": "Pumpkin Seeds",
+      "item_arabic": "بذور اليقطين",
+      "section": "Nuts",
+      "section_arabic": "مكسرات",
+      "addon_price": 0,
+      "free_count": 1,
+      "item_kcal": 56,
+      "item_protein": 0
+    },
+    {
+      "item": "Chia Seeds",
+      "item_arabic": "بذور الشيا",
+      "section": "Nuts",
+      "section_arabic": "مكسرات",
+      "addon_price": 0,
+      "free_count": 1,
+      "item_kcal": 60,
+      "item_protein": 0
+    },
+    {
+      "item": "Sesame",
+      "item_arabic": "سمسم",
+      "section": "Nuts",
+      "section_arabic": "مكسرات",
+      "addon_price": 0,
+      "free_count": 1,
+      "item_kcal": 15,
+      "item_protein": 0
+    }
+  ]
+}

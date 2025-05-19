@@ -11,63 +11,57 @@ import {
   Slider,
   SliderTrack,
   SliderFilledTrack,
-  SliderThumb
-} from "@chakra-ui/react";
-import { useState } from "react";
+  SliderThumb,
+} from '@chakra-ui/react'
+import { useState } from 'react'
 
 const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
   const [formData, setFormData] = useState({
-    name: initialData?.name || "",
-    name_arabic: initialData?.name_arabic || "",
-    section: initialData?.section || "",
-    section_arabic: initialData?.section_arabic || "",
-    price: initialData?.price || 0,
-    kcal: initialData?.kcal || 0,
-    protein: initialData?.protein || 0,
-    carb: initialData?.carb || 0,
-    policy: initialData?.policy || "",
-    ingredients: initialData?.ingredients || "",
-    ingredients_arabic: initialData?.ingredients_arabic || "",
+    name: initialData?.name || '',
+    name_arabic: initialData?.name_arabic || '',
+    section: initialData?.section || '',
+    section_arabic: initialData?.section_arabic || '',
+    price: Number(initialData?.price) || 0,
+    kcal: Number(initialData?.kcal) || 0,
+    protein: Number(initialData?.protein) || 0,
+    carb: Number(initialData?.carb) || 0,
+    policy: initialData?.policy || '',
+    ingredients: initialData?.ingredients || '',
+    ingredients_arabic: initialData?.ingredients_arabic || '',
     items: initialData?.items || [],
-    image: initialData?.image || "",
-    isPremium: initialData?.isPremium || false,
-    plan: initialData?.plan || "",
+    image: initialData?.image || '',
+    isPremium: Boolean(initialData?.isPremium) || false,
+    plan: initialData?.plan || '',
     rate: 4.5,
-    featured: initialData?.featured || false,
-    offerRatio: initialData?.offerRatio || 1,
-    offerLimit: initialData?.offerLimit || "",
-    description: initialData?.description || "",
-  });
+    featured: Boolean(initialData?.featured) || false,
+    offerRatio: Number(initialData?.offerRatio) || 1,
+    offerLimit: initialData?.offerLimit || '',
+    description: initialData?.description || '',
+  })
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
 
   const handleSliderChange = (value) => {
-    setFormData((prev) => ({ ...prev, offerRatio: value }));
-  };
+    setFormData((prev) => ({ ...prev, offerRatio: value }))
+  }
 
   const handleSwitchChange = (e) => {
-    setFormData((prev) => ({ ...prev, featured: e.target.checked }));
-  };
+    setFormData((prev) => ({ ...prev, featured: e.target.checked }))
+  }
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(formData);
-  };
+    e.preventDefault()
+    onSubmit(formData)
+  }
 
   return (
     <form onSubmit={handleSubmit}>
       <FormControl mb={4}>
         <FormLabel>Name</FormLabel>
-        <Input
-          type="text"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-        />
+        <Input type="text" name="name" value={formData.name} onChange={handleChange} required />
       </FormControl>
       <FormControl mb={4}>
         <FormLabel>Name (Arabic)</FormLabel>
@@ -80,12 +74,7 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
       </FormControl>
       <FormControl mb={4}>
         <FormLabel>Section</FormLabel>
-        <Input
-          type="text"
-          name="section"
-          value={formData.section}
-          onChange={handleChange}
-        />
+        <Input type="text" name="section" value={formData.section} onChange={handleChange} />
       </FormControl>
       <FormControl mb={4}>
         <FormLabel>Section (Arabic)</FormLabel>
@@ -98,12 +87,7 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
       </FormControl>
       <FormControl mb={4}>
         <FormLabel>Policy</FormLabel>
-        <Textarea
-          name="policy"
-          value={formData.policy}
-          onChange={handleChange}
-          rows="3"
-        />
+        <Textarea name="policy" value={formData.policy} onChange={handleChange} rows="3" />
       </FormControl>
       <FormControl mb={4}>
         <FormLabel>Ingredients</FormLabel>
@@ -127,11 +111,11 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
         <FormLabel>Items</FormLabel>
         <Textarea
           name="items"
-          value={formData.items.join(", ")}
+          value={formData.items.join(', ')}
           onChange={(e) =>
             setFormData((prev) => ({
               ...prev,
-              items: e.target.value.split(",").map((item) => item.trim()),
+              items: e.target.value.split(',').map((item) => item.trim()),
             }))
           }
           placeholder="Enter items separated by commas"
@@ -139,66 +123,34 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
       </FormControl>
       <FormControl mb={4}>
         <FormLabel>Price</FormLabel>
-        <Input
-          type="number"
-          name="price"
-          value={formData.price}
-          onChange={handleChange}
-          required
-        />
+        <Input type="number" name="price" value={formData.price} onChange={handleChange} required />
       </FormControl>
       <FormControl mb={4}>
         <FormLabel>Premium</FormLabel>
-        <Select
-          name="isPremium"
-          value={formData.isPremium}
-          onChange={handleChange}
-          required
-        >
+        <Select name="isPremium" value={formData.isPremium} onChange={handleChange} required>
           <option value={false}>No</option>
           <option value={true}>Yes</option>
         </Select>
       </FormControl>
-      {
-        formData.isPremium ? 
-         <FormControl mb={4}>
-        <FormLabel>Plan</FormLabel>
-        <Input
-          type="text"
-          name="plan"
-          value={formData.plan}
-          onChange={handleChange}
-        />
-      </FormControl>
-      :
-      <></>
-      }
+      {formData.isPremium ? (
+        <FormControl mb={4}>
+          <FormLabel>Plan</FormLabel>
+          <Input type="text" name="plan" value={formData.plan} onChange={handleChange} />
+        </FormControl>
+      ) : (
+        <></>
+      )}
       <FormControl mb={4}>
         <FormLabel>Calories (kcal)</FormLabel>
-        <Input
-          type="number"
-          name="kcal"
-          value={formData.kcal}
-          onChange={handleChange}
-        />
+        <Input type="number" name="kcal" value={formData.kcal} onChange={handleChange} />
       </FormControl>
       <FormControl mb={4}>
         <FormLabel>Protein (g)</FormLabel>
-        <Input
-          type="number"
-          name="protein"
-          value={formData.protein}
-          onChange={handleChange}
-        />
+        <Input type="number" name="protein" value={formData.protein} onChange={handleChange} />
       </FormControl>
       <FormControl mb={4}>
         <FormLabel>Carbohydrates (g)</FormLabel>
-        <Input
-          type="number"
-          name="carb"
-          value={formData.carb}
-          onChange={handleChange}
-        />
+        <Input type="number" name="carb" value={formData.carb} onChange={handleChange} />
       </FormControl>
       <FormControl mb={4}>
         <FormLabel>Description</FormLabel>
@@ -231,11 +183,7 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
       </FormControl>
       <FormControl mb={4}>
         <FormLabel>Featured</FormLabel>
-        <Switch
-          isChecked={formData.featured}
-          onChange={handleSwitchChange}
-          colorScheme="teal"
-        />
+        <Switch isChecked={formData.featured} onChange={handleSwitchChange} colorScheme="teal" />
       </FormControl>
       <FormControl mb={4}>
         <FormLabel>Offer Ratio</FormLabel>
@@ -261,7 +209,7 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
           value={formData.offerLimit}
           onChange={handleChange}
         />
-        </FormControl>
+      </FormControl>
       <Flex justify="flex-end" gap={2}>
         <Button onClick={onCancel} variant="outline">
           Cancel
@@ -271,7 +219,7 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
         </Button>
       </Flex>
     </form>
-  );
-};
+  )
+}
 
-export default MealForm;
+export default MealForm

@@ -1,6 +1,6 @@
 [
-    {
-      "name": "Cucumber",
+  {
+    "name": "Cucumber",
     "name_arabic": "خيار",
     "section": "Vegetables",
     "section_arabic": "خضروات",
@@ -589,7 +589,7 @@
     "item_kcal": 15,
     "item_protein": 0
   },
-      {
+  {
     "name": "Avocado",
     "name_arabic": "أفوكادو",
     "section": "salad-fruits",
@@ -669,55 +669,54 @@
     "item_kcal": 25,
     "item_protein": 0
   },
-{
-  "name": "Pomegranate",
-  "name_arabic": "رمان",
-  "section": "salad-fruits",
-  "section_arabic": "فواكه للسلطة",
-  "addon_price": 4,
-  "free_count": 5,
-  "item_kcal": 42,
-  "item_protein": 0
-},
-{
-  "name": "Orange",
-  "name_arabic": "برتقال",
-  "section": "salad-fruits",
-  "section_arabic": "فواكه للسلطة",
-  "addon_price": 4,
-  "free_count": 5,
-  "item_kcal": 24,
-  "item_protein": 0
-},
-{
-  "name": "Mango",
-  "name_arabic": "مانجو",
-  "section": "salad-fruits",
-  "section_arabic": "فواكه للسلطة",
-  "addon_price": 4,
-  "free_count": 5,
-  "item_kcal": 32,
-  "item_protein": 0
-},
-{
-  "name": "Melon",
-  "name_arabic": "شمام",
-  "section": "salad-fruits",
-  "section_arabic": "فواكه للسلطة",
-  "addon_price": 4,
-  "free_count": 5,
-  "item_kcal": 34,
-  "item_protein": 0
-},
-{
-  "name": "Pineapple",
-  "name_arabic": "أناناس",
-  "section": "salad-fruits",
-  "section_arabic": "فواكه للسلطة",
-  "addon_price": 4,
-  "free_count": 5,
-  "item_kcal": 25,
-  "item_protein": 0
-}
-  
+  {
+    "name": "Pomegranate",
+    "name_arabic": "رمان",
+    "section": "salad-fruits",
+    "section_arabic": "فواكه للسلطة",
+    "addon_price": 4,
+    "free_count": 5,
+    "item_kcal": 42,
+    "item_protein": 0
+  },
+  {
+    "name": "Orange",
+    "name_arabic": "برتقال",
+    "section": "salad-fruits",
+    "section_arabic": "فواكه للسلطة",
+    "addon_price": 4,
+    "free_count": 5,
+    "item_kcal": 24,
+    "item_protein": 0
+  },
+  {
+    "name": "Mango",
+    "name_arabic": "مانجو",
+    "section": "salad-fruits",
+    "section_arabic": "فواكه للسلطة",
+    "addon_price": 4,
+    "free_count": 5,
+    "item_kcal": 32,
+    "item_protein": 0
+  },
+  {
+    "name": "Melon",
+    "name_arabic": "شمام",
+    "section": "salad-fruits",
+    "section_arabic": "فواكه للسلطة",
+    "addon_price": 4,
+    "free_count": 5,
+    "item_kcal": 34,
+    "item_protein": 0
+  },
+  {
+    "name": "Pineapple",
+    "name_arabic": "أناناس",
+    "section": "salad-fruits",
+    "section_arabic": "فواكه للسلطة",
+    "addon_price": 4,
+    "free_count": 5,
+    "item_kcal": 25,
+    "item_protein": 0
+  }
 ]

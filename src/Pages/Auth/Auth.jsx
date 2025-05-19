@@ -1,6 +1,6 @@
 // components/Auth.jsx
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import {
   VStack,
   Heading,
@@ -11,104 +11,104 @@ import {
   Spinner,
   Alert,
   AlertIcon,
-} from "@chakra-ui/react";
-import { FcGoogle } from "react-icons/fc";
-import "./Auth.css";
-import { useAuthContext } from "../../Contexts/AuthContext";
-import logoIcon from "../../assets/logo.PNG"
+} from '@chakra-ui/react'
+import { FcGoogle } from 'react-icons/fc'
+import './Auth.css'
+import { useAuthContext } from '../../Contexts/AuthContext'
+import logoIcon from '../../assets/logo.PNG'
 
 const Auth = () => {
-  const { user, loading, authError, loginWithGoogle, logout } = useAuthContext(); 
-  const navigate = useNavigate();
-  const location = useLocation();
-  const toast = useToast();
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  
+  const { user, loading, authError, loginWithGoogle, logout } = useAuthContext()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const toast = useToast()
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
+
   // Get redirect location if any
-  const from = location.state?.from?.pathname || "/";
+  const from = location.state?.from?.pathname || '/'
 
   useEffect(() => {
     // If user is already logged in, redirect them
     if (user && !loading) {
       // Check if user is admin to redirect to appropriate page
       if (user.isAdmin) {
-        navigate("/admin");
+        navigate('/admin')
       } else {
-        navigate(from);
+        navigate(from)
       }
     }
-  }, [user, loading, navigate, from]);
+  }, [user, loading, navigate, from])
 
   const handleGoogleSignIn = async () => {
-    setIsLoggingIn(true);
+    setIsLoggingIn(true)
     try {
-      const result = await loginWithGoogle();
-      
+      const result = await loginWithGoogle()
+
       if (result.success) {
         toast({
-          title: "Login successful",
-          description: `Welcome${user?.displayName ? `, ${user.displayName}` : ""}!`,
-          status: "success",
+          title: 'Login successful',
+          description: `Welcome${user?.displayName ? `, ${user.displayName}` : ''}!`,
+          status: 'success',
           duration: 3000,
           isClosable: true,
-        });
-        
+        })
+
         // Navigate based on admin status
         if (result.isAdmin) {
-          navigate("/admin");
+          navigate('/admin')
         } else {
-          navigate(from);
+          navigate(from)
         }
       } else {
         toast({
-          title: "Login failed",
-          description: result.error || "An error occurred during login",
-          status: "error",
+          title: 'Login failed',
+          description: result.error || 'An error occurred during login',
+          status: 'error',
           duration: 5000,
           isClosable: true,
-        });
+        })
       }
     } catch (error) {
-      console.error("Error during Google sign in:", error);
+      //console.error("Error during Google sign in:", error);
       toast({
-        title: "Authentication error",
-        description: error.message || "Failed to sign in with Google",
-        status: "error",
+        title: 'Authentication error',
+        description: error.message || 'Failed to sign in with Google',
+        status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     } finally {
-      setIsLoggingIn(false);
+      setIsLoggingIn(false)
     }
-  };
+  }
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await logout()
       toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
-        status: "info",
+        title: 'Logged out',
+        description: 'You have been successfully logged out.',
+        status: 'info',
         duration: 3000,
         isClosable: true,
-      });
+      })
     } catch (error) {
-      console.error("Error during logout:", error);
+      //console.error("Error during logout:", error);
       toast({
-        title: "Logout error",
-        description: "There was an issue logging you out.",
-        status: "error",
+        title: 'Logout error',
+        description: 'There was an issue logging you out.',
+        status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     }
-  };
+  }
 
   return (
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-logo">
-          <img src={logoIcon} width={"50px"}/>
+          <img src={logoIcon} width={'50px'} />
         </div>
 
         <Heading>Welcome</Heading>
@@ -138,18 +138,17 @@ const Auth = () => {
             onClick={handleGoogleSignIn}
             isDisabled={isLoggingIn}
             _hover={{
-              transform: "translateY(-1px)",
-              boxShadow: "md"
+              transform: 'translateY(-1px)',
+              boxShadow: 'md',
             }}
             transition="all 0.2s"
           >
-            {isLoggingIn ? "Signing in..." : "Sign in with Google"}
+            {isLoggingIn ? 'Signing in...' : 'Sign in with Google'}
           </Button>
         ) : (
           <VStack spacing={4}>
             <Text>
-              Welcome, {user.displayName || user.email}!
-              {user.isAdmin && " (Admin)"}
+              Welcome, {user.displayName || user.email}!{user.isAdmin && ' (Admin)'}
             </Text>
             <Button onClick={handleLogout} colorScheme="red" variant="outline">
               Sign Out
@@ -168,13 +167,19 @@ const Auth = () => {
         <div className="auth-footer">
           <p>New user? Access is automatic with Google sign in</p>
           <p className="auth-terms">
-            By continuing, you agree to our <a href="/terms" className="auth-link">Terms</a> 
-            and <a href="/privacy" className="auth-link">Privacy Policy</a>
+            By continuing, you agree to our{' '}
+            <a href="/terms" className="auth-link">
+              Terms
+            </a>
+            and{' '}
+            <a href="/privacy" className="auth-link">
+              Privacy Policy
+            </a>
           </p>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Auth;
+export default Auth

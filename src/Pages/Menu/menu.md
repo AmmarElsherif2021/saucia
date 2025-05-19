@@ -1,13 +1,16 @@
 # Salad Menu
 
 ## Base Ingredients
+
 ### Greens
+
 - **Lettuce** (50g - 12 kcal)
 - **Mixed greens** (100g - 17 kcal)
 - **Arugula** (100g - 17 kcal)
 - **Kale** (100g - 17 kcal)
 
 ### Vegetables
+
 - **Cucumber** (10g - 10 kcal)
 - **Broccoli** (30g - 10 kcal)
 - **Carrot** (20g - 0 kcal)
@@ -19,6 +22,7 @@
 - **Red cabbage** (35g - 10 kcal)
 
 ## Proteins
+
 - **Chicken** (10g - 10 kcal)
 - **Shrimp** (60g - 90 kcal)
 - **Tuna** (1g - 10 kcal)
@@ -26,24 +30,29 @@
 - **Egg** (2 eggs - 77 kcal)
 
 ## Cheese
+
 - **Parmesan** (10g - 10 kcal)
 - **Halloumi** (10g - 10 kcal)
 - **Feta** (10g - 10 kcal)
 - **Cheddar** (10g - 10 kcal)
 
 ## Toppings & Extras
+
 ### Fruits
+
 - **Avocado** (30g - 48 kcal)
 - **Pumpkin** (60g - 20 kcal)
 - **Beets** (60g - 50 kcal)
 
 ### Grains & Legumes
+
 - **Lentils** (80g - 150 kcal)
 - **Bulgur** (80g - 75 kcal)
 - **Quinoa** (80g - 120 kcal)
 - **Chickpeas** (80g - 75 kcal)
 
 ### Crunchy Toppings
+
 - **Crushed corn** (20g - 4 kcal)
 - **Crushed bread crumbs** (10g - 10 kcal)
 - **Crunchy potatoes** (20g - 12 kcal)
@@ -51,6 +60,7 @@
 - **Caramelized nuts** (20g - 14 kcal)
 
 ## Dressings
+
 - **Caesar dressing** (10 kcal)
 - **Mexican dressing** (2 kcal)
 - **Balsamic dressing** (10 kcal)
@@ -61,6 +71,7 @@
 - **Orange & olive oil** (60 kcal)
 
 ## Signature Salads
+
 1. **Avocado Salad**  
    Lettuce - corn - black olives - tomatoes - green cabbage - cucumber  
    Red beans - carrots - grilled peppers - crispy onions  

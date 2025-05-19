@@ -1,7 +1,6 @@
-import { Box, Heading, Text, Button, VStack } from '@chakra-ui/react';
-import premiumBg from '../../assets/PremiumBG.JPG';
-import { useI18nContext } from '../../Contexts/I18nContext';
-import { useTranslation } from 'react-i18next';
+import { Box, Heading, Text, Button, VStack } from '@chakra-ui/react'
+import premiumBg from '../../assets/PremiumBG.JPG'
+import { useTranslation } from 'react-i18next'
 
 export const GetPremium = () => {
   const { t } = useTranslation()
@@ -16,30 +15,30 @@ export const GetPremium = () => {
       bgImage={`url(${premiumBg})`}
       bgSize="cover"
       bgPosition="center"
-      borderRadius={"2xl"}
-      w={"95%"}
+      borderRadius={'2xl'}
+      w={'95%'}
     >
       <VStack spacing={6} align="center" maxW="lg" mx="auto">
         <Heading as="h2" size="lg" textAlign="center">
-          {t("premium.joinOurPlans")} {/* Translate "Join Our Premium Plans" */}
+          {t('premium.joinOurPlans')} {/* Translate "Join Our Premium Plans" */}
         </Heading>
         <Text fontSize="md" textAlign="center">
-          {t("premium.elevateExperience")} {/* Translate "Elevate your salad experience..." */}
-          <strong>{t("brandNames.sauciaSalad")}</strong> {/* Translate "SauciaSalad" */}
-          {t("premium.benefitsDescription")} {/* Translate "Enjoy exclusive benefits..." */}
+          {t('premium.elevateExperience')} {/* Translate "Elevate your salad experience..." */}
+          <strong>{t('brandNames.sauciaSalad')}</strong> {/* Translate "SauciaSalad" */}
+          {t('premium.benefitsDescription')} {/* Translate "Enjoy exclusive benefits..." */}
         </Text>
         <VStack spacing={4}>
           <Button colorScheme="brand" size="md" variant="solid">
-            {t("premium.joinWeeklyPlan")} {/* Translate "Join Weekly Plan" */}
+            {t('premium.joinWeeklyPlan')} {/* Translate "Join Weekly Plan" */}
           </Button>
           <Button colorScheme="brand" size="md" variant="outline">
-            {t("premium.joinMonthlyPlan")} {/* Translate "Join Monthly Plan" */}
+            {t('premium.joinMonthlyPlan')} {/* Translate "Join Monthly Plan" */}
           </Button>
         </VStack>
       </VStack>
     </Box>
-  );
-};
+  )
+}
 /*
 bbb
 */

@@ -18,22 +18,22 @@
 }
 
 .lalezar {
-  font-family: "Lalezar", sans-serif;
+  font-family: 'Lalezar', sans-serif;
   font-weight: 400;
 }
 
 .readex-pro {
-  font-family: "Readex Pro", sans-serif;
+  font-family: 'Readex Pro', sans-serif;
   font-weight: 400;
 }
 
 .montserrat {
-  font-family: "Montserrat", sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-weight: 400;
 }
 
 .outfit {
-  font-family: "Outfit", sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 400;
 }
 
@@ -45,7 +45,12 @@ body {
   min-height: 100vh;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin: 0;
   font-family: inherit;
 }

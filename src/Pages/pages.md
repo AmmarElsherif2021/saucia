@@ -1,4 +1,3 @@
-
 # Food Store Web App Structure
 
 ## Main Navigation Structure
@@ -8,15 +7,16 @@
 ├── /menu
 ├── /offers
 ├── /account
-│   ├── /profile
-│   ├── /orders
-│   ├── /favorites
-│   └── /settings
+│ ├── /profile
+│ ├── /orders
+│ ├── /favorites
+│ └── /settings
 ├── /cart
 └── /checkout
-    ├── /delivery
-    ├── /payment
-    └── /confirmation
+├── /delivery
+├── /payment
+└── /confirmation
+
 ```
 
 ## Page Details
@@ -30,16 +30,18 @@
 
 ### 2. Menu Page (`/menu`)
 ```
+
 /menu
 ├── /categories
-│   ├── /breakfast
-│   ├── /lunch
-│   ├── /dinner
-│   ├── /desserts
-│   └── /beverages
+│ ├── /breakfast
+│ ├── /lunch
+│ ├── /dinner
+│ ├── /desserts
+│ └── /beverages
 ├── /featured
 ├── /new-arrivals
 └── /combos
+
 ```
 - Category filtering system
 - Search functionality
@@ -115,30 +117,36 @@
 
 ### Authentication
 ```
+
 /auth
 ├── /login
 ├── /register
 ├── /forgot-password
 └── /reset-password
+
 ```
 
 ### Static Pages
 ```
+
 /info
 ├── /about
 ├── /contact
 ├── /faq
 └── /privacy
+
 ```
 
 ### Admin Panel (Protected)
 ```
+
 /admin
 ├── /dashboard
 ├── /menu-management
 ├── /orders
 ├── /customers
 └── /reports
+
 ```
 
 ## Component Structure
@@ -172,16 +180,19 @@
 ## Key Features
 
 1. **Responsive Design**
+
    - Mobile-first approach
    - Tablet-optimized layouts
    - Desktop enhancements
 
 2. **Performance Optimizations**
+
    - Image lazy-loading
    - Menu category prefetching
    - Cart persistence
 
 3. **Accessibility**
+
    - WCAG 2.1 AA compliant
    - Keyboard navigation
    - Screen reader support
@@ -191,5 +202,6 @@
    - Currency conversion
    - Regional menu variations
 
+```
 
 ```

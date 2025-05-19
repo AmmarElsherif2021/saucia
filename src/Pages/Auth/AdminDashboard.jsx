@@ -26,163 +26,151 @@ import {
   Heading,
   useToast,
   Spinner,
-} from "@chakra-ui/react";
-import { useUser } from "../../Contexts/UserContext";
-import { useTranslation } from "react-i18next";
-import { useState, useEffect } from "react";
-import {
-  listItems,
-  createItem,
-  updateItem,
-  deleteItem,
-} from "../../API/items";
-import {
-  getMeals,
-  createMeal,
-  updateMeal,
-  deleteMeal,
-} from "../../API/meals";
-import { listOrders } from "../../API/orders";
+} from '@chakra-ui/react'
+import { useUser } from '../../Contexts/UserContext'
+//import { useTranslation } from "react-i18next";
+import { useState, useEffect, useCallback } from 'react'
+import { listItems, createItem, updateItem, deleteItem } from '../../API/items'
+import { getMeals, createMeal, updateMeal, deleteMeal } from '../../API/meals'
+import { listOrders } from '../../API/orders'
 
 export const AdminDashboard = () => {
-  const { user } = useUser();
-  const { t } = useTranslation();
-  const toast = useToast();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedEntity, setSelectedEntity] = useState(null);
-  const [entityType, setEntityType] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
-  const [itemsData, setItemsData] = useState([]);
-  const [mealsData, setMealsData] = useState([]);
-  const [ordersData, setOrdersData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useUser()
+  //const { t } = useTranslation();
+  const toast = useToast()
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const [selectedEntity, setSelectedEntity] = useState(null)
+  const [entityType, setEntityType] = useState('')
+  const [isEditing, setIsEditing] = useState(false)
+  const [itemsData, setItemsData] = useState([])
+  const [mealsData, setMealsData] = useState([])
+  const [ordersData, setOrdersData] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
 
-  const isAdmin = user?.email === "admin@example.com";
+  const isAdmin = user?.email === 'admin@example.com'
 
   useEffect(() => {
     if (isAdmin) {
-      fetchData();
+      fetchData()
     }
-  }, [isAdmin]);
+  }, [isAdmin, fetchData])
 
-  const fetchData = async () => {
-    setIsLoading(true);
+  const fetchData = useCallback(async () => {
+    setIsLoading(true)
     try {
       const [items, meals, orders] = await Promise.all([
         listItems(),
         getMeals(user?.token),
         listOrders(user?.token),
-      ]);
-      setItemsData(items);
-      setMealsData(meals);
-      setOrdersData(orders);
+      ])
+      setItemsData(items)
+      setMealsData(meals)
+      setOrdersData(orders)
     } catch (error) {
-      console.error("Error fetching data:", error);
+      //console.error("Error fetching data:", error);
       toast({
-        title: "Error",
-        description: "Failed to fetch data. Please try again later.",
-        status: "error",
+        title: 'Error',
+        description: 'Failed to fetch data. Please try again later.',
+        status: 'error',
         duration: 3000,
         isClosable: true,
-      });
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }, [user?.token, toast])
 
   const handleAddNew = (type) => {
-    setEntityType(type);
-    setIsEditing(false);
-    setSelectedEntity({});
-    onOpen();
-  };
+    setEntityType(type)
+    setIsEditing(false)
+    setSelectedEntity({})
+    onOpen()
+  }
 
   const handleEdit = (entity, type) => {
-    setSelectedEntity(entity);
-    setEntityType(type);
-    setIsEditing(true);
-    onOpen();
-  };
+    setSelectedEntity(entity)
+    setEntityType(type)
+    setIsEditing(true)
+    onOpen()
+  }
 
   const handleSave = async () => {
     try {
-      if (entityType === "item") {
+      if (entityType === 'item') {
         if (isEditing) {
-          await updateItem(user?.token, selectedEntity.id, selectedEntity);
+          await updateItem(user?.token, selectedEntity.id, selectedEntity)
         } else {
-          await createItem(user?.token, selectedEntity);
+          await createItem(user?.token, selectedEntity)
         }
-      } else if (entityType === "meal") {
+      } else if (entityType === 'meal') {
         if (isEditing) {
-          await updateMeal(user?.token, selectedEntity.id, selectedEntity);
+          await updateMeal(user?.token, selectedEntity.id, selectedEntity)
         } else {
-          await createMeal(user?.token, selectedEntity);
+          await createMeal(user?.token, selectedEntity)
         }
       }
       toast({
-        title: `${entityType} ${isEditing ? "updated" : "created"} successfully`,
-        status: "success",
+        title: `${entityType} ${isEditing ? 'updated' : 'created'} successfully`,
+        status: 'success',
         duration: 3000,
         isClosable: true,
-      });
-      fetchData();
-      onClose();
+      })
+      fetchData()
+      onClose()
     } catch (error) {
-      console.error(`Error saving ${entityType}:`, error);
+      //console.error(`Error saving ${entityType}:`, error);
       toast({
-        title: "Error",
-        description: `Failed to ${isEditing ? "update" : "create"} ${entityType}.`,
-        status: "error",
+        title: 'Error',
+        description: `Failed to ${isEditing ? 'update' : 'create'} ${entityType}.`,
+        status: 'error',
         duration: 3000,
         isClosable: true,
-      });
+      })
     }
-  };
+  }
 
   const handleDelete = async (id, type) => {
     try {
-      if (type === "item") {
-        await deleteItem(user?.token, id);
-      } else if (type === "meal") {
-        await deleteMeal(user?.token, id);
+      if (type === 'item') {
+        await deleteItem(user?.token, id)
+      } else if (type === 'meal') {
+        await deleteMeal(user?.token, id)
       }
       toast({
         title: `${type} deleted successfully`,
-        status: "success",
+        status: 'success',
         duration: 3000,
         isClosable: true,
-      });
-      fetchData();
+      })
+      fetchData()
     } catch (error) {
-      console.error(`Error deleting ${type}:`, error);
+      //console.error(`Error deleting ${type}:`, error);
       toast({
-        title: "Error",
+        title: 'Error',
         description: `Failed to delete ${type}.`,
-        status: "error",
+        status: 'error',
         duration: 3000,
         isClosable: true,
-      });
+      })
     }
-  };
+  }
 
   const renderAddNewForm = () => {
     switch (entityType) {
-      case "item":
+      case 'item':
         return (
           <>
             <FormControl>
               <FormLabel>Name</FormLabel>
               <Input
-                value={selectedEntity?.name || ""}
-                onChange={(e) =>
-                  setSelectedEntity({ ...selectedEntity, name: e.target.value })
-                }
+                value={selectedEntity?.name || ''}
+                onChange={(e) => setSelectedEntity({ ...selectedEntity, name: e.target.value })}
               />
             </FormControl>
             <FormControl mt={4}>
               <FormLabel>Section</FormLabel>
               <Input
-                value={selectedEntity?.section || ""}
+                value={selectedEntity?.section || ''}
                 onChange={(e) =>
                   setSelectedEntity({
                     ...selectedEntity,
@@ -192,37 +180,33 @@ export const AdminDashboard = () => {
               />
             </FormControl>
           </>
-        );
-      case "meal":
+        )
+      case 'meal':
         return (
           <>
             <FormControl>
               <FormLabel>Meal Name</FormLabel>
               <Input
-                value={selectedEntity?.name || ""}
-                onChange={(e) =>
-                  setSelectedEntity({ ...selectedEntity, name: e.target.value })
-                }
+                value={selectedEntity?.name || ''}
+                onChange={(e) => setSelectedEntity({ ...selectedEntity, name: e.target.value })}
               />
             </FormControl>
             <FormControl mt={4}>
               <FormLabel>Price</FormLabel>
               <Input
                 type="number"
-                value={selectedEntity?.price || ""}
-                onChange={(e) =>
-                  setSelectedEntity({ ...selectedEntity, price: e.target.value })
-                }
+                value={selectedEntity?.price || ''}
+                onChange={(e) => setSelectedEntity({ ...selectedEntity, price: e.target.value })}
               />
             </FormControl>
           </>
-        );
+        )
       default:
-        return null;
+        return null
     }
-  };
+  }
 
-  if (!isAdmin) return <Box p={4}>Unauthorized access</Box>;
+  if (!isAdmin) return <Box p={4}>Unauthorized access</Box>
 
   return (
     <Box p={4}>
@@ -241,7 +225,7 @@ export const AdminDashboard = () => {
             {/* Items Tab */}
             <TabPanel>
               <Flex justify="flex-end" mb={4}>
-                <Button colorScheme="green" onClick={() => handleAddNew("item")}>
+                <Button colorScheme="green" onClick={() => handleAddNew('item')}>
                   Add New Item
                 </Button>
               </Flex>
@@ -259,17 +243,13 @@ export const AdminDashboard = () => {
                       <Td>{item.name}</Td>
                       <Td>{item.section}</Td>
                       <Td>
-                        <Button
-                          size="sm"
-                          mr={2}
-                          onClick={() => handleEdit(item, "item")}
-                        >
+                        <Button size="sm" mr={2} onClick={() => handleEdit(item, 'item')}>
                           Edit
                         </Button>
                         <Button
                           size="sm"
                           colorScheme="red"
-                          onClick={() => handleDelete(item.id, "item")}
+                          onClick={() => handleDelete(item.id, 'item')}
                         >
                           Delete
                         </Button>
@@ -283,7 +263,7 @@ export const AdminDashboard = () => {
             {/* Meals Tab */}
             <TabPanel>
               <Flex justify="flex-end" mb={4}>
-                <Button colorScheme="green" onClick={() => handleAddNew("meal")}>
+                <Button colorScheme="green" onClick={() => handleAddNew('meal')}>
                   Add New Meal
                 </Button>
               </Flex>
@@ -301,17 +281,13 @@ export const AdminDashboard = () => {
                       <Td>{meal.name}</Td>
                       <Td>${meal.price}</Td>
                       <Td>
-                        <Button
-                          size="sm"
-                          mr={2}
-                          onClick={() => handleEdit(meal, "meal")}
-                        >
+                        <Button size="sm" mr={2} onClick={() => handleEdit(meal, 'meal')}>
                           Edit
                         </Button>
                         <Button
                           size="sm"
                           colorScheme="red"
-                          onClick={() => handleDelete(meal.id, "meal")}
+                          onClick={() => handleDelete(meal.id, 'meal')}
                         >
                           Delete
                         </Button>
@@ -351,18 +327,16 @@ export const AdminDashboard = () => {
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>
-            {isEditing ? `Edit ${entityType}` : `Create New ${entityType}`}
-          </ModalHeader>
+          <ModalHeader>{isEditing ? `Edit ${entityType}` : `Create New ${entityType}`}</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
             {renderAddNewForm()}
             <Button mt={6} colorScheme="blue" onClick={handleSave}>
-              {isEditing ? "Save Changes" : "Create"}
+              {isEditing ? 'Save Changes' : 'Create'}
             </Button>
           </ModalBody>
         </ModalContent>
       </Modal>
     </Box>
-  );
-};
+  )
+}
