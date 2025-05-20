@@ -159,6 +159,7 @@ export const UserProvider = ({ children }) => {
     user,
     setUser,
     userPlan,
+    setUserPlan,
     planLoading,
     logout,
     loading,

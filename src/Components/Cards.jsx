@@ -817,14 +817,14 @@ export const PlanCard = ({ plan }) => {
     if (plan?.title?.includes('Salad')) return saladsPlanImage;
     return dailyMealPlanImage;
   })();
-  useEffect(()=>console.log(` from PlanCard ${JSON.stringify(plan)}`),[])
+  //useEffect(()=>console.log(` from PlanCard ${JSON.stringify(plan)}`),[])
   // Construct description from plan data - with null checks
   const description = plan ? `${plan.carb || 0}g carbs • ${plan.protein || 0}g protein • ${plan.kcal || 0}kcal` : '';
   const macros = description?.split(' • ');
 
   // Debug logs - remove in production
-  console.log('PlanCard received plan:', plan);
-  console.log('Image URL being used:', imageUrl);
+  // console.log('PlanCard received plan:', plan);
+  // console.log('Image URL being used:', imageUrl);
 
   return (
     <Box

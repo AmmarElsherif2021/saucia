@@ -6,13 +6,13 @@ import saladsPlanImage from '../../assets/premium/saladMeal.png'
 import gainWeightPlanImage from '../../assets/premium/gainWeight.png'
 import keepWeightPlanImage from '../../assets/premium/keepWeight.png'
 import loseWeightPlanImage from '../../assets/premium/loseWeight.png'
-import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useElements } from '../../Contexts/ElementsContext'
 
 export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
   // Get plans directly from ElementsContext
   const { plans, elementsLoading } = useElements();
-
+  const {t} = useTranslation();
   const getPlanImage = (title) => {
     if (title?.includes('Gain Weight')) return gainWeightPlanImage;
     if (title?.includes('Keep Weight')) return keepWeightPlanImage;
@@ -31,20 +31,14 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
     if (processedPlans.length > 0) {
       return <PlanCard plan={processedPlans[0]} />;
     }
-    return <Text>No plans available</Text>;
+    return <Text>{t('premium.noPlansAvailable')}</Text>;
   };
 
-  // Debug
-  // useEffect(() => {
-  //   console.log('Plans from ElementsContext:', plans);
-  //   console.log('Processed plans with images:', processedPlans);
-  // }, [plans, processedPlans]);
-  
   // Loading state
   if (elementsLoading) {
     return (
       <Box bg="white" p={6} borderRadius="md">
-        <Text>Loading premium plans...</Text>
+        <Text>{t('premium.loadingPremiumPlans')}</Text>
       </Box>
     );
   }
@@ -54,9 +48,9 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
     return (
       <Box bg="white" p={6} borderRadius="md">
         <Heading as="h2" size="xl" mb={4}>
-          {newMember ? 'Join' : 'Change'} Premium Plans
+          {newMember ? t('premium.join') : t('premium.change')} {t('premium.premiumPlans')}
         </Heading>
-        <Text color="red.500">No premium plans found. Please try again later.</Text>
+        <Text color="red.500">{t('premium.noPremiumPlansFound')}</Text>
       </Box>
     );
   }
@@ -64,16 +58,13 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
   return (
     <Box bg="white" p={6} borderRadius="md">
       <Heading as="h2" size="xl" mb={4}>
-        {newMember ? 'Join' : 'Change'} Premium Plans
+        {newMember ? t('premium.join') : t('premium.change')} {t('premium.premiumPlans')}
       </Heading>
       <Flex justifyContent="center" mb={4} gap={4} alignItems="center" flexDirection={{ base: "column", md: "row" }}>
         <Box>
           <Text mb={4} width={{ base: "100%", md: "40vw" }} textAlign="left" fontSize="2xl" color="gray.600">
-            Unlock exclusive features by subscribing to one of our premium plans! You can discover
-            and join any of the daily meal plans based on your preferences. Enjoy exclusive benefits
-            and features tailored for you!
+            {t('premium.unlockExclusiveFeatures')}
           </Text>
-          
         </Box>
         <Box mb={4} w={{ base: "100%", md: "40vw" }} h="auto" mx="auto" position="relative">
           {processedPlans.length > 1 ? (

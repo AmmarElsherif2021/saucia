@@ -51,27 +51,27 @@ const CheckoutPage = () => {
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
         {/* Delivery Information */}
         <Section
-          title={t('checkout.deliveryInformation')} // Translate "Delivery Information"
+          title={t('checkout.deliveryInformation')}
           bgColor="brand.300"
           titleColor="gray.800"
           icon={saladIcon}
         >
           <Stack spacing={1}>
             <TXT
-              placeholder={t('checkout.fullName')} // Translate "Full Name"
+              placeholder={t('checkout.fullName')}
               name="fullName"
               variant="outline"
               maxLength={50}
             />
             <TXT
-              placeholder={t('checkout.phoneNumber')} // Translate "Phone Number"
+              placeholder={t('checkout.phoneNumber')} 
               name="phoneNumber"
               variant="outline"
               maxLength={15}
               mt={4}
             />
             <TXT
-              placeholder={t('checkout.deliveryAddress')} // Translate "Delivery Address"
+              placeholder={t('checkout.deliveryAddress')}
               name="address"
               variant="outline"
               maxLength={100}
@@ -79,7 +79,7 @@ const CheckoutPage = () => {
             />
           </Stack>
           <Select
-            placeholder={t('checkout.selectCity')} // Translate "Select City"
+            placeholder={t('checkout.selectCity')}
             mt={4}
             sx={{
               borderColor: 'brand.300',
@@ -100,12 +100,12 @@ const CheckoutPage = () => {
 
         {/* Payment Details */}
         <Section
-          title={t('checkout.paymentDetails')} // Translate "Payment Details"
+          title={t('checkout.paymentDetails')} 
           bgColor="warning.200"
           icon={paymentIcon}
         >
           <Select
-            placeholder={t('checkout.paymentMethod')} // Translate "Select Payment Method"
+            placeholder={t('checkout.paymentMethod')} 
             focusBorderColor="warning.500"
             variant="outline"
             _hover={{ borderColor: 'warning.400' }}
@@ -126,7 +126,7 @@ const CheckoutPage = () => {
           </Select>
           <Stack spacing={1}>
             <TXT
-              placeholder={t('checkout.cardNumber')} // Translate "Card Number"
+              placeholder={t('checkout.cardNumber')} 
               name="cardNumber"
               variant="outline"
               maxLength={16}
@@ -134,13 +134,13 @@ const CheckoutPage = () => {
             />
             <Flex gap={2} mt={4}>
               <TXT
-                placeholder={t('checkout.expiryDate')} // Translate "MM/YY"
+                placeholder={t('checkout.expiryDate')} 
                 name="expiryDate"
                 variant="outline"
                 maxLength={5}
               />
               <TXT
-                placeholder={t('checkout.cvv')} // Translate "CVV"
+                placeholder={t('checkout.cvv')}
                 name="cvv"
                 variant="outline"
                 maxLength={3}
@@ -154,7 +154,7 @@ const CheckoutPage = () => {
 
         {/* Order Summary */}
         <Section
-          title={t('checkout.orderSummary')} // Translate "Order Summary"
+          title={t('checkout.orderSummary')} 
           bgColor="accent.700"
           icon={orderIcon}
         >

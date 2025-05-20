@@ -19,16 +19,18 @@ import {
 import { useUser } from '../../../Contexts/UserContext';
 import { updateUserProfile } from '../../../API/users';
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 const CommonQuestions = ({ onComplete }) => {
-  const { user, setUser } = useUser();
+  const {t}= useTranslation();
+  const { user, setUser, userPlan } = useUser();
   const toast = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    dietaryPreferences: '',
-    allergies: '',
-    healthProfile: {
+    healthProfile: { 
+      dietaryPreferences: [],
+      allergies: [],
       age: '',
       height: '',
       weight: '',
@@ -40,47 +42,26 @@ const CommonQuestions = ({ onComplete }) => {
 
   // Safely initialize form with user data
   useEffect(() => {
-    if (user) {
+    if (user && user.healthProfile) {
       const newFormData = {
-        dietaryPreferences: '',
-        allergies: '',
         healthProfile: {
-          age: '',
-          height: '',
-          weight: '',
-          gender: '',
-          activityLevel: '',
-          fitnessGoal: '',
-        }
-      };
-
-      // Handle dietaryPreferences
-      if (Array.isArray(user.dietaryPreferences)) {
-        newFormData.dietaryPreferences = user.dietaryPreferences.join(', ');
-      } else if (typeof user.dietaryPreferences === 'string') {
-        newFormData.dietaryPreferences = user.dietaryPreferences;
-      }
-
-      // Handle allergies
-      if (Array.isArray(user.allergies)) {
-        newFormData.allergies = user.allergies.join(', ');
-      } else if (typeof user.allergies === 'string') {
-        newFormData.allergies = user.allergies;
-      }
-
-      // Handle healthProfile
-      if (user.healthProfile && typeof user.healthProfile === 'object') {
-        newFormData.healthProfile = {
+          dietaryPreferences: Array.isArray(user.healthProfile.dietaryPreferences) 
+            ? user.healthProfile.dietaryPreferences.join(', ') 
+            : '',
+          allergies: Array.isArray(user.healthProfile.allergies) 
+            ? user.healthProfile.allergies.join(', ') 
+            : '',
           age: user.healthProfile.age != null ? user.healthProfile.age.toString() : '',
           height: user.healthProfile.height != null ? user.healthProfile.height.toString() : '',
           weight: user.healthProfile.weight != null ? user.healthProfile.weight.toString() : '',
           gender: user.healthProfile.gender || '',
           activityLevel: user.healthProfile.activityLevel || '',
           fitnessGoal: user.healthProfile.fitnessGoal || '',
-        };
-      }
+        }
+      };
 
       setFormData(newFormData);
+      console.log('Health profile initialized:', newFormData);
     }
   }, [user]);
 
@@ -95,14 +76,6 @@ const CommonQuestions = ({ onComplete }) => {
     }));
   };
 
-  const handleArrayInput = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -113,58 +86,67 @@ const CommonQuestions = ({ onComplete }) => {
         throw new Error('User not authenticated');
       }
 
-      // Safely prepare the update data
+      // Prepare the update data with proper structure matching the model
       const updateData = {
-        dietaryPreferences: formData.dietaryPreferences
-          .split(',')
-          .map(item => item.trim())
-          .filter(item => item),
-        allergies: formData.allergies
-          .split(',')
-          .map(item => item.trim())
-          .filter(item => item),
+        age: formData.healthProfile.age ? parseInt(formData.healthProfile.age, 10) : null,
+        gender: formData.healthProfile.gender || '',
         healthProfile: {
-          age: formData.healthProfile.age ? parseInt(formData.healthProfile.age, 10) : null,
+          // Arrays: split comma-separated strings, trim whitespace, filter empty items
+          dietaryPreferences: formData.healthProfile.dietaryPreferences
+            ? formData.healthProfile.dietaryPreferences
+                .split('premium.,')
+                .map(item => item.trim())
+                .filter(item => item)
+            : [],
+          allergies: formData.healthProfile.allergies
+            ? formData.healthProfile.allergies
+                .split('premium.,')
+                .map(item => item.trim())
+                .filter(item => item)
+            : [],
+         
           height: formData.healthProfile.height ? parseInt(formData.healthProfile.height, 10) : null,
           weight: formData.healthProfile.weight ? parseInt(formData.healthProfile.weight, 10) : null,
-          gender: formData.healthProfile.gender || null,
-          activityLevel: formData.healthProfile.activityLevel || null,
-          fitnessGoal: formData.healthProfile.fitnessGoal || null,
-          ...user
+          activityLevel: formData.healthProfile.activityLevel || '',
+          fitnessGoal: formData.healthProfile.fitnessGoal || ''
         }
       };
       
-      console.log(`Updating user profile with data:`, updateData);
+      console.log('Updating user profile with data:', updateData);
       const updatedUser = await updateUserProfile(user.uid, updateData);
       
       // Only update user state if we got a response
       if (updatedUser) {
-        // Be careful not to completely overwrite the user object
+        // Update only the health profile portion of the user object
         setUser(prevUser => ({
           ...prevUser,
-          dietaryPreferences: updateData.dietaryPreferences,
-          allergies: updateData.allergies,
-          healthProfile: updateData.healthProfile
+          age:updateData.age,
+          gender:updateData.gender,
+          healthProfile: {
+            ...prevUser.healthProfile,
+            ...updateData.healthProfile
+          }
         }));
-        navigate('/checkout-plan')
       }
 
       toast({
-        title: 'Profile updated',
-        description: 'Your health profile has been saved successfully',
+        title: t('profile.profileUpdated'),
+        description: t('profile.profileSavedSuccessfully'),
         status: 'success',
         duration: 5000,
         isClosable: true,
       });
+      
       if (onComplete) {
+        navigate('/checkout-plan');
         onComplete();
       }
     } catch (error) {
       console.error('Error updating profile:', error);
       setFormError(error.message || 'Failed to update profile');
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to update profile',
+        title: t('premium.error'),
+        description: error.message || t('premium.errorUpdatingProfile'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -178,7 +160,7 @@ const CommonQuestions = ({ onComplete }) => {
     <Box maxW="600px" mx="auto" mt="8" p="6" borderWidth="1px" borderRadius="lg" boxShadow="md">
       <form onSubmit={handleSubmit}>
         <VStack spacing="4">
-          <Heading as="h2" size="lg" mb="4">Health Profile</Heading>
+          <Heading as="h2" size="lg" mb="4">{t('premium.healthProfile')}</Heading>
           
           {formError && (
             <Box w="full" p="3" bg="red.50" color="red.600" borderRadius="md">
@@ -188,54 +170,54 @@ const CommonQuestions = ({ onComplete }) => {
 
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing="4" w="full">
             <FormControl>
-              <FormLabel>Age</FormLabel>
+              <FormLabel>{t('premium.age')}</FormLabel>
               <Input
                 type="number"
                 name="age"
                 value={formData.healthProfile.age}
                 onChange={handleChange}
-                placeholder="Your age"
+                placeholder={t('premium.yourAge')}
                 min="10"
                 max="100"
               />
             </FormControl>
 
             <FormControl>
-              <FormLabel>Gender</FormLabel>
+              <FormLabel>{t('premium.gender')}</FormLabel>
               <Select
                 name="gender"
                 value={formData.healthProfile.gender || ''}
                 onChange={handleChange}
-                placeholder="Select gender"
+                placeholder={t('premium.selectGender')}
               >
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-                <option value="prefer-not-to-say">Prefer not to say</option>
+                <option value="male">{t('premium.male')}</option>
+                <option value="female">{t('premium.female')}</option>
+                <option value="other">{t('premium.other')}</option>
+                <option value="prefer-not-to-say">{t('premium.preferNotToSay')}</option>
               </Select>
             </FormControl>
 
             <FormControl>
-              <FormLabel>Height (cm)</FormLabel>
+              <FormLabel>{t('premium.heightCm')}</FormLabel>
               <Input
                 type="number"
                 name="height"
                 value={formData.healthProfile.height}
                 onChange={handleChange}
-                placeholder="Your height"
+                placeholder={t('premium.yourHeight')}
                 min="100"
                 max="250"
               />
             </FormControl>
 
             <FormControl>
-              <FormLabel>Weight (kg)</FormLabel>
+              <FormLabel>{t('premium.weightKg')}</FormLabel>
               <Input
                 type="number"
                 name="weight"
                 value={formData.healthProfile.weight}
                 onChange={handleChange}
-                placeholder="Your weight"
+                placeholder={t('premium.yourWeight')}
                 min="30"
                 max="200"
               />
@@ -243,7 +225,7 @@ const CommonQuestions = ({ onComplete }) => {
           </SimpleGrid>
 
           <FormControl>
-            <FormLabel>Activity Level</FormLabel>
+            <FormLabel>{t('premium.activityLevel')}</FormLabel>
             <RadioGroup
               value={formData.healthProfile.activityLevel || ''}
               onChange={(value) => setFormData(prev => ({
@@ -255,48 +237,48 @@ const CommonQuestions = ({ onComplete }) => {
               }))}
             >
               <Stack direction="column">
-                <Radio value="sedentary">Sedentary (little or no exercise)</Radio>
-                <Radio value="lightly-active">Lightly active (light exercise 1-3 days/week)</Radio>
-                <Radio value="moderately-active">Moderately active (moderate exercise 3-5 days/week)</Radio>
-                <Radio value="very-active">Very active (hard exercise 6-7 days/week)</Radio>
-                <Radio value="extremely-active">Extremely active (very hard exercise & physical job)</Radio>
+                <Radio value="sedentary">{t('premium.sedentary')}</Radio>
+                <Radio value="lightly-active">{t('premium.lightlyActive')}</Radio>
+                <Radio value="moderately-active">{t('premium.moderatelyActive')}</Radio>
+                <Radio value="very-active">{t('premium.veryActive')}</Radio>
+                <Radio value="extremely-active">{t('premium.extremelyActive')}</Radio>
               </Stack>
             </RadioGroup>
           </FormControl>
 
           <FormControl>
-            <FormLabel>Fitness Goal</FormLabel>
+            <FormLabel>{t('premium.fitnessGoal')}</FormLabel>
             <Select
               name="fitnessGoal"
               value={formData.healthProfile.fitnessGoal || ''}
               onChange={handleChange}
-              placeholder="Select your goal"
+              placeholder={t('premium.selectFitnessGoal')}
             >
-              <option value="weight-loss">Weight Loss</option>
-              <option value="weight-gain">Weight Gain</option>
-              <option value="maintenance">Weight Maintenance</option>
-              <option value="muscle-gain">Muscle Gain</option>
-              <option value="improve-fitness">Improve Fitness</option>
+              <option value="weight-loss">{t('premium.weightLoss')}</option>
+              <option value="weight-gain">{t('premium.weightGain')}</option>
+              <option value="maintenance">{t('premium.maintenance')}</option>
+              <option value="muscle-gain">{t('premium.muscleGain')}</option>
+              <option value="improve-fitness">{t('premium.improveFitness')}</option>
             </Select>
           </FormControl>
 
           <FormControl>
-            <FormLabel>Dietary Preferences (comma separated)</FormLabel>
+            <FormLabel>{t('premium.dietaryPreferences')}</FormLabel>
             <Textarea
               name="dietaryPreferences"
-              value={formData.dietaryPreferences}
-              onChange={handleArrayInput}
-              placeholder="E.g., vegetarian, gluten-free, dairy-free"
+              value={formData.healthProfile.dietaryPreferences}
+              onChange={handleChange}
+              placeholder={t('premium.dietaryPreferencesPlaceholder')}
             />
           </FormControl>
 
           <FormControl>
-            <FormLabel>Allergies (comma separated)</FormLabel>
+            <FormLabel>{t('premium.allergies')}</FormLabel>
             <Textarea
               name="allergies"
-              value={formData.allergies}
-              onChange={handleArrayInput}
-              placeholder="E.g., peanuts, shellfish, soy"
+              value={formData.healthProfile.allergies}
+              onChange={handleChange}
+              placeholder={t('premium.allergiesPlaceholder')}
             />
           </FormControl>
 
@@ -306,9 +288,9 @@ const CommonQuestions = ({ onComplete }) => {
             width="full"
             mt="4"
             isLoading={isSubmitting}
-            loadingText="Saving..."
+            loadingText={t('premium.saving')}
           >
-            Save Health Profile
+            {t('premium.saveHealthProfile')}
           </Button>
         </VStack>
       </form>

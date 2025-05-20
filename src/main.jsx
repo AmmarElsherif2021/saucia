@@ -18,6 +18,7 @@ const MenuPage = React.lazy(() => import('./Pages/Menu/MenuPage.jsx'))
 const UserAccountPage = React.lazy(() => import('./Pages/Dashboard/UserAccountPage.jsx'))
 const CartPage = React.lazy(() => import('./Pages/Cart/CartPage.jsx'))
 const CheckoutPage = React.lazy(() => import('./Pages/Checkout/CheckoutPage.jsx'))
+const CheckoutPlan = React.lazy(() => import('./Pages/Checkout/CheckoutPlan.jsx'))
 const InfoPage = React.lazy(() => import('./Pages/InfoPage.jsx'))
 const AboutPage = React.lazy(() => import('./Pages/About/AboutPage.jsx'))
 const PremiumPage = React.lazy(() => import('./Pages/Premium/PremiumPage.jsx'))
@@ -177,7 +178,7 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <Suspense fallback={<PageLoader />}>
-          <CheckoutPage />
+          <CheckoutPlan/>
         </Suspense>
       </Layout>
     )

@@ -18,9 +18,10 @@ import {
   Alert,
   AlertIcon
 } from '@chakra-ui/react';
-import { useI18nContext } from '../../Contexts/I18nContext';
+
 import { useElements } from '../../Contexts/ElementsContext';
 import { useUser } from '../../Contexts/UserContext';
+
 import { CurrentPlanBrief } from './CurrentPlanBrief';
 import { Link } from 'react-router-dom';
 // Import plan images - you can maintain this mapping or handle it differently
@@ -30,6 +31,7 @@ import loseWeightPlanImage from "../../assets/premium/loseWeight.png";
 import dailyMealPlanImage from "../../assets/premium/dailyMeal.png";
 import saladsPlanImage from "../../assets/premium/saladMeal.png";
 import { JoinPremiumTeaser } from './JoinPremiumTeaser';
+import { useTranslation } from 'react-i18next';
 
 // Map plan titles to images
 const planImages = {
@@ -44,7 +46,7 @@ const planImages = {
 const PlanCard = ({ plan, isUserPlan, onSelect }) => {
   const cardBg = useColorModeValue('white', 'gray.700');
   const borderColor = isUserPlan ? 'green.400' : 'gray.200';
-  
+  const {t}=useTranslation();
   // Add the image to the plan object for easier access
   const planWithImage = {
     ...plan,
@@ -74,7 +76,7 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
           top={2} 
           right={2}
         >
-          Current Plan
+          {t('premium.currentPlan')}
         </Badge>
       )}
       
@@ -100,15 +102,15 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
       
       <Text mb={2}>
         <Badge colorScheme="purple">
-          {plan.periods?.length || 0} Periods
+          {plan.periods?.length || 0} {t('premium.periods')}
         </Badge>
       </Text>
       
       <Flex justify="space-between" mt={3}>
         <Box>
-          <Text fontSize="sm">Kcal: {plan.kcal}</Text>
-          <Text fontSize="sm">Carbs: {plan.carb}g</Text>
-          <Text fontSize="sm">Protein: {plan.protein}g</Text>
+          <Text fontSize="sm">{t('premium.kcal')}: {plan.kcal}</Text>
+          <Text fontSize="sm">{t('premium.carbs')}: {plan.carb}g</Text>
+          <Text fontSize="sm">{t('premium.protein')}: {plan.protein}g</Text>
         </Box>
         
         <Button 
@@ -116,7 +118,7 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
           colorScheme={isUserPlan ? "green" : "blue"}
           onClick={() => onSelect(planWithImage)}
         >
-          {isUserPlan ? 'View Details' : 'Select'}
+          {isUserPlan ? t('premium.viewDetails') : t('premium.select')}
         </Button>
       </Flex>
     </Box>
@@ -124,7 +126,7 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
 };
 
 const PlanDetails = ({ plan }) => {
-  const { t } = useI18nContext();
+  const { t } = useTranslation()
   
   return (
     <Box>
@@ -139,29 +141,29 @@ const PlanDetails = ({ plan }) => {
       )}
       
       <Heading as="h4" size="xs" mb={2}>
-        Nutritional Information
+        {t('premium.nutritionalInformation')}
       </Heading>
       
       <Flex mb={4} gap={4} flexWrap="wrap">
-        <Badge colorScheme="green">Kcal: {plan.kcal}</Badge>
-        <Badge colorScheme="blue">Carbs: {plan.carb}g</Badge>
-        <Badge colorScheme="red">Protein: {plan.protein}g</Badge>
+        <Badge colorScheme="green">{t('premium.kcal')}: {plan.kcal}</Badge>
+        <Badge colorScheme="blue">{t('premium.carbs')}: {plan.carb}g</Badge>
+        <Badge colorScheme="red">{t('premium.protein')}: {plan.protein}g</Badge>
       </Flex>
       
       <Heading as="h4" size="xs" mb={2}>
-        Subscription Periods
+        {t('premium.subscriptionPeriods')}
       </Heading>
       
       {plan.periods && plan.periods.length > 0 ? (
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={2}>
           {plan.periods.map((period, index) => (
             <Box key={index} p={2} bg="gray.50" borderRadius="md">
-              <Text>{period} days subscription</Text>
+              <Text>{period} {t('premium.daysSubscription')}</Text>
             </Box>
           ))}
         </SimpleGrid>
       ) : (
-        <Text>No subscription periods available for this plan.</Text>
+        <Text>{t('premium.noSubscriptionPeriodsAvailable')}</Text>
       )}
     </Box>
   );
@@ -169,11 +171,11 @@ const PlanDetails = ({ plan }) => {
 
 export const PremiumPage = () => {
   const { plans, elementsLoading } = useElements();
-  const { user, userPlan, planLoading, updateUserSubscription } = useUser();
+  const { user, userPlan,setUserPlan, planLoading, updateUserSubscription } = useUser();
   const [explorePlans, setExplorePlans] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [subscribing, setSubscribing] = useState(false);
-  const { t } = useI18nContext();
+  const { t } = useTranslation()
   const toast = useToast();
   //scrolling down
   const plansSectionRef = useRef(null);
@@ -186,7 +188,10 @@ export const PremiumPage = () => {
       setSelectedPlan(userPlan);
     }
   }, [userPlan, selectedPlan]);
-
+  useEffect(()=>{
+    console.log(`from Premium selecting plan event ${JSON.stringify(selectedPlan)}`)
+    setUserPlan(selectedPlan)
+  },[selectedPlan])
   const handlePlanSelect = (plan) => {
     setSelectedPlan(plan);
     // Scroll to details section after a small delay
@@ -196,6 +201,7 @@ export const PremiumPage = () => {
         block: 'end'
       });
     }, 50);
+    
   };
 
   const toggleExplorePlans = () => {
@@ -216,8 +222,8 @@ export const PremiumPage = () => {
   const handleSubscribe = async () => {
     if (!user) {
       toast({
-        title: "Authentication required",
-        description: "Please sign in to subscribe to a plan",
+        title: t("premium.authenticationRequired"),
+        description: t("premium.signInToSubscribe"),
         status: "warning",
         duration: 5000,
         isClosable: true,
@@ -232,8 +238,8 @@ export const PremiumPage = () => {
       await updateUserSubscription(selectedPlan.id);
        
       toast({
-        title: "Plan updated",
-        description: `You are now subscribed to the ${selectedPlan.title} plan`,
+        title: t("premium.planUpdated"),
+        description: t("premium.nowSubscribedToPlan", { planTitle: selectedPlan.title }),
         status: "success",
         duration: 5000,
         isClosable: true,
@@ -242,8 +248,8 @@ export const PremiumPage = () => {
       setExplorePlans(false);
     } catch (error) {
       toast({
-        title: "Subscription failed",
-        description: error.message || "Failed to update your plan subscription",
+        title: t("premium.subscriptionFailed"),
+        description: error.message || t("premium.failedToUpdatePlanSubscription"),
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -258,7 +264,6 @@ export const PremiumPage = () => {
       <Center h="100vh">
         <VStack spacing={4}>
           <Spinner size="xl" color="brand.500" />
-          <Text>Loading premium plans...</Text>
         </VStack>
       </Center>
     );
@@ -268,20 +273,20 @@ export const PremiumPage = () => {
     <Box p={{ base: 4, md: 8 }} bg="gray.50" minH="100vh">
       <VStack spacing={8} align="stretch">
         <Heading as="h1" size="xl" textAlign="center" color="brand.500">
-          Premium Plans
+          {t("premium.premiumPlans")}
         </Heading>
         
         {!user && (
           <Alert status="info" borderRadius="md">
             <AlertIcon />
-            Sign in to subscribe to our premium meal plans
+            {t("premium.signInToSubscribe")}
           </Alert>
         )}
         
         {/* Current Plan Section */}
         <Box as={VStack} bg="white" p={6} borderRadius="md" shadow="md" alignItems={"center"}>
           <Heading as="h2" size="md" mb={4}>
-            Your Current Plan
+            {t("premium.yourCurrentPlan")}
           </Heading>
           <JoinPremiumTeaser/>
           <CurrentPlanBrief plan={userPlan} loading={planLoading} />
@@ -293,7 +298,7 @@ export const PremiumPage = () => {
               size="sm"
               onClick={toggleExplorePlans}
             >
-              {explorePlans ? "Hide Available Plans" : "Explore Other Plans"}
+              {explorePlans ? t("premium.hideAvailablePlans") : t("premium.exploreOtherPlans")}
             </Button>
           )}
           
@@ -303,11 +308,10 @@ export const PremiumPage = () => {
               colorScheme="brand" 
               onClick={toggleExplorePlans}
             >
-              Browse Available Plans
+              {t("premium.browseAvailablePlans")}
             </Button>
           )}
         </Box>
-        
          {/* Available Plans Section */}
        
         {explorePlans && (
@@ -320,7 +324,7 @@ export const PremiumPage = () => {
               ref={plansContainerRef}
             >
               <Heading as="h2" size="md" mb={6}>
-                Available Premium Plans
+                {t("premium.availablePremiumPlans")}
               </Heading>
               
               {plans && plans.length > 0 ? (
@@ -339,7 +343,7 @@ export const PremiumPage = () => {
                 </SimpleGrid>
               ) : (
                 <Center p={8}>
-                  <Text>No plans available at the moment.</Text>
+                  <Text>{t("premium.noPlansAvailable")}</Text>
                 </Center>
               )}
             </Box>
@@ -356,7 +360,7 @@ export const PremiumPage = () => {
             ref={detailsSectionRef}
           >
             <Heading as="h2" size="md" mb={4}>
-              Plan Details
+              {t("premium.planDetails")}
             </Heading>
             
             <PlanDetails plan={selectedPlan} />
@@ -370,12 +374,13 @@ export const PremiumPage = () => {
                 size="lg" 
                 width="full"
                 isLoading={subscribing}
-                loadingText="Updating subscription..."
-                isDisabled={!user || (userPlan && userPlan.id === selectedPlan.id)}
+                loadingText={t("premium.updatingSubscription")}
+                isDisabled={!user || (userPlan && user.subscribedPlan.id === selectedPlan.id)}
+                
               >
                 {userPlan && userPlan.id === selectedPlan.id 
-                  ? "Current Plan" 
-                  : "Subscribe to Plan"}
+                  ? t("premium.currentPlan") 
+                  : t("premium.subscribeToPlan")}
               </Button>
             </Link>
           </Box>
