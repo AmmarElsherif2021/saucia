@@ -115,10 +115,8 @@ const CheckoutPage = () => {
             }}
           >
             <option value="credit-card">{t('checkout.creditCard')}</option>{' '}
-            {/* Translate "Credit Card" */}
             <option value="paypal">{t('checkout.paypal')}</option> {/* Translate "PayPal" */}
-            <option value="cash-on-delivery">{t('checkout.cashOnDelivery')}</option>{' '}
-            {/* Translate "Cash on Delivery" */}
+            <option value="cash-on-delivery">{t('checkout.cashOnDelivery')}</option>{' '}      
           </Select>
           <Stack spacing={1}>
             <TXT
@@ -167,14 +165,14 @@ const CheckoutPage = () => {
           </Flex>
           <ALT
             message={{
-              title: t('checkout.orderMinimum'), // Translate "Order Minimum"
-              description: t('checkout.orderMinimumDescription'), // Translate "Your order must be at least $20.00 to proceed."
+              title: t('checkout.orderMinimum'), 
+              description: t('checkout.orderMinimumDescription'), 
             }}
             type="error"
             dismissible
           />
           <BTN type="button" size="lg" colorScheme="error" variant="outline" width="full">
-            {t('checkout.placeOrder')} {/* Translate "Place Order" */}
+            {t('checkout.placeOrder')} 
           </BTN>
         </Section>
       </SimpleGrid>

@@ -36,7 +36,7 @@ import { useNavigate } from 'react-router-dom'
 import { useUser } from '../../Contexts/UserContext'
 import { updateUserProfile } from '../../API/users'
 import { useElements } from '../../Contexts/ElementsContext'
-import MealCard from './MealCard'
+import {MealCard} from './MealCard'
 // Import icons
 import paymentIcon from '../../assets/payment.svg'
 import orderIcon from '../../assets/order.svg'
