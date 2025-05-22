@@ -43,14 +43,18 @@ export class Plan {
     const processedData = {
       title: String(planData.title || ''),
       title_arabic: String(planData.title_arabic || ''),
-      periods:  Array.isArray(planData.periods) ? planData.periods.filter((m) => m.trim()) : [],
+      periods: Array.isArray(planData.periods) ? planData.periods.filter((m) => m.trim()) : [],
       carb: Number(planData.carb) || 0,
       protein: Number(planData.protein) || 0,
       kcal: Number(planData.kcal) || 0,
       members: Array.isArray(planData.members) ? planData.members.filter((m) => m.trim()) : [],
       avatar: String(planData.avatar || ''),
-      carbMeals: Array.isArray(planData.carbMeals) ? planData.carbMeals.filter((m) => m.trim()) : [],
-      proteinMeals: Array.isArray(planData.proteinMeals) ? planData.proteinMeals.filter((m) => m.trim()) : [],
+      carbMeals: Array.isArray(planData.carbMeals)
+        ? planData.carbMeals.filter((m) => m.trim())
+        : [],
+      proteinMeals: Array.isArray(planData.proteinMeals)
+        ? planData.proteinMeals.filter((m) => m.trim())
+        : [],
       soaps: Array.isArray(planData.soaps) ? planData.soaps.filter((m) => m.trim()) : [],
       snacks: Array.isArray(planData.snacks) ? planData.snacks.filter((m) => m.trim()) : [],
       createdAt: new Date().toISOString(),
@@ -76,8 +80,12 @@ export class Plan {
     try {
       const processedData = {}
       if (updatedData.title !== undefined) processedData.title = String(updatedData.title)
-      if (updatedData.title_arabic !== undefined) processedData.title_arabic = String(updatedData.title_arabic)
-      if (updatedData.periods !== undefined) processedData.periods = Array.isArray(updatedData.periods)? updatedData.periods.map(Number).filter((m) => m.trim()): []
+      if (updatedData.title_arabic !== undefined)
+        processedData.title_arabic = String(updatedData.title_arabic)
+      if (updatedData.periods !== undefined)
+        processedData.periods = Array.isArray(updatedData.periods)
+          ? updatedData.periods.map(Number).filter((m) => m.trim())
+          : []
       if (updatedData.carb !== undefined) processedData.carb = Number(updatedData.carb)
       if (updatedData.protein !== undefined) processedData.protein = Number(updatedData.protein)
       if (updatedData.kcal !== undefined) processedData.kcal = Number(updatedData.kcal)
@@ -85,22 +93,22 @@ export class Plan {
         processedData.members = Array.isArray(updatedData.members)
           ? updatedData.members.filter((m) => m.trim())
           : []
-          if (updatedData.carbMeals !== undefined)
-            processedData.carbMeals = Array.isArray(updatedData.carbMeals) 
-              ? updatedData.carbMeals.filter((m) => m.trim()) 
-              : []
-          if (updatedData.proteinMeals !== undefined)
-            processedData.proteinMeals = Array.isArray(updatedData.proteinMeals) 
-              ? updatedData.proteinMeals.filter((m) => m.trim()) 
-              : []
-          if (updatedData.soaps !== undefined)
-            processedData.soaps = Array.isArray(updatedData.soaps) 
-              ? updatedData.soaps.filter((m) => m.trim()) 
-              : []
-          if (updatedData.snacks !== undefined)
-            processedData.snacks = Array.isArray(updatedData.snacks) 
-              ? updatedData.snacks.filter((m) => m.trim()) 
-              : []
+      if (updatedData.carbMeals !== undefined)
+        processedData.carbMeals = Array.isArray(updatedData.carbMeals)
+          ? updatedData.carbMeals.filter((m) => m.trim())
+          : []
+      if (updatedData.proteinMeals !== undefined)
+        processedData.proteinMeals = Array.isArray(updatedData.proteinMeals)
+          ? updatedData.proteinMeals.filter((m) => m.trim())
+          : []
+      if (updatedData.soaps !== undefined)
+        processedData.soaps = Array.isArray(updatedData.soaps)
+          ? updatedData.soaps.filter((m) => m.trim())
+          : []
+      if (updatedData.snacks !== undefined)
+        processedData.snacks = Array.isArray(updatedData.snacks)
+          ? updatedData.snacks.filter((m) => m.trim())
+          : []
       if (updatedData.avatar !== undefined) processedData.avatar = String(updatedData.avatar)
       processedData.updatedAt = new Date().toISOString()
       await this.collection.doc(id).update(processedData)

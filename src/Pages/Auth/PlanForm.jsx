@@ -4,25 +4,25 @@ import { AddIcon, CloseIcon } from '@chakra-ui/icons'
 
 const PlanForm = ({ onSubmit, onCancel, initialData = {} }) => {
   const [formData, setFormData] = useState({
-      title: initialData.title || '',
-      title_arabic: initialData.title_arabic || '',
-      periods: Array.isArray(initialData.periods) ? initialData.periods : [],
-      carb: Math.max(Number(initialData.carb) || 0),
-      protein: Math.max(Number(initialData.protein) || 0),
-      kcal: Math.max(Number(initialData.kcal) || 0),
-      members: Array.isArray(initialData.members) ? initialData.members : [],
-      avatar: initialData.avatar || '',
-      carbMeals: Array.isArray(initialData.carbMeals) ? initialData.carbMeals : [],
-      proteinMeals: Array.isArray(initialData.proteinMeals) ? initialData.proteinMeals : [],
-      soaps: Array.isArray(initialData.soaps) ? initialData.soaps : [],
-      snacks: Array.isArray(initialData.snacks) ? initialData.snacks : []
-    });
+    title: initialData.title || '',
+    title_arabic: initialData.title_arabic || '',
+    periods: Array.isArray(initialData.periods) ? initialData.periods : [],
+    carb: Math.max(Number(initialData.carb) || 0),
+    protein: Math.max(Number(initialData.protein) || 0),
+    kcal: Math.max(Number(initialData.kcal) || 0),
+    members: Array.isArray(initialData.members) ? initialData.members : [],
+    avatar: initialData.avatar || '',
+    carbMeals: Array.isArray(initialData.carbMeals) ? initialData.carbMeals : [],
+    proteinMeals: Array.isArray(initialData.proteinMeals) ? initialData.proteinMeals : [],
+    soaps: Array.isArray(initialData.soaps) ? initialData.soaps : [],
+    snacks: Array.isArray(initialData.snacks) ? initialData.snacks : [],
+  })
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
-      [name]: name.startsWith('title') ? value : Math.max(Number(value), 0)
+      [name]: name.startsWith('title') ? value : Math.max(Number(value), 0),
     }))
   }
 
@@ -45,12 +45,12 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {} }) => {
     e.preventDefault()
     const processedData = {
       ...formData,
-      periods: formData.periods.filter(p => p.trim()),
-      members: formData.members.filter(m => m.trim()),
-      carbMeals: formData.carbMeals.filter(c => c.trim()),
-      proteinMeals: formData.proteinMeals.filter(p => p.trim()),
-      soaps: formData.soaps.filter(s => s.trim()),
-      snacks: formData.snacks.filter(sn => sn.trim())
+      periods: formData.periods.filter((p) => p.trim()),
+      members: formData.members.filter((m) => m.trim()),
+      carbMeals: formData.carbMeals.filter((c) => c.trim()),
+      proteinMeals: formData.proteinMeals.filter((p) => p.trim()),
+      soaps: formData.soaps.filter((s) => s.trim()),
+      snacks: formData.snacks.filter((sn) => sn.trim()),
     }
     onSubmit(processedData)
   }
@@ -63,7 +63,12 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {} }) => {
         { label: 'Carbohydrates (g)', type: 'number', name: 'carb', min: 0, required: true },
         { label: 'Protein (g)', type: 'number', name: 'protein', min: 0, required: true },
         { label: 'Calories (kcal)', type: 'number', name: 'kcal', min: 0, required: true },
-        { label: 'Avatar URL', type: 'url', name: 'avatar', placeholder: 'https://example.com/image.jpg' },
+        {
+          label: 'Avatar URL',
+          type: 'url',
+          name: 'avatar',
+          placeholder: 'https://example.com/image.jpg',
+        },
       ].map((input, index) => (
         <FormControl key={index} mb={4} isRequired={input.required}>
           <FormLabel>{input.label}</FormLabel>
@@ -99,10 +104,10 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {} }) => {
             />
           </Flex>
         ))}
-        <Button 
-          onClick={() => addArrayItem('periods')} 
-          leftIcon={<AddIcon />} 
-          mt={2} 
+        <Button
+          onClick={() => addArrayItem('periods')}
+          leftIcon={<AddIcon />}
+          mt={2}
           variant="outline"
         >
           Add Period
@@ -134,10 +139,10 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {} }) => {
               />
             </Flex>
           ))}
-          <Button 
-            onClick={() => addArrayItem(name)} 
-            leftIcon={<AddIcon />} 
-            mt={2} 
+          <Button
+            onClick={() => addArrayItem(name)}
+            leftIcon={<AddIcon />}
+            mt={2}
             variant="outline"
           >
             Add {label}
@@ -164,10 +169,10 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {} }) => {
             />
           </Flex>
         ))}
-        <Button 
-          onClick={() => addArrayItem('members')} 
-          leftIcon={<AddIcon />} 
-          mt={2} 
+        <Button
+          onClick={() => addArrayItem('members')}
+          leftIcon={<AddIcon />}
+          mt={2}
           variant="outline"
         >
           Add Member

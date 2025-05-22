@@ -1,8 +1,8 @@
 import { Box, Heading, Flex, Text, Button } from '@chakra-ui/react'
 import { ItemsCarousel } from '../../Components/ItemsCarousel'
 import { PlanCard } from '../../Components/Cards'
-import dailyMealPlanImage from '../../assets/premium/dailyMeal.png'
-import saladsPlanImage from '../../assets/premium/saladMeal.png'
+import dailyMealPlanImage from '../../assets/premium/dailymealplan.png'
+import saladsPlanImage from '../../assets/premium/proteinsaladplan.png'
 import gainWeightPlanImage from '../../assets/premium/gainWeight.png'
 import keepWeightPlanImage from '../../assets/premium/keepWeight.png'
 import loseWeightPlanImage from '../../assets/premium/loseWeight.png'
@@ -11,28 +11,29 @@ import { useElements } from '../../Contexts/ElementsContext'
 
 export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
   // Get plans directly from ElementsContext
-  const { plans, elementsLoading } = useElements();
-  const {t} = useTranslation();
+  const { plans, elementsLoading } = useElements()
+  const { t } = useTranslation()
   const getPlanImage = (title) => {
-    if (title?.includes('Gain Weight')) return gainWeightPlanImage;
-    if (title?.includes('Keep Weight')) return keepWeightPlanImage;
-    if (title?.includes('Lose Weight')) return loseWeightPlanImage;
-    if (title?.includes('Salad')) return saladsPlanImage;
-    return dailyMealPlanImage;
-  };
-  
-  const processedPlans = plans?.map(plan => ({
-    ...plan,
-    image: getPlanImage(plan.title) // This now provides actual image imports
-  })) || [];
+    if (title?.includes('Gain Weight')) return gainWeightPlanImage
+    if (title?.includes('Keep Weight')) return keepWeightPlanImage
+    if (title?.includes('Lose Weight')) return loseWeightPlanImage
+    if (title?.includes('Salad')) return saladsPlanImage
+    return dailyMealPlanImage
+  }
+
+  const processedPlans =
+    plans?.map((plan) => ({
+      ...plan,
+      image: getPlanImage(plan.title), // This now provides actual image imports
+    })) || []
 
   // Render a single PlanCard if no carousel is needed
   const renderSinglePlan = () => {
     if (processedPlans.length > 0) {
-      return <PlanCard plan={processedPlans[0]} />;
+      return <PlanCard plan={processedPlans[0]} />
     }
-    return <Text>{t('premium.noPlansAvailable')}</Text>;
-  };
+    return <Text>{t('premium.noPlansAvailable')}</Text>
+  }
 
   // Loading state
   if (elementsLoading) {
@@ -40,7 +41,7 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
       <Box bg="white" p={6} borderRadius="md">
         <Text>{t('premium.loadingPremiumPlans')}</Text>
       </Box>
-    );
+    )
   }
 
   // Error state - no plans found
@@ -52,7 +53,7 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
         </Heading>
         <Text color="red.500">{t('premium.noPremiumPlansFound')}</Text>
       </Box>
-    );
+    )
   }
 
   return (
@@ -60,13 +61,25 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
       <Heading as="h2" size="xl" mb={4}>
         {newMember ? t('premium.join') : t('premium.change')} {t('premium.premiumPlans')}
       </Heading>
-      <Flex justifyContent="center" mb={4} gap={4} alignItems="center" flexDirection={{ base: "column", md: "row" }}>
+      <Flex
+        justifyContent="center"
+        mb={4}
+        gap={4}
+        alignItems="center"
+        flexDirection={{ base: 'column', md: 'row' }}
+      >
         <Box>
-          <Text mb={4} width={{ base: "100%", md: "40vw" }} textAlign="left" fontSize="2xl" color="gray.600">
+          <Text
+            mb={4}
+            width={{ base: '100%', md: '40vw' }}
+            textAlign="left"
+            fontSize="2xl"
+            color="gray.600"
+          >
             {t('premium.unlockExclusiveFeatures')}
           </Text>
         </Box>
-        <Box mb={4} w={{ base: "100%", md: "40vw" }} h="auto" mx="auto" position="relative">
+        <Box mb={4} w={{ base: '100%', md: '40vw' }} h="auto" mx="auto" position="relative">
           {processedPlans.length > 1 ? (
             <ItemsCarousel
               items={processedPlans}
@@ -75,7 +88,9 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
               auto={true}
               visibleButtons={true}
             />
-          ) : renderSinglePlan()}
+          ) : (
+            renderSinglePlan()
+          )}
         </Box>
       </Flex>
     </Box>

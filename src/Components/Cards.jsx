@@ -1,9 +1,9 @@
 /* eslint-disable */
-import gainWeightPlanImage from '../assets/premium/gainWeight.png';
-import keepWeightPlanImage from '../assets/premium/keepWeight.png';
-import loseWeightPlanImage from '../assets/premium/loseWeight.png';
-import dailyMealPlanImage from '../assets/premium/dailyMeal.png';
-import saladsPlanImage from '../assets/premium/saladMeal.png';
+import gainWeightPlanImage from '../assets/premium/gainWeight.png'
+import keepWeightPlanImage from '../assets/premium/keepWeight.png'
+import loseWeightPlanImage from '../assets/premium/loseWeight.png'
+import dailyMealPlanImage from '../assets/premium/dailymealplan.png'
+import saladsPlanImage from '../assets/premium/proteinsaladplan.png'
 import { useEffect, useState } from 'react'
 import {
   Skeleton,
@@ -17,7 +17,7 @@ import {
   Stack,
   HStack,
   useColorMode,
-  useColorModeValue
+  useColorModeValue,
 } from '@chakra-ui/react'
 
 import { StarIcon } from '@chakra-ui/icons'
@@ -26,8 +26,6 @@ import { StarIcon } from '@chakra-ui/icons'
 // import leavesPic from "../assets/leaves.JPG"
 import unknownDefaultImage from '../assets//menu/unknownMeal.JPG'
 import { useI18nContext } from '../Contexts/I18nContext'
-import { AnimatedText } from '../Pages/Home/Hero'
-
 import { useTranslation } from 'react-i18next'
 import { useCart } from '../Contexts/CartContext'
 // Basic Food Card - Simple design with image, title, price
@@ -357,84 +355,6 @@ export const MinimalistFoodCard = ({ name, description, price, image, prepTime, 
 }
 
 // Food Cards Demo Component
-export const FoodCards = () => {
-  const { colorMode } = useColorMode()
-  const { t, i18n } = useTranslation()
-  const isArabic = i18n.language === 'ar'
-
-  const foodItem = {
-    name: 'Shrimp soup',
-    name_arabic: 'شوربة الروبيان',
-    section: 'Soups',
-    section_arabic: 'الشوربات',
-    price: 30,
-    kcal: 153,
-    protein: 0,
-    carb: 0,
-    policy: 'ready dish',
-    ingredients: 'Shrimp soup',
-    ingredients_arabic: 'شوربة الروبيان',
-  }
-
-  return (
-    <Box p={4} bg={colorMode === 'dark' ? 'gray.800' : 'gray.50'}>
-      <Heading mb={6} textStyle="heading">
-        {t('widgets.foodCards')}
-      </Heading>
-
-      <Stack spacing={8}>
-        <Box>
-          <Heading size="md" mb={4}>
-            {t('widgets.basicFoodCard')}
-          </Heading>
-          <Flex wrap="wrap" gap={6} justify="center">
-            <FoodCard
-              name={isArabic ? foodItem.name_arabic : foodItem.name}
-              description={isArabic ? foodItem.ingredients_arabic : foodItem.ingredients}
-              price={foodItem.price}
-              image={null}
-              rating={4.5}
-              category={isArabic ? foodItem.section_arabic : foodItem.section}
-            />
-          </Flex>
-        </Box>
-
-        <Box>
-          <Heading size="md" mb={4}>
-            {t('widgets.premiumFoodCard')}
-          </Heading>
-          <Flex wrap="wrap" gap={6} justify="center">
-            <PremiumFoodCard
-              name={isArabic ? foodItem.name_arabic : foodItem.name}
-              description={isArabic ? foodItem.ingredients_arabic : foodItem.ingredients}
-              price={foodItem.price}
-              image={null}
-              rating={5}
-              category={isArabic ? foodItem.section_arabic : foodItem.section}
-              isPopular={true}
-            />
-          </Flex>
-        </Box>
-
-        <Box>
-          <Heading size="md" mb={4}>
-            {t('widgets.minimalistFoodCard')}
-          </Heading>
-          <Flex wrap="wrap" gap={6} justify="center">
-            <MinimalistFoodCard
-              name={isArabic ? foodItem.name_arabic : foodItem.name}
-              description={isArabic ? foodItem.ingredients_arabic : foodItem.ingredients}
-              price={foodItem.price}
-              image={null}
-              prepTime={10}
-              dietaryInfo={['Low-Carb']}
-            />
-          </Flex>
-        </Box>
-      </Stack>
-    </Box>
-  )
-}
 
 export const FeaturedItemCard = ({ item }) => {
   const { colorMode } = useColorMode()
@@ -798,29 +718,33 @@ export const OfferCard = ({ item }) => {
 }
 //Plan card
 export const PlanCard = ({ plan }) => {
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
-  const { currentLanguage } = useI18nContext();
-  const isArabic = currentLanguage === 'ar';
+  const [imageLoaded, setImageLoaded] = useState(false)
+  const [imageError, setImageError] = useState(false)
+  const { currentLanguage } = useI18nContext()
+  const isArabic = currentLanguage === 'ar'
 
   // Color mode specific styling
-  const cardBg = useColorModeValue('white', 'gray.800');
-  const textColor = useColorModeValue('gray.800', 'white');
-  const descriptionBg = useColorModeValue('blackAlpha.700', 'blackAlpha.800');
-  const shadowColor = useColorModeValue('rgba(0,0,0,0.1)', 'rgba(0,0,0,0.4)');
+  const cardBg = useColorModeValue('white', 'gray.800')
+  const textColor = useColorModeValue('gray.800', 'white')
+  const descriptionBg = useColorModeValue('blackAlpha.700', 'blackAlpha.800')
+  const shadowColor = useColorModeValue('rgba(0,0,0,0.1)', 'rgba(0,0,0,0.4)')
 
   // Fallback image if plan.image is not provided
-  const imageUrl = plan?.image || (() => {
-    if (plan?.title?.includes('Gain Weight')) return gainWeightPlanImage;
-    if (plan?.title?.includes('Keep Weight')) return keepWeightPlanImage;
-    if (plan?.title?.includes('Lose Weight')) return loseWeightPlanImage;
-    if (plan?.title?.includes('Salad')) return saladsPlanImage;
-    return dailyMealPlanImage;
-  })();
+  const imageUrl =
+    plan?.image ||
+    (() => {
+      if (plan?.title?.includes('Gain Weight')) return gainWeightPlanImage
+      if (plan?.title?.includes('Keep Weight')) return keepWeightPlanImage
+      if (plan?.title?.includes('Lose Weight')) return loseWeightPlanImage
+      if (plan?.title?.includes('Salad')) return saladsPlanImage
+      return dailyMealPlanImage
+    })()
   //useEffect(()=>console.log(` from PlanCard ${JSON.stringify(plan)}`),[])
   // Construct description from plan data - with null checks
-  const description = plan ? `${plan.carb || 0}g carbs • ${plan.protein || 0}g protein • ${plan.kcal || 0}kcal` : '';
-  const macros = description?.split(' • ');
+  const description = plan
+    ? `${plan.carb || 0}g carbs • ${plan.protein || 0}g protein • ${plan.kcal || 0}kcal`
+    : ''
+  const macros = description?.split(' • ')
 
   // Debug logs - remove in production
   // console.log('PlanCard received plan:', plan);
@@ -839,23 +763,23 @@ export const PlanCard = ({ plan }) => {
       transition="transform 0.3s, box-shadow 0.3s"
       _hover={{
         transform: 'translateY(-5px)',
-        boxShadow: `0 15px 35px ${shadowColor}`
+        boxShadow: `0 15px 35px ${shadowColor}`,
       }}
     >
       {/* Skeleton loader shown while image is loading */}
       {!imageLoaded && !imageError && (
-        <Skeleton 
-          height="100%" 
-          width="100%" 
-          position="absolute" 
-          startColor="gray.100" 
+        <Skeleton
+          height="100%"
+          width="100%"
+          position="absolute"
+          startColor="gray.100"
           endColor="gray.300"
         />
       )}
-      
+
       {/* Actual image - with error handling */}
       <Image
-        src={imageUrl} 
+        src={imageUrl}
         alt={plan?.title || 'Meal Plan'}
         width="100%"
         height="100%"
@@ -864,24 +788,26 @@ export const PlanCard = ({ plan }) => {
         transition="opacity 0.5s"
         onLoad={() => setImageLoaded(true)}
         onError={() => {
-          console.error('Image failed to load:', imageUrl);
-          setImageError(true);
-          setImageLoaded(true);
+          console.error('Image failed to load:', imageUrl)
+          setImageError(true)
+          setImageLoaded(true)
         }}
         fallback={
-          <Box 
-            width="100%" 
-            height="100%" 
-            bg="gray.200" 
-            display="flex" 
-            alignItems="center" 
+          <Box
+            width="100%"
+            height="100%"
+            bg="gray.200"
+            display="flex"
+            alignItems="center"
             justifyContent="center"
           >
-            <Text color="gray.500" fontSize="lg">Image unavailable</Text>
+            <Text color="gray.500" fontSize="lg">
+              Image unavailable
+            </Text>
           </Box>
         }
       />
-        
+
       {/* Gradient overlay for better text visibility */}
       <Box
         position="absolute"
@@ -891,7 +817,7 @@ export const PlanCard = ({ plan }) => {
         bottom={0}
         bgGradient="linear(to-b, transparent 30%, rgba(0,0,0,0.7) 90%)"
       />
-      
+
       {/* Content container */}
       <Flex
         position="absolute"
@@ -900,13 +826,13 @@ export const PlanCard = ({ plan }) => {
         left={0}
         right={0}
         p={6}
-        textAlign={isArabic ? "right" : "left"}
+        textAlign={isArabic ? 'right' : 'left'}
       >
         {/* Premium badge */}
-        <Badge 
-          colorScheme="green" 
-          position="absolute" 
-          top={-12} 
+        <Badge
+          colorScheme="green"
+          position="absolute"
+          top={-12}
           right={6}
           px={3}
           py={1}
@@ -915,7 +841,7 @@ export const PlanCard = ({ plan }) => {
         >
           Premium
         </Badge>
-        
+
         {/* Plan name */}
         <Heading
           as="h2"
@@ -924,22 +850,17 @@ export const PlanCard = ({ plan }) => {
           fontSize="2xl"
           textShadow="0 2px 4px rgba(0,0,0,0.4)"
           className={isArabic ? 'readex-pro' : 'montserrat'}
-          dir={isArabic ? "rtl" : "ltr"}
+          dir={isArabic ? 'rtl' : 'ltr'}
         >
           {plan?.title || 'Plan Title'}
         </Heading>
-        
+
         {/* Macros display */}
-        <Flex 
-          gap={3} 
-          mb={3}
-          flexWrap="wrap"
-          justifyContent={isArabic ? "flex-end" : "flex-start"}
-        >
+        <Flex gap={3} mb={3} flexWrap="wrap" justifyContent={isArabic ? 'flex-end' : 'flex-start'}>
           {macros?.map((macro, index) => (
-            <Badge 
-              key={index} 
-              colorScheme={index === 0 ? "purple" : index === 1 ? "blue" : "orange"}
+            <Badge
+              key={index}
+              colorScheme={index === 0 ? 'purple' : index === 1 ? 'blue' : 'orange'}
               px={2}
               py={1}
               borderRadius="md"
@@ -949,7 +870,7 @@ export const PlanCard = ({ plan }) => {
             </Badge>
           ))}
         </Flex>
-        
+
         {/* Description shown at bottom */}
         <Text
           color="white"
@@ -959,16 +880,16 @@ export const PlanCard = ({ plan }) => {
           p={2}
           borderRadius="md"
           textShadow="0 1px 2px rgba(0,0,0,0.4)"
-          dir={isArabic ? "rtl" : "ltr"}
+          dir={isArabic ? 'rtl' : 'ltr'}
           width="fit-content"
-          mx={isArabic ? "auto 0" : "0 auto"}
+          mx={isArabic ? 'auto 0' : '0 auto'}
         >
           Premium Meal Plan
         </Text>
       </Flex>
     </Box>
-  );
-};
+  )
+}
 //Tiny plan card
 export const PlanTinyCard = ({ recommendedPlan, handleChoosePlan, selected = false }) => (
   <Box

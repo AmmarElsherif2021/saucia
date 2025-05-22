@@ -21,6 +21,7 @@ export class Item {
 
     return {
       id: doc.id,
+      planId: data.planId || '',
       name: data.name || '',
       name_arabic: data.name_arabic || '',
       section: data.section || '',
@@ -38,6 +39,7 @@ export class Item {
   static async create(itemData) {
     // Ensure proper data typing
     const processedData = {
+      planId: String(itemData.planId || ''),
       name: String(itemData.name || ''),
       name_arabic: String(itemData.name_arabic || ''),
       section: String(itemData.section || ''),
@@ -79,6 +81,7 @@ export class Item {
       if (updatedData.name !== undefined) processedData.name = String(updatedData.name)
       if (updatedData.name_arabic !== undefined)
         processedData.name_arabic = String(updatedData.name_arabic)
+      if (updatedData.planId !== undefined) processedData.planId = String(updatedData.planId)
       if (updatedData.section !== undefined) processedData.section = String(updatedData.section)
       if (updatedData.section_arabic !== undefined)
         processedData.section_arabic = String(updatedData.section_arabic)

@@ -458,11 +458,11 @@ const Admin = () => {
 
       {/* Items Section */}
       <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
-        <SectionHeading 
-         title={'Items'}
-         onAddClick={itemModals.add.onOpen} 
+        <SectionHeading
+          title={'Items'}
+          onAddClick={itemModals.add.onOpen}
           buttonText="Create New"
-         />
+        />
         <Flex gap={2} mb={4}>
           <SearchInput value={itemSearch} onChange={setItemSearch} />
           <Button as="label" colorScheme="blue" cursor="pointer">
@@ -535,10 +535,10 @@ const Admin = () => {
 
       {/* Meals Section */}
       <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
-        <SectionHeading 
-        title={'Meals'}
-        onAddClick={mealModals.add.onOpen} 
-        buttonText="Create New"
+        <SectionHeading
+          title={'Meals'}
+          onAddClick={mealModals.add.onOpen}
+          buttonText="Create New"
         />
         <Flex gap={2} mb={4}>
           <SearchInput value={mealSearch} onChange={setMealSearch} />
@@ -624,78 +624,74 @@ const Admin = () => {
       {/* Plans Section */}
       <Box gap={6} m={12} maxW="90%" bg="white" p={8}>
         <SectionHeading
-         title={'Plans'}
-         onAddClick={planModals.add.onOpen} 
-         buttonText="Create New"
-         />
+          title={'Plans'}
+          onAddClick={planModals.add.onOpen}
+          buttonText="Create New"
+        />
         <SearchInput value={planSearch} onChange={setPlanSearch} />
         <ScrollableTableContainer>
-        <TableContainer overflowX="auto">
-  <Table variant="simple" size="sm" style={{ overflowY: 'auto', maxHeight: '70vh' }}>
-    <Thead>
-      <Tr>
-        <Th>Title (EN)</Th>
-        <Th>Title (AR)</Th>
-        <Th>Periods</Th>
-        <Th>Carbs (g)</Th>
-        <Th>Protein (g)</Th>
-        <Th>Calories (kcal)</Th>
-        <Th>Members</Th>
-        <Th>Carb Meals</Th>
-        <Th>Protein Meals</Th>
-        <Th>Soaps</Th>
-        <Th>Snacks</Th>
-        <Th>Actions</Th>
-      </Tr>
-    </Thead>
-    <Tbody>
-      {filteredPlans?.length &&
-        filteredPlans.map((plan) => (
-          <Tr key={plan.id}>
-            <Td>{plan.title || 'N/A'}</Td>
-            <Td>{plan.title_arabic || 'N/A'}</Td>
-            <Td>
-              {plan.periods?.length 
-                ? plan.periods.join(', ') 
-                : 'No periods'}
-            </Td>
-            <Td>{plan.carb || 0}</Td>
-            <Td>{plan.protein || 0}</Td>
-            <Td>{plan.kcal || 0}</Td>
-            <Td>{plan.members?.length || 0}</Td>
-            <Td>{plan.carbMeals?.join(', ') || 'None'}</Td>
-            <Td>{plan.proteinMeals?.join(', ') || 'None'}</Td>
-            <Td>{plan.soaps?.join(', ') || 'None'}</Td>
-            <Td>{plan.snacks?.join(', ') || 'None'}</Td>
-            <Td>
-              <Stack direction="row" spacing={1}>
-                <Button
-                  size="xs"
-                  colorScheme="blue"
-                  onClick={() => {
-                    selectPlan(plan)
-                    planModals.edit.onOpen()
-                  }}
-                >
-                  Edit
-                </Button>
-                <Button
-                  size="xs"
-                  colorScheme="red"
-                  onClick={() => {
-                    selectPlan(plan)
-                    planModals.delete.onOpen()
-                  }}
-                >
-                  Delete
-                </Button>
-              </Stack>
-            </Td>
-          </Tr>
-        ))}
-    </Tbody>
-  </Table>
-</TableContainer>
+          <TableContainer overflowX="auto">
+            <Table variant="simple" size="sm" style={{ overflowY: 'auto', maxHeight: '70vh' }}>
+              <Thead>
+                <Tr>
+                  <Th>Title (EN)</Th>
+                  <Th>Title (AR)</Th>
+                  <Th>Periods</Th>
+                  <Th>Carbs (g)</Th>
+                  <Th>Protein (g)</Th>
+                  <Th>Calories (kcal)</Th>
+                  <Th>Members</Th>
+                  <Th>Carb Meals</Th>
+                  <Th>Protein Meals</Th>
+                  <Th>Soaps</Th>
+                  <Th>Snacks</Th>
+                  <Th>Actions</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {filteredPlans?.length &&
+                  filteredPlans.map((plan) => (
+                    <Tr key={plan.id}>
+                      <Td>{plan.title || 'N/A'}</Td>
+                      <Td>{plan.title_arabic || 'N/A'}</Td>
+                      <Td>{plan.periods?.length ? plan.periods.join(', ') : 'No periods'}</Td>
+                      <Td>{plan.carb || 0}</Td>
+                      <Td>{plan.protein || 0}</Td>
+                      <Td>{plan.kcal || 0}</Td>
+                      <Td>{plan.members?.length || 0}</Td>
+                      <Td>{plan.carbMeals?.join(', ') || 'None'}</Td>
+                      <Td>{plan.proteinMeals?.join(', ') || 'None'}</Td>
+                      <Td>{plan.soaps?.join(', ') || 'None'}</Td>
+                      <Td>{plan.snacks?.join(', ') || 'None'}</Td>
+                      <Td>
+                        <Stack direction="row" spacing={1}>
+                          <Button
+                            size="xs"
+                            colorScheme="blue"
+                            onClick={() => {
+                              selectPlan(plan)
+                              planModals.edit.onOpen()
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="xs"
+                            colorScheme="red"
+                            onClick={() => {
+                              selectPlan(plan)
+                              planModals.delete.onOpen()
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </Stack>
+                      </Td>
+                    </Tr>
+                  ))}
+              </Tbody>
+            </Table>
+          </TableContainer>
         </ScrollableTableContainer>
       </Box>
       <Box>

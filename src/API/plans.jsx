@@ -5,7 +5,7 @@ import { fetchWithAuth } from './fetchWithAuth'
 export const listPlans = async (queryParams = {}) => {
   const searchParams = new URLSearchParams(queryParams)
   const url = `${import.meta.env.VITE_BASE_URL}/plans?${searchParams}`
-  const res= await fetch(url)
+  const res = await fetch(url)
   return res.json()
 }
 

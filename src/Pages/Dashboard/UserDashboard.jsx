@@ -72,21 +72,21 @@ export const UserDashboard = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleCheckboxChange = (field, value, isChecked) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [field]: isChecked
         ? [...(prev[field] || []), value]
-        : (prev[field] || []).filter(item => item !== value)
+        : (prev[field] || []).filter((item) => item !== value),
     }))
   }
 
   const handleSubmit = async () => {
     if (!user?.uid) return
-    
+
     setIsUpdating(true)
     try {
       await updateUserProfile(user.uid, formData)
@@ -168,44 +168,71 @@ export const UserDashboard = () => {
 
   const SubscriptionDetails = () => {
     if (planLoading) return <Spinner />
-    
+
     return (
       <Box>
         {user.subscription.planId ? (
           <Box p={4} borderWidth="1px" borderRadius="lg">
-            <Heading size="md" mb={2}>{user.subscription.planName}</Heading>
-           
-            <Text fontWeight="bold" mb={2}>${user.subscription.price}/month</Text>
+            <Heading size="md" mb={2}>
+              {user.subscription.planName}
+            </Heading>
+
+            <Text fontWeight="bold" mb={2}>
+              ${user.subscription.price}/month
+            </Text>
             {user.subscriptionEndDate && (
               <Text>
-                {t('profile.renewsOn')}: {new Date(user.subscription.subscriptionEndDate).toLocaleDateString()}
+                {t('profile.renewsOn')}:{' '}
+                {new Date(user.subscription.subscriptionEndDate).toLocaleDateString()}
               </Text>
             )}
-        
-                  <Heading size="sm" mt={4} mb={2}>{t('profile.subscriptionInfo')}</Heading>
-                  <Text><strong>{t('profile.status')}:</strong> <Badge colorScheme={user.subscription.status === 'active' ? 'green' : 'orange'}>{user.subscription.status}</Badge></Text>
-                  <Text><strong>{t('profile.paymentMethod')}:</strong> {user.subscription.paymentMethod}</Text>
-                  <Text><strong>{t('profile.startDate')}:</strong> {new Date(user.subscription.startDate).toLocaleDateString()}</Text>
-                  <Text><strong>{t('profile.endDate')}:</strong> {new Date(user.subscription.endDate).toLocaleDateString()}</Text>
-                  <Text><strong>{t('profile.price')}:</strong> ${user.subscription.price.toFixed(2)}</Text>
+
+            <Heading size="sm" mt={4} mb={2}>
+              {t('profile.subscriptionInfo')}
+            </Heading>
+            <Text>
+              <strong>{t('profile.status')}:</strong>{' '}
+              <Badge colorScheme={user.subscription.status === 'active' ? 'green' : 'orange'}>
+                {user.subscription.status}
+              </Badge>
+            </Text>
+            <Text>
+              <strong>{t('profile.paymentMethod')}:</strong> {user.subscription.paymentMethod}
+            </Text>
+            <Text>
+              <strong>{t('profile.startDate')}:</strong>{' '}
+              {new Date(user.subscription.startDate).toLocaleDateString()}
+            </Text>
+            <Text>
+              <strong>{t('profile.endDate')}:</strong>{' '}
+              {new Date(user.subscription.endDate).toLocaleDateString()}
+            </Text>
+            <Text>
+              <strong>{t('profile.price')}:</strong> ${user.subscription.price.toFixed(2)}
+            </Text>
 
             <Button mt={4} colorScheme="brand">
-              {t('profile.manageSubscription')}
+              {
+                t('profile.manageSubscription') // open modal to either delete the or navigate to plans
+              }
             </Button>
           </Box>
         ) : (
           <Box p={4} borderWidth="1px" borderRadius="lg">
             <Text mb={4}>{t('profile.noActiveSubscription')}</Text>
-            <Button colorScheme="brand">
-              {t('profile.browsePlans')}
-            </Button>
+            <Button colorScheme="brand">{t('profile.browsePlans')}</Button>
           </Box>
         )}
       </Box>
     )
   }
 
-  if (loading) return <Box p={4}><Spinner size="xl" /></Box>
+  if (loading)
+    return (
+      <Box p={4}>
+        <Spinner size="xl" />
+      </Box>
+    )
   if (!user) return <Box p={4}>{t('profile.pleaseLoginToViewDashboard')}</Box>
 
   return (
@@ -270,7 +297,7 @@ export const UserDashboard = () => {
             <Flex gap={4} mb={6}>
               <FormControl flex={1}>
                 <FormLabel>{t('profile.displayName')}</FormLabel>
-                <Input 
+                <Input
                   name="displayName"
                   value={formData.displayName || ''}
                   onChange={handleInputChange}
@@ -296,7 +323,9 @@ export const UserDashboard = () => {
                   <Checkbox
                     key={pref}
                     isChecked={formData.dietaryPreferences?.includes(pref)}
-                    onChange={(e) => handleCheckboxChange('dietaryPreferences', pref, e.target.checked)}
+                    onChange={(e) =>
+                      handleCheckboxChange('dietaryPreferences', pref, e.target.checked)
+                    }
                     value={pref}
                   >
                     {t(pref.toLowerCase())}
@@ -324,9 +353,9 @@ export const UserDashboard = () => {
               </Flex>
             </FormControl>
 
-            <Button 
-              colorScheme="brand" 
-              mt={6} 
+            <Button
+              colorScheme="brand"
+              mt={6}
               w="full"
               onClick={handleSubmit}
               isLoading={isUpdating}
@@ -346,43 +375,75 @@ export const UserDashboard = () => {
         </TabList>
 
         <TabPanels mt={4}>
-        <TabPanel>
-          <Heading size="md" mb={4}>
-            {t('profile.accountOverview')}
-          </Heading>
-          <Box p={4} borderWidth="1px" borderRadius="lg">
-            <Flex direction="column" gap={3}>
-              <Text><strong>{t('profile.email')}:</strong> {user.email} {user.emailVerified && <Badge colorScheme="green" ml={2}>{t('profile.verified')}</Badge>}</Text>
-              <Text><strong>{t('profile.accountCreated')}:</strong> {new Date(user.createdAt).toLocaleDateString()}</Text>
-              <Text><strong>{t('profile.lastUpdated')}:</strong> {new Date(user.updatedAt?.seconds * 1000).toLocaleString()}</Text>
-              <Text><strong>{t('profile.lastLogin')}:</strong> {new Date(user.lastLogin?.seconds * 1000).toLocaleString()}</Text>
-              <Text><strong>{t('profile.age')}:</strong> {user.age}</Text>
-              <Text><strong>{t('profile.gender')}:</strong> {user.gender}</Text>
-              
-              {user.healthProfile && (
-                <>
-                  <Heading size="sm" mt={4} mb={2}>{t('profile.healthProfile')}</Heading>
-                  <Text><strong>{t('profile.height')}:</strong> {user.healthProfile.height} cm</Text>
-                  <Text><strong>{t('profile.weight')}:</strong> {user.healthProfile.weight} kg</Text>
-                  <Text><strong>{t('profile.activityLevel')}:</strong> {user.healthProfile.activityLevel.split('profile.-').join(' ')}</Text>
-                  <Text><strong>{t('profile.fitnessGoal')}:</strong> {user.healthProfile.fitnessGoal.split('profile.-').join(' ')}</Text>
-                  {user.healthProfile.dietaryPreferences?.length > 0 && (
-                    <Text>
-                      <strong>{t('profile.dietaryPreferences')}:</strong> {user.healthProfile.dietaryPreferences.join(', ')}
-                    </Text>
+          <TabPanel>
+            <Heading size="md" mb={4}>
+              {t('profile.accountOverview')}
+            </Heading>
+            <Box p={4} borderWidth="1px" borderRadius="lg">
+              <Flex direction="column" gap={3}>
+                <Text>
+                  <strong>{t('profile.email')}:</strong> {user.email}{' '}
+                  {user.emailVerified && (
+                    <Badge colorScheme="green" ml={2}>
+                      {t('profile.verified')}
+                    </Badge>
                   )}
-                  {user.healthProfile.allergies?.length > 0 && (
+                </Text>
+                <Text>
+                  <strong>{t('profile.accountCreated')}:</strong>{' '}
+                  {new Date(user.createdAt).toLocaleDateString()}
+                </Text>
+                <Text>
+                  <strong>{t('profile.lastUpdated')}:</strong>{' '}
+                  {new Date(user.updatedAt?.seconds * 1000).toLocaleString()}
+                </Text>
+                <Text>
+                  <strong>{t('profile.lastLogin')}:</strong>{' '}
+                  {new Date(user.lastLogin?.seconds * 1000).toLocaleString()}
+                </Text>
+                <Text>
+                  <strong>{t('profile.age')}:</strong> {user.age}
+                </Text>
+                <Text>
+                  <strong>{t('profile.gender')}:</strong> {user.gender}
+                </Text>
+
+                {user.healthProfile && (
+                  <>
+                    <Heading size="sm" mt={4} mb={2}>
+                      {t('profile.healthProfile')}
+                    </Heading>
                     <Text>
-                      <strong>{t('profile.allergies')}:</strong> {user.healthProfile.allergies.join(', ')}
+                      <strong>{t('profile.height')}:</strong> {user.healthProfile.height} cm
                     </Text>
-                  )}
-                </>
-              )}
-              
-              
-            </Flex>
-          </Box>
-        </TabPanel>
+                    <Text>
+                      <strong>{t('profile.weight')}:</strong> {user.healthProfile.weight} kg
+                    </Text>
+                    <Text>
+                      <strong>{t('profile.activityLevel')}:</strong>{' '}
+                      {user.healthProfile.activityLevel.split('profile.-').join(' ')}
+                    </Text>
+                    <Text>
+                      <strong>{t('profile.fitnessGoal')}:</strong>{' '}
+                      {user.healthProfile.fitnessGoal.split('profile.-').join(' ')}
+                    </Text>
+                    {user.healthProfile.dietaryPreferences?.length > 0 && (
+                      <Text>
+                        <strong>{t('profile.dietaryPreferences')}:</strong>{' '}
+                        {user.healthProfile.dietaryPreferences.join(', ')}
+                      </Text>
+                    )}
+                    {user.healthProfile.allergies?.length > 0 && (
+                      <Text>
+                        <strong>{t('profile.allergies')}:</strong>{' '}
+                        {user.healthProfile.allergies.join(', ')}
+                      </Text>
+                    )}
+                  </>
+                )}
+              </Flex>
+            </Box>
+          </TabPanel>
 
           <TabPanel>
             <Flex justify="space-between" align="center" mb={4}>

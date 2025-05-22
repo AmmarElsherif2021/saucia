@@ -38,6 +38,7 @@ export const ElementsProvider = ({ children }) => {
       // Fetch section-specific items for selective meals
       const saladItems = items?.filter((item) => item.section !== 'salad-fruits') || []
       const fruitItems = items?.filter((item) => item.section === 'salad-fruits') || []
+      const signatureSalads = meals?.filter((m) => m.section === 'Our signature salad') || []
 
       setElementsState({
         items: items || [],
@@ -47,6 +48,7 @@ export const ElementsProvider = ({ children }) => {
         offersMeals,
         saladItems,
         fruitItems,
+        signatureSalads,
         elementsLoading: false,
       })
     } catch (error) {

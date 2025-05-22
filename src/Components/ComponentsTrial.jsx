@@ -338,9 +338,9 @@ export const PB = ({
 )
 
 // Toggle Switch Component - Using theme colors
-export const TSW = ({ isOn = false, disabled = false, onChange }) => (
-  <Switch isChecked={isOn} isDisabled={disabled} onChange={onChange} colorScheme="brand" />
-)
+// export const TSW = ({ isOn = false, disabled = false, onChange }) => (
+
+// )
 
 // Rating Component - Better color mode handling
 export const RATE = ({ value = 0, maxStars = 5, readOnly = false, onRateChange }) => {

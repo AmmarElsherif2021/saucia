@@ -38,27 +38,27 @@ export const UserProvider = ({ children }) => {
   // New function to fetch plan details based on user's subscribedPlan
   const fetchUserPlanDetails = async (planId) => {
     if (!planId) return null
-    
+
     try {
       setPlanLoading(true)
       // Try to fetch by ID first
       const planRef = doc(db, 'plans', planId)
       const planSnap = await getDoc(planRef)
-      
+
       if (planSnap.exists()) {
         return { id: planSnap.id, ...planSnap.data() }
       }
-      
+
       // If not found by ID, try to find by name
       const plansRef = collection(db, 'plans')
       const planQuery = query(plansRef, where('title', '==', planId))
       const querySnapshot = await getDocs(planQuery)
-      
+
       if (!querySnapshot.empty) {
         const planDoc = querySnapshot.docs[0]
         return { id: planDoc.id, ...planDoc.data() }
       }
-      
+
       return null
     } catch (error) {
       console.error('Error fetching plan details:', error)
@@ -80,8 +80,8 @@ export const UserProvider = ({ children }) => {
 
   // Load user plan whenever the user changes
   useEffect(() => {
-    if (user?.subscribedPlan) {
-      fetchUserPlanDetails(user.subscribedPlan).then(planData => {
+    if (user?.subscription?.planId) {
+      fetchUserPlanDetails(user.subscription.planId).then((planData) => {
         setUserPlan(planData)
       })
     } else {
@@ -112,7 +112,7 @@ export const UserProvider = ({ children }) => {
             subscriptionEndDate: userData?.subscriptionEndDate || null,
             ...(userData || {}),
           }
-          
+
           setUser(userInfo)
         } catch (error) {
           console.error('Error in auth state change:', error)
@@ -129,26 +129,26 @@ export const UserProvider = ({ children }) => {
 
   const updateUserSubscription = async (planId) => {
     if (!user?.uid) return null
-    
+
     try {
       const userRef = doc(db, 'users', user.uid)
       await updateDoc(userRef, {
         subscribedPlan: planId,
         updatedAt: new Date(),
         // Add subscription date if needed
-        subscriptionStartDate: new Date()
+        subscriptionStartDate: new Date(),
       })
-      
+
       const updatedUser = {
         ...user,
-        subscribedPlan: planId
+        subscribedPlan: planId,
       }
-      
+
       setUser(updatedUser)
-      
+
       const newPlan = await fetchUserPlanDetails(planId)
       setUserPlan(newPlan)
-      
+
       return { user: updatedUser, plan: newPlan }
     } catch (error) {
       console.error('Error updating user subscription:', error)

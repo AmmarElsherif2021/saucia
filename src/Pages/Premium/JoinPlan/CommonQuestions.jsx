@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 import {
   Box,
   Button,
@@ -14,21 +14,21 @@ import {
   Select,
   Heading,
   SimpleGrid,
-  Text
-} from '@chakra-ui/react';
-import { useUser } from '../../../Contexts/UserContext';
-import { updateUserProfile } from '../../../API/users';
-import { useNavigate } from 'react-router';
-import { useTranslation } from 'react-i18next';
+  Text,
+} from '@chakra-ui/react'
+import { useUser } from '../../../Contexts/UserContext'
+import { updateUserProfile } from '../../../API/users'
+import { useNavigate } from 'react-router'
+import { useTranslation } from 'react-i18next'
 const CommonQuestions = ({ onComplete }) => {
-  const {t}= useTranslation();
-  const { user, setUser, userPlan } = useUser();
-  const toast = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formError, setFormError] = useState(null);
-  const navigate = useNavigate();
+  const { t } = useTranslation()
+  const { user, setUser, userPlan } = useUser()
+  const toast = useToast()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formError, setFormError] = useState(null)
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
-    healthProfile: { 
+    healthProfile: {
       dietaryPreferences: [],
       allergies: [],
       age: '',
@@ -37,19 +37,19 @@ const CommonQuestions = ({ onComplete }) => {
       gender: '',
       activityLevel: '',
       fitnessGoal: '',
-    }
-  });
+    },
+  })
 
   // Safely initialize form with user data
   useEffect(() => {
     if (user && user.healthProfile) {
       const newFormData = {
         healthProfile: {
-          dietaryPreferences: Array.isArray(user.healthProfile.dietaryPreferences) 
-            ? user.healthProfile.dietaryPreferences.join(', ') 
+          dietaryPreferences: Array.isArray(user.healthProfile.dietaryPreferences)
+            ? user.healthProfile.dietaryPreferences.join(', ')
             : '',
-          allergies: Array.isArray(user.healthProfile.allergies) 
-            ? user.healthProfile.allergies.join(', ') 
+          allergies: Array.isArray(user.healthProfile.allergies)
+            ? user.healthProfile.allergies.join(', ')
             : '',
           age: user.healthProfile.age != null ? user.healthProfile.age.toString() : '',
           height: user.healthProfile.height != null ? user.healthProfile.height.toString() : '',
@@ -57,33 +57,33 @@ const CommonQuestions = ({ onComplete }) => {
           gender: user.healthProfile.gender || '',
           activityLevel: user.healthProfile.activityLevel || '',
           fitnessGoal: user.healthProfile.fitnessGoal || '',
-        }
-      };
+        },
+      }
 
-      setFormData(newFormData);
-      console.log('Health profile initialized:', newFormData);
+      setFormData(newFormData)
+      console.log('Health profile initialized:', newFormData)
     }
-  }, [user]);
+  }, [user])
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
+    const { name, value } = e.target
+    setFormData((prev) => ({
       ...prev,
       healthProfile: {
         ...prev.healthProfile,
-        [name]: value
-      }
-    }));
-  };
+        [name]: value,
+      },
+    }))
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setFormError(null);
+    e.preventDefault()
+    setIsSubmitting(true)
+    setFormError(null)
 
     try {
       if (!user?.uid) {
-        throw new Error('User not authenticated');
+        throw new Error('User not authenticated')
       }
 
       // Prepare the update data with proper structure matching the model
@@ -95,38 +95,42 @@ const CommonQuestions = ({ onComplete }) => {
           dietaryPreferences: formData.healthProfile.dietaryPreferences
             ? formData.healthProfile.dietaryPreferences
                 .split('premium.,')
-                .map(item => item.trim())
-                .filter(item => item)
+                .map((item) => item.trim())
+                .filter((item) => item)
             : [],
           allergies: formData.healthProfile.allergies
             ? formData.healthProfile.allergies
                 .split('premium.,')
-                .map(item => item.trim())
-                .filter(item => item)
+                .map((item) => item.trim())
+                .filter((item) => item)
             : [],
-         
-          height: formData.healthProfile.height ? parseInt(formData.healthProfile.height, 10) : null,
-          weight: formData.healthProfile.weight ? parseInt(formData.healthProfile.weight, 10) : null,
+
+          height: formData.healthProfile.height
+            ? parseInt(formData.healthProfile.height, 10)
+            : null,
+          weight: formData.healthProfile.weight
+            ? parseInt(formData.healthProfile.weight, 10)
+            : null,
           activityLevel: formData.healthProfile.activityLevel || '',
-          fitnessGoal: formData.healthProfile.fitnessGoal || ''
-        }
-      };
-      
-      console.log('Updating user profile with data:', updateData);
-      const updatedUser = await updateUserProfile(user.uid, updateData);
-      
+          fitnessGoal: formData.healthProfile.fitnessGoal || '',
+        },
+      }
+
+      console.log('Updating user profile with data:', updateData)
+      const updatedUser = await updateUserProfile(user.uid, updateData)
+
       // Only update user state if we got a response
       if (updatedUser) {
         // Update only the health profile portion of the user object
-        setUser(prevUser => ({
+        setUser((prevUser) => ({
           ...prevUser,
-          age:updateData.age,
-          gender:updateData.gender,
+          age: updateData.age,
+          gender: updateData.gender,
           healthProfile: {
             ...prevUser.healthProfile,
-            ...updateData.healthProfile
-          }
-        }));
+            ...updateData.healthProfile,
+          },
+        }))
       }
 
       toast({
@@ -135,33 +139,35 @@ const CommonQuestions = ({ onComplete }) => {
         status: 'success',
         duration: 5000,
         isClosable: true,
-      });
-      
+      })
+
       if (onComplete) {
-        navigate('/checkout-plan');
-        onComplete();
+        navigate('/checkout-plan')
+        onComplete()
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
-      setFormError(error.message || 'Failed to update profile');
+      console.error('Error updating profile:', error)
+      setFormError(error.message || 'Failed to update profile')
       toast({
         title: t('premium.error'),
         description: error.message || t('premium.errorUpdatingProfile'),
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <Box maxW="600px" mx="auto" mt="8" p="6" borderWidth="1px" borderRadius="lg" boxShadow="md">
       <form onSubmit={handleSubmit}>
         <VStack spacing="4">
-          <Heading as="h2" size="lg" mb="4">{t('premium.healthProfile')}</Heading>
-          
+          <Heading as="h2" size="lg" mb="4">
+            {t('premium.healthProfile')}
+          </Heading>
+
           {formError && (
             <Box w="full" p="3" bg="red.50" color="red.600" borderRadius="md">
               <Text fontWeight="medium">{formError}</Text>
@@ -228,13 +234,15 @@ const CommonQuestions = ({ onComplete }) => {
             <FormLabel>{t('premium.activityLevel')}</FormLabel>
             <RadioGroup
               value={formData.healthProfile.activityLevel || ''}
-              onChange={(value) => setFormData(prev => ({
-                ...prev,
-                healthProfile: {
-                  ...prev.healthProfile,
-                  activityLevel: value
-                }
-              }))}
+              onChange={(value) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  healthProfile: {
+                    ...prev.healthProfile,
+                    activityLevel: value,
+                  },
+                }))
+              }
             >
               <Stack direction="column">
                 <Radio value="sedentary">{t('premium.sedentary')}</Radio>
@@ -295,7 +303,7 @@ const CommonQuestions = ({ onComplete }) => {
         </VStack>
       </form>
     </Box>
-  );
-};
+  )
+}
 
-export default CommonQuestions;
+export default CommonQuestions

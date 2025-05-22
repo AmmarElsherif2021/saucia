@@ -178,11 +178,11 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <Suspense fallback={<PageLoader />}>
-          <CheckoutPlan/>
+          <CheckoutPlan />
         </Suspense>
       </Layout>
-    )
-  }
+    ),
+  },
 ])
 
 const root = document.getElementById('root')

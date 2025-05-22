@@ -33,21 +33,16 @@ const JoinPlanPage = () => {
             </Heading>
             <Text mb={4}>You're about to subscribe to: {userPlan?.title}</Text>
             <Text mb={6}>Please review your information before proceeding to payment.</Text>
-            
-            <Button 
-              colorScheme="brand" 
-              size="lg" 
+
+            <Button
+              colorScheme="brand"
+              size="lg"
               width="full"
               onClick={() => navigate('/checkout')}
             >
               Proceed to Payment
             </Button>
-            <Button 
-              mt={4}
-              variant="outline"
-              width="full"
-              onClick={handleBackToPlans}
-            >
+            <Button mt={4} variant="outline" width="full" onClick={handleBackToPlans}>
               Back to Plans
             </Button>
           </Box>

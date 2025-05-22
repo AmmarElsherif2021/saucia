@@ -3,27 +3,32 @@ import { db } from '../firebase.js'
 
 export class User {
   static collection = db.collection('users')
-  
+
   static fieldTypes = {
     string: [
-      'email', 'displayName', 'firstName', 'lastName', 'phoneNumber', 
-      'photoURL', 'defaultAddress', 'defaultPaymentMethod', 
-      'notes', 'language'
+      'email',
+      'displayName',
+      'firstName',
+      'lastName',
+      'phoneNumber',
+      'photoURL',
+      'defaultAddress',
+      'defaultPaymentMethod',
+      'notes',
+      'language',
     ],
-    array: [
-      'addresses', 'favoriteItems', 'favoriteMeals', 'paymentMethods'
-    ],
+    array: ['addresses', 'favoriteItems', 'favoriteMeals', 'paymentMethods'],
     boolean: ['isAdmin'],
     number: ['loyaltyPoints'],
     healthProfile: {
       string: ['fitnessGoal', 'gender', 'activityLevel'],
       number: ['height', 'weight'],
-      array: ['dietaryPreferences', 'allergies']
+      array: ['dietaryPreferences', 'allergies'],
     },
     subscription: {
       string: ['paymentMethod', 'planId', 'planName', 'startDate', 'endDate', 'status'],
-      number: ['price']
-    }
+      number: ['price'],
+    },
   }
 
   static defaultValues = {
@@ -46,7 +51,7 @@ export class User {
       planId: '',
       planName: '',
       startDate: null,
-      status: 'inactive'
+      status: 'inactive',
     },
     // Default notification preferences
     notificationPreferences: {
@@ -62,8 +67,8 @@ export class User {
       weight: null,
       dietaryPreferences: [],
       allergies: [],
-      activityLevel: ''
-    }
+      activityLevel: '',
+    },
   }
 
   // Helper function to serialize Firestore data
@@ -74,7 +79,7 @@ export class User {
     // Handle Firestore timestamps
     const createdAt = data.createdAt?.toDate?.().toISOString() || data.createdAt
     const updatedAt = data.updatedAt?.toDate?.().toISOString() || data.updatedAt
-    
+
     // Build user object with correct types
     const result = {
       id: doc.id,
@@ -88,9 +93,15 @@ export class User {
       isAdmin: Boolean(data.isAdmin || this.defaultValues.isAdmin),
       addresses: Array.isArray(data.addresses) ? data.addresses : this.defaultValues.addresses,
       defaultAddress: data.defaultAddress || this.defaultValues.defaultAddress,
-      favoriteItems: Array.isArray(data.favoriteItems) ? data.favoriteItems : this.defaultValues.favoriteItems,
-      favoriteMeals: Array.isArray(data.favoriteMeals) ? data.favoriteMeals : this.defaultValues.favoriteMeals,
-      paymentMethods: Array.isArray(data.paymentMethods) ? data.paymentMethods : this.defaultValues.paymentMethods,
+      favoriteItems: Array.isArray(data.favoriteItems)
+        ? data.favoriteItems
+        : this.defaultValues.favoriteItems,
+      favoriteMeals: Array.isArray(data.favoriteMeals)
+        ? data.favoriteMeals
+        : this.defaultValues.favoriteMeals,
+      paymentMethods: Array.isArray(data.paymentMethods)
+        ? data.paymentMethods
+        : this.defaultValues.paymentMethods,
       defaultPaymentMethod: data.defaultPaymentMethod || this.defaultValues.defaultPaymentMethod,
       loyaltyPoints: Number(data.loyaltyPoints) || this.defaultValues.loyaltyPoints,
       notes: data.notes || this.defaultValues.notes,
@@ -101,21 +112,22 @@ export class User {
 
     // Process subscription
     result.subscription = this._processSubscription(data.subscription)
-    
+
     // Process health profile
     result.healthProfile = this._processHealthProfile(data.healthProfile)
-    
+
     // Process notification preferences
-    result.notificationPreferences = data.notificationPreferences || this.defaultValues.notificationPreferences
+    result.notificationPreferences =
+      data.notificationPreferences || this.defaultValues.notificationPreferences
 
     return result
   }
 
   static _processSubscription(subscriptionData) {
     const defaults = this.defaultValues.subscription
-    
+
     if (!subscriptionData) return { ...defaults }
-    
+
     return {
       price: Number(subscriptionData.price) || defaults.price,
       endDate: subscriptionData.endDate || defaults.endDate,
@@ -123,62 +135,60 @@ export class User {
       planId: String(subscriptionData.planId || defaults.planId),
       planName: String(subscriptionData.planName || defaults.planName),
       startDate: subscriptionData.startDate || defaults.startDate,
-      status: String(subscriptionData.status || defaults.status)
+      status: String(subscriptionData.status || defaults.status),
     }
   }
 
   static _processHealthProfile(profileData) {
     const defaults = this.defaultValues.healthProfile
-    
+
     if (!profileData) return { ...defaults }
-    
+
     return {
       fitnessGoal: String(profileData.fitnessGoal || defaults.fitnessGoal),
       gender: String(profileData.gender || defaults.gender),
       height: Number(profileData.height) || defaults.height,
       weight: Number(profileData.weight) || defaults.weight,
-      dietaryPreferences: Array.isArray(profileData.dietaryPreferences) 
-        ? profileData.dietaryPreferences 
+      dietaryPreferences: Array.isArray(profileData.dietaryPreferences)
+        ? profileData.dietaryPreferences
         : defaults.dietaryPreferences,
-      allergies: Array.isArray(profileData.allergies) 
-        ? profileData.allergies 
-        : defaults.allergies,
-      activityLevel: String(profileData.activityLevel || defaults.activityLevel)
+      allergies: Array.isArray(profileData.allergies) ? profileData.allergies : defaults.allergies,
+      activityLevel: String(profileData.activityLevel || defaults.activityLevel),
     }
   }
 
   static _processFieldsByType(data, parentField = null) {
     const processedData = {}
     const fieldTypesToUse = parentField ? this.fieldTypes[parentField] : this.fieldTypes
-    
+
     // Process string fields
-    fieldTypesToUse.string?.forEach(field => {
+    fieldTypesToUse.string?.forEach((field) => {
       if (data[field] !== undefined) {
         processedData[field] = String(data[field])
       }
     })
-    
+
     // Process array fields
-    fieldTypesToUse.array?.forEach(field => {
+    fieldTypesToUse.array?.forEach((field) => {
       if (data[field] !== undefined) {
         processedData[field] = Array.isArray(data[field]) ? data[field] : []
       }
     })
-    
+
     // Process boolean fields
-    fieldTypesToUse.boolean?.forEach(field => {
+    fieldTypesToUse.boolean?.forEach((field) => {
       if (data[field] !== undefined) {
         processedData[field] = Boolean(data[field])
       }
     })
-    
+
     // Process number fields
-    fieldTypesToUse.number?.forEach(field => {
+    fieldTypesToUse.number?.forEach((field) => {
       if (data[field] !== undefined) {
         processedData[field] = Number(data[field]) || 0
       }
     })
-    
+
     return processedData
   }
 
@@ -203,17 +213,23 @@ export class User {
     try {
       const { email, emailVerified, ...safeUpdateData } = updateData
       let processedData = this._processFieldsByType(safeUpdateData)
-      
+
       // Handle health profile updates
       if (safeUpdateData.healthProfile) {
-        processedData.healthProfile = this._processFieldsByType(safeUpdateData.healthProfile, 'healthProfile')
+        processedData.healthProfile = this._processFieldsByType(
+          safeUpdateData.healthProfile,
+          'healthProfile',
+        )
       }
-      
+
       // Handle subscription updates
       if (safeUpdateData.subscription) {
-        processedData.subscription = this._processFieldsByType(safeUpdateData.subscription, 'subscription')
+        processedData.subscription = this._processFieldsByType(
+          safeUpdateData.subscription,
+          'subscription',
+        )
       }
-      
+
       // Handle notification preferences
       if (safeUpdateData.notificationPreferences) {
         processedData.notificationPreferences = {

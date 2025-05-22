@@ -64,7 +64,7 @@ const CheckoutPage = () => {
               maxLength={50}
             />
             <TXT
-              placeholder={t('checkout.phoneNumber')} 
+              placeholder={t('checkout.phoneNumber')}
               name="phoneNumber"
               variant="outline"
               maxLength={15}
@@ -99,13 +99,9 @@ const CheckoutPage = () => {
         </Section>
 
         {/* Payment Details */}
-        <Section
-          title={t('checkout.paymentDetails')} 
-          bgColor="warning.200"
-          icon={paymentIcon}
-        >
+        <Section title={t('checkout.paymentDetails')} bgColor="warning.200" icon={paymentIcon}>
           <Select
-            placeholder={t('checkout.paymentMethod')} 
+            placeholder={t('checkout.paymentMethod')}
             focusBorderColor="warning.500"
             variant="outline"
             _hover={{ borderColor: 'warning.400' }}
@@ -126,7 +122,7 @@ const CheckoutPage = () => {
           </Select>
           <Stack spacing={1}>
             <TXT
-              placeholder={t('checkout.cardNumber')} 
+              placeholder={t('checkout.cardNumber')}
               name="cardNumber"
               variant="outline"
               maxLength={16}
@@ -134,17 +130,12 @@ const CheckoutPage = () => {
             />
             <Flex gap={2} mt={4}>
               <TXT
-                placeholder={t('checkout.expiryDate')} 
+                placeholder={t('checkout.expiryDate')}
                 name="expiryDate"
                 variant="outline"
                 maxLength={5}
               />
-              <TXT
-                placeholder={t('checkout.cvv')}
-                name="cvv"
-                variant="outline"
-                maxLength={3}
-              />
+              <TXT placeholder={t('checkout.cvv')} name="cvv" variant="outline" maxLength={3} />
             </Flex>
           </Stack>
           <Checkbox mt={4} colorScheme="brand">
@@ -153,11 +144,7 @@ const CheckoutPage = () => {
         </Section>
 
         {/* Order Summary */}
-        <Section
-          title={t('checkout.orderSummary')} 
-          bgColor="accent.700"
-          icon={orderIcon}
-        >
+        <Section title={t('checkout.orderSummary')} bgColor="accent.700" icon={orderIcon}>
           <Flex justify="space-between" mb={2}>
             <Text>{t('checkout.subtotal')}:</Text> {/* Translate "Subtotal" */}
             <Text fontWeight="bold">$45.99</Text>
