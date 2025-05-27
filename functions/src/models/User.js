@@ -16,18 +16,19 @@ export class User {
       'defaultPaymentMethod',
       'notes',
       'language',
+      'gender'
     ],
     array: ['addresses', 'favoriteItems', 'favoriteMeals', 'paymentMethods'],
     boolean: ['isAdmin'],
-    number: ['loyaltyPoints'],
+    number: ['loyaltyPoints','age'],
     healthProfile: {
-      string: ['fitnessGoal', 'gender', 'activityLevel'],
+      string: ['fitnessGoal','activityLevel'],
       number: ['height', 'weight'],
       array: ['dietaryPreferences', 'allergies'],
     },
     subscription: {
       string: ['paymentMethod', 'planId', 'planName', 'startDate', 'endDate', 'status'],
-      number: ['price'],
+      number: ['price','mealsCount','consumedMeals'],
     },
   }
 
@@ -43,6 +44,8 @@ export class User {
     loyaltyPoints: 0,
     notes: '',
     language: 'en',
+    age:0,
+    gender:'male',
     // Default subscription
     subscription: {
       price: 0,
@@ -52,6 +55,8 @@ export class User {
       planName: '',
       startDate: null,
       status: 'inactive',
+      mealsCount:0,
+      consumedMeals:0
     },
     // Default notification preferences
     notificationPreferences: {
@@ -62,7 +67,6 @@ export class User {
     // Default health profile
     healthProfile: {
       fitnessGoal: '',
-      gender: '',
       height: null,
       weight: null,
       dietaryPreferences: [],
@@ -106,6 +110,8 @@ export class User {
       loyaltyPoints: Number(data.loyaltyPoints) || this.defaultValues.loyaltyPoints,
       notes: data.notes || this.defaultValues.notes,
       language: data.language || this.defaultValues.language,
+      age:data.age || this.defaultValues.age,
+      gender: data.gender || this.defaultValues.gender,
       createdAt,
       updatedAt,
     }
@@ -136,6 +142,8 @@ export class User {
       planName: String(subscriptionData.planName || defaults.planName),
       startDate: subscriptionData.startDate || defaults.startDate,
       status: String(subscriptionData.status || defaults.status),
+      mealsCount: Number(subscriptionData.mealsCount) || defaults.mealsCount, // represent selected period of plan
+      consumedMeals:Number(subscriptionData.consumedMeals) || defaults.consumedMeals, //should decrement
     }
   }
 
@@ -146,7 +154,6 @@ export class User {
 
     return {
       fitnessGoal: String(profileData.fitnessGoal || defaults.fitnessGoal),
-      gender: String(profileData.gender || defaults.gender),
       height: Number(profileData.height) || defaults.height,
       weight: Number(profileData.weight) || defaults.weight,
       dietaryPreferences: Array.isArray(profileData.dietaryPreferences)

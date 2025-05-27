@@ -15,7 +15,7 @@ import {
 import { IconButton, AddIcon, MinusIcon, DeleteIcon } from '@chakra-ui/icons'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import dailySaladIcon from '../assets/premium/dailySalad.png'
+import dailySaladIcon from '../assets/premium/dailyMeal.svg'
 import { useElements } from '../Contexts/ElementsContext'
 // Compact cart card
 export const CartCard = ({
@@ -301,10 +301,10 @@ export const CRT = ({
           </Text>
           <Input
             placeholder={t('cart.specialInstructionsPlaceholder')}
-            variant="filled"
+            variant="outline"
             size="sm"
             w={'90%'}
-            _focus={{ borderColor: 'teal.500' }}
+           
           />
         </Box>
 
@@ -317,12 +317,11 @@ export const CRT = ({
               placeholder={t('cart.enterPromoCode')}
               value={promoCode}
               onChange={(e) => setPromoCode(e.target.value)}
-              variant="filled"
+              variant="outline"
               flex={1}
-              w={'90%'}
-              _focus={{ borderColor: 'teal.500' }}
+              w={'90%'}              
             />
-            <Button colorScheme="teal" onClick={handleApplyPromoCode} px={6} flexShrink={0}>
+            <Button colorScheme="brand" onClick={handleApplyPromoCode} px={6} flexShrink={0}>
               {t('buttons.apply')}
             </Button>
           </Flex>
@@ -330,7 +329,7 @@ export const CRT = ({
 
         {checkoutButton && items.length > 0 && (
           <Button
-            colorScheme="teal"
+            colorScheme="brand"
             size="lg"
             width="full"
             onClick={onCheckout}

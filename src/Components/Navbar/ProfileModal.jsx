@@ -1,4 +1,4 @@
-import { Box, VStack, Text, Image, Button, Modal } from '@chakra-ui/react'
+import { Box, VStack, Text, Image, Button, Modal,ModalBody,ModalOverlay,ModalContent,ModalHeader,ModalCloseButton } from '@chakra-ui/react'
 import { PieChart } from 'react-minimal-pie-chart'
 import profileIcon from '../../assets/profile-b.svg'
 //import { MOD } from "../ComponentsTrial.jsx";

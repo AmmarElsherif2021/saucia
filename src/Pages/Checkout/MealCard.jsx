@@ -1,7 +1,7 @@
 import { Box, Button, IconButton, Image, Text, Badge, Flex, Tooltip } from '@chakra-ui/react'
 import { SmallCloseIcon, StarIcon } from '@chakra-ui/icons'
 import unknownDefaultImage from '../../assets//menu/unknownMeal.JPG'
-const MealCard = ({ meal, index, onRemove, onChoose, isArabic, t }) => {
+export const MealCard = ({ meal, index, onRemove, onChoose, isArabic, t }) => {
   return (
     <Box
       as={onRemove ? 'div' : Button}
@@ -9,14 +9,14 @@ const MealCard = ({ meal, index, onRemove, onChoose, isArabic, t }) => {
       onClick={onChoose ? () => onChoose(meal) : undefined}
       position="relative"
       w="100%"
-      h="180px" // Fixed height for consistency
+      h="180px" 
       borderRadius="lg"
       overflow="hidden"
       transition="all 0.2s"
-      bg={"brand.600"}
+      bg={'brand.600'}
       _hover={{
         transform: onChoose ? 'scale(1.02)' : undefined,
-        boxShadow: onChoose ? 'lg' : undefined
+        boxShadow: onChoose ? 'lg' : undefined,
       }}
     >
       {/* Background Image */}
@@ -52,32 +52,23 @@ const MealCard = ({ meal, index, onRemove, onChoose, isArabic, t }) => {
           top={2}
           right={2}
           onClick={(e) => {
-            e.stopPropagation();
-            onRemove(index);
+            e.stopPropagation()
+            onRemove(index)
           }}
           zIndex="2"
         />
       )}
 
-     
-
       {/* Content Overlay */}
-      <Box
-        position="absolute"
-        bottom={0}
-        left={0}
-        right={0}
-        p={3}
-        zIndex="1"
-      >
+      <Box position="absolute" bottom={0} left={0} right={0} p={3} zIndex="1">
         {/* Meal Name */}
-        <Text 
-          fontSize="lg" 
-          fontWeight="bold" 
+        <Text
+          fontSize="lg"
+          fontWeight="bold"
           color="white"
           noOfLines={2}
           mb={1}
-          bg={"gray.900"}
+          bg={'gray.900'}
           px={0}
           mx={0}
         >
@@ -89,34 +80,33 @@ const MealCard = ({ meal, index, onRemove, onChoose, isArabic, t }) => {
           <Badge colorScheme="orange" variant="solid" fontSize="xs">
             {meal.kcal} kcal
           </Badge>
-          <Badge colorScheme="blue" variant="solid" fontSize="xs">
+          <Badge colorScheme="brand" variant="solid" fontSize="xs">
             {meal.protein}g protein
           </Badge>
         </Flex>
 
         {/* Ingredients with Tooltip */}
-        <Tooltip 
+        <Tooltip
           label={isArabic ? meal.ingredients_arabic || meal.ingredients : meal.ingredients}
           placement="top"
-          
         >
-          <Text 
-            fontSize="sm" 
+          <Text
+            fontSize="sm"
             color="whiteAlpha.800"
             noOfLines={2}
             textShadow="0 1px 2px rgba(0,0,0,0.5)"
           >
-            {isArabic ? 
-              (meal?.ingredients_arabic || meal?.ingredients)?.split(',').slice(0, 3).join(', ') : 
-              meal?.ingredients?.split(',').slice(0, 3).join(', ')}
+            {isArabic
+              ? (meal?.ingredients_arabic || meal?.ingredients)?.split(',').slice(0, 3).join(', ')
+              : meal?.ingredients?.split(',').slice(0, 3).join(', ')}
           </Text>
         </Tooltip>
 
         {/* Rating */}
         {meal.rate > 0 && (
-          <Flex 
-            position="absolute" 
-            top={-5} 
+          <Flex
+            position="absolute"
+            top={-5}
             left={3}
             align="center"
             bg="blackAlpha.600"
@@ -133,11 +123,11 @@ const MealCard = ({ meal, index, onRemove, onChoose, isArabic, t }) => {
 
         {/* Custom Tag */}
         {meal.isCustom && (
-          <Badge 
+          <Badge
             position="absolute"
             top={-8}
             left={3}
-            colorScheme="blue"
+            colorScheme="brand"
             variant="solid"
             fontSize="xs"
           >
@@ -146,7 +136,7 @@ const MealCard = ({ meal, index, onRemove, onChoose, isArabic, t }) => {
         )}
       </Box>
     </Box>
-  );
-};
+  )
+}
 
-export default MealCard;
+export default MealCard

@@ -331,7 +331,7 @@ export const AdminDashboard = () => {
           <ModalCloseButton />
           <ModalBody pb={6}>
             {renderAddNewForm()}
-            <Button mt={6} colorScheme="blue" onClick={handleSave}>
+            <Button mt={6} colorScheme="brand" onClick={handleSave}>
               {isEditing ? 'Save Changes' : 'Create'}
             </Button>
           </ModalBody>

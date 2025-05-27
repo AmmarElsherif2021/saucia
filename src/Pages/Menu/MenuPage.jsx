@@ -17,7 +17,7 @@ import dressingsIcon from '../../assets/menu/dressings.svg'
 import saladIcon from '../../assets/menu/salad.svg'
 import soupIcon from '../../assets/menu/soup.svg'
 import fruitIcon from '../../assets/menu/fruit.svg'
-
+import dessertIcon from '../../assets/menu/dessert.svg'
 import { useCart } from '../../Contexts/CartContext'
 
 const MenuPage = () => {
@@ -54,7 +54,8 @@ const MenuPage = () => {
     'Make Your Own Salad': makeSaladIcon,
     'Make Your Own Fruit Salad': fruitIcon,
     'Our signature salad': saladIcon,
-    Desserts: fruitIcon,
+    Juices: fruitIcon,
+    Desserts: dessertIcon,
   }
 
   const selectiveSectionMap = {

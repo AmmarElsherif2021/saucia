@@ -8,17 +8,17 @@ export const FeaturedMeals = ({ featuredMeals }) => {
   //useEffect(() => console.log(`From featured items ${(JSON.stringify(featuredMeals))}`), [featuredMeals]);
 
   return (
-    <VStack p={4} bg="transparent" alignItems={'center'} w={'95%'}>
+    <VStack p={4} bg="transparent" alignItems={'center'} w={'99%'}>
       <Heading mb={6} fontSize={'3em'} textStyle="heading" color={'brand.800'}>
         {t('featuredSlide.title')}
       </Heading>
 
       {/* Items display */}
       {featuredMeals?.length > 0 ? (
-        <ItemsCarousel
+        <ItemsCarousel 
           items={featuredMeals}
           CardComponent={FeaturedItemCard}
-          visibleCount={4}
+          visibleCount={3}
           visibleButtons={true}
         />
       ) : (

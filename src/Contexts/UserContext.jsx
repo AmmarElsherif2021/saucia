@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { onAuthStateChanged, signOut, getIdTokenResult } from 'firebase/auth'
 import { auth } from '../../firebaseConfig.jsx'
-import { doc, getDoc, getFirestore, collection, query, where, getDocs } from 'firebase/firestore'
+import { doc, getDoc, getFirestore, collection, query, where, getDocs, updateDoc } from 'firebase/firestore'
 import { getUserOrders } from '../API/orders.jsx'
 
 const UserContext = createContext()
@@ -12,6 +12,62 @@ export const UserProvider = ({ children }) => {
   const [userPlan, setUserPlan] = useState(null)
   const [planLoading, setPlanLoading] = useState(false)
   const db = getFirestore()
+
+  // Helper function to create default user structure
+  const createDefaultUserStructure = (firebaseUser, userData = {}) => {
+    return {
+      id: firebaseUser.uid,
+      uid: firebaseUser.uid,
+      email: firebaseUser.email || '',
+      displayName: firebaseUser.displayName || userData?.displayName || '',
+      firstName: userData?.firstName || '',
+      lastName: userData?.lastName || '',
+      phoneNumber: userData?.phoneNumber || '',
+      photoURL: firebaseUser.photoURL || '',
+      emailVerified: firebaseUser.emailVerified,
+      addresses: userData?.addresses || [],
+      defaultAddress: userData?.defaultAddress || '',
+      favoriteItems: userData?.favoriteItems || [],
+      favoriteMeals: userData?.favoriteMeals || [],
+      paymentMethods: userData?.paymentMethods || [],
+      defaultPaymentMethod: userData?.defaultPaymentMethod || '',
+      loyaltyPoints: Number(userData?.loyaltyPoints) || 0,
+      notes: userData?.notes || '',
+      language: userData?.language || 'en',
+      age: userData?.age || 0,
+      gender: userData?.gender || 'male',
+      createdAt: userData?.createdAt || new Date().toISOString(),
+      updatedAt: userData?.updatedAt || new Date().toISOString(),
+      lastLogin: userData?.lastLogin || new Date(),
+      orders: [], // Will be populated separately
+      subscription: userData?.subscription || {
+        planId: '',
+        price: 0,
+        endDate: null,
+        paymentMethod: '',
+        planId: '',
+        planName: '',
+        startDate: null,
+        status: 'inactive',
+        mealsCount: 0,
+        consumedMeals: 0
+      },
+      notificationPreferences: userData?.notificationPreferences || {
+        email: true,
+        sms: false,
+        push: true,
+      },
+      healthProfile: userData?.healthProfile || {
+        fitnessGoal: '',
+        gender: '',
+        height: null,
+        weight: null,
+        dietaryPreferences: [],
+        allergies: [],
+        activityLevel: '',
+      }
+    }
+  }
 
   const refreshOrders = async (firebaseUser) => {
     try {
@@ -35,13 +91,11 @@ export const UserProvider = ({ children }) => {
     }
   }
 
-  // New function to fetch plan details based on user's subscribedPlan
   const fetchUserPlanDetails = async (planId) => {
     if (!planId) return null
 
     try {
       setPlanLoading(true)
-      // Try to fetch by ID first
       const planRef = doc(db, 'plans', planId)
       const planSnap = await getDoc(planRef)
 
@@ -49,7 +103,6 @@ export const UserProvider = ({ children }) => {
         return { id: planSnap.id, ...planSnap.data() }
       }
 
-      // If not found by ID, try to find by name
       const plansRef = collection(db, 'plans')
       const planQuery = query(plansRef, where('title', '==', planId))
       const querySnapshot = await getDocs(planQuery)
@@ -65,6 +118,33 @@ export const UserProvider = ({ children }) => {
       return null
     } finally {
       setPlanLoading(false)
+    }
+  }
+
+  // New function to update user profile with automatic context sync
+  const updateUserProfile = async (uid, updateData) => {
+    if (!uid) throw new Error('User ID is required')
+
+    try {
+      const userRef = doc(db, 'users', uid)
+      const dataToUpdate = {
+        ...updateData,
+        updatedAt: new Date().toISOString()
+      }
+      
+      await updateDoc(userRef, dataToUpdate)
+
+      // Update local user state immediately for better UX
+      setUser(prevUser => ({
+        ...prevUser,
+        ...updateData,
+        updatedAt: dataToUpdate.updatedAt
+      }))
+
+      return { success: true }
+    } catch (error) {
+      console.error('Error updating user profile:', error)
+      throw error
     }
   }
 
@@ -87,7 +167,7 @@ export const UserProvider = ({ children }) => {
     } else {
       setUserPlan(null)
     }
-  }, [user?.subscribedPlan])
+  }, [user?.subscription?.planId])
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -99,19 +179,10 @@ export const UserProvider = ({ children }) => {
             refreshOrders(firebaseUser),
           ])
 
-          const userInfo = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName || userData?.displayName || '',
-            photoURL: firebaseUser.photoURL,
-            emailVerified: firebaseUser.emailVerified,
-            isAdmin: !!tokenResult.claims.admin,
-            orders: orders,
-            // Make sure to include subscription details
-            subscribedPlan: userData?.subscribedPlan || '',
-            subscriptionEndDate: userData?.subscriptionEndDate || null,
-            ...(userData || {}),
-          }
+          // Create user object with default structure
+          const userInfo = createDefaultUserStructure(firebaseUser, userData)
+          userInfo.isAdmin = !!tokenResult.claims.admin
+          userInfo.orders = orders
 
           setUser(userInfo)
         } catch (error) {
@@ -127,26 +198,24 @@ export const UserProvider = ({ children }) => {
     return () => unsubscribe()
   }, [])
 
-  const updateUserSubscription = async (planId) => {
+  const updateUserSubscription = async (subscriptionData) => {
     if (!user?.uid) return null
 
     try {
       const userRef = doc(db, 'users', user.uid)
       await updateDoc(userRef, {
-        subscribedPlan: planId,
-        updatedAt: new Date(),
-        // Add subscription date if needed
-        subscriptionStartDate: new Date(),
+        subscription: subscriptionData,
+        updatedAt: new Date().toISOString()
       })
 
       const updatedUser = {
         ...user,
-        subscribedPlan: planId,
+        subscription: subscriptionData
       }
 
       setUser(updatedUser)
 
-      const newPlan = await fetchUserPlanDetails(planId)
+      const newPlan = await fetchUserPlanDetails(subscriptionData.planId)
       setUserPlan(newPlan)
 
       return { user: updatedUser, plan: newPlan }
@@ -155,6 +224,7 @@ export const UserProvider = ({ children }) => {
       throw error
     }
   }
+
   const contextValue = {
     user,
     setUser,
@@ -164,6 +234,7 @@ export const UserProvider = ({ children }) => {
     logout,
     loading,
     updateUserSubscription,
+    updateUserProfile, 
     refreshOrders: async () => {
       if (auth.currentUser) {
         const orders = await refreshOrders(auth.currentUser)
@@ -184,4 +255,4 @@ export const useUser = () => {
   return context
 }
 
-export default UserContext
+export default UserContext;

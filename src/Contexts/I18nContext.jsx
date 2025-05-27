@@ -5,7 +5,7 @@ import translations from '../dict.json'
 import { I18nextProvider } from 'react-i18next' // Add this import
 
 const I18nContext = createContext()
- 
+
 export const useI18nContext = () => useContext(I18nContext)
 
 export const I18nProvider = ({ children }) => {

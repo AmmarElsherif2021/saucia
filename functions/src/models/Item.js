@@ -30,6 +30,7 @@ export class Item {
       free_count: Number(data.free_count) || 0,
       item_kcal: Number(data.item_kcal) || 0,
       item_protein: Number(data.item_protein) || 0,
+      allergens: data.allergens || [],
       image: data.image || '',
       createdAt,
       updatedAt,
@@ -48,6 +49,7 @@ export class Item {
       free_count: Number(itemData.free_count) || 0,
       item_kcal: Number(itemData.item_kcal) || 0,
       item_protein: Number(itemData.item_protein) || 0,
+      allergens: data.allergens || [],
       image: String(itemData.image || ''),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -93,6 +95,8 @@ export class Item {
         processedData.item_kcal = Number(updatedData.item_kcal)
       if (updatedData.item_protein !== undefined)
         processedData.item_protein = Number(updatedData.item_protein)
+      if (updatedData.allergens !== undefined)
+        processedData.allergens = Array.isArray(updatedData.allergens) ? updatedData.allergens : []
       if (updatedData.image !== undefined) processedData.image = String(updatedData.image)
 
       processedData.updatedAt = new Date().toISOString()

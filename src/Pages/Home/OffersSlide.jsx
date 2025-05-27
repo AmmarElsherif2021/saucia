@@ -8,8 +8,8 @@ export const OffersSlide = ({ offersMeals }) => {
   //useEffect(() => console.log(`From offers items ${(JSON.stringify(offersMeals))}`), [offersMeals]);
 
   return (
-    <VStack p={4} my={8} bg="transparent" alignItems="center">
-      <Heading fontSize={'3em'} mb={6} textStyle="heading" color={'brand.800'}>
+    <VStack p={2} my={8} bg="transparent" alignItems="center">
+      <Heading fontSize={'3em'} mb={4} textStyle="heading" color={'brand.800'}>
         {t('offerSlide.title')}
       </Heading>
 

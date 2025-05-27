@@ -465,7 +465,7 @@ const Admin = () => {
         />
         <Flex gap={2} mb={4}>
           <SearchInput value={itemSearch} onChange={setItemSearch} />
-          <Button as="label" colorScheme="blue" cursor="pointer">
+          <Button as="label" colorScheme="brand" cursor="pointer">
             Import Items
             <input type="file" hidden accept=".json" onChange={handleImportItems} />
           </Button>
@@ -483,6 +483,7 @@ const Admin = () => {
                   <Th w="10%">Free Count</Th>
                   <Th w="10%">Calories</Th>
                   <Th w="10%">Protein</Th>
+                  <Th w="15%">Allergens</Th>
                   <Th w="15%">Image</Th>
                   <Th w="15%">Action</Th>
                 </Tr>
@@ -498,6 +499,7 @@ const Admin = () => {
                     <Td w="10%">{item.free_count}</Td>
                     <Td w="10%">{item.item_kcal}</Td>
                     <Td w="10%">{item.item_protein}</Td>
+                    <Td>{item?.allergens?.length > 0 ? item.allergens.map(a=>`${a.ar} |`): 'N/A'}</Td>
                     <Td w="15%" isTruncated maxW="150px">
                       {item.image}
                     </Td>
@@ -505,7 +507,7 @@ const Admin = () => {
                       <Stack direction="row" spacing={2}>
                         <Button
                           size="xs"
-                          colorScheme="blue"
+                          colorScheme="brand"
                           onClick={() => {
                             selectItem(item)
                             itemModals.edit.onOpen()
@@ -542,7 +544,7 @@ const Admin = () => {
         />
         <Flex gap={2} mb={4}>
           <SearchInput value={mealSearch} onChange={setMealSearch} />
-          <Button as="label" colorScheme="blue" cursor="pointer">
+          <Button as="label" colorScheme="brand" cursor="pointer">
             Import Meals
             <input type="file" hidden accept=".json" onChange={handleImportMeals} />
           </Button>
@@ -569,6 +571,7 @@ const Admin = () => {
                   <Th>Ingredients (Arabic)</Th>
                   <Th>Items</Th>
                   <Th>Image</Th>
+                  <Th>Allergens</Th>
                   <Th>Actions</Th>
                 </Tr>
               </Thead>
@@ -589,6 +592,7 @@ const Admin = () => {
                       <Td>{meal.ingredients_arabic}</Td>
                       <Td>{meal?.items?.length > 0 ? meal.items.join(', ') : 'N/A'}</Td>
                       <Td>{meal?.image}</Td>
+                      <Td>{meal?.allergens?.length > 0 ? meal.allergens.map(a=>`${a.ar} |`): 'N/A'}</Td>
                       <Td>
                         <Stack direction="row" spacing={2}>
                           <Button
@@ -667,7 +671,7 @@ const Admin = () => {
                         <Stack direction="row" spacing={1}>
                           <Button
                             size="xs"
-                            colorScheme="blue"
+                            colorScheme="brand"
                             onClick={() => {
                               selectPlan(plan)
                               planModals.edit.onOpen()
@@ -727,7 +731,7 @@ const Admin = () => {
                             order.status === 'completed'
                               ? 'green'
                               : order.status === 'processing'
-                                ? 'blue'
+                                ? 'brand'
                                 : order.status === 'cancelled'
                                   ? 'red'
                                   : 'gray'

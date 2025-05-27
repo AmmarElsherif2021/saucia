@@ -433,12 +433,12 @@ export const ACC = ({ sections = [], expandedIndex, onToggle }) => {
         <AccordionItem key={index} id={`section-${index}`} data-section-name={section.title}>
           <h2>
             <AccordionButton
-              _expanded={{ bg: 'secondary.200' }}
-              sx={{ borderStyle: 'none', bg: 'secondary.100', color: 'gray.800' }}
+              _expanded={{ bg: 'brand.300' }}
+              sx={{ borderStyle: 'none', bg: 'brand.200', color: 'gray.800' }}
             >
               <Box flex="1" textAlign="left" textStyle="heading">
                 <Flex align="center" gap={2}>
-                  {section.icon && <img width={10} src={section.icon} alt="" />}
+                  {section.icon && <img width={22} src={section.icon} alt="" style={{borderRadius:'50%', backgroundColor:'white',padding:8}}/>}
                   <Heading size="md">{section.title}</Heading>
                 </Flex>
               </Box>

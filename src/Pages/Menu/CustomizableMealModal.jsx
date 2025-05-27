@@ -101,7 +101,7 @@ export const CustomizableMealModal = ({
             <Tag colorScheme="green" mr={4}>
               {t('menuPage.totalPrice')}: {calculateTotal().toFixed(2)} {t('common.currency')}
             </Tag>
-            <Button colorScheme="blue" onClick={onConfirm}>
+            <Button colorScheme="brand" onClick={onConfirm}>
               {t('menuPage.addToCart')}
             </Button>
           </ModalFooter>

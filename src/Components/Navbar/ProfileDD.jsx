@@ -44,7 +44,7 @@ export const ProfileDD = ({ disabled = false }) => {
           <VStack align="center" spacing={4}>
             <VStack spacing={4}>
               <Image
-                src={user.photoURL || profileIcon}
+                src={user.photoURL?user?.photoURL:profileIcon}
                 alt="Profile"
                 boxSize="100px"
                 borderRadius="full"

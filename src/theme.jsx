@@ -6,17 +6,18 @@ const createTheme = (config) => {
   return extendTheme({
     colors: {
       brand: {
-        50: '#ebfaf5',
-        100: '#d7f5eb',
-        200: '#aeebda',
-        300: '#85e0c9',
-        400: '#5cd6b7',
-        500: '#3cd3aa', // Primary color
-        600: '#2eb98e',
-        700: '#25a47c',
-        800: '#1c8f6b',
-        900: '#156650',
+        50: '#e6f8f6',
+        100: '#c0ece7',
+        200: '#99e0d8',
+        300: '#73d4c9',
+        400: '#4dc8ba',
+        500: '#3DD5B4', // Primary color
+        600: '#009e90',
+        700: '#007e73',
+        800: '#005e56',
+        900: '#003f39',
       },
+
       secondary: {
         50: '#f4fbf7',
         100: '#e9f7ef',
@@ -132,7 +133,7 @@ const createTheme = (config) => {
       useSystemColorMode: false,
     },
     fonts: {
-      heading: isArabic ? "'Readex Pro', sans-serif" : "'Montserrat', sans-serif",
+      heading: isArabic ? "'Lalezar', sans-serif" : "'Outfit', sans-serif",//"'Readex Pro', sans-serif" : "'Montserrat', sans-serif",
       body: isArabic ? "'Lalezar', sans-serif" : "'Outfit', sans-serif",
     },
     styles: {
@@ -249,7 +250,7 @@ const createTheme = (config) => {
         baseStyle: {
           fontWeight: 'semibold',
           borderRadius: 'md',
-          fontFamily: isArabic ? "'Readex Pro', sans-serif" : "'Outfit', sans-serif",
+          fontFamily: isArabic ? "'Lalezar', sans-serif" : "'Outfit', sans-serif",
           _focus: {
             boxShadow: 'none',
           },
@@ -317,7 +318,7 @@ const createTheme = (config) => {
           field: {
             borderRadius: 'md',
             borderWidth: '2px',
-            borderColor: 'brand.700',
+            borderColor: 'brand.600',
             _focus: {
               borderColor: 'brand.800',
               borderWidth: '3px',
@@ -328,16 +329,17 @@ const createTheme = (config) => {
           outline: {
             field: {
               _hover: {
-                borderColor: 'gray.400',
+                borderColor: 'brand.500',
               },
               _focus: {
-                borderColor: 'brand.500',
+                borderColor: 'brand.600',
               },
             },
           },
           filled: {
             field: {
-              bg: 'gray.100',
+              bg: 'brand.100',
+              borderColor: 'brand.500',
               _hover: {
                 bg: 'gray.200',
               },
@@ -410,7 +412,7 @@ const createTheme = (config) => {
           margin: 0,
           padding: 0,
           color: props.colorMode === 'dark' ? 'gray.100' : 'gray.800',
-          fontFamily: isArabic ? "'Readex Pro', sans-serif" : "'Outfit', sans-serif",
+          fontFamily: isArabic ? "'Lalezar', sans-serif" : "'Outfit', sans-serif",
         }),
         variants: {
           muted: (props) => ({

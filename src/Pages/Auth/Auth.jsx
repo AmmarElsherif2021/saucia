@@ -153,7 +153,7 @@ const Auth = () => {
             <Button onClick={handleLogout} colorScheme="red" variant="outline">
               Sign Out
             </Button>
-            <Button onClick={() => navigate('/')} colorScheme="blue">
+            <Button onClick={() => navigate('/')} colorScheme="brand">
               Go to Home
             </Button>
             {user.isAdmin && (

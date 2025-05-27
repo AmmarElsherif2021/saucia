@@ -116,7 +116,7 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
 
         <Button
           size="sm"
-          colorScheme={isUserPlan ? 'green' : 'blue'}
+          colorScheme={isUserPlan ? 'green' : 'brand'}
           onClick={() => onSelect(planWithImage)}
         >
           {isUserPlan ? t('premium.viewDetails') : t('premium.select')}
@@ -145,7 +145,7 @@ const PlanDetails = ({ plan }) => {
         <Badge colorScheme="green">
           {t('premium.kcal')}: {plan.kcal}
         </Badge>
-        <Badge colorScheme="blue">
+        <Badge colorScheme="brand">
           {t('premium.carbs')}: {plan.carb}g
         </Badge>
         <Badge colorScheme="red">
@@ -298,7 +298,7 @@ export const PremiumPage = () => {
           )}
 
           {userPlan && (
-            <Button mt={4} colorScheme="blue" size="sm" onClick={toggleExplorePlans}>
+            <Button mt={4} colorScheme="brand" size="sm" onClick={toggleExplorePlans}>
               {explorePlans ? t('premium.hideAvailablePlans') : t('premium.exploreOtherPlans')}
             </Button>
           )}
@@ -365,7 +365,7 @@ export const PremiumPage = () => {
                   width="full"
                   isLoading={subscribing}
                   loadingText={t('premium.updatingSubscription')}
-                  isDisabled={!user || (userPlan && user.subscribedPlan.id === selectedPlan.id)}
+                  isDisabled={!user || (userPlan && userPlan.id != selectedPlan.id)}
                 >
                   {t('premium.subscribeToPlan')}
                 </Button>

@@ -45,7 +45,7 @@ const AboutCard = ({ title, description, image }) => {
       mb={10}
       overflow="hidden"
     >
-      <Box width={{ base: '100%', md: '40%' }} mb={{ base: 4, md: 0 }}>
+      <Box width={{ base: '75vw', md: '50vw', lg:'50vw'}} mb={{ base: 4, md: 0 }}>
         <Image
           src={image}
           alt={title}

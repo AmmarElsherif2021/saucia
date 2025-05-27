@@ -1,16 +1,47 @@
-# React + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# Salad Saucia - Healthy Food Platform  
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🥗 Features  
+### **A. Customer Experience**  
+- **Interactive Homepage**  
+  - Hero carousel with animated CTAs  
+  - Featured items/offers sliders (Chakra UI + Framer Motion)  
+  - About section + responsive footer  
 
-## Expanding the ESLint configuration
+- **Smart Menu System**  
+  - Category-based browsing (Signature Salads/Juices/Fruits)  
+  - **DIY Salad Builder**:  
+    - Base ingredients (free tier) + premium add-ons  
+    - Real-time price calculation  
+  - Cart with promo code validation  
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **Premium Plans**  
+  - Personalized meal plans based on:  
+    - Dietary preferences (Keto/Vegan/Gluten-free)  
+    - Allergies tracker  
+    - BMI calculator (height/weight/activity level)  
+  - Delivery scheduling calendar  
+  - Plan management portal (pause/skip meals)  
 
-# saucia
+### **B. Admin System**  
+- **Dashboard with Firestore CRUD**  
+  - Meals/Items inventory management  
+  - Customer plans oversight  
+  - Delivery scheduling (time/address mapping)  
+  - Sales analytics  
 
-Healthy food store web application
+### **C. Technical Stack**  
+- **Frontend**: React + Chakra UI + Framer Motion  
+- **Backend**: Node.js + Express  
+- **Database**: Firestore (with security rules)  
+- **Auth**: Firebase Authentication (Google/Phone)  
+- **State**: Context API + Redux Toolkit  
+- **Notifications**: Firebase Cloud Messaging (*in progress*)  
+
+## 🚀 Installation  
+```bash
+git clone [AmmarElsherif2021/saucia]
+cd saucia-app
+npm install
+npm run dev

@@ -1,4 +1,5 @@
-import { FormControl, FormLabel, Input, Button, Flex, Switch, Select } from '@chakra-ui/react'
+import { FormControl, FormLabel, Input, Button, Flex, Box,Divider, HStack,IconButton, Text,VStack, Select } from '@chakra-ui/react';
+import { AddIcon, DeleteIcon } from '@chakra-ui/icons';
 import { useState } from 'react'
 
 const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
@@ -13,9 +14,23 @@ const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
     free_count: Number(initialData.free_count) || 0,
     item_kcal: Number(initialData.item_kcal) || 0,
     item_protein: Number(initialData.item_protein) || 0,
+    allergens: Array.isArray(initialData?.allergens) ? initialData.allergens : [],
     image: initialData.image || '',
   })
-
+   // Predefined allergens list based on the document
+   const predefinedAllergens = [
+    { en: "Milk and dairy products", ar: "الحليب ومنتجاته" },
+    { en: "Gluten", ar: "الجلوتين" },
+    { en: "Nuts and products", ar: "المكسرات ومنتجاتها" },
+    { en: "Sesame seeds and products", ar: "بذور السمسم ومنتجاتها" },
+    { en: "Fish and products", ar: "الأسماك ومنتجاتها" },
+    { en: "Eggs and products", ar: "البيض ومنتجاته" },
+    { en: "Soy", ar: "الصويا" },
+    { en: "Crustaceans and products", ar: "القشريات ومنتجاتها" },
+    { en: "Celery seeds and products", ar: "بذور الكرفس ومنتجاتها" },
+    { en: "Mustard seeds and products", ar: "بذور الخردل ومنتجاتها" },
+    { en: "Peanuts", ar: "فول سوداني" },
+  ];
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
@@ -23,8 +38,64 @@ const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onSubmit(formData)
-  }
+    // Filter out empty custom allergens
+    const filteredAllergens = formData.allergens.filter(
+      (allergen) => allergen.en.trim() !== '' || allergen.ar.trim() !== ''
+    )
+    onSubmit({ ...formData, allergens: filteredAllergens })
+  };
+//Allergies
+const handleAllergenToggle = (allergen) => {
+  setFormData((prev) => {
+    const existingIndex = prev.allergens.findIndex(
+      (a) => a.en === allergen.en && a.ar === allergen.ar
+    )
+    
+    if (existingIndex >= 0) {
+      // Remove allergen if it exists
+      return {
+        ...prev,
+        allergens: prev.allergens.filter((_, index) => index !== existingIndex)
+      }
+    } else {
+      // Add allergen if it doesn't exist
+      return {
+        ...prev,
+        allergens: [...prev.allergens, allergen]
+      }
+    }
+  })
+}
+
+const addCustomAllergen = () => {
+  const newAllergen = { en: '', ar: '' }
+  setFormData((prev) => ({
+    ...prev,
+    allergens: [...prev.allergens, newAllergen]
+  }))
+}
+
+const updateCustomAllergen = (index, field, value) => {
+  setFormData((prev) => ({
+    ...prev,
+    allergens: prev.allergens.map((allergen, i) => 
+      i === index ? { ...allergen, [field]: value } : allergen
+    )
+  }))
+}
+
+const removeCustomAllergen = (index) => {
+  setFormData((prev) => ({
+    ...prev,
+    allergens: prev.allergens.filter((_, i) => i !== index)
+  }))
+}
+
+const isAllergenSelected = (allergen) => {
+  return formData.allergens.some(
+    (a) => a.en === allergen.en && a.ar === allergen.ar
+  )
+};
 
   return (
     <form onSubmit={handleSubmit}>
@@ -67,7 +138,7 @@ const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
           onChange={handleChange}
         />
       </FormControl>
-      {
+      { 
         // !isPremium ? (
         //   <>
         //   </>
@@ -114,6 +185,96 @@ const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
           onChange={handleChange}
         />
       </FormControl>
+
+       {/* Allergens Section */}
+       <FormControl mb={4}>
+        <FormLabel>Allergens</FormLabel>
+        <VStack align="stretch" spacing={3}>
+          <Text fontSize="sm" color="gray.600">
+            Select from common allergens:
+          </Text>
+          <Box>
+            {predefinedAllergens.map((allergen, index) => (
+              <Button
+                key={index}
+                size="sm"
+                variant={isAllergenSelected(allergen) ? "solid" : "outline"}
+                colorScheme={isAllergenSelected(allergen) ? "brand" : "gray"}
+                onClick={() => handleAllergenToggle(allergen)}
+                m={1}
+              >
+                {allergen.en} / {allergen.ar}
+              </Button>
+            ))}
+          </Box>
+          
+          <Divider />
+          
+          <HStack justify="space-between" align="center">
+            <Text fontSize="sm" color="gray.600">
+              Custom allergens:
+            </Text>
+            <IconButton
+              icon={<AddIcon />}
+              size="sm"
+              onClick={addCustomAllergen}
+              colorScheme="green"
+              variant="outline"
+            />
+          </HStack>
+          
+          {formData.allergens
+            .filter(allergen => 
+              !predefinedAllergens.some(pa => pa.en === allergen.en && pa.ar === allergen.ar)
+            )
+            .map((allergen, index) => {
+              const actualIndex = formData.allergens.findIndex(a => a === allergen)
+              return (
+                <HStack key={actualIndex} spacing={2}>
+                  <Input
+                    placeholder="English name"
+                    value={allergen.en}
+                    onChange={(e) => updateCustomAllergen(actualIndex, 'en', e.target.value)}
+                    size="sm"
+                  />
+                  <Input
+                    placeholder="Arabic name"
+                    value={allergen.ar}
+                    onChange={(e) => updateCustomAllergen(actualIndex, 'ar', e.target.value)}
+                    size="sm"
+                  />
+                  <IconButton
+                    icon={<DeleteIcon />}
+                    size="sm"
+                    onClick={() => removeCustomAllergen(actualIndex)}
+                    colorScheme="red"
+                    variant="outline"
+                  />
+                </HStack>
+              )
+            })}
+        </VStack>
+      </FormControl>
+      
+    
+      
+      <FormControl mb={4}>
+        <FormLabel>Premium</FormLabel>
+        <Select name="isPremium" value={formData.isPremium} onChange={handleChange} required>
+          <option value={false}>No</option>
+          <option value={true}>Yes</option>
+        </Select>
+      </FormControl>
+      
+      {formData.isPremium ? (
+        <FormControl mb={4}>
+          <FormLabel>Plan</FormLabel>
+          <Input type="text" name="plan" value={formData.plan} onChange={handleChange} />
+        </FormControl>
+      ) : (
+        <></>
+      )}
+      
       <FormControl mb={4}>
         <FormLabel>Image Link</FormLabel>
         <Input
@@ -128,7 +289,7 @@ const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
         <Button onClick={onCancel} variant="outline">
           Cancel
         </Button>
-        <Button type="submit" colorScheme="blue">
+        <Button type="submit" colorScheme="brand">
           Save
         </Button>
       </Flex>

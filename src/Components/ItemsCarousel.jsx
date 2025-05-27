@@ -48,10 +48,10 @@ export const ItemsCarousel = ({
   const itemsToShow =
     useBreakpointValue({
       base: 1, // Mobile screens
-      sm: visibleCount === 1 ? 1 : 2, // Small screens
-      md: visibleCount === 1 ? 1 : 3, // Medium screens
-      lg: visibleCount === 1 ? 1 : 4, // Large screens
-      xl: visibleCount === 1 ? 1 : 5, // Extra-large screens
+      sm: visibleCount === 1 ? 1 : 1, // Small screens
+      md: visibleCount === 1 ? 1 : 2, // Medium screens
+      lg: visibleCount === 1 ? 1 : 3, // Large screens
+      xl: visibleCount === 1 ? 1 : 4, // Extra-large screens
     }) || visibleCount
 
   const totalSlides = Math.max(1, Math.ceil(items.length / itemsToShow))
@@ -98,7 +98,7 @@ export const ItemsCarousel = ({
       height="auto"
       ref={carouselRef}
       align="center"
-      justify="center"
+      justifyContent="center"
       overflow="hidden"
       bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
       borderRadius="lg"
@@ -122,38 +122,40 @@ export const ItemsCarousel = ({
         />
       )}
 
-      <Box width="100%" overflow="hidden" px={4}>
-        <Flex
-          as={motion.div}
-          ref={carouselContentRef}
-          width="100%"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          alignItems="center"
-          justifyContent="center"
-          flexDirection="row"
-          flexWrap="nowrap"
-          gap={4}
-        >
-          {visibleItems.map((item, index) => (
-            <Box
-              key={`item-${index}-${currentIndex}`}
-              as={motion.div}
-              variants={itemVariants}
-              flex={`0 0 ${100 / itemsToShow}%`}
-              maxWidth={`${100 / itemsToShow}%`}
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              px={0}
-            >
-              <Box width="100%" px={0}>
-                {item ? <CardComponent key={item.id} item={item} /> : <Box visibility="hidden" />}
-              </Box>
+      <Box width="100%" overflow="hidden">
+      <Flex
+        as={motion.div}
+        ref={carouselContentRef}
+        width="100%"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        alignItems="center"
+        justifyContent="center !important" 
+        flexDirection="row"
+        flexWrap="nowrap"
+        gap={3}
+        bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
+        px={8}
+      >
+        {visibleItems.map((item, index) => (
+          <Box
+            key={`item-${index}-${currentIndex}`}
+            as={motion.div}
+            variants={itemVariants}
+            flex={itemsToShow === 1 ? "0 0 auto" : `0 0 ${100 / itemsToShow}%`} // Modified this line
+            maxWidth={itemsToShow === 1 ? "100%" : `${100 / itemsToShow}%`} // Modified this line
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            px={0}
+          >
+            <Box width={itemsToShow === 1 ? "100%" : "100%"} px={0}> {/* Modified this line */}
+              {item ? <CardComponent key={item.id} item={item} /> : <Box visibility="hidden" />}
             </Box>
-          ))}
-        </Flex>
+          </Box>
+        ))}
+      </Flex>
       </Box>
 
       {showControls && (

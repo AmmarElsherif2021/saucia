@@ -51,7 +51,7 @@ export const CurrentPlanBrief = ({ plan, loading }) => {
             <Badge colorScheme="green">
               {t('kcal')}: {plan.kcal}
             </Badge>
-            <Badge colorScheme="blue">
+            <Badge colorScheme="brand">
               {t('carbs')}: {plan.carb}g
             </Badge>
             <Badge colorScheme="red">
@@ -124,7 +124,7 @@ export const CurrentPlanBrief = ({ plan, loading }) => {
             )}
           </Flex>
 
-          <Button mt={4} size="sm" colorScheme="blue">
+          <Button mt={4} size="sm" colorScheme="brand">
             {t('premium.managePlanSettings')}
           </Button>
         </Box>

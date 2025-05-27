@@ -183,7 +183,7 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {} }) => {
         <Button onClick={onCancel} variant="outline" width="20%">
           Cancel
         </Button>
-        <Button type="submit" colorScheme="blue" width="20%">
+        <Button type="submit" colorScheme="brand" width="20%">
           Save Plan
         </Button>
       </Flex>

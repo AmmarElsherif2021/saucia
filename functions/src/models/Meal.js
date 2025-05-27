@@ -46,6 +46,7 @@ export class Meal {
       offerRatio: Number(data.offerRatio) || 1,
       offerLimit,
       description: data.description || '',
+      allergens: data.allergens || [],
       createdAt,
       updatedAt,
     }
@@ -74,6 +75,7 @@ export class Meal {
       offerRatio: Number(mealData.offerRatio) || 1,
       offerLimit: mealData.offerLimit || '',
       description: String(mealData.description || ''),
+      allergens: Array.isArray(mealData.allergens) ? mealData.allergens : [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
@@ -135,9 +137,9 @@ export class Meal {
     if (updatedData.offerLimit !== undefined) processedData.offerLimit = updatedData.offerLimit
     if (updatedData.description !== undefined)
       processedData.description = String(updatedData.description)
-
+    if (updatedData.allergens !== undefined)
+      processedData.allergens = Array.isArray(updatedData.allergens) ? updatedData.allergens : []
     processedData.updatedAt = new Date().toISOString()
-
     await this.collection.doc(mealId).update(processedData)
     const updatedDoc = await this.collection.doc(mealId).get()
     return this.serialize(updatedDoc)

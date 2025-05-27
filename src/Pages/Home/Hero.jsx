@@ -13,14 +13,13 @@ import { ItemsCarousel } from '../../Components/ItemsCarousel'
 import heroA from '../../assets/hero/heroA.JPG'
 import heroB from '../../assets/hero/heroB.JPG'
 import heroC from '../../assets/hero/heroC.JPG'
-import heroD from '../../assets/hero/heroD.svg'
+import heroD from '../../assets/hero/heroD.JPG'
 import heroE from '../../assets/hero/heroE.JPG'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import { useEffect, useState, useMemo } from 'react'
 import { useI18nContext } from '../../Contexts/I18nContext'
 import { useTranslation } from 'react-i18next'
-import { Link as RouterLink } from 'react-router-dom'
-//import { ArrowForwardIcon, ArrowBackIcon } from "@chakra-ui/icons";
+import { Link, Link as RouterLink } from 'react-router-dom'
 
 export const AnimatedText = ({ text, delay = 0 }) => {
   const [displayText, setDisplayText] = useState('')
@@ -60,6 +59,7 @@ export const AnimatedText = ({ text, delay = 0 }) => {
     </motion.span>
   )
 }
+
 // Motion variants for animations
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -94,19 +94,35 @@ const HeroCard = ({ item }) => {
   const [hasError, setHasError] = useState(false)
   const isArabic = currentLanguage === 'ar'
 
+  // Responsive layout: column on mobile, row on md+
   const contentLayout = useBreakpointValue({
-    base: 'row',
-    // sm: "column",
-    // md: "row",
-    // lg: "row",
+    base: 'column',
+    md: 'row',
   })
 
+  // Responsive width for content/image
   const contentWidth = useBreakpointValue({
-    base: '90%',
+    base: '86%',
     md: '50%',
   })
 
   const optimizedImage = useMemo(() => image, [image])
+
+  // Preload image and handle loading states
+  useEffect(() => {
+    if (optimizedImage) {
+      const img = new Image()
+      img.onload = () => {
+        setIsLoaded(true)
+        setHasError(false)
+      }
+      img.onerror = () => {
+        setHasError(true)
+        setIsLoaded(false)
+      }
+      img.src = optimizedImage
+    }
+  }, [optimizedImage])
 
   const MotionFlex = motion(Flex)
   const MotionBox = motion(Box)
@@ -114,25 +130,23 @@ const HeroCard = ({ item }) => {
   return (
     <Box
       key={id}
-      bgImage={
-        contentLayout === 'column'
-          ? 'none'
-          : !hasError
-            ? `url(${optimizedImage})`
-            : 'linear-gradient(to right, #48BB78, #38B2AC)'
-      }
+      bgImage={`url(${optimizedImage})`}
       bgSize="cover"
       bgPosition="center"
-      height="100vh"
-      w="100%"
-      mx={-16}
-      my={0}
-      px={24}
-      py={0}
-      position="relative"
+      bgRepeat="no-repeat"
+      minHeight={{ base: '80vh', md: '100vh' }}
+      width="100vw"
+      left="50%" // Center the element
+      marginLeft="-50vw" // Offset for centering
+      position="relative" 
+      px={{ base: 12, md: 16, lg: 24 }}
+      py={{ base: 6, md: 0 }}
       overflow="hidden"
-      backgroundColor={colorMode === 'dark' ? 'gray.800' : 'gray.100'}
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
     >
+      {/* Loading overlay - only show when not loaded and no error */}
       {!isLoaded && !hasError && (
         <Box
           position="absolute"
@@ -140,55 +154,106 @@ const HeroCard = ({ item }) => {
           left={0}
           right={0}
           bottom={0}
-          bg="gray.100"
-          as={motion.div}
-          animate={{ opacity: [0.4, 1] }}
-          transition={{ duration: 3, repeat: Infinity }}
-        />
+          bg="gray.200"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          zIndex={0}
+        >
+          <Box
+            as={motion.div}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 0.5, repeat: Infinity, ease: "linear" }}
+            w="60px"
+            h="60px"
+            border="4px solid"
+            borderColor="brand.200"
+            borderTopColor="brand.500"
+            borderRadius="full"
+           
+          />
+        </Box>
       )}
+
+      {/* Error fallback */}
+      {hasError && (
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          bg="gray.100"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          zIndex={0}
+        >
+          <Text color="gray.500" fontSize="lg">
+            Image failed to load
+          </Text>
+        </Box>
+      )}
+
+      {/* Dark overlay for better text readability */}
+      <Box
+        position="absolute"
+        top={0}
+        left={0}
+        right={0}
+        bottom={0}
+        bg="blackAlpha.400"
+        zIndex={0}
+      />
 
       <Container
         maxW="container.xl"
         height="100%"
-        centerContent
+        centerContent={false}
+        display="flex"
+        alignItems="center"
         justifyContent="center"
-        alignItems={'center'}
+        px={0}
+        position="relative"
+        zIndex={1}
       >
         <MotionFlex
-          position="relative"
-          zIndex={1}
           alignItems="center"
           justifyContent="space-between"
           flexDirection={contentLayout}
           w="full"
-          padding={6}
+          gap={{ base: 8, md: 12, lg: 24 }}
+          padding={0}
           variants={containerVariants}
           initial="hidden"
-          animate="visible"
+          animate={isLoaded || hasError ? "visible" : "hidden"}
         >
           <MotionBox
             as={VStack}
             width={contentWidth}
+            maxW={{ base: '100%', md: '520px' }}
             variants={itemVariants}
-            textAlign={contentLayout === 'column' ? 'center' : isArabic ? 'right' : 'left'}
-            alignItems={contentLayout === 'column' ? 'center' : isArabic ? 'right' : 'left'}
-            mb={contentLayout === 'column' ? 8 : 0}
-          >
+            textAlign={isArabic ? 'right' : 'left'}
+            alignItems={contentLayout === 'column'?'center': isArabic ? 'flex-end' : 'flex-start'}
+            mb={contentLayout === 'column' ? 4 : 0}
+            spacing={2}
+            >
             <Box
               as={motion.div}
               color="#ffffff"
-              mb={4}
-              px={0}
+              mb={1}
               borderRadius="md"
               whileHover={{ scale: 1.02 }}
               transition={{ type: 'spring', stiffness: 400, damping: 10 }}
-              maxWidth="100%"
-              bgColor="rgba(39, 160, 108, 0.9)"
+              width="96%"
+              bgColor="brand.600"
+              mx={{ base: 8, md: 12 }}
+              
+              boxShadow="lg"
             >
               <Heading
                 as="h1"
-                fontSize={['2em', '3em']}
-                className={isArabic ? 'readex-pro' : 'montserrat'}
+                fontSize={['2xl', '3xl', '4xl']}
                 margin={0}
                 lineHeight={1.2}
                 color={'white'}
@@ -201,22 +266,25 @@ const HeroCard = ({ item }) => {
               <Box
                 as={motion.div}
                 display="inline-flex"
-                bg="rgba(0, 0, 0, 0.8)"
+                bg="rgba(0, 0, 0, 0.7)"
                 color="brand.500"
-                px={0}
+                mx={{ base: 8, md: 12 }}
+                my={{ base: 2, md: 3 }}
                 borderRadius="md"
                 whileHover={{ scale: 1.02 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 10 }}
-                maxWidth="100%"
+                maxWidth="90%"
+                boxShadow="md"
+                
               >
                 <Text
-                  fontSize={['1.2em', '1.5em']}
-                  className={isArabic ? 'lalezar' : 'outfit'}
+                  fontSize={['md', 'lg', 'xl']}
                   margin={0}
-                  lineHeight={1.4}
-                  color={'brand.400'}
+                  lineHeight={1.5}
+                  color={'brand.200'}
+                  fontWeight="medium"
                 >
-                  <AnimatedText text={description} delay={name.length * 0.1} color="#ffffff" />
+                  <AnimatedText text={description} delay={name?.length * 0.1 || 0} color="#ffffff" />
                 </Text>
               </Box>
             )}
@@ -225,6 +293,7 @@ const HeroCard = ({ item }) => {
               <Box
                 as={motion.div}
                 mt={4}
+                mx={{ base: 8, md: 12 }}
                 display="inline-block"
                 whileHover={{ scale: 1.05 }}
                 initial={{ opacity: 0, y: 20 }}
@@ -233,60 +302,34 @@ const HeroCard = ({ item }) => {
                   type: 'spring',
                   stiffness: 400,
                   damping: 10,
-                  delay: (name.length + (description?.length || 0)) * 0.05,
+                  delay: (name?.length + (description?.length || 0)) * 0.05,
                 }}
               >
-                <Button
-                  as={RouterLink}
+                <Link
+                  as={Button}
                   to={path}
+                  variant={'solid'}
                   colorScheme="brand"
                   size="lg"
-                  bgColor="green.500"
-                  color="white"
-                  _hover={{ bgColor: 'green.600' }}
+                  fontWeight="bold"
+                  px={8}
+                  py={6}
+                  fontSize={{ base: 'md', md: 'lg' }}
+                  _hover={{ bg: 'brand.700' }}
                 >
                   {t('hero.explore')}
-                </Button>
+                </Link>
               </Box>
             )}
           </MotionBox>
-
-          <MotionBox
-            width={contentWidth}
-            height={contentLayout === 'column' ? '300px' : 'auto'}
-            variants={itemVariants}
-            borderRadius="lg"
-            overflow="hidden"
-            whileHover={{ scale: 1.03 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 10 }}
-          >
-            <Box
-              width="100%"
-              height="100%"
-              bgImage={`url(${optimizedImage})`}
-              bgSize="cover"
-              bgPosition="center"
-              borderRadius="lg"
-            />
-          </MotionBox>
         </MotionFlex>
       </Container>
-
-      <Box
-        as="img"
-        src={optimizedImage}
-        alt=""
-        display="none"
-        onLoad={() => setIsLoaded(true)}
-        onError={() => setHasError(true)}
-      />
     </Box>
   )
 }
 
 // Hero
 export const Hero = () => {
-  //const { t } = useTranslation();
   const { currentLanguage } = useI18nContext()
   const heroSlides = useMemo(
     () => [
@@ -356,6 +399,7 @@ export const Hero = () => {
   return (
     <Box
       height="100vh"
+      width="100%" // Ensure full width
       display="flex"
       alignItems="center"
       justifyContent="center"
