@@ -8,8 +8,15 @@ import { Footer } from './Footer'
 import { useEffect } from 'react'
 import { useElements } from '../../Contexts/ElementsContext'
 import ExpertPortal from './ExpertPortal'
+import MapBox from '../../Components/Map/MapBox'
 const HomePage = () => {
   //const { user }=useUser();
+  // const markers = [
+  //   {
+  //     position: [51.505, -0.09],
+  //     content: "Our main office"
+  //   }
+  // ];
   const {
     //items,
     //meals,
@@ -33,6 +40,7 @@ const HomePage = () => {
   return (
     <Box textAlign="center" p={5}>
       <Hero />
+      {/*<MapBox />*/}
       <FeaturedMeals featuredMeals={featuredMeals} />
       <OffersSlide offersMeals={offersMeals} />
       <ExpertPortal />

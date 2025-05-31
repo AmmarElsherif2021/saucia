@@ -57,14 +57,14 @@ const Layout = ({ children }) => {
       }}
     >
       <Navbar />
-      <main 
-       style={{ 
-        position: 'absolute',
-        top: '4rem',
-        width: '100%',
-       }}
-        >
-          {children}
+      <main
+        style={{
+          position: 'absolute',
+          top: '4rem',
+          width: '100%',
+        }}
+      >
+        {children}
       </main>
     </div>
   )

@@ -41,7 +41,7 @@ export const AnimatedText = ({ text, delay = 0 }) => {
     const controls = animate(count, safeText.length, {
       type: 'tween',
       delay: delay,
-      duration: safeText.length * 0.1,
+      duration: safeText.length * 0.06,
       ease: 'easeInOut',
     })
     return () => controls.stop()
@@ -138,7 +138,7 @@ const HeroCard = ({ item }) => {
       width="100vw"
       left="50%" // Center the element
       marginLeft="-50vw" // Offset for centering
-      position="relative" 
+      position="relative"
       px={{ base: 12, md: 16, lg: 24 }}
       py={{ base: 6, md: 0 }}
       overflow="hidden"
@@ -163,14 +163,13 @@ const HeroCard = ({ item }) => {
           <Box
             as={motion.div}
             animate={{ rotate: 360 }}
-            transition={{ duration: 0.5, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 0.5, repeat: Infinity, ease: 'linear' }}
             w="60px"
             h="60px"
             border="4px solid"
             borderColor="brand.200"
             borderTopColor="brand.500"
             borderRadius="full"
-           
           />
         </Box>
       )}
@@ -218,15 +217,16 @@ const HeroCard = ({ item }) => {
         zIndex={1}
       >
         <MotionFlex
-          alignItems="center"
+          alignItems="stretch"
           justifyContent="space-between"
           flexDirection={contentLayout}
-          w="full"
+          w="80%"
           gap={{ base: 8, md: 12, lg: 24 }}
+          //bg={colorMode === 'light' ? 'whiteAlpha.800' : 'blackAlpha.800'}
           padding={0}
           variants={containerVariants}
           initial="hidden"
-          animate={isLoaded || hasError ? "visible" : "hidden"}
+          animate={isLoaded || hasError ? 'visible' : 'hidden'}
         >
           <MotionBox
             as={VStack}
@@ -234,10 +234,12 @@ const HeroCard = ({ item }) => {
             maxW={{ base: '100%', md: '520px' }}
             variants={itemVariants}
             textAlign={isArabic ? 'right' : 'left'}
-            alignItems={contentLayout === 'column'?'center': isArabic ? 'flex-end' : 'flex-start'}
+            alignItems={
+              contentLayout === 'column' ? 'center' : isArabic ? 'flex-end' : 'flex-start'
+            }
             mb={contentLayout === 'column' ? 4 : 0}
             spacing={2}
-            >
+          >
             <Box
               as={motion.div}
               color="#ffffff"
@@ -247,8 +249,7 @@ const HeroCard = ({ item }) => {
               transition={{ type: 'spring', stiffness: 400, damping: 10 }}
               width="96%"
               bgColor="brand.600"
-              mx={{ base: 8, md: 12 }}
-              
+              p={0}
               boxShadow="lg"
             >
               <Heading
@@ -264,18 +265,19 @@ const HeroCard = ({ item }) => {
 
             {description && (
               <Box
-                as={motion.div}
                 display="inline-flex"
-                bg="rgba(0, 0, 0, 0.7)"
+                as={motion.div}
                 color="brand.500"
-                mx={{ base: 8, md: 12 }}
-                my={{ base: 2, md: 3 }}
+                mb={1}
                 borderRadius="md"
                 whileHover={{ scale: 1.02 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 10 }}
-                maxWidth="90%"
-                boxShadow="md"
-                
+                width="96%"
+                bg="rgba(0, 0, 0, 0.7)"
+                // mr={{ base: '15vw', md: '10vw', lg:'4vw'}}
+                // ml={{ base: '15vw', md: '10vw', lg:'4vw'}}
+                px={0}
+                boxShadow="lg"
               >
                 <Text
                   fontSize={['md', 'lg', 'xl']}
@@ -284,7 +286,11 @@ const HeroCard = ({ item }) => {
                   color={'brand.200'}
                   fontWeight="medium"
                 >
-                  <AnimatedText text={description} delay={name?.length * 0.1 || 0} color="#ffffff" />
+                  <AnimatedText
+                    text={description}
+                    delay={name?.length * 0.1 || 0}
+                    color="#ffffff"
+                  />
                 </Text>
               </Box>
             )}
@@ -293,7 +299,7 @@ const HeroCard = ({ item }) => {
               <Box
                 as={motion.div}
                 mt={4}
-                mx={{ base: 8, md: 12 }}
+                // mx={{ base: 8, md: 12 }}
                 display="inline-block"
                 whileHover={{ scale: 1.05 }}
                 initial={{ opacity: 0, y: 20 }}
@@ -304,6 +310,7 @@ const HeroCard = ({ item }) => {
                   damping: 10,
                   delay: (name?.length + (description?.length || 0)) * 0.05,
                 }}
+                //bg={colorMode === 'light' ? 'brand.100' : 'brand.600'}
               >
                 <Link
                   as={Button}

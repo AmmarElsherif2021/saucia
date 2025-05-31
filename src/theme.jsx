@@ -1,5 +1,6 @@
 import { extendTheme, Input } from '@chakra-ui/react'
 import './index.css'
+import { color } from 'framer-motion'
 
 const createTheme = (config) => {
   const isArabic = config?.language === 'ar'
@@ -133,7 +134,7 @@ const createTheme = (config) => {
       useSystemColorMode: false,
     },
     fonts: {
-      heading: isArabic ? "'Lalezar', sans-serif" : "'Outfit', sans-serif",//"'Readex Pro', sans-serif" : "'Montserrat', sans-serif",
+      heading: isArabic ? "'Lalezar', sans-serif" : "'Outfit', sans-serif", //"'Readex Pro', sans-serif" : "'Montserrat', sans-serif",
       body: isArabic ? "'Lalezar', sans-serif" : "'Outfit', sans-serif",
     },
     styles: {
@@ -157,7 +158,7 @@ const createTheme = (config) => {
     components: {
       Box: {
         baseStyle: (props) => ({
-          color: props.colorMode === 'dark' ? 'gray.100' : 'gray.800',
+          color: props.colorMode === 'dark' ? 'gray.100' : 'brand.900',
           borderRadius: 'md',
           boxShadow: 'none',
           p: 4,
@@ -273,6 +274,7 @@ const createTheme = (config) => {
             color: props.colorScheme ? `${props.colorScheme}.500` : 'brand.500',
             _hover: {
               bg: props.colorScheme ? `${props.colorScheme}.300` : 'brand.200',
+              color: props.colorScheme ? `${props.colorScheme}.700` : 'brand.50',
             },
           }),
           ghost: (props) => ({
@@ -393,7 +395,7 @@ const createTheme = (config) => {
         baseStyle: (props) => ({
           fontWeight: 'bold',
           lineHeight: 'shorter',
-          color: props.colorMode === 'dark' ? 'white' : 'gray.800',
+          color: props.colorMode === 'dark' ? 'white' : 'brand.800',
         }),
         sizes: {
           xl: { fontSize: '4xl' },

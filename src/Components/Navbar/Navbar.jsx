@@ -30,7 +30,7 @@ export const Navbar = () => {
   } = useDisclosure()
   const { currentLanguage, changeLanguage } = useI18nContext()
   const { t } = useTranslation()
-  
+
   // Enhanced color values for better contrast and theming
   const bgColor = useColorModeValue('white', 'gray.800')
   const borderColor = useColorModeValue('gray.200', 'gray.700')
@@ -64,7 +64,7 @@ export const Navbar = () => {
       left={0}
       right={0}
       width="100vw"
-      h={"4rem"}
+      h={'4rem'}
       pt={2}
       pb={4}
       mb={0}
@@ -72,35 +72,31 @@ export const Navbar = () => {
       borderColor={borderColor}
       backdropFilter="blur(10px)"
       _dark={{
-        backdropFilter: "blur(20px)",
-        bg: "rgba(26, 32, 44, 0.95)"
+        backdropFilter: 'blur(20px)',
+        bg: 'rgba(26, 32, 44, 0.95)',
       }}
     >
       {/* Main Navigation Container */}
       <Container maxW="99vw" pb={4} px={{ base: 4, sm: 6, md: 8, lg: 12 }}>
-        <Flex
-          alignItems="center"
-          justifyContent="space-between"
-          w="100%"
-        >
+        <Flex alignItems="center" justifyContent="space-between" w="100%">
           {/* Logo Section */}
           <Box flexShrink={0} mr={{ base: 2, md: 4 }}>
             <Link to="/">
-              <Img 
-                src={logoIcon} 
-                w={{ base: 12, sm: 14, md: 16, lg: 20 }} 
+              <Img
+                src={logoIcon}
+                w={{ base: 12, sm: 14, md: 16, lg: 20 }}
                 h={{ base: 10, sm: 12, md: 14, lg: 16 }}
                 alt={t('navbar.logoAlt')}
                 objectFit="contain"
                 transition="transform 0.2s"
-                _hover={{ transform: "scale(1.05)" }}
+                _hover={{ transform: 'scale(1.05)' }}
               />
             </Link>
           </Box>
 
           {/* Desktop Navigation Menu */}
           <Flex
-            display={{ base: 'none',md:'none', lg: 'flex' }}
+            display={{ base: 'none', md: 'none', lg: 'flex' }}
             alignItems="center"
             gap={{ lg: 1, xl: 2 }}
             flexGrow={1}
@@ -114,15 +110,15 @@ export const Navbar = () => {
                 to={item.path}
                 state={item.section ? handleSectionNavigation(item.section) : undefined}
               >
-                <Button 
+                <Button
                   variant="ghost"
-                  size={{lg: "sm", xl: "md" }}
-                  fontSize={{ lg: "xs", xl: "sm" }}
+                  size={{ lg: 'sm', xl: 'md' }}
+                  fontSize={{ lg: 'xs', xl: 'sm' }}
                   px={{ lg: 2, xl: 3 }}
                   _hover={{
                     bg: useColorModeValue('brand.50', 'brand.800'),
                     color: useColorModeValue('brand.700', 'brand.200'),
-                    transform: "translateY(-1px)"
+                    transform: 'translateY(-1px)',
                   }}
                   transition="all 0.2s"
                 >
@@ -133,8 +129,8 @@ export const Navbar = () => {
           </Flex>
 
           {/* Desktop Right Controls */}
-          <HStack 
-            spacing={{ md: 1, lg: 3, xl: 4 }} 
+          <HStack
+            spacing={{ md: 1, lg: 3, xl: 4 }}
             display={{ base: 'none', md: 'flex' }}
             flexShrink={0}
           >
@@ -144,11 +140,11 @@ export const Navbar = () => {
                 aria-label={t('navbar.cart')}
                 icon={<FaShoppingCart />}
                 variant="ghost"
-                size={{ md: "sm", lg: "md" }}
+                size={{ md: 'sm', lg: 'md' }}
                 _hover={{
                   bg: useColorModeValue('brand.50', 'brand.800'),
                   color: useColorModeValue('brand.700', 'brand.200'),
-                  transform: "scale(1.1)"
+                  transform: 'scale(1.1)',
                 }}
                 transition="all 0.2s"
               />
@@ -165,21 +161,21 @@ export const Navbar = () => {
               icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
               onClick={toggleColorMode}
               variant="ghost"
-              size={{ md: "sm", lg: "md" }}
+              size={{ md: 'sm', lg: 'md' }}
               _hover={{
                 bg: useColorModeValue('brand.50', 'brand.800'),
                 color: useColorModeValue('brand.700', 'brand.200'),
-                transform: "rotate(180deg)"
+                transform: 'rotate(180deg)',
               }}
               transition="all 0.3s"
             />
 
             {/* Language Toggle */}
-            <Button 
-              onClick={toggleLanguage} 
-              variant="ghost" 
-              size={{ md: "sm", lg: "md" }}
-              minW="auto" 
+            <Button
+              onClick={toggleLanguage}
+              variant="ghost"
+              size={{ md: 'sm', lg: 'md' }}
+              minW="auto"
               px={{ md: 2, lg: 3 }}
               fontWeight="bold"
               _hover={{
@@ -200,7 +196,7 @@ export const Navbar = () => {
                 size="sm"
                 _hover={{
                   bg: useColorModeValue('brand.50', 'brand.800'),
-                  transform: "scale(1.1)"
+                  transform: 'scale(1.1)',
                 }}
               />
             </Box>
@@ -236,7 +232,7 @@ export const Navbar = () => {
               size="sm"
               _hover={{
                 bg: useColorModeValue('brand.50', 'brand.800'),
-                transform: "scale(1.1)"
+                transform: 'scale(1.1)',
               }}
             />
           </HStack>
@@ -245,26 +241,26 @@ export const Navbar = () => {
 
       {/* Mobile Menu Dropdown */}
       {isOpen && (
-        <Box 
+        <Box
           display={{ base: 'block', md: 'block', lg: 'none' }}
           bg={bgColor}
           mt={0}
-          w={"100vw"}
+          w={'100vw'}
           position="fixed"
           top="3.5rem"
           borderColor={borderColor}
           backdropFilter="blur(10px)"
           _dark={{
-            bg: "rgba(26, 32, 44, 0.98)"
+            bg: 'rgba(26, 32, 44, 0.98)',
           }}
         >
           <Container maxW="1400px" px={{ base: 4, sm: 6 }}>
             <VStack spacing={2} py={4} align="stretch">
               {/* Home Link */}
               <Link to="/" onClick={onClose}>
-                <Button 
-                  variant="ghost" 
-                  w="full" 
+                <Button
+                  variant="ghost"
+                  w="full"
                   justifyContent="flex-start"
                   _hover={{
                     bg: useColorModeValue('brand.50', 'brand.800'),
@@ -283,9 +279,9 @@ export const Navbar = () => {
                   state={item.section ? handleSectionNavigation(item.section) : undefined}
                   onClick={onClose}
                 >
-                  <Button 
-                    variant="ghost" 
-                    w="full" 
+                  <Button
+                    variant="ghost"
+                    w="full"
                     justifyContent="flex-start"
                     _hover={{
                       bg: useColorModeValue('brand.50', 'brand.800'),
@@ -298,8 +294,8 @@ export const Navbar = () => {
               ))}
 
               {/* Mobile Profile Button */}
-              <Button 
-                w="full" 
+              <Button
+                w="full"
                 onClick={onProfileModalOpen}
                 variant="ghost"
                 justifyContent="flex-start"
@@ -312,8 +308,8 @@ export const Navbar = () => {
               </Button>
 
               {/* Mobile Language Toggle */}
-              <Button 
-                w="full" 
+              <Button
+                w="full"
                 onClick={toggleLanguage}
                 variant="ghost"
                 justifyContent="flex-start"

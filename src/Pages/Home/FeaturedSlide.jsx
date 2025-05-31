@@ -15,7 +15,7 @@ export const FeaturedMeals = ({ featuredMeals }) => {
 
       {/* Items display */}
       {featuredMeals?.length > 0 ? (
-        <ItemsCarousel 
+        <ItemsCarousel
           items={featuredMeals}
           CardComponent={FeaturedItemCard}
           visibleCount={3}

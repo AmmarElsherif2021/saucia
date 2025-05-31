@@ -13,6 +13,7 @@ import {
   Box,
   Button,
   Tag,
+  Heading,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
 
@@ -110,14 +111,14 @@ const CustomizableMealSelectionModal = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
-      <ModalContent sx={{ maxHeight: '60vh' }}>
-        <ModalHeader>
+      <ModalContent sx={{ padding: '2vw', width: '80%', minWidth: '75vw', maxHeight: '85vh' }}>
+        <ModalHeader sx={{ paddingTop: '6vh' }}>
           <Flex justify="space-between" align="center" w="100%">
-            <Text fontSize="lg" fontWeight="bold">
+            <Heading fontSize="xl" fontWeight="bold">
               {t('checkout.customizeYourSalad')}
-            </Text>
-            <Text fontWeight="bold" color="green.600">
-              {calculateTotal().toFixed(2)} {t('common.currency')}
+            </Heading>
+            <Text fontWeight="bold" color="green.600" fontSize="0.5em" mx={2}>
+              {t('checkout.customizePolicy')}
             </Text>
           </Flex>
         </ModalHeader>
@@ -127,7 +128,7 @@ const CustomizableMealSelectionModal = ({
             {t('checkout.customizeSaladInstructions')}
           </Text>
 
-          <SimpleGrid p={10} columns={[1, 2]} spacing={4}>
+          <SimpleGrid p={10} m={0} columns={[1, 2]} spacing={3} bg={'warning.50'}>
             {Object.entries(groupedItems).map(([section, items]) => (
               <Box key={section} mb={6}>
                 {renderSectionHeader(section)}
@@ -140,7 +141,7 @@ const CustomizableMealSelectionModal = ({
                     borderRadius="md"
                     align="center"
                     justify="space-between"
-                    bg={(selectedItems[item.id] || 0) > 0 ? 'blue.50' : 'white'}
+                    bg={(selectedItems[item.id] || 0) > 0 ? 'brand.100' : 'white'}
                     onClick={() => handleSelectItem(item)}
                     cursor="pointer"
                   >
@@ -160,11 +161,11 @@ const CustomizableMealSelectionModal = ({
           </SimpleGrid>
         </ModalBody>
         <ModalFooter>
-          <Tag mr={4}>{t('menuPage.selectedCount', { count: totalSelectedItems })}</Tag>
-          <Tag colorScheme="green" mr={4}>
-            {t('menuPage.totalPrice')}: {calculateTotal().toFixed(2)} {t('common.currency')}
+          <Tag mr={4} colorScheme="green">
+            {t('menuPage.selectedCount', { count: totalSelectedItems })}
           </Tag>
-          <Button colorScheme="brand" onClick={() => onConfirm(selectedItems)}>
+
+          <Button sx={{ marginX: 6 }} colorScheme="brand" onClick={() => onConfirm(selectedItems)}>
             {t('checkout.confirmSelection')}
           </Button>
         </ModalFooter>

@@ -30,13 +30,15 @@ import keepWeightPlanImage from '../../assets/premium/keepWeight.png'
 import loseWeightPlanImage from '../../assets/premium/loseWeight.png'
 import dailyMealPlanImage from '../../assets/premium/dailymealplan.png'
 import saladsPlanImage from '../../assets/premium/proteinsaladplan.png'
+import nonProteinsaladsPlanImage from '../../assets/premium/nonproteinsaladplan.png'
 import { JoinPremiumTeaser } from './JoinPremiumTeaser'
 import { useTranslation } from 'react-i18next'
+import { useI18nContext } from '../../Contexts/I18nContext'
 
 // Map plan titles to images
 const planImages = {
   'Protein Salad Plan': saladsPlanImage,
-  'Non-Protein Salad Plan': saladsPlanImage,
+  'Non-Protein Salad Plan': nonProteinsaladsPlanImage,
   'Daily Plan': dailyMealPlanImage,
   'Gain Weight': gainWeightPlanImage,
   'Keep Weight': keepWeightPlanImage,
@@ -44,9 +46,11 @@ const planImages = {
 }
 
 const PlanCard = ({ plan, isUserPlan, onSelect }) => {
-  const cardBg = useColorModeValue('white', 'gray.700')
-  const borderColor = isUserPlan ? 'green.400' : 'gray.200'
+  const cardBg = useColorModeValue('teal.100', 'gray.700')
+  const borderColor = isUserPlan ? 'teal.500' : 'gray.200'
   const { t } = useTranslation()
+  const { currentLanguage } = useI18nContext()
+  const isArabic = currentLanguage === 'ar'
   // Add the image to the plan object for easier access
   const planWithImage = {
     ...plan,
@@ -60,7 +64,7 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
       borderColor={borderColor}
       overflow="hidden"
       bg={cardBg}
-      boxShadow={isUserPlan ? '0 0 0 2px #48BB78' : 'base'}
+      boxShadow={isUserPlan ? '0 0 0 2px rgb(59, 150, 147)' : 'base'}
       p={4}
       position="relative"
       transition="transform 0.2s, box-shadow 0.2s"
@@ -83,18 +87,12 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
         width="100%"
         objectFit="cover"
         mb={4}
+        bg={useColorModeValue('gray.50', 'gray.600')}
       />
 
       <Heading as="h3" size="md" mb={2}>
-        {plan.title}
+        {isArabic ? plan.title_arabic : plan.title}
       </Heading>
-
-      {plan.title_arabic && (
-        <Text mb={2} color="gray.600">
-          {plan.title_arabic}
-        </Text>
-      )}
-
       <Text mb={2}>
         <Badge colorScheme="purple">
           {plan.periods?.length || 0} {t('premium.periods')}
@@ -128,15 +126,13 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
 
 const PlanDetails = ({ plan }) => {
   const { t } = useTranslation()
-
+  const currentLanguage = useI18nContext()
+  const isArabic = currentLanguage === 'ar'
   return (
     <Box>
       <Heading as="h3" size="sm" mb={2}>
-        {plan.title}
+        {isArabic ? plan.title_arabic : plan.title}
       </Heading>
-
-      {plan.title_arabic && <Text mb={4}>{plan.title_arabic}</Text>}
-
       <Heading as="h4" size="xs" mb={2}>
         {t('premium.nutritionalInformation')}
       </Heading>
@@ -154,7 +150,7 @@ const PlanDetails = ({ plan }) => {
       </Flex>
 
       <Heading as="h4" size="xs" mb={2}>
-        {t('premium.subscriptionPeriods')}
+        {t('checkout.subscriptionPeriod')}
       </Heading>
 
       {plan.periods && plan.periods.length > 0 ? (
@@ -327,7 +323,7 @@ export const PremiumPage = () => {
                         ...plan,
                         image: planImages[plan.title] || dailyMealPlanImage,
                       }}
-                      isUserPlan={userPlan && userPlan.id === plan.id}
+                      isUserPlan={userPlan && user.subscription.planId === plan.id}
                       onSelect={handlePlanSelect}
                     />
                   ))}

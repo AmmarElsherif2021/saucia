@@ -438,7 +438,14 @@ export const ACC = ({ sections = [], expandedIndex, onToggle }) => {
             >
               <Box flex="1" textAlign="left" textStyle="heading">
                 <Flex align="center" gap={2}>
-                  {section.icon && <img width={22} src={section.icon} alt="" style={{borderRadius:'50%', backgroundColor:'white',padding:8}}/>}
+                  {section.icon && (
+                    <img
+                      width={32}
+                      src={section.icon}
+                      alt=""
+                      style={{ borderRadius: '50%', backgroundColor: 'white', padding: 8 }}
+                    />
+                  )}
                   <Heading size="md">{section.title}</Heading>
                 </Flex>
               </Box>

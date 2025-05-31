@@ -9,7 +9,7 @@ export const MealCard = ({ meal, index, onRemove, onChoose, isArabic, t }) => {
       onClick={onChoose ? () => onChoose(meal) : undefined}
       position="relative"
       w="100%"
-      h="180px" 
+      h="180px"
       borderRadius="lg"
       overflow="hidden"
       transition="all 0.2s"

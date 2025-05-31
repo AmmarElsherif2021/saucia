@@ -23,12 +23,12 @@ import {
   ModalContent,
   ModalHeader,
   ModalBody,
-  ModalCloseButton,     
+  ModalCloseButton,
   ModalFooter,
-  IconButton
+  IconButton,
 } from '@chakra-ui/react'
 
-import { StarIcon, MinusIcon, AddIcon} from '@chakra-ui/icons'
+import { StarIcon, MinusIcon, AddIcon } from '@chakra-ui/icons'
 // import dessertPic from "../assets/dessert.JPG";
 // import fruitPic from "../assets/fruits.JPG";
 // import leavesPic from "../assets/leaves.JPG"
@@ -419,7 +419,7 @@ export const FeaturedItemCard = ({ item }) => {
         boxShadow="md"
       >
         {/* Image Section */}
-        <Box position="relative" height={"45%"} width="100%">
+        <Box position="relative" height={'45%'} width="100%">
           <Image
             src={item?.image || unknownDefaultImage}
             alt={isArabic ? item?.name_arabic : item?.name}
@@ -461,10 +461,10 @@ export const FeaturedItemCard = ({ item }) => {
         </Box>
 
         {/* Content Section */}
-        <Box p={2} bg={colorMode === 'dark' ? 'gray.700' : 'white'} height={"30%"}>
+        <Box p={2} bg={colorMode === 'dark' ? 'gray.700' : 'white'} height={'30%'}>
           <Flex direction="column" gap={2}>
             <Heading
-              fontSize={"1.3em"}
+              fontSize={'1.3em'}
               color={colorMode === 'dark' ? 'white' : 'gray.800'}
               noOfLines={1}
             >
@@ -525,7 +525,14 @@ export const FeaturedItemCard = ({ item }) => {
       {isModalOpen && (
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} isCentered>
           <ModalOverlay />
-          <ModalContent mx={4} bg={colorMode === 'dark' ? 'gray.800' : 'white'} maxW="40vw">
+          <ModalContent
+            width={['90%', '80%', '50%']}
+            maxWidth="90vw"
+            p={1}
+            ml="1vw"
+            mr="4vw"
+            bg={colorMode === 'dark' ? 'gray.800' : 'white'}
+          >
             <ModalHeader>
               <Flex align="center">
                 <Text fontSize="xl" fontWeight="bold">
@@ -576,17 +583,10 @@ export const FeaturedItemCard = ({ item }) => {
             </ModalBody>
 
             <ModalFooter>
-              <Button
-                variant="outline"
-                mr={3}
-                onClick={() => setIsModalOpen(false)}
-              >
+              <Button variant="outline" mr={3} onClick={() => setIsModalOpen(false)}>
                 {t('buttons.maybeLater')}
               </Button>
-              <Button
-                colorScheme="brand"
-                onClick={handleConfirm}
-              >
+              <Button colorScheme="brand" onClick={handleConfirm}>
                 {t('buttons.addToCart')} ({quantity})
               </Button>
             </ModalFooter>
@@ -737,7 +737,14 @@ export const OfferCard = ({ item }) => {
       {isModalOpen && (
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} isCentered>
           <ModalOverlay />
-          <ModalContent mx="4vw" bg={colorMode === 'dark' ? 'gray.800' : 'white'}>
+          <ModalContent
+            width={['90%', '80%', '50%']}
+            maxWidth="90vw"
+            p={1}
+            ml="1vw"
+            mr="4vw"
+            bg={colorMode === 'dark' ? 'gray.800' : 'white'}
+          >
             <ModalHeader>
               <Flex align="center">
                 <Text fontSize="xl" fontWeight="bold">
@@ -788,17 +795,10 @@ export const OfferCard = ({ item }) => {
             </ModalBody>
 
             <ModalFooter>
-              <Button
-                variant="outline"
-                mr={3}
-                onClick={() => setIsModalOpen(false)}
-              >
+              <Button variant="outline" mr={3} onClick={() => setIsModalOpen(false)}>
                 {t('buttons.maybeLater')}
               </Button>
-              <Button
-                colorScheme="brand"
-                onClick={handleConfirm}
-              >
+              <Button colorScheme="brand" onClick={handleConfirm}>
                 {t('buttons.addToCart')} ({quantity})
               </Button>
             </ModalFooter>
@@ -812,8 +812,10 @@ export const OfferCard = ({ item }) => {
 export const PlanCard = ({ plan }) => {
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
+  const { t } = useTranslation()
   const { currentLanguage } = useI18nContext()
   const isArabic = currentLanguage === 'ar'
+  const saladImage = saladsPlanImage // Fallback image for salad plans
 
   // Color mode specific styling
   const cardBg = useColorModeValue('white', 'gray.800')
@@ -834,7 +836,7 @@ export const PlanCard = ({ plan }) => {
   //useEffect(()=>console.log(` from PlanCard ${JSON.stringify(plan)}`),[])
   // Construct description from plan data - with null checks
   const description = plan
-    ? `${plan.carb || 0}g carbs • ${plan.protein || 0}g protein • ${plan.kcal || 0}kcal`
+    ? `${plan.carb || 0}g ${t('premium.carbs')} • ${plan.protein || 0}g ${t('premium.protein')} • ${plan.kcal || 0}${t('premium.kcal')}`
     : ''
   const macros = description?.split(' • ')
 
@@ -849,7 +851,6 @@ export const PlanCard = ({ plan }) => {
       borderRadius="2xl"
       overflow="hidden"
       position="relative"
-      boxShadow={`0 10px 30px ${shadowColor}`}
       bg={cardBg}
       mx="auto"
       transition="transform 0.3s, box-shadow 0.3s"
@@ -901,14 +902,7 @@ export const PlanCard = ({ plan }) => {
       />
 
       {/* Gradient overlay for better text visibility */}
-      <Box
-        position="absolute"
-        top={0}
-        left={0}
-        right={0}
-        bottom={0}
-        bgGradient="linear(to-b, transparent 30%, rgba(0,0,0,0.7) 90%)"
-      />
+      <Box position="absolute" top={0} left={0} right={0} bottom={0} />
 
       {/* Content container */}
       <Flex
@@ -941,10 +935,11 @@ export const PlanCard = ({ plan }) => {
           mb={2}
           fontSize="2xl"
           textShadow="0 2px 4px rgba(0,0,0,0.4)"
+          bg={'rgba(0,0,0,0.7) 90%'}
           className={isArabic ? 'readex-pro' : 'montserrat'}
           dir={isArabic ? 'rtl' : 'ltr'}
         >
-          {plan?.title || 'Plan Title'}
+          {isArabic ? plan.title_arabic : plan.title}
         </Heading>
 
         {/* Macros display */}
@@ -962,29 +957,18 @@ export const PlanCard = ({ plan }) => {
             </Badge>
           ))}
         </Flex>
-
-        {/* Description shown at bottom */}
-        <Text
-          color="white"
-          fontSize="md"
-          className={isArabic ? 'lalezar' : 'outfit'}
-          bg={descriptionBg}
-          p={2}
-          borderRadius="md"
-          textShadow="0 1px 2px rgba(0,0,0,0.4)"
-          dir={isArabic ? 'rtl' : 'ltr'}
-          width="fit-content"
-          mx={isArabic ? 'auto 0' : '0 auto'}
-        >
-          Premium Meal Plan
-        </Text>
       </Flex>
     </Box>
   )
 }
 //Tiny plan card
-export const PlanTinyCard = ({ recommendedPlan, handleChoosePlan, selected = false }) => (
-  <Box
+export const PlanTinyCard = ({ recommendedPlan, handleChoosePlan, selected = false }) => {
+  const { t } = useTranslation()
+  const { currentLanguage } = useI18nContext()
+  const isArabic = currentLanguage === 'ar'
+  const saladImage = saladsPlanImage // Fallback image for salad plans
+  return
+  ;<Box
     sx={{
       width: 'auto',
       maxWidth: '20vw',
@@ -1010,30 +994,34 @@ export const PlanTinyCard = ({ recommendedPlan, handleChoosePlan, selected = fal
     </Box>
     <Box>
       <Flex align="start" spacing="2" mt="4" wrap="wrap">
-        {['Carbs', 'Protein', 'Snacks', 'Soups'].map((label, i) => (
-          <HStack key={i} spacing="1">
-            <Box
-              px="3"
-              my="1"
-              bg={'gray.800'}
-              borderRadius="md"
-              color={['brand.500', 'secondary.500', 'orange.500', 'error.500'][i]}
-              fontWeight="bold"
-            >
-              {label}
-            </Box>
-            <Text fontSize="sm" isTruncated>
-              {label === 'Carbs' || label === 'Protein'
-                ? `${recommendedPlan?.[label.toLowerCase()]}g`
-                : `Choose your ${label.toLowerCase()}`}
-            </Text>
-          </HStack>
-        ))}
+        {[t('premium.carbs'), t('premium.protein'), t('premium.snacks'), t('premium.soups')].map(
+          (label, i) => (
+            <HStack key={i} spacing="1">
+              <Box
+                px="3"
+                my="1"
+                bg={'gray.800'}
+                borderRadius="md"
+                color={['brand.500', 'secondary.500', 'orange.500', 'error.500'][i]}
+                fontWeight="bold"
+              >
+                {label}
+              </Box>
+              <Text fontSize="sm" isTruncated>
+                {label === t('premium.carbs') || label === t('premium.protein')
+                  ? `${recommendedPlan?.[label.toLowerCase()]}g`
+                  : label === t('premium.snacks')
+                    ? t('premium.chooseYourSnacks')
+                    : t('premium.chooseYourSoups')}
+              </Text>
+            </HStack>
+          ),
+        )}
       </Flex>
     </Box>
     {selected && (
       <Box mt={8}>
-        <Text>{recommendedPlan.description}</Text>
+        <Text>{isArabic ? recommendedPlan.description_arabic : recommendedPlan.description}</Text>
         <Box>
           <Button mt="6" colorScheme="brand" onClick={handleChoosePlan}>
             Select Plan
@@ -1042,4 +1030,4 @@ export const PlanTinyCard = ({ recommendedPlan, handleChoosePlan, selected = fal
       </Box>
     )}
   </Box>
-)
+}

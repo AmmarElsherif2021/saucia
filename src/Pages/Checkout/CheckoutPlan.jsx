@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useReducer } from 'react'
 import {
   Box,
   Heading,
@@ -28,27 +28,78 @@ import {
   ModalFooter,
   useDisclosure,
   useBreakpointValue,
-} from '@chakra-ui/react';
-import { useTranslation } from 'react-i18next';
-import { useI18nContext } from '../../Contexts/I18nContext';
-import { useNavigate } from 'react-router-dom';
-import { useUser } from '../../Contexts/UserContext';
-import { updateUserProfile } from '../../API/users';
-import { useElements } from '../../Contexts/ElementsContext';
-import { MealCard } from './MealCard';
-import ConfirmPlanModal from './ConfirmPlanModal';
-import CustomizableMealSelectionModal from './CustomizableMealSelectionModal';
+} from '@chakra-ui/react'
+import MapModal from './MapModal'
+import { useTranslation } from 'react-i18next'
+import { useI18nContext } from '../../Contexts/I18nContext'
+import { useNavigate } from 'react-router-dom'
+import { useUser } from '../../Contexts/UserContext'
+import { updateUserProfile } from '../../API/users'
+import { useElements } from '../../Contexts/ElementsContext'
+import { MealCard } from './MealCard'
+import ConfirmPlanModal from './ConfirmPlanModal'
+import CustomizableMealSelectionModal from './CustomizableMealSelectionModal'
 
 // Import icons
-import paymentIcon from '../../assets/payment.svg';
-import orderIcon from '../../assets/order.svg';
-import saladIcon from '../../assets/menu/salad.svg';
+import paymentIcon from '../../assets/payment.svg'
+import orderIcon from '../../assets/order.svg'
+import saladIcon from '../../assets/menu/salad.svg'
+
+//Checkout state
+const initialState = {
+  isSubmitting: false,
+  paymentMethod: '',
+  period: 12,
+  selectedMeals: [],
+  customizedSalad: null,
+  billingInfo: {
+    fullName: '',
+    email: '',
+    phoneNumber: '',
+    deliveryAddress: '',
+    deliveryTime: '12:00',
+  },
+}
+
+// Reducer function to manage checkout state
+function checkoutReducer(state, action) {
+  switch (action.type) {
+    case 'SET_PAYMENT_METHOD':
+      return { ...state, paymentMethod: action.payload }
+    case 'SET_PERIOD':
+      return { ...state, period: action.payload }
+    case 'SET_SELECTED_MEALS':
+      return { ...state, selectedMeals: action.payload }
+    case 'SET_CUSTOMIZED_SALAD':
+      return { ...state, customizedSalad: action.payload }
+    case 'ADD_SIGNATURE_SALAD':
+      return { ...state, selectedMeals: [...state.selectedMeals, action.payload] }
+    case 'REMOVE_MEAL':
+      return {
+        ...state,
+        selectedMeals: state.selectedMeals.filter((_, i) => i !== action.payload),
+      }
+    case 'SET_BILLING_INFO':
+      return {
+        ...state,
+        billingInfo: { ...state.billingInfo, ...action.payload },
+      }
+    case 'START_SUBMISSION':
+      return { ...state, isSubmitting: true }
+    case 'END_SUBMISSION':
+      return { ...state, isSubmitting: false }
+    case 'RESET_MEALS':
+      return { ...state, selectedMeals: [], customizedSalad: null }
+    default:
+      return state
+  }
+}
 
 // Reusable Section Component with responsive improvements
 const Section = ({ title, children, bgColor, titleColor, icon }) => {
-  const { colorMode } = useColorMode();
-  const padding = useBreakpointValue({ base: 4, md: 6 });
-  
+  const { colorMode } = useColorMode()
+  const padding = useBreakpointValue({ base: 4, md: 6 })
+
   return (
     <Box
       bg={colorMode === 'dark' ? 'gray.700' : `${bgColor}.300`}
@@ -63,7 +114,7 @@ const Section = ({ title, children, bgColor, titleColor, icon }) => {
       minHeight="85vh"
       my={20}
     >
-      <Box position="relative" zIndex="1" >
+      <Box position="relative" zIndex="1">
         <Flex align="center" mb={5}>
           {icon && <Box as="img" src={icon} alt={`${title} icon`} boxSize="48px" mr={2} />}
           <Heading size="md" color={titleColor || 'gray.800'}>
@@ -73,59 +124,8 @@ const Section = ({ title, children, bgColor, titleColor, icon }) => {
         {children}
       </Box>
     </Box>
-  );
-};
-
-// Reusable PlanSummary Component
-const PlanSummary = ({ plan, period, setPeriod, t }) => {
-  const { currentLanguage } = useI18nContext();
-  const isArabic = currentLanguage === 'ar';
-  
-  if (!plan) return <Text>{t('noPlanSelected')}</Text>;
-
-  return (
-    <Box>
-      <Flex alignItems="center" mb={4}>
-        <Image src={plan.image} alt={plan.title} boxSize="60px" borderRadius="md" mr={4} />
-        <Box>
-          <Heading as="h3" size="sm">
-            {isArabic ? plan.title_arabic : plan.title}
-          </Heading>
-        </Box>
-      </Flex>
-
-      <Divider mb={4} />
-
-      <Stack spacing={2}>
-        <Flex justify="space-between" align="center">
-          <Text fontSize="sm">{t('nutritionalInformation')}:</Text>
-          <Flex wrap="wrap" gap={1}>
-            <Badge colorScheme="green">{t('kcal')}: {plan.kcal}</Badge>
-            <Badge colorScheme="brand">{t('carbs')}: {plan.carb}g</Badge>
-            <Badge colorScheme="red">{t('protein')}: {plan.protein}g</Badge>
-          </Flex>
-        </Flex>
-
-        <Flex justify="space-between" align="center">
-          <Text fontSize="sm">{t('subscriptionPeriod')}:</Text>
-          <Select
-            size="sm"
-            width="140px"
-            value={period}
-            onChange={(e) => setPeriod(Number(e.target.value))}
-            focusBorderColor="brand.500"
-          >
-            {plan.periods?.map((periodOption, index) => (
-              <option key={index} value={periodOption}>
-                {periodOption} {t('days')}
-              </option>
-            ))}
-          </Select>
-        </Flex>
-      </Stack>
-    </Box>
-  );
-};
+  )
+}
 
 // Payment Method Input Components
 const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
@@ -167,8 +167,8 @@ const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
             {t('checkout.saveThisCardForFuturePayments')}
           </Checkbox>
         </Stack>
-      );
-    
+      )
+
     case 'paypal':
       return (
         <VStack spacing={4} align="stretch" maxW={'90%'}>
@@ -180,8 +180,8 @@ const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
             {t('checkout.continueWithPayPal')}
           </Button>
         </VStack>
-      );
-    
+      )
+
     case 'apple-pay':
     case 'google-pay':
       return (
@@ -192,102 +192,124 @@ const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
               method: paymentMethod === 'apple-pay' ? 'Apple Pay' : 'Google Pay',
             })}
           </Alert>
-          <Button
-            colorScheme={paymentMethod === 'apple-pay' ? 'blackAlpha' : 'brand'}
-            width="full"
-          >
+          <Button colorScheme={paymentMethod === 'apple-pay' ? 'blackAlpha' : 'brand'} width="full">
             {t('checkout.payWith', {
               method: paymentMethod === 'apple-pay' ? 'Apple Pay' : 'Google Pay',
             })}
           </Button>
         </VStack>
-      );
-    
+      )
+
     default:
-      return null;
+      return null
   }
-};
+}
 
 // Date calculation utilities
 const calculateDeliveryDate = (startDate, mealIndex) => {
-  let date = new Date(startDate);
-  let daysAdded = 0;
+  let date = new Date(startDate)
+  let daysAdded = 0
 
   while (daysAdded <= mealIndex) {
-    date.setDate(date.getDate() + 1);
+    date.setDate(date.getDate() + 1)
     if (date.getDay() !== 5 && date.getDay() !== 6) {
-      daysAdded++;
+      daysAdded++
     }
   }
 
-  return date;
-};
+  return date
+}
 
 const calculateEndDate = (startDate, daysToAdd) => {
-  let result = new Date(startDate);
-  let daysAdded = 0;
+  let result = new Date(startDate)
+  let daysAdded = 0
 
   while (daysAdded < daysToAdd) {
-    result.setDate(result.getDate() + 1);
+    result.setDate(result.getDate() + 1)
     if (result.getDay() !== 5 && result.getDay() !== 6) {
-      daysAdded++;
+      daysAdded++
     }
   }
 
-  return result;
-};
+  return result
+}
 
 const CheckoutPlan = () => {
   // Hooks and context
-  const navigate = useNavigate();
-  const { colorMode } = useColorMode();
-  const { user, userPlan, setUser } = useUser();
-  const { saladItems, signatureSalads } = useElements();
-  const toast = useToast();
-  const { t } = useTranslation();
-  const { currentLanguage } = useI18nContext();
-  const isArabic = currentLanguage === 'ar';
+  const navigate = useNavigate()
+  const { colorMode } = useColorMode()
+  const { user, userPlan, setUser, userAddress } = useUser()
+  const { saladItems, signatureSalads } = useElements()
+  const toast = useToast()
+  const { t } = useTranslation()
+  const { currentLanguage } = useI18nContext()
+  const isArabic = currentLanguage === 'ar'
 
-  // State management
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('');
-  const [period, setPeriod] = useState(12);
-  const [selectedMeals, setSelectedMeals] = useState([]);
-  const [customizedSalad, setCustomizedSalad] = useState(null);
+  //Checkout state
+  const [state, dispatch] = useReducer(checkoutReducer, {
+    ...initialState,
+    billingInfo: {
+      ...initialState.billingInfo,
+      fullName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+      email: user?.email || '',
+      phoneNumber: user?.phoneNumber || '',
+      deliveryAddress: userAddress || user?.defaultAddress || '',
+      deliveryTime: user?.subscription?.deliveryTime || '12:00',
+    },
+  })
+
+  const { isSubmitting, paymentMethod, period, selectedMeals, customizedSalad, billingInfo } = state
 
   // Modal controls
   const {
     isOpen: isConfirmationOpen,
     onOpen: onOpenConfirmation,
     onClose: onCloseConfirmation,
-  } = useDisclosure();
+  } = useDisclosure()
 
   const {
     isOpen: isMealSelectionOpen,
     onOpen: onOpenMealSelection,
     onClose: onCloseMealSelection,
-  } = useDisclosure();
-
+  } = useDisclosure()
+  const { isOpen: isMapOpen, onOpen: onOpenMap, onClose: onCloseMap } = useDisclosure()
   // Constants
-  const today = new Date();
+  const today = new Date()
   const startDate = today.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-  });
+  })
 
-  const endDate = calculateEndDate(today, period);
+  const endDate = calculateEndDate(today, period)
   const formattedEndDate = endDate.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-  });
+  })
 
-  const subscriptionPrice = 49.99;
-  const discount = 10.0;
-  const totalPrice = subscriptionPrice - discount;
+  const subscriptionPrice = 49.99
+  const discount = 10.0
+  const totalPrice = subscriptionPrice - discount
+
+  // Helper function to combine meals
+  const getCombinedMeals = () => {
+    const meals = [...selectedMeals]
+    if (customizedSalad) {
+      meals.push(customizedSalad)
+    }
+    // If no meals selected, use default signature salads
+    return meals.length > 0 ? meals : signatureSalads.slice(0, period)
+  }
 
   // Event handlers
+  const handleBillingInfoChange = (field, value) => {
+    dispatch({
+      type: 'SET_BILLING_INFO',
+      payload: { [field]: value },
+    })
+  }
+
   const handleOpenConfirmation = () => {
     if (!paymentMethod) {
       toast({
@@ -296,64 +318,75 @@ const CheckoutPlan = () => {
         status: 'warning',
         duration: 3000,
         isClosable: true,
-      });
-      return;
+      })
+      return
     }
 
-    setUser(prev => ({
-      ...prev,
-      subscription: {
-        planId: userPlan?.id || 'premium-plan',
-        planName: userPlan?.title || 'Premium Plan',
-        startDate: today.toISOString(),
-        endDate: endDate.toISOString(),
-        status: 'active',
-        paymentMethod,
-        price: totalPrice,
-        mealsCount: period,
-        consumedMeals: 0,
-        meals: customizedSalad
-          ? [customizedSalad]
-          : selectedMeals.length > 0
-            ? selectedMeals
-            : signatureSalads.slice(0, 10),
-      },
-    }));
-    onOpenConfirmation();
-  };
+    if (!billingInfo.fullName || !billingInfo.email || !billingInfo.deliveryAddress) {
+      toast({
+        title: t('checkout.requiredFieldsMissing'),
+        description: t('checkout.pleaseFillAllRequiredFields'),
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      })
+      return
+    }
 
-  const handleSelectMeals = () => onOpenMealSelection();
+    onOpenConfirmation()
+  }
+
+  const handleSelectMeals = () => onOpenMealSelection()
 
   const handleConfirmCustomizedSalad = (selectedItems) => {
-    const selectedItemIds = Object.keys(selectedItems);
-    const items = saladItems.filter((item) => selectedItemIds.includes(item.id));
+    const selectedItemIds = Object.keys(selectedItems)
+    const items = saladItems.filter((item) => selectedItemIds.includes(item.id))
 
-    setCustomizedSalad({
-      id: 'custom-salad-' + Date.now(),
-      name: t('checkout.customSalad'),
-      name_arabic: t('checkout.customSalad', { lng: 'ar' }),
-      calories: items.reduce((sum, item) => sum + (item.calories || 0), 0),
-      price: items.reduce((sum, item) => sum + (item.price || 0), 0),
-      items,
-      isCustom: true,
-    });
-    onCloseMealSelection();
-  };
+    dispatch({
+      type: 'SET_CUSTOMIZED_SALAD',
+      payload: {
+        id: 'custom-salad-' + Date.now(),
+        name: t('checkout.customSalad'),
+        name_arabic: t('checkout.customSalad', { lng: 'ar' }),
+        calories: items.reduce((sum, item) => sum + (item.calories || 0), 0),
+        price: items.reduce((sum, item) => sum + (item.price || 0), 0),
+        items,
+        isCustom: true,
+      },
+    })
+    onCloseMealSelection()
+  }
 
   const handleAddSignatureSalad = (meal) => {
-    setSelectedMeals((prev) => [...prev, meal]);
-  };
+    dispatch({ type: 'ADD_SIGNATURE_SALAD', payload: meal })
+  }
 
   const handleRemoveMeal = (index) => {
-    setSelectedMeals((prev) => prev.filter((_, i) => i !== index));
-  };
+    dispatch({ type: 'REMOVE_MEAL', payload: index })
+  }
 
   const handleConfirmSubscription = async () => {
-    setIsSubmitting(true);
-    onCloseConfirmation();
+    dispatch({ type: 'START_SUBMISSION' })
+    onCloseConfirmation()
 
     try {
-      if (!user?.uid) throw new Error('User not authenticated');
+      if (!user?.uid) throw new Error('User not authenticated')
+
+      const finalMeals = getCombinedMeals()
+      const deliveryAddress = billingInfo.deliveryAddress || user?.defaultAddress
+
+      // Prepare user profile updates
+      const userProfileUpdates = {
+        firstName: billingInfo.fullName.split(' ')[0] || '',
+        lastName: billingInfo.fullName.split(' ').slice(1).join(' ') || '',
+        phoneNumber: billingInfo.phoneNumber,
+      }
+
+      // Update addresses if new address provided
+      const updatedAddresses = [...(user?.addresses || [])]
+      if (deliveryAddress && !updatedAddresses.includes(deliveryAddress)) {
+        updatedAddresses.push(deliveryAddress)
+      }
 
       const subscriptionData = {
         subscription: {
@@ -365,20 +398,30 @@ const CheckoutPlan = () => {
           paymentMethod,
           price: totalPrice,
           mealsCount: period,
-          consumedMeals: 0,
-          meals: customizedSalad
-            ? [customizedSalad]
-            : selectedMeals.length > 0
-              ? selectedMeals
-              : signatureSalads.slice(0, 10),
+          consumedMeals: user?.subscription?.consumedMeals || 0, // Maintain existing consumed meals
+          meals: finalMeals,
+          deliveryAddress,
+          deliveryTime: billingInfo.deliveryTime,
+          autoRenewal: false,
+          deliveryPaused: false,
+          nextMealDate: calculateDeliveryDate(today, 0).toISOString(),
         },
-      };
+        // Update personal information
+        ...userProfileUpdates,
+        addresses: updatedAddresses,
+        defaultAddress: deliveryAddress,
+      }
 
-      await updateUserProfile(user.uid, subscriptionData);
-      setUser(prev => ({
+      await updateUserProfile(user.uid, subscriptionData)
+
+      // Update local user context
+      setUser((prev) => ({
         ...prev,
+        ...userProfileUpdates,
+        addresses: updatedAddresses,
+        defaultAddress: deliveryAddress,
         subscription: subscriptionData.subscription,
-      }));
+      }))
 
       toast({
         title: t('checkout.subscriptionSuccessful'),
@@ -386,12 +429,12 @@ const CheckoutPlan = () => {
         status: 'success',
         duration: 5000,
         isClosable: true,
-      });
+      })
 
-      navigate('/account?subscription=success');
+      navigate('/account?subscription=success')
     } catch (error) {
-      console.error('Error confirming subscription:', error);
-      setIsSubmitting(false);
+      console.error('Error confirming subscription:', error)
+      dispatch({ type: 'END_SUBMISSION' })
 
       toast({
         title: t('checkout.subscriptionFailed'),
@@ -399,15 +442,19 @@ const CheckoutPlan = () => {
         status: 'error',
         duration: 5000,
         isClosable: true,
-      });
+      })
     }
-  };
+  }
 
   // Responsive grid columns
-  const gridColumns = useBreakpointValue({ base: 1, md: 3 });
+  const gridColumns = useBreakpointValue({ base: 1, md: 3 })
 
   return (
-    <Box p={{ base: 4, md: 6 }} bg={colorMode === 'dark' ? 'gray.800' : 'gray.50'} minHeight="100vh">
+    <Box
+      p={{ base: 4, md: 6 }}
+      bg={colorMode === 'dark' ? 'gray.800' : 'gray.50'}
+      minHeight="100vh"
+    >
       <VStack spacing={8} align="stretch">
         <Heading as="h1" size="xl" textAlign="center" color="brand.500">
           {t('checkout.completeYourSubscription')}
@@ -420,7 +467,7 @@ const CheckoutPlan = () => {
           </Alert>
         )}
 
-        <SimpleGrid columns={gridColumns} spacing={6} >
+        <SimpleGrid columns={gridColumns} spacing={6}>
           {/* Billing Information */}
           <Section
             title={t('checkout.billingInformation')}
@@ -429,26 +476,30 @@ const CheckoutPlan = () => {
             icon={saladIcon}
           >
             <Stack spacing={3}>
-              <FormControl>
+              <FormControl isRequired>
                 <FormLabel fontSize="sm">{t('checkout.fullName')}</FormLabel>
                 <Input
                   placeholder={t('checkout.enterYourFullName')}
                   variant="outline"
                   bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
                   focusBorderColor="brand.500"
-                  maxW={"85%"}
+                  maxW={'85%'}
+                  value={billingInfo.fullName}
+                  onChange={(e) => handleBillingInfoChange('fullName', e.target.value)}
                 />
               </FormControl>
 
-              <FormControl>
+              <FormControl isRequired>
                 <FormLabel fontSize="sm">{t('checkout.emailAddress')}</FormLabel>
                 <Input
                   type="email"
-                  maxW={"85%"}
+                  maxW={'85%'}
                   placeholder={t('checkout.yourEmailAddress')}
                   variant="outline"
                   bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
                   focusBorderColor="brand.500"
+                  value={billingInfo.email}
+                  onChange={(e) => handleBillingInfoChange('email', e.target.value)}
                 />
               </FormControl>
 
@@ -459,8 +510,51 @@ const CheckoutPlan = () => {
                   variant="outline"
                   bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
                   focusBorderColor="brand.500"
-                  maxW={"85%"}
+                  maxW={'85%'}
+                  value={billingInfo.phoneNumber}
+                  onChange={(e) => handleBillingInfoChange('phoneNumber', e.target.value)}
                 />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel fontSize="sm">{t('checkout.deliveryAddress')}</FormLabel>
+                <Input
+                  placeholder={t('checkout.enterDeliveryAddress')}
+                  variant="outline"
+                  bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
+                  focusBorderColor="brand.500"
+                  maxW={'85%'}
+                  value={userAddress.display_name || billingInfo.deliveryAddress.display_name || ''}
+                  onChange={(e) => handleBillingInfoChange('deliveryAddress', e.target.value)}
+                />
+                <Button onClick={onOpenMap}> Get geo location </Button>
+                <MapModal
+                  isOpen={isMapOpen}
+                  onClose={onCloseMap}
+                  onSelectLocation={() => console.log(`trying to set location`)}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel fontSize="sm">{t('checkout.deliveryTime')}</FormLabel>
+                <Select
+                  maxW={'85%'}
+                  bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
+                  focusBorderColor="brand.500"
+                  value={billingInfo.deliveryTime}
+                  onChange={(e) => handleBillingInfoChange('deliveryTime', e.target.value)}
+                >
+                  <option value="09:00">09:00 AM</option>
+                  <option value="10:00">10:00 AM</option>
+                  <option value="11:00">11:00 AM</option>
+                  <option value="12:00">12:00 PM</option>
+                  <option value="13:00">01:00 PM</option>
+                  <option value="14:00">02:00 PM</option>
+                  <option value="15:00">03:00 PM</option>
+                  <option value="16:00">04:00 PM</option>
+                  <option value="17:00">05:00 PM</option>
+                  <option value="18:00">06:00 PM</option>
+                </Select>
               </FormControl>
 
               <Checkbox colorScheme="brand" mt={2}>
@@ -477,7 +571,7 @@ const CheckoutPlan = () => {
                 placeholder="Select payment method"
                 focusBorderColor="warning.500"
                 bg={colorMode === 'dark' ? 'gray.800' : 'warning.100'}
-                onChange={(e) => setPaymentMethod(e.target.value)}
+                onChange={(e) => dispatch({ type: 'SET_PAYMENT_METHOD', payload: e.target.value })}
               >
                 <option value="credit-card">Credit Card</option>
                 <option value="paypal">PayPal</option>
@@ -486,18 +580,81 @@ const CheckoutPlan = () => {
               </Select>
             </FormControl>
 
-            <PaymentMethodInputs 
-              paymentMethod={paymentMethod} 
-              t={t} 
-              colorMode={colorMode} 
-            />
+            <PaymentMethodInputs paymentMethod={paymentMethod} t={t} colorMode={colorMode} />
           </Section>
 
           {/* Subscription Summary */}
           <Section title={t('checkout.subscriptionSummary')} bgColor="accent" icon={orderIcon}>
-            <Box mb={4}>
-              <PlanSummary plan={userPlan} period={period} setPeriod={setPeriod} t={t} />
-            </Box>
+            {!userPlan ? (
+              <Text>{t('noPlanSelected')}</Text>
+            ) : (
+              <Box>
+                <Flex alignItems="center" mb={4}>
+                  <Image
+                    src={userPlan.image}
+                    alt={userPlan.title}
+                    boxSize="60px"
+                    borderRadius="md"
+                    mr={4}
+                  />
+                  <Box>
+                    <Heading as="h3" size="sm">
+                      {isArabic ? userPlan.title_arabic : userPlan.title}
+                    </Heading>
+                  </Box>
+                </Flex>
+
+                <Divider mb={4} />
+
+                <Stack spacing={2}>
+                  <Flex justify="space-between" align="center">
+                    <Text fontSize="sm">{t('premium.nutritionalInformation')}:</Text>
+                    <Flex wrap="wrap" gap={1}>
+                      <Badge colorScheme="green">
+                        {t('kcal')}: {userPlan.kcal}
+                      </Badge>
+                      <Badge colorScheme="brand">
+                        {t('carbs')}: {userPlan.carb}g
+                      </Badge>
+                      <Badge colorScheme="red">
+                        {t('protein')}: {userPlan.protein}g
+                      </Badge>
+                    </Flex>
+                  </Flex>
+
+                  <Flex justify="space-between" align="center">
+                    <Text fontSize="sm">{t('checkout.subscriptionPeriod')}:</Text>
+                    <Select
+                      px={8}
+                      size="sm"
+                      width="180px"
+                      value={period}
+                      onChange={(e) =>
+                        dispatch({ type: 'SET_PERIOD', payload: Number(e.target.value) })
+                      }
+                      focusBorderColor="brand.500"
+                      bg="warning.50"
+                    >
+                      {userPlan.periods?.map((periodOption, index) => (
+                        <option key={index} value={periodOption}>
+                          <span>
+                            {' '}
+                            {periodOption} {t('days')}{' '}
+                          </span>
+                        </option>
+                      ))}
+                    </Select>
+                  </Flex>
+
+                  <Flex justify="space-between" align="center">
+                    <Text fontSize="sm">{t('checkout.selectedMeals')}:</Text>
+                    <Text fontSize="sm" color="brand.500">
+                      {getCombinedMeals().length} {t('meals')}
+                    </Text>
+                  </Flex>
+                </Stack>
+              </Box>
+            )}
 
             <Divider mb={4} />
 
@@ -575,7 +732,7 @@ const CheckoutPlan = () => {
         calculateDeliveryDate={calculateDeliveryDate}
       />
     </Box>
-  );
-};
+  )
+}
 
-export default CheckoutPlan;
+export default CheckoutPlan

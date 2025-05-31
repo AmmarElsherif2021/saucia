@@ -44,7 +44,7 @@ const ConfirmPlanModal = ({
   const isArabic = currentLanguage === 'ar'
   const toast = useToast()
   const [endDateObj, setEndDateObj] = useState(null)
-  const {user}=useUser();
+  const { user } = useUser()
   // Convert formattedEndDate to Date object when component mounts or formattedEndDate changes
   useEffect(() => {
     console.log(` from confirmation modal of plan ${JSON.stringify(userPlan)}`)
@@ -55,99 +55,107 @@ const ConfirmPlanModal = ({
 
   // handleMealSelection function:
 
-const handleMealSelection = (meal) => {
-  // Check if user has remaining meals in their plan
-  if (user.subscription.mealsCount && selectedMeals.length >= user.subscription.mealsCount) {
+  const handleMealSelection = (meal) => {
+    // Check if user has remaining meals in their plan
+    if (user.subscription.mealsCount && selectedMeals.length >= user.subscription.mealsCount) {
+      toast({
+        title: t('checkout.planLimitReachedTitle'),
+        description: t('checkout.planLimitReachedDescription', {
+          mealsCount: userPlan.mealsCount,
+        }),
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+      return
+    }
+
+    // Check if the calculated delivery date is before the plan end date
+    const nextDeliveryIndex = selectedMeals.length
+    const deliveryDate = calculateDeliveryDate(today, nextDeliveryIndex)
+
+    // if (endDateObj && deliveryDate > endDateObj) {
+    //   toast({
+    //     title: t('checkout.planExpiredTitle'),
+    //     description: t('checkout.planExpiredDescription', { endDate: formattedEndDate }),
+    //     status: 'error',
+    //     duration: 5000,
+    //     isClosable: true,
+    //   })
+    //   return
+    // }
+
+    // Show success toast when meal is selected
     toast({
-      title: t('checkout.planLimitReachedTitle'),
-      description: t('checkout.planLimitReachedDescription', { 
-        mealsCount: userPlan.mealsCount 
+      title: t('checkout.mealAddedTitle'),
+      description: t('checkout.mealAddedDescription', {
+        mealName: meal.name,
+        deliveryDate: deliveryDate.toLocaleDateString('en-US', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+        }),
+        remainingMeals: userPlan.mealsCount - selectedMeals.length - 1,
       }),
-      status: 'error',
-      duration: 5000,
+      status: 'success',
+      duration: 3000,
       isClosable: true,
     })
-    return
+
+    // Proceed with adding the meal
+    handleAddSignatureSalad(meal)
   }
-
-  // Check if the calculated delivery date is before the plan end date
-  const nextDeliveryIndex = selectedMeals.length
-  const deliveryDate = calculateDeliveryDate(today, nextDeliveryIndex)
-  
-  // if (endDateObj && deliveryDate > endDateObj) {
-  //   toast({
-  //     title: t('checkout.planExpiredTitle'),
-  //     description: t('checkout.planExpiredDescription', { endDate: formattedEndDate }),
-  //     status: 'error',
-  //     duration: 5000,
-  //     isClosable: true,
-  //   })
-  //   return
-  // }
-
-  // Show success toast when meal is selected
-  toast({
-    title: t('checkout.mealAddedTitle'),
-    description: t('checkout.mealAddedDescription', {
-      mealName: meal.name,
-      deliveryDate: deliveryDate.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-      }),
-      remainingMeals: userPlan.mealsCount - selectedMeals.length - 1,
-    }),
-    status: 'success',
-    duration: 3000,
-    isClosable: true,
-  })
-
-  // Proceed with adding the meal
-  handleAddSignatureSalad(meal)
-}
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
-      <ModalContent sx={{ minWidth: '50vw', maxWidth: '90vw', margin: "5vw" }}>
+      <ModalContent sx={{ minWidth: '50vw', maxWidth: '90vw', margin: '5vw', padding: '1vw' }}>
         <ModalHeader>{t('checkout.confirmSubscription')}</ModalHeader>
         <ModalBody
           sx={{ maxHeight: '60vh', minWidth: '50vw', overflowY: 'auto', overflowX: 'hidden' }}
         >
           <VStack spacing={6} align="stretch">
-          <Box>
-            <Heading size="xl" mb={2}>
-              {t('checkout.planDetails')}
-            </Heading>
-            <Flex justify="space-between" mb={1}>
-              <Text>{t('checkout.plan')}</Text>
-              <Text fontWeight="bold">{userPlan?.title || t('checkout.premiumPlan')}</Text>
-            </Flex>
-            <Flex justify="space-between" mb={1}>
-              <Text>{t('checkout.startDate')}</Text>
-              <Text fontWeight="bold">{startDate}</Text>
-            </Flex>
-            <Flex justify="space-between" mb={1}>
-              <Text>{t('checkout.endDate')}</Text>
-              <Text fontWeight="bold">{formattedEndDate}</Text>
-            </Flex>
-            {userPlan?.mealsCount && (
-              <Flex justify="space-between">
-                <Text>{t('checkout.remainingMeals')}</Text>
-                <Text fontWeight="bold">
-                  {userPlan.mealsCount - selectedMeals.length} / {userPlan.mealsCount}
-                </Text>
+            <Box>
+              <Heading size="xl" mb={2}>
+                {t('checkout.planDetails')}
+              </Heading>
+              <Flex justify="space-between" mb={1}>
+                <Text>{t('checkout.plan')}</Text>
+                <Text fontWeight="bold">{userPlan?.title || t('checkout.premiumPlan')}</Text>
               </Flex>
-            )}
-          </Box>
+              <Flex justify="space-between" mb={1}>
+                <Text>{t('checkout.startDate')}</Text>
+                <Text fontWeight="bold">{startDate}</Text>
+              </Flex>
+              <Flex justify="space-between" mb={1}>
+                <Text>{t('checkout.endDate')}</Text>
+                <Text fontWeight="bold">{formattedEndDate}</Text>
+              </Flex>
+              {userPlan?.mealsCount && (
+                <Flex justify="space-between">
+                  <Text>{t('checkout.remainingMeals')}</Text>
+                  <Text fontWeight="bold">
+                    {userPlan.mealsCount - selectedMeals.length} / {userPlan.mealsCount}
+                  </Text>
+                </Flex>
+              )}
+            </Box>
 
             <Divider />
 
             <Box>
               <Flex justify="space-between" align="center" mb={4}>
                 <Heading size="lg">{t('checkout.yourMealPlan')}</Heading>
-                <Box size="xl" w="13vw" h="13vw" colorScheme="brand" as={Button} variant="outline" onClick={handleSelectMeals}>
-                  {t('checkout.selectMeals')}
+                <Box
+                  size="xl"
+                  w="13vw"
+                  h="13vw"
+                  colorScheme="brand"
+                  as={Button}
+                  variant="outline"
+                  onClick={handleSelectMeals}
+                >
+                  {t('checkout.selectedMeal')}
                 </Box>
               </Flex>
 
@@ -227,10 +235,16 @@ const handleMealSelection = (meal) => {
           </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button variant="outline" mr={3} onClick={onClose}>
+          <Button variant="outline" mx={5} onClick={onClose}>
             {t('checkout.back')}
           </Button>
-          <Button colorScheme="brand" onClick={handleConfirmSubscription} isLoading={isSubmitting}>
+          <Button
+            mx={5}
+            colorScheme="brand"
+            disabled={selectedMeals.length < user?.subscription?.mealsCount}
+            onClick={handleConfirmSubscription}
+            isLoading={isSubmitting}
+          >
             {t('checkout.confirmAndPay')}
           </Button>
         </ModalFooter>

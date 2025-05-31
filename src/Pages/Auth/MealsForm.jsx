@@ -48,18 +48,18 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
 
   // Predefined allergens list based on the document
   const predefinedAllergens = [
-    { en: "Milk and dairy products", ar: "الحليب ومنتجاته" },
-    { en: "Gluten", ar: "الجلوتين" },
-    { en: "Nuts and products", ar: "المكسرات ومنتجاتها" },
-    { en: "Sesame seeds and products", ar: "بذور السمسم ومنتجاتها" },
-    { en: "Fish and products", ar: "الأسماك ومنتجاتها" },
-    { en: "Eggs and products", ar: "البيض ومنتجاته" },
-    { en: "Soy", ar: "الصويا" },
-    { en: "Crustaceans and products", ar: "القشريات ومنتجاتها" },
-    { en: "Celery seeds and products", ar: "بذور الكرفس ومنتجاتها" },
-    { en: "Mustard seeds and products", ar: "بذور الخردل ومنتجاتها" },
-    { en: "Peanuts", ar: "فول سوداني" },
-  ];
+    { en: 'Milk and dairy products', ar: 'الحليب ومنتجاته' },
+    { en: 'Gluten', ar: 'الجلوتين' },
+    { en: 'Nuts and products', ar: 'المكسرات ومنتجاتها' },
+    { en: 'Sesame seeds and products', ar: 'بذور السمسم ومنتجاتها' },
+    { en: 'Fish and products', ar: 'الأسماك ومنتجاتها' },
+    { en: 'Eggs and products', ar: 'البيض ومنتجاته' },
+    { en: 'Soy', ar: 'الصويا' },
+    { en: 'Crustaceans and products', ar: 'القشريات ومنتجاتها' },
+    { en: 'Celery seeds and products', ar: 'بذور الكرفس ومنتجاتها' },
+    { en: 'Mustard seeds and products', ar: 'بذور الخردل ومنتجاتها' },
+    { en: 'Peanuts', ar: 'فول سوداني' },
+  ]
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -77,20 +77,20 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
   const handleAllergenToggle = (allergen) => {
     setFormData((prev) => {
       const existingIndex = prev.allergens.findIndex(
-        (a) => a.en === allergen.en && a.ar === allergen.ar
+        (a) => a.en === allergen.en && a.ar === allergen.ar,
       )
-      
+
       if (existingIndex >= 0) {
         // Remove allergen if it exists
         return {
           ...prev,
-          allergens: prev.allergens.filter((_, index) => index !== existingIndex)
+          allergens: prev.allergens.filter((_, index) => index !== existingIndex),
         }
       } else {
         // Add allergen if it doesn't exist
         return {
           ...prev,
-          allergens: [...prev.allergens, allergen]
+          allergens: [...prev.allergens, allergen],
         }
       }
     })
@@ -100,40 +100,38 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
     const newAllergen = { en: '', ar: '' }
     setFormData((prev) => ({
       ...prev,
-      allergens: [...prev.allergens, newAllergen]
+      allergens: [...prev.allergens, newAllergen],
     }))
   }
 
   const updateCustomAllergen = (index, field, value) => {
     setFormData((prev) => ({
       ...prev,
-      allergens: prev.allergens.map((allergen, i) => 
-        i === index ? { ...allergen, [field]: value } : allergen
-      )
+      allergens: prev.allergens.map((allergen, i) =>
+        i === index ? { ...allergen, [field]: value } : allergen,
+      ),
     }))
   }
 
   const removeCustomAllergen = (index) => {
     setFormData((prev) => ({
       ...prev,
-      allergens: prev.allergens.filter((_, i) => i !== index)
+      allergens: prev.allergens.filter((_, i) => i !== index),
     }))
   }
 
   const isAllergenSelected = (allergen) => {
-    return formData.allergens.some(
-      (a) => a.en === allergen.en && a.ar === allergen.ar
-    )
+    return formData.allergens.some((a) => a.en === allergen.en && a.ar === allergen.ar)
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
     // Filter out empty custom allergens
     const filteredAllergens = formData.allergens.filter(
-      (allergen) => allergen.en.trim() !== '' || allergen.ar.trim() !== ''
+      (allergen) => allergen.en.trim() !== '' || allergen.ar.trim() !== '',
     )
     onSubmit({ ...formData, allergens: filteredAllergens })
-  };
+  }
 
   return (
     <form onSubmit={handleSubmit}>
@@ -141,7 +139,7 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
         <FormLabel>Name</FormLabel>
         <Input type="text" name="name" value={formData.name} onChange={handleChange} required />
       </FormControl>
-      
+
       <FormControl mb={4}>
         <FormLabel>Name (Arabic)</FormLabel>
         <Input
@@ -151,12 +149,12 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
           onChange={handleChange}
         />
       </FormControl>
-      
+
       <FormControl mb={4}>
         <FormLabel>Section</FormLabel>
         <Input type="text" name="section" value={formData.section} onChange={handleChange} />
       </FormControl>
-      
+
       <FormControl mb={4}>
         <FormLabel>Section (Arabic)</FormLabel>
         <Input
@@ -166,12 +164,12 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
           onChange={handleChange}
         />
       </FormControl>
-      
+
       <FormControl mb={4}>
         <FormLabel>Policy</FormLabel>
         <Textarea name="policy" value={formData.policy} onChange={handleChange} rows="3" />
       </FormControl>
-      
+
       <FormControl mb={4}>
         <FormLabel>Ingredients</FormLabel>
         <Textarea
@@ -181,7 +179,7 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
           rows="3"
         />
       </FormControl>
-      
+
       <FormControl mb={4}>
         <FormLabel>Ingredients (Arabic)</FormLabel>
         <Textarea
@@ -191,7 +189,7 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
           rows="3"
         />
       </FormControl>
-      
+
       <FormControl mb={4}>
         <FormLabel>Items</FormLabel>
         <Textarea
@@ -219,8 +217,8 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
               <Button
                 key={index}
                 size="sm"
-                variant={isAllergenSelected(allergen) ? "solid" : "outline"}
-                colorScheme={isAllergenSelected(allergen) ? "brand" : "gray"}
+                variant={isAllergenSelected(allergen) ? 'solid' : 'outline'}
+                colorScheme={isAllergenSelected(allergen) ? 'brand' : 'gray'}
                 onClick={() => handleAllergenToggle(allergen)}
                 m={1}
               >
@@ -228,9 +226,9 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
               </Button>
             ))}
           </Box>
-          
+
           <Divider />
-          
+
           <HStack justify="space-between" align="center">
             <Text fontSize="sm" color="gray.600">
               Custom allergens:
@@ -243,13 +241,14 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
               variant="outline"
             />
           </HStack>
-          
+
           {formData.allergens
-            .filter(allergen => 
-              !predefinedAllergens.some(pa => pa.en === allergen.en && pa.ar === allergen.ar)
+            .filter(
+              (allergen) =>
+                !predefinedAllergens.some((pa) => pa.en === allergen.en && pa.ar === allergen.ar),
             )
             .map((allergen, index) => {
-              const actualIndex = formData.allergens.findIndex(a => a === allergen)
+              const actualIndex = formData.allergens.findIndex((a) => a === allergen)
               return (
                 <HStack key={actualIndex} spacing={2}>
                   <Input
@@ -276,12 +275,12 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
             })}
         </VStack>
       </FormControl>
-      
+
       <FormControl mb={4}>
         <FormLabel>Price</FormLabel>
         <Input type="number" name="price" value={formData.price} onChange={handleChange} required />
       </FormControl>
-      
+
       <FormControl mb={4}>
         <FormLabel>Premium</FormLabel>
         <Select name="isPremium" value={formData.isPremium} onChange={handleChange} required>
@@ -289,7 +288,7 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
           <option value={true}>Yes</option>
         </Select>
       </FormControl>
-      
+
       {formData.isPremium ? (
         <FormControl mb={4}>
           <FormLabel>Plan</FormLabel>
@@ -298,22 +297,22 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
       ) : (
         <></>
       )}
-      
+
       <FormControl mb={4}>
         <FormLabel>Calories (kcal)</FormLabel>
         <Input type="number" name="kcal" value={formData.kcal} onChange={handleChange} />
       </FormControl>
-      
+
       <FormControl mb={4}>
         <FormLabel>Protein (g)</FormLabel>
         <Input type="number" name="protein" value={formData.protein} onChange={handleChange} />
       </FormControl>
-      
+
       <FormControl mb={4}>
         <FormLabel>Carbohydrates (g)</FormLabel>
         <Input type="number" name="carb" value={formData.carb} onChange={handleChange} />
       </FormControl>
-      
+
       <FormControl mb={4}>
         <FormLabel>Description</FormLabel>
         <Textarea
@@ -323,7 +322,7 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
           rows="3"
         />
       </FormControl>
-      
+
       <FormControl mb={4}>
         <FormLabel>Image Link</FormLabel>
         <Input
@@ -334,12 +333,12 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
           placeholder="Enter a valid URL"
         />
       </FormControl>
-      
+
       <FormControl mb={4}>
         <FormLabel>Featured</FormLabel>
         <Switch isChecked={formData.featured} onChange={handleSwitchChange} colorScheme="teal" />
       </FormControl>
-      
+
       <FormControl mb={4}>
         <FormLabel>Offer Ratio</FormLabel>
         <Slider
@@ -356,7 +355,7 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
         </Slider>
         <Box mt={2}>Current Ratio: {formData.offerRatio.toFixed(2)}</Box>
       </FormControl>
-      
+
       <FormControl mb={4}>
         <FormLabel>Offer Expiry Date</FormLabel>
         <Input
@@ -366,7 +365,7 @@ const MealForm = ({ onSubmit, onCancel, initialData = {} }) => {
           onChange={handleChange}
         />
       </FormControl>
-      
+
       <Flex justify="flex-end" gap={2}>
         <Button onClick={onCancel} variant="outline">
           Cancel

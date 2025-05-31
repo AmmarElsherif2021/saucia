@@ -5,10 +5,10 @@ import createTheme from '../theme'
 
 const DynamicThemeProvider = ({ children }) => {
   const { currentLanguage, isI18nInitialized } = useI18nContext()
-  
+
   // Create default theme first (with fallback language)
-  const [currentTheme, setCurrentTheme] = useState(() => 
-    createTheme({ language: isI18nInitialized ? currentLanguage : 'en' })
+  const [currentTheme, setCurrentTheme] = useState(() =>
+    createTheme({ language: isI18nInitialized ? currentLanguage : 'en' }),
   )
 
   useEffect(() => {

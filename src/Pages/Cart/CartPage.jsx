@@ -15,7 +15,7 @@ const CartPage = () => {
     if (item) {
       // We're updating an existing item's quantity by 1
       const updatedItem = { ...item }
-      updatedItem.qty = 1 // Just pass 1 as the qty to increment by one
+      updatedItem.qty += 1 // Just pass 1 as the qty to increment by one
       addToCart(updatedItem)
     }
   }
@@ -25,7 +25,7 @@ const CartPage = () => {
     if (item && item.qty > 1) {
       // We're decreasing the quantity, so we pass a negative value
       const updatedItem = { ...item }
-      updatedItem.qty = -1 // Negative value to decrement
+      updatedItem.qty -= 1 // Negative value to decrement
       addToCart(updatedItem)
     }
   }

@@ -1,10 +1,18 @@
 import { Text, Flex, Box, Button, Collapse, Spinner, Badge } from '@chakra-ui/react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useI18nContext } from '../../Contexts/I18nContext'
+import { useUser } from '../../Contexts/UserContext'
 import planIcon from '../../assets/premium/planIcon.svg'
+import PlanSettingsModal from './PlanSettingsModal' // Add this import
+
 export const CurrentPlanBrief = ({ plan, loading }) => {
   const [showDetails, setShowDetails] = useState(false)
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false) // Add state for modal
   const { t } = useTranslation()
+  const { currentLanguage } = useI18nContext()
+  const { user } = useUser()
+  const isArabic = currentLanguage === 'ar'
 
   if (loading) {
     return (
@@ -19,14 +27,13 @@ export const CurrentPlanBrief = ({ plan, loading }) => {
     return <Text>{t('notSubscribedToAnyPlan')}.</Text>
   }
 
-  // Get plan image from a mapping or use default
-  //.replace(/\s+/g, '-')}
   const planImage = plan.image || planIcon
 
   return (
     <>
       <Text>
-        {t('premium.currentlySubscribedToThe')} <strong>{plan.title}</strong> {t('plan')}.
+        {t('premium.currentlySubscribedToThe')}{' '}
+        <strong>{isArabic ? plan.title_arabic : plan.title}</strong>.
       </Text>
 
       <Flex mt={4} alignItems="center" flexWrap={{ base: 'wrap', md: 'nowrap' }} gap={4}>
@@ -34,7 +41,13 @@ export const CurrentPlanBrief = ({ plan, loading }) => {
           <img
             src={planImage}
             alt={plan.title}
-            style={{ width: '7rem', height: '7rem', borderRadius: '50%', objectFit: 'cover' }}
+            style={{
+              width: '70px',
+              height: '70px',
+              borderRadius: '50%',
+              backgroundColor: '#FCEA80',
+              padding: '5px',
+            }}
             onError={(e) => {
               e.target.src = '/assets/premium/dailyMealPlan.png'
             }}
@@ -43,35 +56,37 @@ export const CurrentPlanBrief = ({ plan, loading }) => {
 
         <Box flex="1">
           <Text fontSize="lg" color="gray.600">
-            {plan.description ||
-              `${t('premium.thisPlanIsDesignedToHelpYouWithYour')} ${plan.title.toLowerCase()} ${t('goals')}.`}
+            {/*
+            plan.description ||
+              `${t('premium.thisPlanIsDesignedToHelpYouWithYour')} ${plan.description.toLowerCase()} ${t('goals')}.`
+              */}
           </Text>
 
           <Flex mt={2} gap={2} flexWrap="wrap">
             <Badge colorScheme="green">
-              {t('kcal')}: {plan.kcal}
+              {t('premium.kcal')}: {plan.kcal}
             </Badge>
             <Badge colorScheme="brand">
-              {t('carbs')}: {plan.carb}g
+              {t('premium.carbs')}: {plan.carb}g
             </Badge>
             <Badge colorScheme="red">
-              {t('protein')}: {plan.protein}g
+              {t('premium.protein')}: {plan.protein}g
             </Badge>
           </Flex>
 
           {plan.nextMeal && (
             <Box mt={2}>
               <Text fontSize="sm" color="gray.500">
-                <strong>{t('upcomingMeal')}:</strong> {plan.nextMeal.name}
+                <strong>{t('premium.upcomingMeal')}:</strong> {plan.nextMeal.name}
               </Text>
               {plan.nextMeal.time && (
                 <Text fontSize="sm" color="gray.500">
-                  <strong>{t('time')}:</strong> {plan.nextMeal.time}
+                  <strong>{t('premium.time')}:</strong> {plan.nextMeal.time}
                 </Text>
               )}
               {plan.nextMeal.location && (
                 <Text fontSize="sm" color="gray.500">
-                  <strong>{t('location')}:</strong> {plan.nextMeal.location}
+                  <strong>{t('premium.location')}:</strong> {plan.nextMeal.location}
                 </Text>
               )}
             </Box>
@@ -79,56 +94,59 @@ export const CurrentPlanBrief = ({ plan, loading }) => {
         </Box>
 
         <Button onClick={() => setShowDetails(!showDetails)} colorScheme="brand" size="sm">
-          {showDetails ? t('hideDetails') : t('showDetails')}
+          {showDetails ? t('premium.hideDetails') : t('premium.showDetails')}
         </Button>
       </Flex>
 
       <Collapse in={showDetails} animateOpacity>
-        <Box mt={4} p={4} bg="gray.50" borderRadius="md">
+        <Box mt={4} p={4} w={'80vw'} bg="secondary.100" borderRadius="md">
           <Text fontWeight="medium" mb={2}>
-            {t('planDetails')}
+            {t('premium.planDetails')}
           </Text>
 
           <Flex direction={{ base: 'column', md: 'row' }} gap={4}>
             <Box flex="1">
               <Text fontSize="sm">
-                <strong>{t('fullName')}:</strong> {plan.title}
+                <strong>{t('premium.fullName')}:</strong>{' '}
+                {isArabic ? plan.title_arabic : plan.title}
               </Text>
-              {plan.title_arabic && (
-                <Text fontSize="sm">
-                  <strong>{t('arabicName')}:</strong> {plan.title_arabic}
-                </Text>
-              )}
+
               <Text fontSize="sm">
-                <strong>{t('calories')}:</strong> {plan.kcal} kcal
+                <strong>{t('premium.calories')}:</strong> {plan.kcal} kcal
               </Text>
               <Text fontSize="sm">
-                <strong>{t('carbohydrates')}:</strong> {plan.carb}g
+                <strong>{t('premium.carbohydrates')}:</strong> {plan.carb}g
               </Text>
               <Text fontSize="sm">
-                <strong>{t('protein')}:</strong> {plan.protein}g
+                <strong>{t('premium.protein')}:</strong> {plan.protein}g
               </Text>
             </Box>
 
-            {plan.periods && plan.periods.length > 0 && (
-              <Box flex="1">
-                <Text fontSize="sm" fontWeight="medium">
-                  {t('availablePeriods')}:
+            <Box flex="1">
+              {user?.subscription && (
+                <Text fontSize="sm">
+                  {user?.subscription?.mealsCount} {t('premium.days')}
                 </Text>
-                {plan.periods.map((period, index) => (
-                  <Text key={index} fontSize="sm">
-                    {period} {t('days')}
-                  </Text>
-                ))}
-              </Box>
-            )}
+              )}
+            </Box>
           </Flex>
 
-          <Button mt={4} size="sm" colorScheme="brand">
+          <Button
+            mt={4}
+            size="sm"
+            colorScheme="brand"
+            onClick={() => setIsSettingsModalOpen(true)} // Add click handler
+          >
             {t('premium.managePlanSettings')}
           </Button>
         </Box>
       </Collapse>
+
+      {/* Add the modal component */}
+      <PlanSettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+      />
     </>
   )
 }

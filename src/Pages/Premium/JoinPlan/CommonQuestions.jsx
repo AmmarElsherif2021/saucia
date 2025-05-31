@@ -80,12 +80,15 @@ const CommonQuestions = ({ onComplete }) => {
         age: user.age != null ? user.age.toString() : '',
         gender: user.gender || '',
         healthProfile: {
-          dietaryPreferences: Array.isArray(user.healthProfile.dietaryPreferences) && user.healthProfile.dietaryPreferences.length > 0
-            ? user.healthProfile.dietaryPreferences
-            : ['none'], // Default to 'none' if empty
-          allergies: Array.isArray(user.healthProfile.allergies) && user.healthProfile.allergies.length > 0
-            ? user.healthProfile.allergies
-            : ['none'], // Default to 'none' if empty
+          dietaryPreferences:
+            Array.isArray(user.healthProfile.dietaryPreferences) &&
+            user.healthProfile.dietaryPreferences.length > 0
+              ? user.healthProfile.dietaryPreferences
+              : ['none'], // Default to 'none' if empty
+          allergies:
+            Array.isArray(user.healthProfile.allergies) && user.healthProfile.allergies.length > 0
+              ? user.healthProfile.allergies
+              : ['none'], // Default to 'none' if empty
           height: user.healthProfile.height != null ? user.healthProfile.height.toString() : '',
           weight: user.healthProfile.weight != null ? user.healthProfile.weight.toString() : '',
           activityLevel: user.healthProfile.activityLevel || 'moderately-active',
@@ -100,12 +103,12 @@ const CommonQuestions = ({ onComplete }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    if (name === 'age'||'gender'){
+    if (name === 'age' || 'gender') {
       setFormData((prev) => ({
         ...prev,
-        [name]:value
+        [name]: value,
       }))
-    }else{
+    } else {
       setFormData((prev) => ({
         ...prev,
         healthProfile: {
@@ -128,7 +131,7 @@ const CommonQuestions = ({ onComplete }) => {
       }))
     } else {
       // If other values are selected, remove 'none'
-      const filteredValues = values.filter(v => v !== 'none')
+      const filteredValues = values.filter((v) => v !== 'none')
       setFormData((prev) => ({
         ...prev,
         healthProfile: {
@@ -151,7 +154,7 @@ const CommonQuestions = ({ onComplete }) => {
       }))
     } else {
       // If other values are selected, remove 'none'
-      const filteredValues = values.filter(v => v !== 'none')
+      const filteredValues = values.filter((v) => v !== 'none')
       setFormData((prev) => ({
         ...prev,
         healthProfile: {
@@ -235,7 +238,16 @@ const CommonQuestions = ({ onComplete }) => {
   }
 
   return (
-    <Box maxW="800px" mx="auto" mt="8" p="6" borderWidth="1px" borderRadius="lg" boxShadow="md" backgroundColor={'brand.100'}>
+    <Box
+      maxW="800px"
+      mx="auto"
+      mt="8"
+      p="6"
+      borderWidth="1px"
+      borderRadius="lg"
+      boxShadow="md"
+      backgroundColor={'brand.100'}
+    >
       <form onSubmit={handleSubmit}>
         <VStack spacing="4">
           <Heading as="h2" size="lg" mb="4">
@@ -249,8 +261,7 @@ const CommonQuestions = ({ onComplete }) => {
           )}
 
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing="4" w="full">
-            <FormControl maxW={'90%'}
-             mx={8}>
+            <FormControl maxW={'90%'} mx={8}>
               <FormLabel>{t('premium.age')}</FormLabel>
               <Input
                 type="number"
@@ -261,12 +272,10 @@ const CommonQuestions = ({ onComplete }) => {
                 min="10"
                 max="100"
                 maxW={'90%'}
-                
               />
             </FormControl>
 
-            <FormControl maxW={'90%'}
-             mx={8}>
+            <FormControl maxW={'90%'} mx={8}>
               <FormLabel>{t('premium.gender')}</FormLabel>
               <Select
                 name="gender"
@@ -281,8 +290,7 @@ const CommonQuestions = ({ onComplete }) => {
               </Select>
             </FormControl>
 
-            <FormControl maxW={'90%'}
-             mx={8}>
+            <FormControl maxW={'90%'} mx={8}>
               <FormLabel>{t('premium.heightCm')}</FormLabel>
               <Input
                 type="number"
@@ -297,8 +305,7 @@ const CommonQuestions = ({ onComplete }) => {
               />
             </FormControl>
 
-            <FormControl maxW={'90%'}
-             mx={8}>
+            <FormControl maxW={'90%'} mx={8}>
               <FormLabel>{t('premium.weightKg')}</FormLabel>
               <Input
                 type="number"
@@ -314,8 +321,7 @@ const CommonQuestions = ({ onComplete }) => {
             </FormControl>
           </SimpleGrid>
 
-          <FormControl maxW={'90%'}
-           mx={8}>
+          <FormControl maxW={'90%'} mx={8}>
             <FormLabel>{t('premium.activityLevel')}</FormLabel>
             <RadioGroup
               value={formData.healthProfile.activityLevel || 'moderately-active'}
@@ -339,8 +345,7 @@ const CommonQuestions = ({ onComplete }) => {
             </RadioGroup>
           </FormControl>
 
-          <FormControl maxW={'90%'}
-           mx={8}>
+          <FormControl maxW={'90%'} mx={8}>
             <FormLabel>{t('premium.fitnessGoal')}</FormLabel>
             <Select
               name="fitnessGoal"
@@ -356,40 +361,47 @@ const CommonQuestions = ({ onComplete }) => {
             </Select>
           </FormControl>
 
-          <FormControl maxW={'90%'}
-           mx={8}>
+          <FormControl maxW={'90%'} mx={8}>
             <FormLabel>{t('premium.dietaryPreferences')}</FormLabel>
             <Wrap spacing={3}>
               {dietaryPreferencesOptions.map((option) => (
                 <WrapItem key={option.value}>
                   <Button
                     size="sm"
-                    variant={formData.healthProfile.dietaryPreferences.includes(option.value) ? "solid" : "outline"}
-                    colorScheme={formData.healthProfile.dietaryPreferences.includes(option.value) ? "brand" : "gray"}
+                    variant={
+                      formData.healthProfile.dietaryPreferences.includes(option.value)
+                        ? 'solid'
+                        : 'outline'
+                    }
+                    colorScheme={
+                      formData.healthProfile.dietaryPreferences.includes(option.value)
+                        ? 'brand'
+                        : 'gray'
+                    }
                     onClick={() => {
-                      const currentValues = formData.healthProfile.dietaryPreferences;
-                      let newValues;
-                      
+                      const currentValues = formData.healthProfile.dietaryPreferences
+                      let newValues
+
                       if (option.value === 'none') {
                         // If clicking 'none', set only 'none'
-                        newValues = currentValues.includes('none') ? [] : ['none'];
+                        newValues = currentValues.includes('none') ? [] : ['none']
                       } else {
                         // If clicking any other option
                         if (currentValues.includes(option.value)) {
                           // Remove the option
-                          newValues = currentValues.filter(v => v !== option.value);
+                          newValues = currentValues.filter((v) => v !== option.value)
                         } else {
                           // Add the option and remove 'none' if present
-                          newValues = [...currentValues.filter(v => v !== 'none'), option.value];
+                          newValues = [...currentValues.filter((v) => v !== 'none'), option.value]
                         }
                       }
-                      
+
                       // Ensure we always have at least 'none' if nothing else is selected
                       if (newValues.length === 0) {
-                        newValues = ['none'];
+                        newValues = ['none']
                       }
-                      
-                      handleDietaryPreferencesChange(newValues);
+
+                      handleDietaryPreferencesChange(newValues)
                     }}
                   >
                     {option.label}
@@ -399,40 +411,43 @@ const CommonQuestions = ({ onComplete }) => {
             </Wrap>
           </FormControl>
 
-          <FormControl maxW={'90%'}
-           mx={8}>
+          <FormControl maxW={'90%'} mx={8}>
             <FormLabel>{t('premium.allergies')}</FormLabel>
             <Wrap spacing={3}>
               {allergiesOptions.map((option) => (
                 <WrapItem key={option.value}>
                   <Button
                     size="sm"
-                    variant={formData.healthProfile.allergies.includes(option.value) ? "solid" : "outline"}
-                    colorScheme={formData.healthProfile.allergies.includes(option.value) ? "red" : "gray"}
+                    variant={
+                      formData.healthProfile.allergies.includes(option.value) ? 'solid' : 'outline'
+                    }
+                    colorScheme={
+                      formData.healthProfile.allergies.includes(option.value) ? 'red' : 'gray'
+                    }
                     onClick={() => {
-                      const currentValues = formData.healthProfile.allergies;
-                      let newValues;
-                      
+                      const currentValues = formData.healthProfile.allergies
+                      let newValues
+
                       if (option.value === 'none') {
                         // If clicking 'none', set only 'none'
-                        newValues = currentValues.includes('none') ? [] : ['none'];
+                        newValues = currentValues.includes('none') ? [] : ['none']
                       } else {
                         // If clicking any other option
                         if (currentValues.includes(option.value)) {
                           // Remove the option
-                          newValues = currentValues.filter(v => v !== option.value);
+                          newValues = currentValues.filter((v) => v !== option.value)
                         } else {
                           // Add the option and remove 'none' if present
-                          newValues = [...currentValues.filter(v => v !== 'none'), option.value];
+                          newValues = [...currentValues.filter((v) => v !== 'none'), option.value]
                         }
                       }
-                      
+
                       // Ensure we always have at least 'none' if nothing else is selected
                       if (newValues.length === 0) {
-                        newValues = ['none'];
+                        newValues = ['none']
                       }
-                      
-                      handleAllergiesChange(newValues);
+
+                      handleAllergiesChange(newValues)
                     }}
                   >
                     {option.label}

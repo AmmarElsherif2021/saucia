@@ -3,6 +3,7 @@ import { ItemsCarousel } from '../../Components/ItemsCarousel'
 import { PlanCard } from '../../Components/Cards'
 import dailyMealPlanImage from '../../assets/premium/dailymealplan.png'
 import saladsPlanImage from '../../assets/premium/proteinsaladplan.png'
+import nonProteinSaladsPlanImage from '../../assets/premium/nonproteinsaladplan.png'
 import gainWeightPlanImage from '../../assets/premium/gainWeight.png'
 import keepWeightPlanImage from '../../assets/premium/keepWeight.png'
 import loseWeightPlanImage from '../../assets/premium/loseWeight.png'
@@ -17,8 +18,8 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
     if (title?.includes('Gain Weight')) return gainWeightPlanImage
     if (title?.includes('Keep Weight')) return keepWeightPlanImage
     if (title?.includes('Lose Weight')) return loseWeightPlanImage
-    if (title?.includes('Salad')) return saladsPlanImage
-    return dailyMealPlanImage
+    if (title?.includes('Non')) return nonProteinSaladsPlanImage
+    return saladsPlanImage
   }
 
   const processedPlans =

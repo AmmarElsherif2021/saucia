@@ -9,7 +9,18 @@ export const getAllOrders = async (token) => {
   const url = `${import.meta.env.VITE_BASE_URL}/orders`
   return await fetchWithAuth(url, {}, token)
 }
-
+//Create order
+export const createOrder = async (token, orderData) => {
+  const url = `${import.meta.env.VITE_BASE_URL}/orders`
+  return await fetchWithAuth(
+    url,
+    {
+      method: 'POST',
+      body: JSON.stringify(orderData),
+    },
+    token,
+  )
+}
 // Get orders for the authenticated user
 export const getUserOrders = async (token) => {
   const url = `${import.meta.env.VITE_BASE_URL}/orders/user`

@@ -16,19 +16,33 @@ export class User {
       'defaultPaymentMethod',
       'notes',
       'language',
-      'gender'
+      'gender',
     ],
     array: ['addresses', 'favoriteItems', 'favoriteMeals', 'paymentMethods'],
     boolean: ['isAdmin'],
-    number: ['loyaltyPoints','age'],
+    number: ['loyaltyPoints', 'age'],
     healthProfile: {
-      string: ['fitnessGoal','activityLevel'],
+      string: ['fitnessGoal', 'activityLevel'],
       number: ['height', 'weight'],
       array: ['dietaryPreferences', 'allergies'],
     },
     subscription: {
-      string: ['paymentMethod', 'planId', 'planName', 'startDate', 'endDate', 'status'],
-      number: ['price','mealsCount','consumedMeals'],
+      string: [
+        'paymentMethod',
+        'planId',
+        'planName',
+        'startDate',
+        'endDate',
+        'status',
+        'deliveryAddress',
+        'deliveryTime',
+        'pausedAt',
+        'resumedAt',
+        'nextMealDate',
+        'mealSchedule', // JSON string for complex scheduling
+      ],
+      number: ['price', 'mealsCount', 'consumedMeals'],
+      boolean: ['autoRenewal', 'deliveryPaused'],
     },
   }
 
@@ -44,9 +58,9 @@ export class User {
     loyaltyPoints: 0,
     notes: '',
     language: 'en',
-    age:0,
-    gender:'male',
-    // Default subscription
+    age: 0,
+    gender: 'male',
+    // Enhanced subscription defaults
     subscription: {
       price: 0,
       endDate: null,
@@ -54,15 +68,26 @@ export class User {
       planId: '',
       planName: '',
       startDate: null,
-      status: 'inactive',
-      mealsCount:0,
-      consumedMeals:0
+      status: 'inactive', // 'active', 'paused', 'expired', 'cancelled'
+      mealsCount: 0,
+      consumedMeals: 0,
+      deliveryAddress: '', // Selected delivery address
+      deliveryTime: '12:00', // Preferred delivery time (24h format)
+      autoRenewal: false,
+      deliveryPaused: false,
+      pausedAt: null, // When plan was paused
+      resumedAt: null, // When plan was resumed
+      nextMealDate: null, // Next scheduled meal delivery
+      mealSchedule: '{}', // JSON string for meal scheduling data
     },
     // Default notification preferences
     notificationPreferences: {
       email: true,
       sms: false,
       push: true,
+      mealReminders: true,
+      deliveryUpdates: true,
+      planUpdates: true,
     },
     // Default health profile
     healthProfile: {
@@ -83,6 +108,7 @@ export class User {
     // Handle Firestore timestamps
     const createdAt = data.createdAt?.toDate?.().toISOString() || data.createdAt
     const updatedAt = data.updatedAt?.toDate?.().toISOString() || data.updatedAt
+    const lastLogin = data.lastLogin?.toDate?.().toISOString() || data.lastLogin
 
     // Build user object with correct types
     const result = {
@@ -110,21 +136,23 @@ export class User {
       loyaltyPoints: Number(data.loyaltyPoints) || this.defaultValues.loyaltyPoints,
       notes: data.notes || this.defaultValues.notes,
       language: data.language || this.defaultValues.language,
-      age:data.age || this.defaultValues.age,
+      age: data.age || this.defaultValues.age,
       gender: data.gender || this.defaultValues.gender,
       createdAt,
       updatedAt,
+      lastLogin,
     }
 
-    // Process subscription
+    // Process subscription with enhanced fields
     result.subscription = this._processSubscription(data.subscription)
 
     // Process health profile
     result.healthProfile = this._processHealthProfile(data.healthProfile)
 
-    // Process notification preferences
-    result.notificationPreferences =
-      data.notificationPreferences || this.defaultValues.notificationPreferences
+    // Process enhanced notification preferences
+    result.notificationPreferences = this._processNotificationPreferences(
+      data.notificationPreferences,
+    )
 
     return result
   }
@@ -142,8 +170,17 @@ export class User {
       planName: String(subscriptionData.planName || defaults.planName),
       startDate: subscriptionData.startDate || defaults.startDate,
       status: String(subscriptionData.status || defaults.status),
-      mealsCount: Number(subscriptionData.mealsCount) || defaults.mealsCount, // represent selected period of plan
-      consumedMeals:Number(subscriptionData.consumedMeals) || defaults.consumedMeals, //should decrement
+      mealsCount: Number(subscriptionData.mealsCount) || defaults.mealsCount,
+      consumedMeals: Number(subscriptionData.consumedMeals) || defaults.consumedMeals,
+      // Enhanced subscription fields
+      deliveryAddress: String(subscriptionData.deliveryAddress || defaults.deliveryAddress),
+      deliveryTime: String(subscriptionData.deliveryTime || defaults.deliveryTime),
+      autoRenewal: Boolean(subscriptionData.autoRenewal ?? defaults.autoRenewal),
+      deliveryPaused: Boolean(subscriptionData.deliveryPaused ?? defaults.deliveryPaused),
+      pausedAt: subscriptionData.pausedAt || defaults.pausedAt,
+      resumedAt: subscriptionData.resumedAt || defaults.resumedAt,
+      nextMealDate: subscriptionData.nextMealDate || defaults.nextMealDate,
+      mealSchedule: String(subscriptionData.mealSchedule || defaults.mealSchedule),
     }
   }
 
@@ -161,6 +198,21 @@ export class User {
         : defaults.dietaryPreferences,
       allergies: Array.isArray(profileData.allergies) ? profileData.allergies : defaults.allergies,
       activityLevel: String(profileData.activityLevel || defaults.activityLevel),
+    }
+  }
+
+  static _processNotificationPreferences(notificationData) {
+    const defaults = this.defaultValues.notificationPreferences
+
+    if (!notificationData) return { ...defaults }
+
+    return {
+      email: Boolean(notificationData.email ?? defaults.email),
+      sms: Boolean(notificationData.sms ?? defaults.sms),
+      push: Boolean(notificationData.push ?? defaults.push),
+      mealReminders: Boolean(notificationData.mealReminders ?? defaults.mealReminders),
+      deliveryUpdates: Boolean(notificationData.deliveryUpdates ?? defaults.deliveryUpdates),
+      planUpdates: Boolean(notificationData.planUpdates ?? defaults.planUpdates),
     }
   }
 
@@ -199,12 +251,96 @@ export class User {
     return processedData
   }
 
+  // Enhanced subscription management methods
+  static async updateSubscriptionStatus(uid, status, additionalData = {}) {
+    try {
+      const updateData = {
+        'subscription.status': status,
+        'subscription.updatedAt': new Date().toISOString(),
+        ...additionalData,
+      }
+
+      if (status === 'paused') {
+        updateData['subscription.pausedAt'] = new Date().toISOString()
+        updateData['subscription.deliveryPaused'] = true
+      } else if (status === 'active') {
+        updateData['subscription.resumedAt'] = new Date().toISOString()
+        updateData['subscription.deliveryPaused'] = false
+      }
+
+      await this.collection.doc(uid).update(updateData)
+      return await this.getById(uid)
+    } catch (error) {
+      console.error('Error updating subscription status:', error)
+      throw error
+    }
+  }
+
+  static async updateDeliverySettings(uid, deliveryAddress, deliveryTime) {
+    try {
+      const updateData = {
+        'subscription.deliveryAddress': deliveryAddress,
+        'subscription.deliveryTime': deliveryTime,
+        updatedAt: new Date().toISOString(),
+      }
+
+      await this.collection.doc(uid).update(updateData)
+      return await this.getById(uid)
+    } catch (error) {
+      console.error('Error updating delivery settings:', error)
+      throw error
+    }
+  }
+
+  static async incrementConsumedMeals(uid, increment = 1) {
+    try {
+      const userDoc = await this.getById(uid)
+      if (!userDoc) throw new Error('User not found')
+
+      const newConsumedMeals = (userDoc.subscription.consumedMeals || 0) + increment
+      const updateData = {
+        'subscription.consumedMeals': newConsumedMeals,
+        updatedAt: new Date().toISOString(),
+      }
+
+      // Check if plan should be completed
+      if (newConsumedMeals >= userDoc.subscription.mealsCount) {
+        updateData['subscription.status'] = 'completed'
+        updateData['subscription.completedAt'] = new Date().toISOString()
+      }
+
+      await this.collection.doc(uid).update(updateData)
+      return await this.getById(uid)
+    } catch (error) {
+      console.error('Error incrementing consumed meals:', error)
+      throw error
+    }
+  }
+
+  static async scheduleNextMeal(uid, nextMealDate, mealScheduleData = {}) {
+    try {
+      const updateData = {
+        'subscription.nextMealDate': nextMealDate,
+        'subscription.mealSchedule': JSON.stringify(mealScheduleData),
+        updatedAt: new Date().toISOString(),
+      }
+
+      await this.collection.doc(uid).update(updateData)
+      return await this.getById(uid)
+    } catch (error) {
+      console.error('Error scheduling next meal:', error)
+      throw error
+    }
+  }
+
+  // Existing methods remain the same...
   static async create(uid, userData) {
     try {
       const defaultUserData = {
         ...this.defaultValues,
         createdAt: new Date(),
         updatedAt: new Date(),
+        lastLogin: new Date(),
       }
 
       const newUserData = { ...defaultUserData, ...userData }

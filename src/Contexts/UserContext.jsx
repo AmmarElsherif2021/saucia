@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { onAuthStateChanged, signOut, getIdTokenResult } from 'firebase/auth'
+import { onAuthStateChanged, signOut, getIdToken } from 'firebase/auth'
 import { auth } from '../../firebaseConfig.jsx'
-import { doc, getDoc, getFirestore, collection, query, where, getDocs, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, getFirestore, collection, query, where, getDocs } from 'firebase/firestore'
 import { getUserOrders } from '../API/orders.jsx'
+import { getUserInfo, updateUserProfile as apiUpdateUserProfile } from '../API/users.jsx'
 
 const UserContext = createContext()
 
@@ -11,6 +12,7 @@ export const UserProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [userPlan, setUserPlan] = useState(null)
   const [planLoading, setPlanLoading] = useState(false)
+  const [userAddress, setUserAddress] = useState(null)
   const db = getFirestore()
 
   // Helper function to create default user structure
@@ -50,7 +52,7 @@ export const UserProvider = ({ children }) => {
         startDate: null,
         status: 'inactive',
         mealsCount: 0,
-        consumedMeals: 0
+        consumedMeals: 0,
       },
       notificationPreferences: userData?.notificationPreferences || {
         email: true,
@@ -65,7 +67,7 @@ export const UserProvider = ({ children }) => {
         dietaryPreferences: [],
         allergies: [],
         activityLevel: '',
-      }
+      },
     }
   }
 
@@ -80,6 +82,19 @@ export const UserProvider = ({ children }) => {
     }
   }
 
+  // Use API instead of direct Firestore access
+  const getUserInfoFromAPI = async (uid) => {
+    try {
+      const userData = await getUserInfo(uid)
+      return userData
+    } catch (error) {
+      console.error('Error getting user from API:', error)
+      // Fallback to Firestore if API fails
+      return await getUserInfoFromFirestore(uid)
+    }
+  }
+
+  // Keep as fallback for API failures
   const getUserInfoFromFirestore = async (uid) => {
     try {
       const userRef = doc(db, 'users', uid)
@@ -121,29 +136,54 @@ export const UserProvider = ({ children }) => {
     }
   }
 
-  // New function to update user profile with automatic context sync
+  // Updated to use API function
   const updateUserProfile = async (uid, updateData) => {
     if (!uid) throw new Error('User ID is required')
 
     try {
-      const userRef = doc(db, 'users', uid)
-      const dataToUpdate = {
-        ...updateData,
-        updatedAt: new Date().toISOString()
-      }
-      
-      await updateDoc(userRef, dataToUpdate)
+      // Use API function instead of direct Firestore update
+      const result = await apiUpdateUserProfile(uid, updateData)
 
       // Update local user state immediately for better UX
-      setUser(prevUser => ({
+      setUser((prevUser) => ({
         ...prevUser,
         ...updateData,
-        updatedAt: dataToUpdate.updatedAt
+        updatedAt: new Date().toISOString(),
       }))
 
-      return { success: true }
+      return { success: true, data: result }
     } catch (error) {
       console.error('Error updating user profile:', error)
+      throw error
+    }
+  }
+
+  // Updated to use API for subscription updates
+  const updateUserSubscription = async (subscriptionData) => {
+    if (!user?.uid) return null
+
+    try {
+      // Use API to update subscription
+      const updateData = {
+        subscription: subscriptionData,
+        updatedAt: new Date().toISOString(),
+      }
+
+      await apiUpdateUserProfile(user.uid, updateData)
+
+      const updatedUser = {
+        ...user,
+        subscription: subscriptionData,
+      }
+
+      setUser(updatedUser)
+
+      const newPlan = await fetchUserPlanDetails(subscriptionData.planId)
+      setUserPlan(newPlan)
+
+      return { user: updatedUser, plan: newPlan }
+    } catch (error) {
+      console.error('Error updating user subscription:', error)
       throw error
     }
   }
@@ -173,9 +213,9 @@ export const UserProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          const tokenResult = await getIdTokenResult(firebaseUser)
+          const tokenResult = await firebaseUser.getIdTokenResult()
           const [userData, orders] = await Promise.all([
-            getUserInfoFromFirestore(firebaseUser.uid),
+            getUserInfoFromAPI(firebaseUser.uid), // Use API instead of Firestore
             refreshOrders(firebaseUser),
           ])
 
@@ -198,33 +238,6 @@ export const UserProvider = ({ children }) => {
     return () => unsubscribe()
   }, [])
 
-  const updateUserSubscription = async (subscriptionData) => {
-    if (!user?.uid) return null
-
-    try {
-      const userRef = doc(db, 'users', user.uid)
-      await updateDoc(userRef, {
-        subscription: subscriptionData,
-        updatedAt: new Date().toISOString()
-      })
-
-      const updatedUser = {
-        ...user,
-        subscription: subscriptionData
-      }
-
-      setUser(updatedUser)
-
-      const newPlan = await fetchUserPlanDetails(subscriptionData.planId)
-      setUserPlan(newPlan)
-
-      return { user: updatedUser, plan: newPlan }
-    } catch (error) {
-      console.error('Error updating user subscription:', error)
-      throw error
-    }
-  }
-
   const contextValue = {
     user,
     setUser,
@@ -234,7 +247,7 @@ export const UserProvider = ({ children }) => {
     logout,
     loading,
     updateUserSubscription,
-    updateUserProfile, 
+    updateUserProfile,
     refreshOrders: async () => {
       if (auth.currentUser) {
         const orders = await refreshOrders(auth.currentUser)
@@ -242,6 +255,8 @@ export const UserProvider = ({ children }) => {
         return orders
       }
     },
+    userAddress,
+    setUserAddress,
   }
 
   return <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>
@@ -255,4 +270,4 @@ export const useUser = () => {
   return context
 }
 
-export default UserContext;
+export default UserContext

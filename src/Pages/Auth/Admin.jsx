@@ -499,7 +499,9 @@ const Admin = () => {
                     <Td w="10%">{item.free_count}</Td>
                     <Td w="10%">{item.item_kcal}</Td>
                     <Td w="10%">{item.item_protein}</Td>
-                    <Td>{item?.allergens?.length > 0 ? item.allergens.map(a=>`${a.ar} |`): 'N/A'}</Td>
+                    <Td>
+                      {item?.allergens?.length > 0 ? item.allergens.map((a) => `${a.ar} |`) : 'N/A'}
+                    </Td>
                     <Td w="15%" isTruncated maxW="150px">
                       {item.image}
                     </Td>
@@ -592,7 +594,11 @@ const Admin = () => {
                       <Td>{meal.ingredients_arabic}</Td>
                       <Td>{meal?.items?.length > 0 ? meal.items.join(', ') : 'N/A'}</Td>
                       <Td>{meal?.image}</Td>
-                      <Td>{meal?.allergens?.length > 0 ? meal.allergens.map(a=>`${a.ar} |`): 'N/A'}</Td>
+                      <Td>
+                        {meal?.allergens?.length > 0
+                          ? meal.allergens.map((a) => `${a.ar} |`)
+                          : 'N/A'}
+                      </Td>
                       <Td>
                         <Stack direction="row" spacing={2}>
                           <Button

@@ -11,11 +11,12 @@ import {
   useToast,
   Input,
   Stack,
+  Image,
 } from '@chakra-ui/react'
 import { IconButton, AddIcon, MinusIcon, DeleteIcon } from '@chakra-ui/icons'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import dailySaladIcon from '../assets/premium/dailyMeal.svg'
+import dailySaladIcon from '../assets/menu/unknownMeal.JPG'
 import { useElements } from '../Contexts/ElementsContext'
 // Compact cart card
 export const CartCard = ({
@@ -32,135 +33,144 @@ export const CartCard = ({
   const { t } = useTranslation()
   const { items } = useElements()
 
-  useEffect(() => {
-    console.log(`addOns from cart`, addOns)
-  }, [addOns])
-
   return (
     <Flex
-      direction="row"
-      align="center"
+      direction={['column', 'row']} // Stack vertically on mobile, row on larger screens
+      align={['flex-start', 'center']}
+      justify="space-between"
       bg={colorMode === 'dark' ? 'gray.700' : 'white'}
-      borderRadius="27px"
-      p={2}
-      mb={2}
-      width="90%"
+      borderRadius="lg"
+      width="100%"
+      maxWidth="600px"
+      p={[3, 4]}
+      my={2}
+      mx="auto"
+      boxShadow="sm"
       position="relative"
       _hover={{
         transform: 'scale(1.01)',
       }}
       transition="all 0.2s"
     >
-      <Box
-        position="relative"
-        width="100px"
-        height="100px"
-        overflow="hidden"
-        borderRadius="25px"
-        flexShrink={0}
-      >
+      {/* Image and basic info row */}
+      <Flex direction={['row', 'row']} align="center" width={['100%', 'auto']} mb={[2, 0]}>
         <Box
-          as="img"
-          src={image}
-          alt={name}
-          objectFit="cover"
-          width="100%"
-          height="100%"
-          filter="brightness(0.95)"
-        />
-        <Badge
-          position="absolute"
-          bottom="2"
-          right="2"
-          bg="brand.600"
-          color="white"
-          borderRadius="full"
-          px={2}
-          py={1}
-          fontSize="xs"
+          position="relative"
+          width={['80px', '100px']}
+          height={['80px', '100px']}
+          overflow="hidden"
+          borderRadius="md"
+          flexShrink={0}
+          mx={[3, 4]}
         >
-          ×{quantity}
-        </Badge>
-      </Box>
+          <Image
+            src={image}
+            alt={name}
+            objectFit="cover"
+            width="100%"
+            height="100%"
+            filter="brightness(0.95)"
+          />
+          <Badge
+            position="absolute"
+            bottom="2"
+            right="2"
+            bg="error.300"
+            color="white"
+            borderRadius="full"
+            px={2}
+            py={1}
+            fontSize="xs"
+          >
+            ×{quantity}
+          </Badge>
+        </Box>
 
-      <Box textAlign="left" flex="3" px={3} minW="50">
-        <Text
-          fontWeight="bold"
-          fontSize="lg"
-          color={colorMode === 'dark' ? 'white' : 'gray.800'}
-          noOfLines={1}
-          py={0.5}
-          my={0.5}
-        >
-          {name}
-        </Text>
-        <Text fontSize="md" color="gray.800" fontWeight="bold" py={0.5} my={0.5}>
-          ${(price * quantity)?.toFixed(2)}
-        </Text>
-        <Flex wrap="wrap" gap={1} py={0.5} my={0.5}>
-          {Array.isArray(addOns) &&
-            addOns.length > 0 &&
-            addOns.map((addOnId, index) => {
-              const addOn = items.find((item) => item.id === addOnId)
-              return addOn ? (
-                <Badge
-                  key={`${addOnId}-${index}`}
-                  colorScheme="teal"
-                  borderRadius="full"
-                  px={2}
-                  py={1}
-                  fontSize="xs"
-                >
-                  {addOn.name}
-                </Badge>
-              ) : null
-            })}
+        {/* Item details */}
+        <Box flex="1" minW="0">
+          {' '}
+          {/* minW="0" prevents overflow issues */}
+          <Text
+            fontWeight="bold"
+            fontSize={['md', 'lg']}
+            color={colorMode === 'dark' ? 'white' : 'gray.800'}
+            noOfLines={1}
+            mb={1}
+          >
+            {name}
+          </Text>
+          <Text fontSize={['sm', 'md']} color="gray.600" mb={1}>
+            ${price?.toFixed(2)} {t('common.unitPrice')}
+          </Text>
+          <Text fontSize={['md', 'lg']} color="gray.800" fontWeight="bold" mb={2}>
+            ${(price * quantity)?.toFixed(2)}
+          </Text>
+          {/* Add-ons badges - only show if exists */}
+          {Array.isArray(addOns) && addOns.length > 0 && (
+            <Flex wrap="wrap" gap={1} mb={[2, 0]}>
+              {addOns.map((addOnId, index) => {
+                const addOn = items.find((item) => item.id === addOnId)
+                return addOn ? (
+                  <Badge
+                    key={`${addOnId}-${index}`}
+                    colorScheme="teal"
+                    borderRadius="full"
+                    px={2}
+                    py={1}
+                    fontSize="xs"
+                  >
+                    {addOn.name}
+                  </Badge>
+                ) : null
+              })}
+            </Flex>
+          )}
+        </Box>
+      </Flex>
+
+      {/* Quantity controls - positioned differently based on screen size */}
+      <Flex
+        align="center"
+        justify="center" //{['space-between', 'flex-end']}
+        width={['100%', 'auto']}
+        mt={[3, 0]}
+      >
+        <Flex direction={['row', 'column', 'column']} align="center" mr={[0, 2]}>
+          <IconButton
+            icon={<AddIcon />}
+            aria-label={t('buttons.increaseQuantity')}
+            size="sm"
+            variant="outline"
+            onClick={onIncrease}
+          />
+          <Text mx={2} fontSize="md" minW="20px" textAlign="center">
+            {quantity}
+          </Text>
+          <IconButton
+            icon={<MinusIcon />}
+            aria-label={t('buttons.decreaseQuantity')}
+            size="sm"
+            variant="outline"
+            colorScheme="error"
+            onClick={onDecrease}
+          />
         </Flex>
-        <Text
-          fontSize="sm"
-          color={colorMode === 'dark' ? 'gray.400' : 'gray.500'}
-          py={0.5}
-          my={0.5}
-        >
-          ${price?.toFixed(2)} {t('common.each')}
-        </Text>
-      </Box>
 
-      <Flex align="center">
-        <IconButton
-          icon={<MinusIcon />}
-          aria-label={t('buttons.decreaseQuantity')}
-          size="xs"
-          as={Button}
-          variant="outlined"
-          onClick={onDecrease}
-        />
-        <Text mx={1} fontSize="sm" minW="20px" textAlign="center">
-          {quantity}
-        </Text>
-        <IconButton
-          icon={<AddIcon />}
-          as={Button}
-          aria-label={t('buttons.increaseQuantity')}
-          size="xs"
-          variant="outlined"
-          onClick={onIncrease}
-        />
         <Button
           aria-label={t('buttons.removeItem')}
-          size="xs"
-          variant="solid"
+          size="sm"
+          variant="ghost"
           onClick={onRemove}
           colorScheme="error"
-          ml={2}
+          ml={[0, 2]}
+          leftIcon={<DeleteIcon />}
         >
-          <DeleteIcon />
+          <Text display={['none', 'inline']}>{t('buttons.remove')}</Text>
         </Button>
       </Flex>
     </Flex>
   )
 }
-
 export const CRT = ({
   items = [],
   totalPrice = 0,
@@ -235,10 +245,11 @@ export const CRT = ({
     <Box
       bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
       borderRadius="25px"
-      p={{ base: 8, md: 12 }}
-      width="80%"
-      maxW="600px"
-      mx="auto"
+      width={['95%', '87%', '70%']}
+      minWidth="280px"
+      p={2}
+      ml="1vw"
+      mr="2vw"
     >
       <Flex align="center" justify="space-between" mb={4}>
         <Heading size="lg" fontWeight="semibold">
@@ -304,7 +315,6 @@ export const CRT = ({
             variant="outline"
             size="sm"
             w={'90%'}
-           
           />
         </Box>
 
@@ -319,7 +329,7 @@ export const CRT = ({
               onChange={(e) => setPromoCode(e.target.value)}
               variant="outline"
               flex={1}
-              w={'90%'}              
+              w={'90%'}
             />
             <Button colorScheme="brand" onClick={handleApplyPromoCode} px={6} flexShrink={0}>
               {t('buttons.apply')}

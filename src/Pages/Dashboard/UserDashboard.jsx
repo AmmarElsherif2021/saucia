@@ -53,20 +53,20 @@ export const UserDashboard = () => {
   const { colorMode } = useColorMode()
   const { t } = useTranslation()
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const { 
-    user, 
-    loading, 
-    userPlan, 
-    planLoading, 
-    refreshOrders, 
+  const {
+    user,
+    loading,
+    userPlan,
+    planLoading,
+    refreshOrders,
     updateUserSubscription,
-    updateUserProfile // Use context function instead of API directly
+    updateUserProfile, // Use context function instead of API directly
   } = useUser()
-  
+
   const [isOrdersLoading, setIsOrdersLoading] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
   const [formData, setFormData] = useState({})
-  const toast = useToast();
+  const toast = useToast()
   const createDefaultFormData = (userData) => ({
     displayName: userData?.displayName || '',
     firstName: userData?.firstName || '',
@@ -108,18 +108,18 @@ export const UserDashboard = () => {
     }
   }
 
-  // Generic input change handler 
+  // Generic input change handler
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  // Generic number change handler 
+  // Generic number change handler
   const handleNumberChange = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  // Generic nested field change handler 
+  // Generic nested field change handler
   const handleNestedFieldChange = (parentField, field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -139,10 +139,10 @@ export const UserDashboard = () => {
     handleNestedFieldChange('notificationPreferences', field, value)
   }
 
-  // Generic checkbox array handler 
+  // Generic checkbox array handler
   const handleCheckboxArrayChange = (fieldPath, value, isChecked) => {
-    const [parentField, childField] = fieldPath.includes('.') 
-      ? fieldPath.split('.') 
+    const [parentField, childField] = fieldPath.includes('.')
+      ? fieldPath.split('.')
       : [fieldPath, null]
 
     setFormData((prev) => {
@@ -202,7 +202,7 @@ export const UserDashboard = () => {
     }
   }
 
-  // Reusable component for displaying user info 
+  // Reusable component for displaying user info
   const UserInfoItem = ({ label, value, verified = false }) => (
     <Text>
       <strong>{label}:</strong> {value || 'N/A'}{' '}
@@ -214,7 +214,7 @@ export const UserDashboard = () => {
     </Text>
   )
 
-  // Reusable component for notification status 
+  // Reusable component for notification status
   const NotificationStatus = ({ label, enabled }) => (
     <Text>
       <strong>{label}:</strong>{' '}
@@ -224,8 +224,8 @@ export const UserDashboard = () => {
     </Text>
   )
 
-  // Reusable form control for basic inputs 
-  const BasicFormControl = ({ label, name, value, placeholder, type = "text" }) => (
+  // Reusable form control for basic inputs
+  const BasicFormControl = ({ label, name, value, placeholder, type = 'text' }) => (
     <FormControl w={{ base: '95%', md: '60%' }}>
       <FormLabel>{label}</FormLabel>
       <Input
@@ -237,7 +237,7 @@ export const UserDashboard = () => {
         sx={{
           '::placeholder': {
             color: 'gray.500',
-            opacity: 1, 
+            opacity: 1,
             padding: '0.5rem',
           },
         }}
@@ -245,7 +245,7 @@ export const UserDashboard = () => {
     </FormControl>
   )
 
-  // Reusable form control for number inputs 
+  // Reusable form control for number inputs
   const NumberFormControl = ({ label, value, min, max, onChange }) => (
     <FormControl w={{ base: '90%', md: '50%' }}>
       <FormLabel>{label}</FormLabel>
@@ -268,13 +268,13 @@ export const UserDashboard = () => {
     </FormControl>
   )
 
-  // Reusable form control for select inputs 
+  // Reusable form control for select inputs
   const SelectFormControl = ({ label, name, value, onChange, options, placeholder }) => (
     <FormControl w={{ base: '90%', md: '80%' }}>
       <FormLabel>{label}</FormLabel>
       <Select name={name} value={value} onChange={onChange} sx={{ paddingX: '2rem' }}>
         {placeholder && <option value="">{placeholder}</option>}
-        {options.map(option => (
+        {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>
@@ -283,94 +283,88 @@ export const UserDashboard = () => {
     </FormControl>
   )
 
-  // Reusable checkbox grid component 
+  // Reusable checkbox grid component
   const CheckboxGrid = ({ items, selectedItems, fieldPath, columns = { base: 2, md: 4 } }) => (
     <SimpleGrid columns={columns} spacing={3}>
-    {items.map((item) => (
-      <Checkbox
-        key={item.id}
-        isChecked={selectedItems?.includes(item.id)}
-        onChange={(e) =>
-          handleCheckboxArrayChange(fieldPath, item.id, e.target.checked)
-        }
-        value={item.id}
-      >
-        {t(`profile.${item?.label?.toLowerCase().replace('-', '')}`) || item.label}
-      </Checkbox>
-    ))}
-  </SimpleGrid>
+      {items.map((item) => (
+        <Checkbox
+          key={item.id}
+          isChecked={selectedItems?.includes(item.id)}
+          onChange={(e) => handleCheckboxArrayChange(fieldPath, item.id, e.target.checked)}
+          value={item.id}
+        >
+          {t(`profile.${item?.label?.toLowerCase().replace('-', '')}`) || item.label}
+        </Checkbox>
+      ))}
+    </SimpleGrid>
   )
 
-  // Constants for form options 
+  // Constants for form options
   const GENDER_OPTIONS = [
-    {id:1, value: 'male', label: t('profile.male') },
-    { id:2, value: 'female', label: t('profile.female') },
-    {id:3, value: 'other', label: t('profile.other') },
-    {id:4, value: 'prefer-not-to-say', label: t('profile.preferNotToSay') }
+    { id: 1, value: 'male', label: t('profile.male') },
+    { id: 2, value: 'female', label: t('profile.female') },
+    { id: 3, value: 'other', label: t('profile.other') },
+    { id: 4, value: 'prefer-not-to-say', label: t('profile.preferNotToSay') },
   ]
 
   const LANGUAGE_OPTIONS = [
-    {id:1, value: 'en', label: 'English' },
-    {id:2, value: 'es', label: 'Español' },
-    {id:3, value: 'fr', label: 'Français' },
-    {id:4, value: 'de', label: 'Deutsch' },
-    {id:5, value: 'it', label: 'Italiano' }
+    { id: 1, value: 'en', label: 'English' },
+    { id: 2, value: 'es', label: 'Español' },
+    { id: 3, value: 'fr', label: 'Français' },
+    { id: 4, value: 'de', label: 'Deutsch' },
+    { id: 5, value: 'it', label: 'Italiano' },
   ]
 
   const FITNESS_GOAL_OPTIONS = [
-    {id:1, value: 'lose-weight', label: t('profile.loseWeight') },
-    {id:2, value: 'gain-weight', label: t('profile.gainWeight') },
-    {id:3, value: 'maintain-weight', label: t('profile.maintainWeight') },
-    {id:4, value: 'build-muscle', label: t('profile.buildMuscle') },
-    {id:5, value: 'improve-endurance', label: t('profile.improveEndurance') }
+    { id: 1, value: 'lose-weight', label: t('profile.loseWeight') },
+    { id: 2, value: 'gain-weight', label: t('profile.gainWeight') },
+    { id: 3, value: 'maintain-weight', label: t('profile.maintainWeight') },
+    { id: 4, value: 'build-muscle', label: t('profile.buildMuscle') },
+    { id: 5, value: 'improve-endurance', label: t('profile.improveEndurance') },
   ]
 
   const ACTIVITY_LEVEL_OPTIONS = [
-    {id:1, value: 'sedentary', label: t('profile.sedentary') },
-    {id:2, value: 'lightly-active', label: t('profile.lightlyActive') },
-    {id:3, value: 'moderately-active', label: t('profile.moderatelyActive') },
-    {id:4, value: 'very-active', label: t('profile.veryActive') },
-    {id:5, value: 'extremely-active', label: t('profile.extremelyActive') }
+    { id: 1, value: 'sedentary', label: t('profile.sedentary') },
+    { id: 2, value: 'lightly-active', label: t('profile.lightlyActive') },
+    { id: 3, value: 'moderately-active', label: t('profile.moderatelyActive') },
+    { id: 4, value: 'very-active', label: t('profile.veryActive') },
+    { id: 5, value: 'extremely-active', label: t('profile.extremelyActive') },
   ]
 
   const DIETARY_PREFERENCES = [
-    {id:1, value: 'vegetarian', label: t('premium.vegetarian') || 'Vegetarian' },
-    {id:2, value: 'vegan', label: t('premium.vegan') || 'Vegan' },
-    {id:3, value: 'pescatarian', label: t('premium.pescatarian') || 'Pescatarian' },
-    {id:4, value: 'keto', label: t('premium.keto') || 'Ketogenic' },
-    {id:5, value: 'paleo', label: t('premium.paleo') || 'Paleo' },
-    {id:6, value: 'mediterranean', label: t('premium.mediterranean') || 'Mediterranean' },
-    {id:7, value: 'low-carb', label: t('premium.lowCarb') || 'Low Carb' },
-    {id:8, value: 'gluten-free', label: t('premium.glutenFree') || 'Gluten Free' },
-    {id:9, value: 'dairy-free', label: t('premium.dairyFree') || 'Dairy Free' },
-    {id:12, value: 'none', label: t('premium.none') || 'None' },
+    { id: 1, value: 'vegetarian', label: t('premium.vegetarian') || 'Vegetarian' },
+    { id: 2, value: 'vegan', label: t('premium.vegan') || 'Vegan' },
+    { id: 3, value: 'pescatarian', label: t('premium.pescatarian') || 'Pescatarian' },
+    { id: 4, value: 'keto', label: t('premium.keto') || 'Ketogenic' },
+    { id: 5, value: 'paleo', label: t('premium.paleo') || 'Paleo' },
+    { id: 6, value: 'mediterranean', label: t('premium.mediterranean') || 'Mediterranean' },
+    { id: 7, value: 'low-carb', label: t('premium.lowCarb') || 'Low Carb' },
+    { id: 8, value: 'gluten-free', label: t('premium.glutenFree') || 'Gluten Free' },
+    { id: 9, value: 'dairy-free', label: t('premium.dairyFree') || 'Dairy Free' },
+    { id: 12, value: 'none', label: t('premium.none') || 'None' },
   ]
 
   const ALLERGIES = [
-    {id:1, value: 'nuts', label: t('premium.nuts') || 'Nuts' },
-    {id:2, value: 'peanuts', label: t('premium.peanuts') || 'Peanuts' },
-    {id:3, value: 'shellfish', label: t('premium.shellfish') || 'Shellfish' },
-    {id:4, value: 'fish', label: t('premium.fish') || 'Fish' },
-    {id:5, value: 'eggs', label: t('premium.eggs') || 'Eggs' },
-    {id:6, value: 'milk', label: t('premium.milk') || 'Milk/Dairy' },
-    {id:7, value: 'soy', label: t('premium.soy') || 'Soy' },
-    {id:8, value: 'wheat', label: t('premium.wheat') || 'Wheat' },
-    {id:9, value: 'sesame', label: t('premium.sesame') || 'Sesame' },
-    {id:10, value: 'sulfites', label: t('premium.sulfites') || 'Sulfites' },
-    {id:11, value: 'none', label: t('premium.none') || 'None' },
+    { id: 1, value: 'nuts', label: t('premium.nuts') || 'Nuts' },
+    { id: 2, value: 'peanuts', label: t('premium.peanuts') || 'Peanuts' },
+    { id: 3, value: 'shellfish', label: t('premium.shellfish') || 'Shellfish' },
+    { id: 4, value: 'fish', label: t('premium.fish') || 'Fish' },
+    { id: 5, value: 'eggs', label: t('premium.eggs') || 'Eggs' },
+    { id: 6, value: 'milk', label: t('premium.milk') || 'Milk/Dairy' },
+    { id: 7, value: 'soy', label: t('premium.soy') || 'Soy' },
+    { id: 8, value: 'wheat', label: t('premium.wheat') || 'Wheat' },
+    { id: 9, value: 'sesame', label: t('premium.sesame') || 'Sesame' },
+    { id: 10, value: 'sulfites', label: t('premium.sulfites') || 'Sulfites' },
+    { id: 11, value: 'none', label: t('premium.none') || 'None' },
   ]
 
-  // Reusable switch control component 
+  // Reusable switch control component
   const SwitchFormControl = ({ label, id, checked, onChange }) => (
     <FormControl display="flex" alignItems="center" w={{ base: '90%', md: '50%' }}>
       <FormLabel htmlFor={id} mb="0">
         {label}
       </FormLabel>
-      <Switch
-        id={id}
-        isChecked={checked}
-        onChange={onChange}
-      />
+      <Switch id={id} isChecked={checked} onChange={onChange} />
     </FormControl>
   )
 
@@ -558,11 +552,11 @@ export const UserDashboard = () => {
       <Modal isOpen={isOpen} onClose={onClose} isCentered motionPreset="slideInBottom">
         <ModalOverlay />
         <ModalContent
-          maxW={{ base: "80vw", md: "70vw", lg: "60vw" }}
-          mx={{ base: 10, md: "auto" }}
+          maxW={{ base: '80vw', md: '70vw', lg: '60vw' }}
+          mx={{ base: 10, md: 'auto' }}
           maxH="70vh"
           mt={{ base: 4, md: 8 }}
-          sx={{ overflowY: 'auto',overflowX: 'hidden' }}
+          sx={{ overflowY: 'auto', overflowX: 'hidden' }}
         >
           <ModalHeader>{t('profile.editProfile')}</ModalHeader>
           <ModalCloseButton />
@@ -765,10 +759,10 @@ export const UserDashboard = () => {
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
                 <VStack align="start" spacing={3}>
                   <Heading size="sm">{t('profile.personalInformation')}</Heading>
-                  <UserInfoItem 
-                    label={t('profile.email')} 
-                    value={user.email} 
-                    verified={user.emailVerified} 
+                  <UserInfoItem
+                    label={t('profile.email')}
+                    value={user.email}
+                    verified={user.emailVerified}
                   />
                   <UserInfoItem label={t('profile.displayName')} value={user.displayName} />
                   <UserInfoItem label={t('profile.firstName')} value={user.firstName} />
@@ -777,57 +771,55 @@ export const UserDashboard = () => {
                   <UserInfoItem label={t('profile.age')} value={user.age} />
                   <UserInfoItem label={t('profile.gender')} value={user.gender} />
                   <UserInfoItem label={t('profile.language')} value={user.language || 'en'} />
-                  <UserInfoItem 
-                    label={t('profile.accountCreated')} 
-                    value={new Date(user.createdAt).toLocaleDateString()} 
+                  <UserInfoItem
+                    label={t('profile.accountCreated')}
+                    value={new Date(user.createdAt).toLocaleDateString()}
                   />
-                  <UserInfoItem 
-                    label={t('profile.lastUpdated')} 
-                    value={new Date(user.updatedAt?.seconds * 1000).toLocaleString()} 
+                  <UserInfoItem
+                    label={t('profile.lastUpdated')}
+                    value={new Date(user.updatedAt?.seconds * 1000).toLocaleString()}
                   />
-                  <UserInfoItem 
-                    label={t('profile.lastLogin')} 
-                    value={new Date(user.lastLogin?.seconds * 1000).toLocaleString()} 
+                  <UserInfoItem
+                    label={t('profile.lastLogin')}
+                    value={new Date(user.lastLogin?.seconds * 1000).toLocaleString()}
                   />
-                  <UserInfoItem 
-                    label={t('profile.loyaltyPoints')} 
-                    value={user.loyaltyPoints || 0} 
+                  <UserInfoItem
+                    label={t('profile.loyaltyPoints')}
+                    value={user.loyaltyPoints || 0}
                   />
-                  {user.notes && (
-                    <UserInfoItem label={t('profile.notes')} value={user.notes} />
-                  )}
+                  {user.notes && <UserInfoItem label={t('profile.notes')} value={user.notes} />}
                 </VStack>
 
                 <VStack align="start" spacing={3}>
                   {user.healthProfile && (
                     <>
                       <Heading size="sm">{t('profile.healthProfile')}</Heading>
-                      <UserInfoItem 
-                        label={t('profile.height')} 
-                        value={user.healthProfile.height ? `${user.healthProfile.height} cm` : null} 
+                      <UserInfoItem
+                        label={t('profile.height')}
+                        value={user.healthProfile.height ? `${user.healthProfile.height} cm` : null}
                       />
-                      <UserInfoItem 
-                        label={t('profile.weight')} 
-                        value={user.healthProfile.weight ? `${user.healthProfile.weight} kg` : null} 
+                      <UserInfoItem
+                        label={t('profile.weight')}
+                        value={user.healthProfile.weight ? `${user.healthProfile.weight} kg` : null}
                       />
-                      <UserInfoItem 
-                        label={t('profile.fitnessGoal')} 
-                        value={user.healthProfile.fitnessGoal} 
+                      <UserInfoItem
+                        label={t('profile.fitnessGoal')}
+                        value={user.healthProfile.fitnessGoal}
                       />
-                      <UserInfoItem 
-                        label={t('profile.activityLevel')} 
-                        value={user.healthProfile.activityLevel} 
+                      <UserInfoItem
+                        label={t('profile.activityLevel')}
+                        value={user.healthProfile.activityLevel}
                       />
                       {user.healthProfile.dietaryPreferences?.length > 0 && (
-                        <UserInfoItem 
-                          label={t('profile.dietaryPreferences')} 
-                          value={user.healthProfile.dietaryPreferences.join(', ')} 
+                        <UserInfoItem
+                          label={t('profile.dietaryPreferences')}
+                          value={user.healthProfile.dietaryPreferences.join(', ')}
                         />
                       )}
                       {user.healthProfile.allergies?.length > 0 && (
-                        <UserInfoItem 
-                          label={t('profile.allergies')} 
-                          value={user.healthProfile.allergies.join(', ')} 
+                        <UserInfoItem
+                          label={t('profile.allergies')}
+                          value={user.healthProfile.allergies.join(', ')}
                         />
                       )}
                     </>
@@ -836,17 +828,17 @@ export const UserDashboard = () => {
                   <Heading size="sm" mt={4}>
                     {t('profile.notificationPreferences')}
                   </Heading>
-                  <NotificationStatus 
-                    label={t('profile.emailNotifications')} 
-                    enabled={user.notificationPreferences?.email} 
+                  <NotificationStatus
+                    label={t('profile.emailNotifications')}
+                    enabled={user.notificationPreferences?.email}
                   />
-                  <NotificationStatus 
-                    label={t('profile.smsNotifications')} 
-                    enabled={user.notificationPreferences?.sms} 
+                  <NotificationStatus
+                    label={t('profile.smsNotifications')}
+                    enabled={user.notificationPreferences?.sms}
                   />
-                  <NotificationStatus 
-                    label={t('profile.pushNotifications')} 
-                    enabled={user.notificationPreferences?.push} 
+                  <NotificationStatus
+                    label={t('profile.pushNotifications')}
+                    enabled={user.notificationPreferences?.push}
                   />
                 </VStack>
               </SimpleGrid>

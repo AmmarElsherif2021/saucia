@@ -1,4 +1,16 @@
-import { Box, VStack, Text, Image, Button, Modal,ModalBody,ModalOverlay,ModalContent,ModalHeader,ModalCloseButton } from '@chakra-ui/react'
+import {
+  Box,
+  VStack,
+  Text,
+  Image,
+  Button,
+  Modal,
+  ModalBody,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+} from '@chakra-ui/react'
 import { PieChart } from 'react-minimal-pie-chart'
 import profileIcon from '../../assets/profile-b.svg'
 //import { MOD } from "../ComponentsTrial.jsx";
@@ -12,7 +24,7 @@ export const ProfileModal = ({ isOpen, onClose }) => {
 
   const handleProfileClick = () => {
     if (user) {
-      navigate('/') // Temporary
+      navigate('/account')
       onClose()
     }
   }
@@ -28,7 +40,7 @@ export const ProfileModal = ({ isOpen, onClose }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="md">
       <ModalOverlay />
-      <ModalContent>
+      <ModalContent width={['95%', '80%', '60%']} maxWidth="400px" p={2} mx="30px">
         <ModalHeader>{t('profile.title')}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
