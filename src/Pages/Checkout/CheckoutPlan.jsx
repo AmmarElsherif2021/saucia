@@ -28,6 +28,7 @@ import {
   ModalFooter,
   useDisclosure,
   useBreakpointValue,
+  IconButton,
 } from '@chakra-ui/react'
 import MapModal from './MapModal'
 import { useTranslation } from 'react-i18next'
@@ -44,7 +45,7 @@ import CustomizableMealSelectionModal from './CustomizableMealSelectionModal'
 import paymentIcon from '../../assets/payment.svg'
 import orderIcon from '../../assets/order.svg'
 import saladIcon from '../../assets/menu/salad.svg'
-
+import locationPin from '../../assets/locationPin.svg'
 //Checkout state
 const initialState = {
   isSubmitting: false,
@@ -104,7 +105,8 @@ const Section = ({ title, children, bgColor, titleColor, icon }) => {
     <Box
       bg={colorMode === 'dark' ? 'gray.700' : `${bgColor}.300`}
       borderRadius="45px"
-      borderWidth="7px"
+      borderWidth="3px"
+      borderColor={colorMode === 'dark' ? 'gray.600' : `${bgColor}.500`}
       p={padding}
       position="relative"
       overflow="hidden"
@@ -116,8 +118,18 @@ const Section = ({ title, children, bgColor, titleColor, icon }) => {
     >
       <Box position="relative" zIndex="1">
         <Flex align="center" mb={5}>
-          {icon && <Box as="img" src={icon} alt={`${title} icon`} boxSize="48px" mr={2} />}
-          <Heading size="md" color={titleColor || 'gray.800'}>
+          {icon
+           && 
+           <Box 
+           as="img" 
+           src={icon} 
+           alt={`${title} icon`} 
+           boxSize="48px" 
+           mx={2} 
+           borderRadius={"50%"} 
+           p={1} 
+           bg={"whiteAlpha.900"}/>}
+          <Heading size="md" color={titleColor || 'brand.900'}>
             {title}
           </Heading>
         </Flex>
@@ -137,7 +149,7 @@ const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
             <FormLabel fontSize="sm">{t('checkout.cardNumber')}</FormLabel>
             <Input
               placeholder={t('checkout.cardNumberPlaceholder')}
-              variant="outline"
+              variant="ghost"
               maxLength={19}
             />
           </FormControl>
@@ -147,20 +159,20 @@ const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
               <FormLabel fontSize="sm">{t('checkout.expiryDate')}</FormLabel>
               <Input
                 placeholder={t('checkout.expiryDatePlaceholder')}
-                variant="outline"
+                variant="ghost"
                 maxLength={5}
               />
             </FormControl>
 
             <FormControl>
               <FormLabel fontSize="sm">CVV</FormLabel>
-              <Input placeholder="123" variant="outline" maxLength={3} type="password" />
+              <Input placeholder="123" variant="ghost" maxLength={3} type="password" />
             </FormControl>
           </Flex>
 
           <FormControl>
             <FormLabel fontSize="sm">{t('checkout.nameOnCard')}</FormLabel>
-            <Input placeholder={t('checkout.cardholderNamePlaceholder')} variant="outline" />
+            <Input placeholder={t('checkout.cardholderNamePlaceholder')} variant="ghost" />
           </FormControl>
 
           <Checkbox colorScheme="brand" mt={2}>
@@ -455,8 +467,8 @@ const CheckoutPlan = () => {
       bg={colorMode === 'dark' ? 'gray.800' : 'gray.50'}
       minHeight="100vh"
     >
-      <VStack spacing={8} align="stretch">
-        <Heading as="h1" size="xl" textAlign="center" color="brand.500">
+      <VStack spacing={2} align="stretch">
+        <Heading as="h1" size="xl" textAlign="center" color="brand.800">
           {t('checkout.completeYourSubscription')}
         </Heading>
 
@@ -467,20 +479,19 @@ const CheckoutPlan = () => {
           </Alert>
         )}
 
-        <SimpleGrid columns={gridColumns} spacing={6}>
+        <SimpleGrid columns={gridColumns} spacing={4}>
           {/* Billing Information */}
           <Section
             title={t('checkout.billingInformation')}
-            bgColor="brand"
-            titleColor="gray.800"
+            bgColor="teal"
             icon={saladIcon}
           >
-            <Stack spacing={3}>
+            <Stack spacing={2}>
               <FormControl isRequired>
                 <FormLabel fontSize="sm">{t('checkout.fullName')}</FormLabel>
                 <Input
                   placeholder={t('checkout.enterYourFullName')}
-                  variant="outline"
+                  variant="ghost"
                   bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
                   focusBorderColor="brand.500"
                   maxW={'85%'}
@@ -495,7 +506,7 @@ const CheckoutPlan = () => {
                   type="email"
                   maxW={'85%'}
                   placeholder={t('checkout.yourEmailAddress')}
-                  variant="outline"
+                  variant="ghost"
                   bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
                   focusBorderColor="brand.500"
                   value={billingInfo.email}
@@ -507,7 +518,7 @@ const CheckoutPlan = () => {
                 <FormLabel fontSize="sm">{t('checkout.phoneNumber')}</FormLabel>
                 <Input
                   placeholder={t('checkout.yourPhoneNumber')}
-                  variant="outline"
+                  variant="ghost"
                   bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
                   focusBorderColor="brand.500"
                   maxW={'85%'}
@@ -518,16 +529,20 @@ const CheckoutPlan = () => {
 
               <FormControl isRequired>
                 <FormLabel fontSize="sm">{t('checkout.deliveryAddress')}</FormLabel>
+                <Flex alignItems="center" maxW={'85%'}>
                 <Input
                   placeholder={t('checkout.enterDeliveryAddress')}
-                  variant="outline"
+                  variant="outlined"
                   bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
                   focusBorderColor="brand.500"
                   maxW={'85%'}
-                  value={userAddress.display_name || billingInfo.deliveryAddress.display_name || ''}
+                  value={ userAddress?.display_name ||billingInfo?.deliveryAddress?.display_name }
                   onChange={(e) => handleBillingInfoChange('deliveryAddress', e.target.value)}
                 />
-                <Button onClick={onOpenMap}> Get geo location </Button>
+                <Button mx={2} onClick={onOpenMap}>
+                  <Image src={locationPin} alt="Location Pin" boxSize="30px" />
+                </Button>
+                </Flex>
                 <MapModal
                   isOpen={isMapOpen}
                   onClose={onCloseMap}
@@ -564,13 +579,13 @@ const CheckoutPlan = () => {
           </Section>
 
           {/* Payment Details */}
-          <Section title={t('checkout.paymentDetails')} bgColor="warning" icon={paymentIcon}>
+          <Section title={t('checkout.paymentDetails')} bgColor="secondary" icon={paymentIcon}>
             <FormControl mb={4}>
-              <FormLabel fontSize="sm">Payment Method</FormLabel>
+              <FormLabel fontSize="sm">{t('checkout.paymentMethod')}</FormLabel>
               <Select
-                placeholder="Select payment method"
-                focusBorderColor="warning.500"
-                bg={colorMode === 'dark' ? 'gray.800' : 'warning.100'}
+                placeholder={t('checkout.selectPaymentMethod')}
+                focusBorderColor="secondary.500"
+                bg={colorMode === 'dark' ? 'gray.800' : 'secondary.100'}
                 onChange={(e) => dispatch({ type: 'SET_PAYMENT_METHOD', payload: e.target.value })}
               >
                 <option value="credit-card">Credit Card</option>
@@ -584,39 +599,41 @@ const CheckoutPlan = () => {
           </Section>
 
           {/* Subscription Summary */}
-          <Section title={t('checkout.subscriptionSummary')} bgColor="accent" icon={orderIcon}>
+          <Section title={t('checkout.subscriptionSummary')} bgColor="warning" icon={orderIcon}>
             {!userPlan ? (
               <Text>{t('noPlanSelected')}</Text>
             ) : (
               <Box>
-                <Flex alignItems="center" mb={4}>
+                <Flex alignItems="center" mb={2}>
                   <Image
-                    src={userPlan.image}
+                    src={userPlan.image||saladIcon}
                     alt={userPlan.title}
                     boxSize="60px"
-                    borderRadius="md"
-                    mr={4}
+                    borderRadius="25%"
+                    bg={colorMode === 'dark' ? 'gray.700' : 'warning.100'}
+                    mx={4}
+                    p={2}
                   />
                   <Box>
-                    <Heading as="h3" size="sm">
+                    <Heading size="xs">
                       {isArabic ? userPlan.title_arabic : userPlan.title}
                     </Heading>
                   </Box>
                 </Flex>
 
-                <Divider mb={4} />
+                <Divider mb={1} />
 
                 <Stack spacing={2}>
                   <Flex justify="space-between" align="center">
                     <Text fontSize="sm">{t('premium.nutritionalInformation')}:</Text>
                     <Flex wrap="wrap" gap={1}>
-                      <Badge colorScheme="green">
+                      <Badge fontSize="0.5em" colorScheme="green">
                         {t('kcal')}: {userPlan.kcal}
                       </Badge>
-                      <Badge colorScheme="brand">
+                      <Badge fontSize="0.5em" colorScheme="brand">
                         {t('carbs')}: {userPlan.carb}g
                       </Badge>
-                      <Badge colorScheme="red">
+                      <Badge fontSize="0.5em" colorScheme="red">
                         {t('protein')}: {userPlan.protein}g
                       </Badge>
                     </Flex>
@@ -625,9 +642,9 @@ const CheckoutPlan = () => {
                   <Flex justify="space-between" align="center">
                     <Text fontSize="sm">{t('checkout.subscriptionPeriod')}:</Text>
                     <Select
-                      px={8}
-                      size="sm"
-                      width="180px"
+                      px={3}
+                      mx={4}
+                      w="auto"
                       value={period}
                       onChange={(e) =>
                         dispatch({ type: 'SET_PERIOD', payload: Number(e.target.value) })
@@ -648,44 +665,44 @@ const CheckoutPlan = () => {
 
                   <Flex justify="space-between" align="center">
                     <Text fontSize="sm">{t('checkout.selectedMeals')}:</Text>
-                    <Text fontSize="sm" color="brand.500">
-                      {getCombinedMeals().length} {t('meals')}
+                    <Text fontSize="sm" color="brand.900">
+                       {' '}{getCombinedMeals().length}
                     </Text>
                   </Flex>
                 </Stack>
               </Box>
             )}
 
-            <Divider mb={4} />
+            <Divider mb={2} />
 
             <Flex justify="space-between" mb={2}>
-              <Text>{t('checkout.monthlySubscription')}</Text>
-              <Text fontWeight="bold">${subscriptionPrice.toFixed(2)}</Text>
+              <Text fontSize="sm">{t('checkout.monthlySubscription')}</Text>
+              <Text fontSize="sm">${subscriptionPrice.toFixed(2)}</Text>
             </Flex>
 
             <Flex justify="space-between" mb={2}>
-              <Text>{t('checkout.newSubscriberDiscount')}</Text>
-              <Text fontWeight="bold" color="green.500">
+              <Text fontSize="sm">{t('checkout.newSubscriberDiscount')}</Text>
+              <Text fontSize="sm" fontWeight="bold" color="green.500">
                 -${discount.toFixed(2)}
               </Text>
             </Flex>
 
-            <Divider my={3} />
+            <Divider my={1} />
 
             <Flex justify="space-between" mb={4}>
-              <Text fontWeight="bold">{t('checkout.totalToday')}</Text>
-              <Text fontWeight="bold" fontSize="lg" color="gray.800">
+              <Text fontSize="sm" fontWeight="bold">{t('checkout.totalToday')}</Text>
+              <Text fontSize="sm" fontWeight="bold" color="brand.800">
                 ${totalPrice.toFixed(2)}
               </Text>
             </Flex>
 
-            <Text fontSize="sm" color="gray.600" mb={4}>
+            <Text fontSize="xs" color="gray.600" mb={4}>
               {t('checkout.subscriptionTerms')}
             </Text>
 
             <Button
               colorScheme="brand"
-              size="lg"
+              size="sm"
               width="full"
               onClick={handleOpenConfirmation}
               isLoading={isSubmitting}

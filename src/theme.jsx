@@ -270,8 +270,8 @@ const createTheme = (config) => {
           }),
           outline: (props) => ({
             border: '2px solid',
-            borderColor: props.colorScheme ? `${props.colorScheme}.500` : 'brand.500',
-            color: props.colorScheme ? `${props.colorScheme}.500` : 'brand.500',
+            borderColor: props.colorScheme ? `${props.colorScheme}.700` : 'brand.700',
+            color: props.colorScheme ? `${props.colorScheme}.700` : 'brand.700',
             _hover: {
               bg: props.colorScheme ? `${props.colorScheme}.300` : 'brand.200',
               color: props.colorScheme ? `${props.colorScheme}.700` : 'brand.50',
@@ -689,7 +689,7 @@ const createTheme = (config) => {
       FormLabel: {
         baseStyle: (props) => ({
           shadow: 'none',
-          color: props.colorMode === 'dark' ? 'white' : 'gray.800',
+          color: props.colorMode === 'dark' ? 'white' : 'brand.900',
         }),
       },
       FormHelperText: {

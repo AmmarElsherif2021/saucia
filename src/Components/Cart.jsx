@@ -17,6 +17,7 @@ import { IconButton, AddIcon, MinusIcon, DeleteIcon } from '@chakra-ui/icons'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import dailySaladIcon from '../assets/menu/unknownMeal.JPG'
+import cartIcon from '../assets/cartIcon.svg'
 import { useElements } from '../Contexts/ElementsContext'
 // Compact cart card
 export const CartCard = ({
@@ -247,14 +248,12 @@ export const CRT = ({
       borderRadius="25px"
       width={['95%', '87%', '70%']}
       minWidth="280px"
-      p={2}
+      p={4}
       ml="1vw"
       mr="2vw"
     >
       <Flex align="center" justify="space-between" mb={4}>
-        <Heading size="lg" fontWeight="semibold">
-          {t('cart.yourCart')}
-        </Heading>
+        <Image src={cartIcon} alt="Cart Icon" boxSize="12vw" borderRadius={"50%"} m={4} bg={'whiteAlpha.900'} />
         <Badge colorScheme="warning" fontSize="md" px={3} py={1} borderRadius="full">
           {items.length} {items.length === 1 ? t('cart.meal') : t('cart.meals')}
         </Badge>
@@ -265,7 +264,7 @@ export const CRT = ({
           {t('cart.emptyCart')}
         </Text>
       ) : (
-        <Stack spacing={3} mb={6}>
+        <Stack spacing={3} mb={6} px={4} maxHeight={"60vh"} overflowY="auto" overflowX="hidden">
           {items.map((item) => (
             <CartCard
               key={item.id}

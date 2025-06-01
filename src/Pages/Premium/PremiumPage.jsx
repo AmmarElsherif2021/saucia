@@ -272,10 +272,6 @@ export const PremiumPage = () => {
   return (
     <Box p={{ base: 4, md: 8 }} bg="gray.50" minH="100vh">
       <VStack spacing={8} align="stretch">
-        <Heading as="h1" size="xl" textAlign="center" color="brand.500">
-          {t('premium.premiumPlans')}
-        </Heading>
-
         {!user && (
           <Alert status="info" borderRadius="md">
             <AlertIcon />

@@ -101,19 +101,30 @@ const Section = ({ title, children, bgColor, titleColor, icon }) => {
 
   return (
     <Box
-      bg={colorMode === 'dark' ? 'gray.700' : `${bgColor}.300`}
+      bg={colorMode === 'dark' ? 'gray.700' : `${bgColor}.200`}
       borderRadius="45px"
-      borderWidth="2px"
+      borderWidth="3px"
+      borderColor="brand.700"
       p={padding}
       position="relative"
       overflow="hidden"
-      boxShadow="sm"
       height="100%"
       minHeight="500px"
     >
       <Box position="relative" zIndex="1">
         <Flex align="center" mb={4}>
-          {icon && <Box as="img" src={icon} alt={`${title} icon`} boxSize="48px" mr={2} />}
+          {icon 
+            && 
+          <Box 
+            as="img" 
+            src={icon} 
+            alt={`${title} icon`} 
+            boxSize="48px" 
+            p={1} 
+            mx={4} 
+            bg={"whiteAlpha.900"} 
+            borderRadius="50%"
+            />}
           <Heading size="md" color={titleColor || 'gray.800'}>
             {title}
           </Heading>
@@ -134,7 +145,7 @@ const PaymentMethodInputs = ({ paymentMethod, paymentInfo, onPaymentInfoChange, 
             <FormLabel fontSize="sm">{t('checkout.cardNumber')}</FormLabel>
             <Input
               placeholder={t('checkout.cardNumberPlaceholder') || '1234 5678 9012 3456'}
-              variant="outline"
+              variant="ghost"
               maxLength={19}
               value={paymentInfo.cardNumber}
               onChange={(e) => onPaymentInfoChange('cardNumber', e.target.value)}
@@ -147,7 +158,7 @@ const PaymentMethodInputs = ({ paymentMethod, paymentInfo, onPaymentInfoChange, 
               <FormLabel fontSize="sm">{t('checkout.expiryDate')}</FormLabel>
               <Input
                 placeholder={t('checkout.expiryDatePlaceholder') || 'MM/YY'}
-                variant="outline"
+                variant="ghost"
                 maxLength={5}
                 value={paymentInfo.expiryDate}
                 onChange={(e) => onPaymentInfoChange('expiryDate', e.target.value)}
@@ -159,7 +170,7 @@ const PaymentMethodInputs = ({ paymentMethod, paymentInfo, onPaymentInfoChange, 
               <FormLabel fontSize="sm">CVV</FormLabel>
               <Input
                 placeholder="123"
-                variant="outline"
+                variant="ghost"
                 maxLength={3}
                 type="password"
                 value={paymentInfo.cvv}
@@ -173,7 +184,7 @@ const PaymentMethodInputs = ({ paymentMethod, paymentInfo, onPaymentInfoChange, 
             <FormLabel fontSize="sm">{t('checkout.nameOnCard')}</FormLabel>
             <Input
               placeholder={t('checkout.cardholderNamePlaceholder') || 'John Doe'}
-              variant="outline"
+              variant="ghost"
               value={paymentInfo.nameOnCard}
               onChange={(e) => onPaymentInfoChange('nameOnCard', e.target.value)}
               bg={colorMode === 'dark' ? 'gray.800' : 'warning.100'}
@@ -516,9 +527,7 @@ const CheckoutPage = () => {
                 <FormLabel fontSize="sm">{t('checkout.fullName')}</FormLabel>
                 <Input
                   placeholder={t('checkout.enterYourFullName') || 'Enter your full name'}
-                  variant="outline"
-                  bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
-                  focusBorderColor="brand.500"
+                  variant="ghost"
                   maxW={'85%'}
                   value={orderInfo.displayName}
                   onChange={(e) => handleOrderInfoChange('fullName', e.target.value)}
@@ -529,9 +538,7 @@ const CheckoutPage = () => {
                 <FormLabel fontSize="sm">{t('checkout.phoneNumber')}</FormLabel>
                 <Input
                   placeholder={t('checkout.yourPhoneNumber') || 'Your phone number'}
-                  variant="outline"
-                  bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
-                  focusBorderColor="brand.500"
+                  variant="ghost"
                   maxW={'85%'}
                   value={orderInfo.phoneNumber}
                   onChange={(e) => handleOrderInfoChange('phoneNumber', e.target.value)}
@@ -542,9 +549,7 @@ const CheckoutPage = () => {
                 <FormLabel fontSize="sm">{t('checkout.deliveryAddress')}</FormLabel>
                 <Input
                   placeholder={t('checkout.enterDeliveryAddress') || 'Enter delivery address'}
-                  variant="outline"
-                  bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
-                  focusBorderColor="brand.500"
+                  variant="ghost"
                   maxW={'85%'}
                   value={userAddress?.display_name || orderInfo.deliveryAddress}
                   onChange={(e) => handleOrderInfoChange('deliveryAddress', e.target.value)}
@@ -554,33 +559,30 @@ const CheckoutPage = () => {
                 </Button>
               </FormControl>
               <FormControl>
-                <FormLabel fontSize="sm">Notes</FormLabel>
                 <Input
-                  placeholder="Special instructions"
+                  placeholder={t('checkout.specialInstructions')}
                   value={orderInfo.notes}
+                  variant="ghost"
+                  maxW={'85%'}
                   onChange={(e) => handleOrderInfoChange('notes', e.target.value)}
                 />
               </FormControl>
 
               <FormControl>
-                <FormLabel fontSize="sm">Coupon Code</FormLabel>
                 <Input
-                  placeholder="Enter coupon code"
+                  placeholder={t('checkout.couponCode')}
                   value={orderInfo.couponCode}
+                  variant={"ghost"}
+                  maxW={'85%'}
                   onChange={(e) => handleOrderInfoChange('couponCode', e.target.value)}
                 />
               </FormControl>
               <FormControl>
-                <FormLabel fontSize="sm">
-                  {t('checkout.deliveryInstructions') || 'Delivery Instructions'}
-                </FormLabel>
                 <Input
                   placeholder={
-                    t('checkout.optionalDeliveryInstructions') || 'Optional delivery instructions'
+                    t('checkout.deliveryInstructions') || 'Optional delivery instructions'
                   }
-                  variant="outline"
-                  bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
-                  focusBorderColor="brand.500"
+                  variant="ghost"
                   maxW={'85%'}
                   value={orderInfo.deliveryInstructions}
                   onChange={(e) => handleOrderInfoChange('deliveryInstructions', e.target.value)}

@@ -264,6 +264,7 @@ const CommonQuestions = ({ onComplete }) => {
             <FormControl maxW={'90%'} mx={8}>
               <FormLabel>{t('premium.age')}</FormLabel>
               <Input
+                variant={"ghost"}
                 type="number"
                 name="age"
                 value={formData.age}
@@ -293,6 +294,7 @@ const CommonQuestions = ({ onComplete }) => {
             <FormControl maxW={'90%'} mx={8}>
               <FormLabel>{t('premium.heightCm')}</FormLabel>
               <Input
+                variant={"ghost"}
                 type="number"
                 name="height"
                 value={formData.healthProfile.height}
@@ -308,6 +310,7 @@ const CommonQuestions = ({ onComplete }) => {
             <FormControl maxW={'90%'} mx={8}>
               <FormLabel>{t('premium.weightKg')}</FormLabel>
               <Input
+                variant={"ghost"}
                 type="number"
                 name="weight"
                 value={formData.healthProfile.weight}

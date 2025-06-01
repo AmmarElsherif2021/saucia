@@ -16,7 +16,31 @@
   -webkit-appearance: none;
   list-style: none;
 }
+/* Customize the scrollbar width */
+::-webkit-scrollbar {
+  padding-top: 5px;
+  width: 10px;
+}
 
+/* Styling the track */
+::-webkit-scrollbar-track {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  background: #f1f1f1;
+  border-radius: 5px;
+}
+
+/* Styling the thumb */
+::-webkit-scrollbar-thumb {
+  background: #009e90;
+  border-radius: 5px;
+}
+
+/* On hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #007e73;
+}
+/* Font families */
 .lalezar {
   font-family: 'Lalezar', sans-serif;
   font-weight: 400;
@@ -57,20 +81,20 @@ h6 {
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: #2c8477;
   text-decoration: inherit;
 }
 
 a:hover {
-  color: #535bf2;
+  color: #2c8477;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
+    color: #2a5a52;
     background-color: #ffffff;
   }
   a:hover {
-    color: #747bff;
+    color: #2c8477;
   }
 }

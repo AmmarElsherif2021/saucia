@@ -43,16 +43,27 @@ import {
   SimpleGrid,
   Divider,
   VStack,
+  IconButton,
+  Image,
+  HStack,
+  useBreakpointValue,
+
 } from '@chakra-ui/react'
 import { StarIcon, EditIcon } from '@chakra-ui/icons'
 import { useTranslation } from 'react-i18next'
 import { useUser } from '../../Contexts/UserContext'
 import { useState, useEffect } from 'react'
-
+import MapModal from '../Checkout/MapModal'
+import locationPin from '../../assets/locationPin.svg'
 export const UserDashboard = () => {
   const { colorMode } = useColorMode()
   const { t } = useTranslation()
-  const { isOpen, onOpen, onClose } = useDisclosure()
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isMapOpen,
+    onOpen: onOpenMap,
+    onClose: onCloseMap,
+  } = useDisclosure();
   const {
     user,
     loading,
@@ -76,6 +87,8 @@ export const UserDashboard = () => {
     gender: userData?.gender || 'male',
     language: userData?.language || 'en',
     notes: userData?.notes || '',
+    defaultAddress: userData?.defaultAddress || '',
+  deliveryTime: userData?.subscription?.deliveryTime || '12:00',
     healthProfile: {
       height: userData?.healthProfile?.height || null,
       weight: userData?.healthProfile?.weight || null,
@@ -174,7 +187,20 @@ export const UserDashboard = () => {
       }
     })
   }
-
+  const handleAddressSelect = (location) => {
+    setFormData(prev => ({
+      ...prev,
+      defaultAddress: location.display_name
+    }));
+  };
+  
+  const handleDeliveryTimeChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      deliveryTime: e.target.value
+    }));
+  };
+  
   const handleSubmit = async () => {
     if (!user?.uid) return
 
@@ -201,7 +227,25 @@ export const UserDashboard = () => {
       setIsUpdating(false)
     }
   }
-
+  //Reusable address component
+  const AddressInput = ({ label, value, onChange, onMapOpen }) => (
+    <FormControl>
+      <FormLabel>{label}</FormLabel>
+      <Flex alignItems="center">
+        <Input
+          value={value?.display_name || value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={t('profile.enterDeliveryAddress')}
+        />
+        <IconButton
+          ml={2}
+          aria-label={t('checkout.selectFromMap')}
+          icon={<Image src={locationPin} boxSize="24px" />}
+          onClick={onMapOpen}
+        />
+      </Flex>
+    </FormControl>
+  );
   // Reusable component for displaying user info
   const UserInfoItem = ({ label, value, verified = false }) => (
     <Text>
@@ -229,6 +273,7 @@ export const UserDashboard = () => {
     <FormControl w={{ base: '95%', md: '60%' }}>
       <FormLabel>{label}</FormLabel>
       <Input
+        variant={"ghost"}
         name={name}
         value={value}
         onChange={handleInputChange}
@@ -250,13 +295,14 @@ export const UserDashboard = () => {
     <FormControl w={{ base: '90%', md: '50%' }}>
       <FormLabel>{label}</FormLabel>
       <NumberInput
+        variant={"ghost"}
         value={value}
         onChange={onChange}
         min={min}
         max={max}
         // Removed focusInputOnChange to fix stepper/focus issue
         sx={{
-          paddingX: '1.5rem',
+          paddingX: '10px',
         }}
       >
         <NumberInputField />
@@ -293,7 +339,7 @@ export const UserDashboard = () => {
           onChange={(e) => handleCheckboxArrayChange(fieldPath, item.id, e.target.checked)}
           value={item.id}
         >
-          {t(`profile.${item?.label?.toLowerCase().replace('-', '')}`) || item.label}
+          {t(`${item?.label?.toLowerCase().replace('-', '')}`) || item.label}
         </Checkbox>
       ))}
     </SimpleGrid>
@@ -625,6 +671,7 @@ export const UserDashboard = () => {
                   <FormLabel>{t('profile.notes')}</FormLabel>
                   <Textarea
                     name="notes"
+                    variant="ghost"
                     value={formData.notes || ''}
                     onChange={handleInputChange}
                     placeholder={t('profile.enterNotes')}
@@ -727,7 +774,45 @@ export const UserDashboard = () => {
                   />
                 </SimpleGrid>
               </Box>
+              <Divider />
 
+              {/* Delivery Settings Section */}
+              <Box>
+                <Heading size="sm" mb={4} color="brand.500">
+                  {t('profile.deliverySettings')}
+                </Heading>
+                
+                <AddressInput
+                  label={t('profile.defaultDeliveryAddress')}
+                  value={formData.defaultAddress}
+                  onChange={(value) => handleNestedFieldChange('', 'defaultAddress', value)}
+                  onMapOpen={onOpenMap}
+                />
+                
+                <FormControl mt={4}>
+                  <FormLabel>{t('profile.defaultDeliveryTime')}</FormLabel>
+                  <Select
+                    value={formData.deliveryTime}
+                    onChange={handleDeliveryTimeChange}
+                  >
+                    <option value="09:00">09:00 AM</option>
+                    <option value="10:00">10:00 AM</option>
+                    <option value="11:00">11:00 AM</option>
+                    <option value="12:00">12:00 PM</option>
+                    <option value="13:00">01:00 PM</option>
+                    <option value="14:00">02:00 PM</option>
+                    <option value="15:00">03:00 PM</option>
+                    <option value="16:00">04:00 PM</option>
+                    <option value="17:00">05:00 PM</option>
+                    <option value="18:00">06:00 PM</option>
+                  </Select>
+                </FormControl>
+                <MapModal
+                  isOpen={isMapOpen}
+                  onClose={onCloseMap}
+                  onSelectLocation={handleAddressSelect}
+                />
+              </Box>
               <Button
                 colorScheme="brand"
                 size="lg"
@@ -791,7 +876,7 @@ export const UserDashboard = () => {
                 </VStack>
 
                 <VStack align="start" spacing={3}>
-                  {user.healthProfile && (
+                {user.healthProfile && (
                     <>
                       <Heading size="sm">{t('profile.healthProfile')}</Heading>
                       <UserInfoItem

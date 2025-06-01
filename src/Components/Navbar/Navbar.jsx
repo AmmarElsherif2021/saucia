@@ -318,7 +318,7 @@ export const Navbar = () => {
                   color: useColorModeValue('brand.700', 'brand.200'),
                 }}
               >
-                {t('common.language')}: {currentLanguage.toUpperCase()}
+                {currentLanguage.toUpperCase()}
               </Button>
             </VStack>
           </Container>

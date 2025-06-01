@@ -1,4 +1,4 @@
-import { Box, useColorMode } from '@chakra-ui/react'
+import { Box, Heading, useColorMode, VStack } from '@chakra-ui/react'
 import { CRT } from '../../Components/Cart'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -45,7 +45,10 @@ const CartPage = () => {
   }
 
   return (
-    <Box p={4} bg={colorMode === 'dark' ? 'gray.800' : 'gray.50'} w={'100vw'} h={'100vh'}>
+    <VStack p={4} bg={colorMode === 'dark' ? 'gray.800' : 'gray.50'} w={'100vw'} h={'100vh'}>
+      <Heading size="lg" fontWeight="semibold" mb={4}>
+        {t('cart.yourCart')}
+      </Heading>
       <CRT
         items={cart.map((item) => ({
           ...item,
@@ -59,7 +62,7 @@ const CartPage = () => {
         onRemove={handleRemove}
         checkoutButton={true}
       />
-    </Box>
+    </VStack>
   )
 }
 

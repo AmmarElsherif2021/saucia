@@ -14,8 +14,12 @@ import {
   Button,
   Tag,
   Heading,
+  Icon,
+  Tooltip,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
+import { useUser } from '../../Contexts/UserContext'
+import { WarningIcon } from '@chakra-ui/icons'
 
 const CustomizableMealSelectionModal = ({
   isOpen,
@@ -28,6 +32,35 @@ const CustomizableMealSelectionModal = ({
   const [selectedItems, setSelectedItems] = useState({})
   const [groupedItems, setGroupedItems] = useState({})
   const [sectionFreeCounts, setSectionFreeCounts] = useState({})
+  const { user } = useUser();
+
+  useEffect(() => {
+    if (user) {
+      console.log(`User data in CustomizableMealSelectionModal: ${JSON.stringify(user.healthProfile.allergies)}`)
+    }
+  }, [user]);
+
+  // Function to check if an item contains user's allergens
+  const isItemRestricted = (item) => {
+    if (!user?.healthProfile?.allergies || !item?.allergens) {
+      return false;
+    }
+
+    const userAllergies = user.healthProfile.allergies.map(allergy => allergy.toLowerCase());
+    
+    return item.allergens.some(allergen => {
+      const allergenNameEn = allergen.en?.toLowerCase() || '';
+      const allergenNameAr = allergen.ar?.toLowerCase() || '';
+      
+      // Check if any user allergy matches the allergen name (English or Arabic)
+      return userAllergies.some(userAllergy => 
+        allergenNameEn.includes(userAllergy) || 
+        userAllergy.includes(allergenNameEn) ||
+        allergenNameAr.includes(userAllergy) || 
+        userAllergy.includes(allergenNameAr)
+      );
+    });
+  };
 
   useEffect(() => {
     if (saladItems && saladItems.length > 0) {
@@ -52,6 +85,11 @@ const CustomizableMealSelectionModal = ({
   }, [saladItems])
 
   const handleSelectItem = (item) => {
+    // Don't allow selection of restricted items
+    if (isItemRestricted(item)) {
+      return;
+    }
+
     setSelectedItems((prev) => {
       // Check if we already have an item from this section
       const sectionItems = Object.keys(prev).filter((id) => {
@@ -98,12 +136,50 @@ const CustomizableMealSelectionModal = ({
   }
 
   const renderItemContent = (item) => {
+    const isRestricted = isItemRestricted(item);
+    
     return (
       <Flex direction="column" flex="1">
-        <Text fontWeight="medium">{isArabic ? item.name_arabic : item.name}</Text>
-        <Text fontSize="sm" color="gray.600">
-          {item.price} {t('common.currency')}
+        <Flex align="center" gap={2}>
+          <Text 
+            fontWeight="medium" 
+            color={isRestricted ? 'gray.400' : 'inherit'}
+            textDecoration={isRestricted ? 'line-through' : 'none'}
+          >
+            {isArabic ? item.name_arabic : item.name}
+          </Text>
+          {isRestricted && (
+            <Tooltip 
+              label={t('checkout.allergenNotice') || 'This item contains allergens you are sensitive to'}
+              placement="top"
+            >
+              <Icon as={WarningIcon} color="red.500" boxSize={4} />
+            </Tooltip>
+          )}
+        </Flex>
+        <Text fontSize="sm" color={isRestricted ? 'gray.400' : 'gray.600'}>
+          {/* You can add item description here if available */}
         </Text>
+        {isRestricted && item.allergens && (
+          <Text fontSize="xs" color="red.500" mt={1}>
+            {t('contains') || 'Contains'}: {
+              item.allergens
+                .filter(allergen => {
+                  const userAllergies = user?.healthProfile?.allergies?.map(a => a.toLowerCase()) || [];
+                  const allergenNameEn = allergen.en?.toLowerCase() || '';
+                  const allergenNameAr = allergen.ar?.toLowerCase() || '';
+                  return userAllergies.some(userAllergy => 
+                    allergenNameEn.includes(userAllergy) || 
+                    userAllergy.includes(allergenNameEn) ||
+                    allergenNameAr.includes(userAllergy) || 
+                    userAllergy.includes(allergenNameAr)
+                  );
+                })
+                .map(allergen => isArabic ? allergen.ar : allergen.en)
+                .join(', ')
+            }
+          </Text>
+        )}
       </Flex>
     )
   }
@@ -133,29 +209,37 @@ const CustomizableMealSelectionModal = ({
               <Box key={section} mb={6}>
                 {renderSectionHeader(section)}
 
-                {items.map((item) => (
-                  <Flex
-                    key={item.id}
-                    p={4}
-                    borderWidth={1}
-                    borderRadius="md"
-                    align="center"
-                    justify="space-between"
-                    bg={(selectedItems[item.id] || 0) > 0 ? 'brand.100' : 'white'}
-                    onClick={() => handleSelectItem(item)}
-                    cursor="pointer"
-                  >
-                    {renderItemContent(item)}
+                {items.map((item) => {
+                  const isRestricted = isItemRestricted(item);
+                  const isSelected = (selectedItems[item.id] || 0) > 0;
+                  
+                  return (
+                    <Flex
+                      key={item.id}
+                      p={4}
+                      borderWidth={1}
+                      borderRadius="md"
+                      align="center"
+                      justify="space-between"
+                      bg={isSelected ? 'brand.100' : isRestricted ? 'gray.50' : 'white'}
+                      opacity={isRestricted ? 0.6 : 1}
+                      onClick={() => handleSelectItem(item)}
+                      cursor={isRestricted ? 'not-allowed' : 'pointer'}
+                      _hover={isRestricted ? {} : { bg: isSelected ? 'brand.200' : 'gray.50' }}
+                      borderColor={isRestricted ? 'red.200' : 'gray.200'}
+                    >
+                      {renderItemContent(item)}
 
-                    {(selectedItems[item.id] || 0) > 0 && (
-                      <Flex align="center" gap={2} onClick={(e) => e.stopPropagation()}>
-                        <Text minW="30px" textAlign="center">
-                          {selectedItems[item.id]}
-                        </Text>
-                      </Flex>
-                    )}
-                  </Flex>
-                ))}
+                      {isSelected && !isRestricted && (
+                        <Flex align="center" gap={2} onClick={(e) => e.stopPropagation()}>
+                          <Text minW="30px" textAlign="center">
+                            {selectedItems[item.id]}
+                          </Text>
+                        </Flex>
+                      )}
+                    </Flex>
+                  )
+                })}
               </Box>
             ))}
           </SimpleGrid>
