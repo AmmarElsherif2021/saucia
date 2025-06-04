@@ -57,6 +57,13 @@ const PlanSettingsModal = ({ isOpen, onClose }) => {
   const isArabic = currentLanguage === 'ar'
   const subscription = user?.subscription || {}
 
+  // Helper function to get address display
+  const getAddressDisplay = (address) => {
+    if (typeof address === 'string') return address
+    if (address.display_name) return address.display_name
+    if (address.address) return address.address
+    return JSON.stringify(address)
+  }
   // Initialize state from user data
   useEffect(() => {
     if (user?.subscription) {
@@ -64,19 +71,26 @@ const PlanSettingsModal = ({ isOpen, onClose }) => {
 
       // Parse delivery time if exists
       if (user.subscription.deliveryTime) {
-        const [hours, minutes] = user.subscription.deliveryTime.split('premium.:')
+        const [hours, minutes] = user.subscription.deliveryTime.split(':')
         setDeliveryTime({ hours: hours || '12', minutes: minutes || '00' })
       }
 
       // Set selected address
       if (user.subscription.deliveryAddress) {
-        setSelectedAddress(user.subscription.deliveryAddress)
+        setSelectedAddress(
+          typeof user.subscription.deliveryAddress === 'string'
+            ? user.subscription.deliveryAddress
+            : getAddressDisplay(user.subscription.deliveryAddress),
+        )
       } else if (user.defaultAddress) {
-        setSelectedAddress(user.defaultAddress)
+        setSelectedAddress(
+          typeof user.defaultAddress === 'string'
+            ? user.defaultAddress
+            : getAddressDisplay(user.defaultAddress),
+        )
       }
     }
   }, [user])
-
   // Calculate next meal info
   const getNextMealInfo = () => {
     if (!userPlan || !subscription.startDate) return null
@@ -134,7 +148,7 @@ const PlanSettingsModal = ({ isOpen, onClose }) => {
             : t('premium.planResumedSuccessfully'),
         status: 'success',
         duration: 3000,
-        isClosable: true,
+        isClosable: false,
       })
     } catch (error) {
       console.error('Error updating plan status:', error)
@@ -143,7 +157,7 @@ const PlanSettingsModal = ({ isOpen, onClose }) => {
         description: t('premium.failedToUpdatePlanStatus'),
         status: 'error',
         duration: 3000,
-        isClosable: true,
+        isClosable: false,
       })
     } finally {
       setLoading(false)
@@ -168,7 +182,7 @@ const PlanSettingsModal = ({ isOpen, onClose }) => {
         description: t('premium.deliverySettingsUpdated'),
         status: 'success',
         duration: 3000,
-        isClosable: true,
+        isClosable: false,
       })
     } catch (error) {
       console.error('Error updating delivery settings:', error)
@@ -177,7 +191,7 @@ const PlanSettingsModal = ({ isOpen, onClose }) => {
         description: t('premium.failedToUpdateDeliverySettings'),
         status: 'error',
         duration: 3000,
-        isClosable: true,
+        isClosable: false,
       })
     } finally {
       setLoading(false)
@@ -373,11 +387,14 @@ const PlanSettingsModal = ({ isOpen, onClose }) => {
                       onChange={(e) => setSelectedAddress(e.target.value)}
                       placeholder={t('premium.selectAddress')}
                     >
-                      {user?.addresses?.map((address, index) => (
-                        <option key={index} value={address}>
-                          {address}
-                        </option>
-                      ))}
+                      {user?.addresses?.map((address, index) => {
+                        const addressDisplay = getAddressDisplay(address)
+                        return (
+                          <option key={index} value={addressDisplay}>
+                            {addressDisplay}
+                          </option>
+                        )
+                      })}
                     </Select>
                     {(!user?.addresses || user.addresses.length === 0) && (
                       <Text fontSize="sm" color="gray.500" mt={1}>
@@ -389,36 +406,25 @@ const PlanSettingsModal = ({ isOpen, onClose }) => {
 
                   {/* Delivery Time */}
                   <FormControl>
-                    <FormLabel>{t('premium.preferredDeliveryTime')}</FormLabel>
-                    <HStack>
+                    <FormLabel>{t('premium.selectDeliveryTime')}</FormLabel>
+                    <Flex>
                       <Select
-                        value={deliveryTime.hours}
-                        onChange={(e) =>
-                          setDeliveryTime((prev) => ({ ...prev, hours: e.target.value }))
-                        }
-                        maxW="100px"
+                        value={`${deliveryTime.hours}:${deliveryTime.minutes}`}
+                        onChange={(e) => {
+                          const [hours, minutes] = e.target.value.split(':')
+                          setDeliveryTime({ hours, minutes })
+                        }}
+                        maxW="180px"
                       >
-                        {Array.from({ length: 24 }, (_, i) => (
-                          <option key={i} value={i.toString().padStart(2, '0')}>
-                            {i.toString().padStart(2, '0')}
-                          </option>
-                        ))}
+                        {['11', '12', '13', '14', '15', '16', '17', '18'].flatMap((hour) =>
+                          ['00', '15', '30', '45'].map((minute) => (
+                            <option key={`${hour}-${minute}`} value={`${hour}:${minute}`}>
+                              {`${hour}:${minute}`}
+                            </option>
+                          )),
+                        )}
                       </Select>
-                      <Text>:</Text>
-                      <Select
-                        value={deliveryTime.minutes}
-                        onChange={(e) =>
-                          setDeliveryTime((prev) => ({ ...prev, minutes: e.target.value }))
-                        }
-                        maxW="100px"
-                      >
-                        {['00', '15', '30', '45'].map((minute) => (
-                          <option key={minute} value={minute}>
-                            {minute}
-                          </option>
-                        ))}
-                      </Select>
-                    </HStack>
+                    </Flex>
                   </FormControl>
 
                   {/* Current Delivery Info */}

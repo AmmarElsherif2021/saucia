@@ -1,6 +1,6 @@
-import { extendTheme, Input } from '@chakra-ui/react'
+import { border, extendTheme, Input, position, Toast } from '@chakra-ui/react'
 import './index.css'
-import { color } from 'framer-motion'
+import { color, px } from 'framer-motion'
 
 const createTheme = (config) => {
   const isArabic = config?.language === 'ar'
@@ -159,7 +159,7 @@ const createTheme = (config) => {
       Box: {
         baseStyle: (props) => ({
           color: props.colorMode === 'dark' ? 'gray.100' : 'brand.900',
-          borderRadius: 'md',
+          borderRadius: 'lg',
           boxShadow: 'none',
           p: 4,
           transition: 'all 0.2s ease-in-out',
@@ -184,7 +184,7 @@ const createTheme = (config) => {
           card: (props) => ({
             bg: props.colorMode === 'dark' ? 'gray.700' : 'white',
             borderRadius: 'xl',
-            boxShadow: 'md',
+            boxShadow: 'none',
             p: 6,
           }),
         },
@@ -434,13 +434,13 @@ const createTheme = (config) => {
           background: props.colorMode === 'dark' ? 'gray.700' : 'white',
           alignItems: 'center',
           gap: 4,
-          boxShadow: props.colorMode === 'dark' ? 'dark-lg' : 'sm',
+
           borderRadius: '2xl', // Rounded cards as seen in screenshots
           p: 6,
         }),
         variants: {
           elevated: (props) => ({
-            boxShadow: props.colorMode === 'dark' ? 'dark-lg' : 'md',
+            //boxShadow: props.colorMode === 'dark' ? 'dark-lg' : 'md',
             borderRadius: '2xl',
             p: 6,
           }),
@@ -552,7 +552,7 @@ const createTheme = (config) => {
           bg: props.colorMode === 'dark' ? 'gray.800' : 'white',
           color: props.colorMode === 'dark' ? 'gray.100' : 'gray.800',
           borderRadius: 'md',
-          boxShadow: props.colorMode === 'dark' ? 'dark-lg' : 'lg',
+          boxShadow: props.colorMode === 'dark' ? 'dark-lg' : 'none',
         }),
       },
 
@@ -604,6 +604,8 @@ const createTheme = (config) => {
         baseStyle: (props) => ({
           track: {
             bg: props.colorMode === 'dark' ? 'gray.700' : 'gray.200',
+            pr: '1.5rem',
+            pl: 0,
             _checked: {
               bg: 'brand.500',
             },
@@ -621,18 +623,22 @@ const createTheme = (config) => {
           dialog: {
             bg: props.colorMode === 'dark' ? 'gray.800' : 'white',
             borderRadius: 'xl',
-            boxShadow: props.colorMode === 'dark' ? 'dark-lg' : 'lg',
+            boxShadow: props.colorMode === 'dark' ? 'dark-lg' : 'none',
             padding: '5rem',
           },
         }),
       },
       CloseButton: {
         baseStyle: (props) => ({
-          color: props.colorMode === 'dark' ? 'gray.50' : 'black',
-          backgroundColor: 'transparent',
+          color: props.colorMode === 'dark' ? 'error.200' : 'error.600',
+          bg: 'transparent',
           border: '2px solid',
-
+          borderColor: props.colorMode === 'dark' ? 'error.200' : 'error.600',
           borderRadius: 'md',
+          width: '1.5rem',
+          height: '1.5rem',
+          padding: 0,
+          margin: 1,
           _hover: {
             borderRadius: 'md',
           },
@@ -673,7 +679,7 @@ const createTheme = (config) => {
           popover: {
             bg: props.colorMode === 'dark' ? 'gray.800' : 'white',
             borderRadius: 'md',
-            boxShadow: props.colorMode === 'dark' ? 'dark-lg' : 'lg',
+            boxShadow: props.colorMode === 'dark' ? 'dark-lg' : 'none',
           },
         }),
       },
@@ -717,6 +723,39 @@ const createTheme = (config) => {
       Spinner: {
         baseStyle: (props) => ({
           color: props.colorMode === 'dark' ? 'brand.500' : 'brand.600',
+          size: 'md',
+          speed: '0.65s',
+          thickness: '4px',
+          emptyColor: props.colorMode === 'dark' ? 'gray.600' : 'gray.200',
+          position: 'relative',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 1000,
+          display: 'inline-block',
+          verticalAlign: 'middle',
+          margin: '0 auto',
+        }),
+      },
+      Toast: {
+        baseStyle: (props) => ({
+          px: '30px',
+          fontSize: 'sm',
+          fontWeight: 'medium',
+        }),
+        defaultProps: {
+          position: isArabic ? position.right : position.left,
+        },
+      },
+      Link: {
+        baseStyle: (props) => ({
+          color: props.colorMode === 'dark' ? 'brand.300' : 'brand.700',
+          textDecoration: 'underline',
+
+          _hover: {
+            textDecoration: 'none',
+            color: props.colorMode === 'dark' ? 'brand.400' : 'brand.800',
+          },
         }),
       },
     },

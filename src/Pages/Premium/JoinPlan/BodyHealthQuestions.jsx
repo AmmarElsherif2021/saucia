@@ -22,7 +22,7 @@ const BodyHealthQuestions = ({ setApplicationPhase }) => {
   }
 
   return (
-    <Box maxW="500px" mx="auto" mt="8" p="6" borderWidth="1px" borderRadius="lg" boxShadow="md">
+    <Box maxW="500px" mx="auto" mt="8" p="6" borderWidth="1px" borderRadius="lg">
       <form onSubmit={setApplicationPhase}>
         <VStack spacing="4"></VStack>
       </form>

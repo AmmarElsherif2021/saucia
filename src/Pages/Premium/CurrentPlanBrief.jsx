@@ -16,7 +16,7 @@ export const CurrentPlanBrief = ({ plan, loading }) => {
 
   if (loading) {
     return (
-      <Flex justify="center" py={6}>
+      <Flex justify="center" py={6} borderRadius={'35px'} bg="brand.100" alignItems="center">
         <Spinner size="md" color="brand.500" />
         <Text ml={3}>{t('loadingPlanDetails')}...</Text>
       </Flex>
@@ -30,20 +30,27 @@ export const CurrentPlanBrief = ({ plan, loading }) => {
   const planImage = plan.image || planIcon
 
   return (
-    <>
+    <Box borderRadius={'35px'} bg="brand.100" p={6} mb={6}>
       <Text>
         {t('premium.currentlySubscribedToThe')}{' '}
         <strong>{isArabic ? plan.title_arabic : plan.title}</strong>.
       </Text>
 
       <Flex mt={4} alignItems="center" flexWrap={{ base: 'wrap', md: 'nowrap' }} gap={4}>
-        <Box w="90px" h="90px" mb={{ base: 2, md: 0 }}>
+        <Box
+          w="85px"
+          h="85px"
+          mb={{ base: 2, md: 0 }}
+          alignItems={'center'}
+          justifyContent={'center'}
+          display="flex"
+        >
           <img
             src={planImage}
             alt={plan.title}
             style={{
-              width: '70px',
-              height: '70px',
+              width: '80px',
+              height: '80px',
               borderRadius: '50%',
               backgroundColor: '#FCEA80',
               padding: '5px',
@@ -84,9 +91,9 @@ export const CurrentPlanBrief = ({ plan, loading }) => {
                   <strong>{t('premium.time')}:</strong> {plan.nextMeal.time}
                 </Text>
               )}
-              {plan.nextMeal.location && (
+              {user?.subscription?.deliveryAddress && (
                 <Text fontSize="sm" color="gray.500">
-                  <strong>{t('premium.location')}:</strong> {plan.nextMeal.location}
+                  <strong>{t('premium.location')}:</strong> {user.subscription.deliveryAddress}
                 </Text>
               )}
             </Box>
@@ -147,6 +154,6 @@ export const CurrentPlanBrief = ({ plan, loading }) => {
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
       />
-    </>
+    </Box>
   )
 }

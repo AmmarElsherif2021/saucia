@@ -27,7 +27,7 @@ import {
   ModalFooter,
   IconButton,
 } from '@chakra-ui/react'
-
+import cartIcon from '../assets/cartIcon2.svg'
 import { StarIcon, MinusIcon, AddIcon } from '@chakra-ui/icons'
 // import dessertPic from "../assets/dessert.JPG";
 // import fruitPic from "../assets/fruits.JPG";
@@ -106,7 +106,6 @@ export const FoodCard = ({ id, name, nameArabic, description, price, image }) =>
             bg={colorMode === 'dark' ? 'gray.800' : 'white'}
             p="6"
             borderRadius="lg"
-            boxShadow="lg"
             width="90%"
             maxW="400px"
           >
@@ -168,7 +167,6 @@ export const PremiumFoodCard = ({
         maxW="320px"
         borderRadius="xl"
         overflow="hidden"
-        boxShadow="none"
         bg={colorMode === 'dark' ? 'gray.700' : 'white'}
         position="relative"
       >
@@ -253,7 +251,6 @@ export const PremiumFoodCard = ({
             bg={colorMode === 'dark' ? 'gray.800' : 'white'}
             p="6"
             borderRadius="lg"
-            boxShadow="lg"
             width="90%"
             maxW="400px"
           >
@@ -298,7 +295,6 @@ export const MinimalistFoodCard = ({ name, description, price, image, prepTime, 
       overflow="hidden"
       bg={colorMode === 'dark' ? 'gray.700' : 'white'}
       borderRadius="lg"
-      boxShadow="sm"
       maxW="500px"
       borderWidth="1px"
       borderColor={colorMode === 'dark' ? 'gray.600' : 'gray.200'}
@@ -410,13 +406,11 @@ export const FeaturedItemCard = ({ item }) => {
         transition="all 0.3s ease"
         _hover={{
           transform: 'translateY(-0.5vw)',
-          boxShadow: 'xl',
         }}
         height="60vh"
         my={2}
         mx="auto"
         cursor="pointer"
-        boxShadow="md"
       >
         {/* Image Section */}
         <Box position="relative" height={'45%'} width="100%">
@@ -515,7 +509,7 @@ export const FeaturedItemCard = ({ item }) => {
               width="full"
               onClick={() => setIsModalOpen(true)}
             >
-              {t('buttons.addToCart')} 🛒
+              {t('buttons.addToCart')} {<Image src={cartIcon} alt="Cart" boxSize="1.7em" m={1} />|| null}
             </Button>
           </Flex>
         </Box>
@@ -539,7 +533,7 @@ export const FeaturedItemCard = ({ item }) => {
                   {isArabic ? item?.name_arabic : item?.name}
                 </Text>
                 {hasOffer && (
-                  <Badge ml={2} colorScheme="green">
+                  <Badge mx={2} colorScheme="green">
                     {discountPercentage}% OFF
                   </Badge>
                 )}
@@ -549,7 +543,7 @@ export const FeaturedItemCard = ({ item }) => {
             <ModalBody>
               <Flex direction="column" gap={4}>
                 <Text fontSize="lg" fontWeight="medium">
-                  {t('modal.howManyWouldYouLike')}
+                  {t('cart.howManyWouldYouLike')}
                 </Text>
 
                 <Flex align="center" justify="space-between">
@@ -574,7 +568,7 @@ export const FeaturedItemCard = ({ item }) => {
                 </Flex>
 
                 <Flex justify="space-between" align="center" mt={4}>
-                  <Text fontSize="lg">{t('common.total')}:</Text>
+                  <Text fontSize="lg">{t('profile.total')}:</Text>
                   <Text fontSize="xl" fontWeight="bold" color="brand.500">
                     SAR {(discountedPrice * quantity).toFixed(2)}
                   </Text>
@@ -583,7 +577,7 @@ export const FeaturedItemCard = ({ item }) => {
             </ModalBody>
 
             <ModalFooter>
-              <Button variant="outline" mr={3} onClick={() => setIsModalOpen(false)}>
+              <Button variant="outline" mx={3} onClick={() => setIsModalOpen(false)}>
                 {t('buttons.maybeLater')}
               </Button>
               <Button colorScheme="brand" onClick={handleConfirm}>
@@ -642,7 +636,6 @@ export const OfferCard = ({ item }) => {
         _hover={{ transform: 'translateY(-1vw)' }}
         height="55vh"
         my="2vh"
-        boxShadow="md"
       >
         <Box position="relative" height="100%" zIndex={0}>
           <Image
@@ -727,7 +720,7 @@ export const OfferCard = ({ item }) => {
               </Text>
             </Flex>
             <Button colorScheme="brand" size="sm" onClick={() => setIsModalOpen(true)}>
-              {t('buttons.addToCart')} 🛒
+              {t('buttons.addToCart')} {<Image src={cartIcon} alt="Cart" boxSize="1.7em" m={1} />|| null}
             </Button>
           </Flex>
         </Box>
@@ -751,7 +744,7 @@ export const OfferCard = ({ item }) => {
                   {isArabic ? item?.name_arabic : item?.name}
                 </Text>
                 {hasOffer && (
-                  <Badge ml={2} colorScheme="green">
+                  <Badge mx={2} colorScheme="green">
                     {discountPercentage}% OFF
                   </Badge>
                 )}
@@ -761,7 +754,7 @@ export const OfferCard = ({ item }) => {
             <ModalBody>
               <Flex direction="column" gap={4}>
                 <Text fontSize="lg" fontWeight="medium">
-                  {t('modal.howManyWouldYouLike')}
+                  {t('cart.howManyWouldYouLike')}
                 </Text>
 
                 <Flex align="center" justify="space-between">
@@ -786,7 +779,7 @@ export const OfferCard = ({ item }) => {
                 </Flex>
 
                 <Flex justify="space-between" align="center" mt={4}>
-                  <Text fontSize="lg">{t('common.total')}:</Text>
+                  <Text fontSize="lg">{t('profile.total')}:</Text>
                   <Text fontSize="xl" fontWeight="bold" color="brand.500">
                     SAR {(discountedPrice * quantity).toFixed(2)}
                   </Text>
@@ -795,7 +788,7 @@ export const OfferCard = ({ item }) => {
             </ModalBody>
 
             <ModalFooter>
-              <Button variant="outline" mr={3} onClick={() => setIsModalOpen(false)}>
+              <Button variant="outline" mx={3} onClick={() => setIsModalOpen(false)}>
                 {t('buttons.maybeLater')}
               </Button>
               <Button colorScheme="brand" onClick={handleConfirm}>
@@ -856,7 +849,6 @@ export const PlanCard = ({ plan }) => {
       transition="transform 0.3s, box-shadow 0.3s"
       _hover={{
         transform: 'translateY(-5px)',
-        boxShadow: `0 15px 35px ${shadowColor}`,
       }}
     >
       {/* Skeleton loader shown while image is loading */}

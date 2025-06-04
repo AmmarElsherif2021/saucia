@@ -289,7 +289,6 @@ const popupStyle = {
   padding: '10px',
   borderRadius: '8px',
   border: '1px solid #ccc',
-  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
   transform: 'translate(-50%, -100%)',
   pointerEvents: 'none',
   minWidth: '220px',

@@ -134,12 +134,10 @@ const Auth = () => {
             borderRadius="12px"
             height="52px"
             borderColor="gray.200"
-            boxShadow="sm"
             onClick={handleGoogleSignIn}
             isDisabled={isLoggingIn}
             _hover={{
               transform: 'translateY(-1px)',
-              boxShadow: 'md',
             }}
             transition="all 0.2s"
           >

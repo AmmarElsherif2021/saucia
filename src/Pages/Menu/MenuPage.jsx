@@ -201,17 +201,24 @@ const MenuPage = () => {
 
             if (isSelective) {
               const itemSection = selectiveSectionMap[meal.name.toLowerCase()]
+              //console.log('Item section:', itemSection)
               if (itemSection) {
                 selectableItems = selectiveItems[itemSection]
-                sectionRules = selectableItems[0] || {}
+                //console.log('Selectable items for section:', selectableItems[0])
+                // sectionRules = {
+                //   addon_price: meal.addon_price || 0,
+                //   free_count: meal.free_count || 0,
+                // }
+                // console.log('Section rules:', sectionRules)
               }
+              //console.log('Selectable items for meal:', meal)
             }
 
             return isSelective ? (
               <CustomizableMealCard
                 key={index}
                 meal={meal}
-                sectionRules={sectionRules}
+                //sectionRules={sectionRules}
                 selectableItems={selectableItems}
                 onhandleAddToCart={handleAddToCart}
               />

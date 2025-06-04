@@ -58,7 +58,7 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
   }
 
   return (
-    <VStack p={6} borderRadius="md">
+    <VStack p={6} borderRadius="40px" bg={'brand.500'}>
       <Heading as="h2" size="xl" mb={4}>
         {newMember ? t('premium.join') : t('premium.change')} {t('premium.premiumPlans')}
       </Heading>
@@ -68,7 +68,6 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
         gap={4}
         alignItems="center"
         flexDirection={{ base: 'column', md: 'row' }}
-        
       >
         <Box>
           <Text
@@ -89,6 +88,7 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
               visibleCount={1}
               auto={true}
               visibleButtons={true}
+              carouselBg="whiteAlpha.50"
             />
           ) : (
             renderSinglePlan()

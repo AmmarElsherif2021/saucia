@@ -18,7 +18,11 @@
 }
 /* Customize the scrollbar width */
 ::-webkit-scrollbar {
-  padding-top: 5px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-left: 5px;
+  margin-right: 5px;
+  padding: 5px;
   width: 10px;
 }
 
@@ -26,7 +30,9 @@
 ::-webkit-scrollbar-track {
   margin-top: 5px;
   margin-bottom: 5px;
-  background: #f1f1f1;
+  margin-left: 5px;
+  margin-right: 5px;
+  background: #f1f1f14e;
   border-radius: 5px;
 }
 

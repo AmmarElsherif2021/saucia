@@ -20,10 +20,6 @@ const JoinPlanPage = () => {
   return (
     <Box p={{ base: 4, md: 8 }} minH="100vh">
       <VStack spacing={8} align="stretch">
-        <Heading as="h1" size="xl" textAlign="center" color="brand.500">
-          {currentStep === 0 ? 'Complete Your Profile' : 'Subscription Confirmation'}
-        </Heading>
-
         {currentStep === 0 ? (
           <CommonQuestions onComplete={handleCompleteQuestions} />
         ) : (

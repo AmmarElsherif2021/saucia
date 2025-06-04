@@ -73,6 +73,7 @@
       },
 
       "buttons": {
+        "maybeLater": "Maybe Later",
         "confirm": "Confirm",
         "addToCart": "Add to Cart",
         "order": "Order",
@@ -105,12 +106,13 @@
         "consumedMeals": "Consumed Meals",
         "mealsCount": "Meals Count",
         "disabled": "Disabled",
-        "enterDeliveryAddress":"Enter dilevery address",
+        "enterDeliveryAddress": "Enter dilevery address",
         "defaultDeliveryAddress": "Default Delivery Address",
+        "defaultDeliveryTime": "Default Delivery Time",
         "enterNotes": "Enter Notes",
         "notes": "Notes",
-        "male":"Male",
-        "female":"Female",
+        "male": "Male",
+        "female": "Female",
         "basicInformation": "Basic Information",
         "personalInformation": "Personal Information",
         "notificationPreferences": "Notification Preferences",
@@ -120,7 +122,7 @@
         "emailNotifications": "Email Notifications",
         "firstName": "First Name",
         "lastName": "Last Name",
-        "phoneNumber":"Phone Number",
+        "phoneNumber": "Phone Number",
         "language": "Language",
         "loyaltyPoints": "Loyalty Points",
         "orderID": "Order ID",
@@ -169,6 +171,7 @@
         "errorUpdatingProfile": "Error updating profile"
       },
       "premium": {
+        "selectDeliveryTime": "Select Delivery Time",
         "vegetarian": "Vegetarian",
         "vegan": "Vegan",
         "pescatarian": "Pescatarian",
@@ -341,6 +344,7 @@
         "newFeatures": "New Features"
       },
       "foodCategories": {
+        "juices": "Juices",
         "dessert": "Dessert",
         "healthy": "Healthy",
         "salad": "Salad",
@@ -504,6 +508,7 @@
       },
 
       "menuPage": {
+        "extraCharge": "Extra charge for additional items",
         "title": "Salad Menu",
         "baseIngredients": "Base Ingredients",
         "proteins": "Proteins",
@@ -545,7 +550,7 @@
         "noItems": "No items available for this category."
       },
       "offerSlide": {
-        "noOffers":"No Offers",
+        "noOffers": "No Offers",
         "title": "Exclusive Offers",
         "buyOneGetOne": "Buy 1 Get 1 Free",
         "comboOffers": "20% Off on Combos",
@@ -556,6 +561,7 @@
         "extraDiscount": "Extra 10% off for loyalty members."
       },
       "cart": {
+        "howManyWouldYouLike": "How many would you like?",
         "meals": "meals",
         "yourCart": "Your Cart",
         "specialInstructionsPlaceholder": "Enter any special instructions",
@@ -577,20 +583,20 @@
         "minimumOrder": "Minimum Order Required"
       },
       "checkout": {
-        "mealAddedTitle":"Added new meal",
-        "contains":"contains",
+        "mealAddedTitle": "Added new meal",
+        "contains": "contains",
         "allergenNoticeDescription": "Please be aware of potential allergens in your meal selections. If you have any allergies, please inform us.",
         "allergenNotice": "Allergen Notice",
         "customized": "Customized",
-        "customSalad":"Custom Salad",
+        "customSalad": "Custom Salad",
         "selectedMeals": "Selected Meals",
         "selectPaymentMethod": "Select Payment Method",
         "deliveryTime": "Delivery Time",
-        "selectOnMap":"select on map",
-        "deliveryInstructions":"Delivery Instructions",
-        "couponCode":"Coupon code",
-        "specialInstructions":"Special Instructions",
-        "enterDeliveryAddress":"Enter dilevery address",
+        "selectOnMap": "select on map",
+        "deliveryInstructions": "Delivery Instructions",
+        "couponCode": "Coupon code",
+        "specialInstructions": "Special Instructions",
+        "enterDeliveryAddress": "Enter dilevery address",
         "completeYourSubscription": "Complete Your Subscription",
         "noPlanSelected": "No plan selected. Please choose a plan first.",
         "billingInformation": "Billing Information",
@@ -729,6 +735,7 @@
         "currency": "ريال"
       },
       "buttons": {
+        "maybeLater": "ربما لاحقًا",
         "confirm": "تأكيد",
         "addToCart": "أضف إلى السلة",
         "order": "اطلب الآن",
@@ -763,6 +770,7 @@
         "disabled": "معطل",
         "enterDeliveryAddress": "أدخل عنوان التوصيل",
         "defaultDeliveryAddress": "عنوان التوصيل الافتراضي",
+        "defaultDeliveryTime": "وقت التوصيل الافتراضي",
         "enterNotes": "أدخل الملاحظات",
         "notes": "ملاحظات",
         "male": "ذكر",
@@ -825,6 +833,7 @@
         "errorUpdatingProfile": "خطأ في تحديث الملف الشخصي"
       },
       "premium": {
+        "selectDeliveryTime": "اختر وقت التوصيل",
         "vegetarian": "نباتي",
         "vegan": "نباتي صرف",
         "pescatarian": "يعتمد على الأسماك",
@@ -982,6 +991,7 @@
       },
 
       "foodCategories": {
+        "juices": "عصائر",
         "dessert": "الحلويات",
         "healthy": "صحي",
         "salad": "سلطة",
@@ -1171,6 +1181,7 @@
         "saucia": "سوسيا"
       },
       "menuPage": {
+        "extraCharge": "رسوم إضافية",
         "title": "قائمة السلطات",
         "baseIngredients": "المكونات الأساسية",
         "proteins": "البروتينات",
@@ -1212,7 +1223,7 @@
         "noItems": "لا توجد عناصر متاحة لهذه الفئة."
       },
       "offerSlide": {
-        "noOffers":"لا توجد عروض",
+        "noOffers": "لا توجد عروض",
         "title": "العروض الحصرية",
         "buyOneGetOne": "اشترِ 1 واحصل على 1 مجانًا",
         "comboOffers": "خصم 20% على الوجبات المجمعة",
@@ -1223,7 +1234,8 @@
         "extraDiscount": "خصم إضافي 10% للأعضاء ."
       },
       "cart": {
-        "meals":"عددالوجبات",
+        "howManyWouldYouLike": "كم عدد الوجبات التي ترغب في إضافتها؟",
+        "meals": "عددالوجبات",
         "yourCart": "عربة التسوق",
         "specialInstructionsPlaceholder": "أدخل أي تعليمات خاصة",
         "promoCode": "كود الخصم",
@@ -1244,8 +1256,7 @@
         "minimumOrder": "الحد الأدنى المطلوب للطلب"
       },
       "checkout": {
-      
-        "mealAddedTitle":"تم اضافة وجبة جديدة",
+        "mealAddedTitle": "تم اضافة وجبة جديدة",
         "contains": "يحتوي على",
         "allergenNoticeDescription": "يرجى ملاحظة أن جميع الوجبات قد تحتوي على مكونات مسببة للحساسية. إذا كان لديك أي حساسية، يرجى إبلاغنا قبل تقديم الطلب.",
         "allergenNotice": "تنبيه الحساسية",
@@ -1254,11 +1265,11 @@
         "selectedMeals": "الوجبات المختارة",
         "selectPaymentMethod": "اختر طريقة الدفع",
         "deliveryTime": "وقت التوصيل",
-        "selectOnMap":"حدد موقع الاستلام",
-        "deliveryInstructions":"تعليمات التوصيل",
-        "couponCode":"كود الخصم",
-        "specialInstructions":"تعليمات خاصة",
-        "enterDeliveryAddress":"ادخل عنوان التوصيل",
+        "selectOnMap": "حدد موقع الاستلام",
+        "deliveryInstructions": "تعليمات التوصيل",
+        "couponCode": "كود الخصم",
+        "specialInstructions": "تعليمات خاصة",
+        "enterDeliveryAddress": "ادخل عنوان التوصيل",
         "completeYourSubscription": "أكمل اشتراكك",
         "noPlanSelected": "لم يتم اختيار خطة. يرجى اختيار خطة أولاً.",
         "billingInformation": "معلومات الفاتورة",

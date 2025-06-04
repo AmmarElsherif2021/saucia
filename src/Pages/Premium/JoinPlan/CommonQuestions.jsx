@@ -245,7 +245,6 @@ const CommonQuestions = ({ onComplete }) => {
       p="6"
       borderWidth="1px"
       borderRadius="lg"
-      boxShadow="md"
       backgroundColor={'brand.100'}
     >
       <form onSubmit={handleSubmit}>
@@ -264,7 +263,7 @@ const CommonQuestions = ({ onComplete }) => {
             <FormControl maxW={'90%'} mx={8}>
               <FormLabel>{t('premium.age')}</FormLabel>
               <Input
-                variant={"ghost"}
+                variant={'ghost'}
                 type="number"
                 name="age"
                 value={formData.age}
@@ -283,6 +282,10 @@ const CommonQuestions = ({ onComplete }) => {
                 value={formData.gender || ''}
                 onChange={handleChange}
                 placeholder={t('premium.selectGender')}
+                maxW={'95%'}
+                variant={'outline'}
+                px={3}
+                mx={1}
               >
                 <option value="male">{t('premium.male')}</option>
                 <option value="female">{t('premium.female')}</option>
@@ -294,7 +297,7 @@ const CommonQuestions = ({ onComplete }) => {
             <FormControl maxW={'90%'} mx={8}>
               <FormLabel>{t('premium.heightCm')}</FormLabel>
               <Input
-                variant={"ghost"}
+                variant={'ghost'}
                 type="number"
                 name="height"
                 value={formData.healthProfile.height}
@@ -310,7 +313,7 @@ const CommonQuestions = ({ onComplete }) => {
             <FormControl maxW={'90%'} mx={8}>
               <FormLabel>{t('premium.weightKg')}</FormLabel>
               <Input
-                variant={"ghost"}
+                variant={'ghost'}
                 type="number"
                 name="weight"
                 value={formData.healthProfile.weight}

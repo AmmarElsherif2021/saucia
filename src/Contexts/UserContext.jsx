@@ -47,7 +47,6 @@ export const UserProvider = ({ children }) => {
         price: 0,
         endDate: null,
         paymentMethod: '',
-        planId: '',
         planName: '',
         startDate: null,
         status: 'inactive',

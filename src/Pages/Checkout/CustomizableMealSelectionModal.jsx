@@ -32,35 +32,40 @@ const CustomizableMealSelectionModal = ({
   const [selectedItems, setSelectedItems] = useState({})
   const [groupedItems, setGroupedItems] = useState({})
   const [sectionFreeCounts, setSectionFreeCounts] = useState({})
-  const { user } = useUser();
+  const { user } = useUser()
 
   useEffect(() => {
     if (user) {
-      console.log(`User data in CustomizableMealSelectionModal: ${JSON.stringify(user.healthProfile.allergies)}`)
+      console.log(
+        `User data in CustomizableMealSelectionModal: ${JSON.stringify(user.healthProfile.allergies)}`,
+      )
     }
-  }, [user]);
+  }, [user])
 
   // Function to check if an item contains user's allergens
   const isItemRestricted = (item) => {
     if (!user?.healthProfile?.allergies || !item?.allergens) {
-      return false;
+      return false
     }
 
-    const userAllergies = user.healthProfile.allergies.map(allergy => allergy.toLowerCase());
-    
-    return item.allergens.some(allergen => {
-      const allergenNameEn = allergen.en?.toLowerCase() || '';
-      const allergenNameAr = allergen.ar?.toLowerCase() || '';
-      
+    const userAllergies = user.healthProfile.allergies.map(
+      (allergy) => typeof allergy === 'string' && allergy.toLowerCase(),
+    )
+
+    return item.allergens.some((allergen) => {
+      const allergenNameEn = allergen.en?.toLowerCase() || ''
+      const allergenNameAr = allergen.ar?.toLowerCase() || ''
+
       // Check if any user allergy matches the allergen name (English or Arabic)
-      return userAllergies.some(userAllergy => 
-        allergenNameEn.includes(userAllergy) || 
-        userAllergy.includes(allergenNameEn) ||
-        allergenNameAr.includes(userAllergy) || 
-        userAllergy.includes(allergenNameAr)
-      );
-    });
-  };
+      return userAllergies.some(
+        (userAllergy) =>
+          allergenNameEn.includes(userAllergy) ||
+          (typeof userAllergy === 'string' && userAllergy.includes(allergenNameEn)) ||
+          allergenNameAr.includes(userAllergy) ||
+          (typeof userAllergy === 'string' && userAllergy.includes(allergenNameAr)),
+      )
+    })
+  }
 
   useEffect(() => {
     if (saladItems && saladItems.length > 0) {
@@ -87,7 +92,7 @@ const CustomizableMealSelectionModal = ({
   const handleSelectItem = (item) => {
     // Don't allow selection of restricted items
     if (isItemRestricted(item)) {
-      return;
+      return
     }
 
     setSelectedItems((prev) => {
@@ -136,21 +141,23 @@ const CustomizableMealSelectionModal = ({
   }
 
   const renderItemContent = (item) => {
-    const isRestricted = isItemRestricted(item);
-    
+    const isRestricted = isItemRestricted(item)
+
     return (
       <Flex direction="column" flex="1">
         <Flex align="center" gap={2}>
-          <Text 
-            fontWeight="medium" 
+          <Text
+            fontWeight="medium"
             color={isRestricted ? 'gray.400' : 'inherit'}
             textDecoration={isRestricted ? 'line-through' : 'none'}
           >
             {isArabic ? item.name_arabic : item.name}
           </Text>
           {isRestricted && (
-            <Tooltip 
-              label={t('checkout.allergenNotice') || 'This item contains allergens you are sensitive to'}
+            <Tooltip
+              label={
+                t('checkout.allergenNotice') || 'This item contains allergens you are sensitive to'
+              }
               placement="top"
             >
               <Icon as={WarningIcon} color="red.500" boxSize={4} />
@@ -162,22 +169,25 @@ const CustomizableMealSelectionModal = ({
         </Text>
         {isRestricted && item.allergens && (
           <Text fontSize="xs" color="red.500" mt={1}>
-            {t('contains') || 'Contains'}: {
-              item.allergens
-                .filter(allergen => {
-                  const userAllergies = user?.healthProfile?.allergies?.map(a => a.toLowerCase()) || [];
-                  const allergenNameEn = allergen.en?.toLowerCase() || '';
-                  const allergenNameAr = allergen.ar?.toLowerCase() || '';
-                  return userAllergies.some(userAllergy => 
-                    allergenNameEn.includes(userAllergy) || 
-                    userAllergy.includes(allergenNameEn) ||
-                    allergenNameAr.includes(userAllergy) || 
-                    userAllergy.includes(allergenNameAr)
-                  );
-                })
-                .map(allergen => isArabic ? allergen.ar : allergen.en)
-                .join(', ')
-            }
+            {t('contains') || 'Contains'}:{' '}
+            {item.allergens
+              .filter((allergen) => {
+                const userAllergies =
+                  user?.healthProfile?.allergies?.map(
+                    (a) => typeof a === 'string' && a.toLowerCase(),
+                  ) || []
+                const allergenNameEn = allergen.en?.toLowerCase() || ''
+                const allergenNameAr = allergen.ar?.toLowerCase() || ''
+                return userAllergies.some(
+                  (userAllergy) =>
+                    allergenNameEn.includes(userAllergy) ||
+                    (typeof userAllergy === 'string' && userAllergy.includes(allergenNameEn)) ||
+                    allergenNameAr.includes(userAllergy) ||
+                    (typeof userAllergy === 'string' && userAllergy.includes(allergenNameAr)),
+                )
+              })
+              .map((allergen) => (isArabic ? allergen.ar : allergen.en))
+              .join(', ')}
           </Text>
         )}
       </Flex>
@@ -210,9 +220,9 @@ const CustomizableMealSelectionModal = ({
                 {renderSectionHeader(section)}
 
                 {items.map((item) => {
-                  const isRestricted = isItemRestricted(item);
-                  const isSelected = (selectedItems[item.id] || 0) > 0;
-                  
+                  const isRestricted = isItemRestricted(item)
+                  const isSelected = (selectedItems[item.id] || 0) > 0
+
                   return (
                     <Flex
                       key={item.id}

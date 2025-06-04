@@ -46,8 +46,8 @@ const planImages = {
 }
 
 const PlanCard = ({ plan, isUserPlan, onSelect }) => {
-  const cardBg = useColorModeValue('teal.100', 'gray.700')
-  const borderColor = isUserPlan ? 'teal.500' : 'gray.200'
+  const cardBg = useColorModeValue('accent.500', 'gray.700')
+  const borderColor = isUserPlan ? 'teal.400' : 'gray.200'
   const { t } = useTranslation()
   const { currentLanguage } = useI18nContext()
   const isArabic = currentLanguage === 'ar'
@@ -59,22 +59,20 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
 
   return (
     <Box
-      borderWidth="1px"
+      borderWidth={isUserPlan ? '2px' : 'none'}
       borderRadius="lg"
       borderColor={borderColor}
       overflow="hidden"
       bg={cardBg}
-      boxShadow={isUserPlan ? '0 0 0 2px rgb(59, 150, 147)' : 'base'}
       p={4}
       position="relative"
-      transition="transform 0.2s, box-shadow 0.2s"
+      transition="transform 0.2s 0.2s"
       _hover={{
         transform: 'translateY(-2px)',
-        boxShadow: 'md',
       }}
     >
       {isUserPlan && (
-        <Badge colorScheme="green" position="absolute" top={2} right={2}>
+        <Badge colorScheme="warning" position="absolute" top={2} right={2}>
           {t('premium.currentPlan')}
         </Badge>
       )}
@@ -94,7 +92,7 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
         {isArabic ? plan.title_arabic : plan.title}
       </Heading>
       <Text mb={2}>
-        <Badge colorScheme="purple">
+        <Badge colorScheme="error">
           {plan.periods?.length || 0} {t('premium.periods')}
         </Badge>
       </Text>
@@ -114,7 +112,7 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
 
         <Button
           size="sm"
-          colorScheme={isUserPlan ? 'green' : 'brand'}
+          colorScheme={isUserPlan ? 'error' : 'brand'}
           onClick={() => onSelect(planWithImage)}
         >
           {isUserPlan ? t('premium.viewDetails') : t('premium.select')}
@@ -280,7 +278,7 @@ export const PremiumPage = () => {
         )}
 
         {/* Current Plan Section */}
-        <Box as={VStack} bg="white" p={6} borderRadius="md" shadow="md" alignItems={'center'}>
+        <Box as={VStack} bg="white" p={6} borderRadius="xl" alignItems={'center'}>
           <JoinPremiumTeaser />
           {user?.subscription?.planId && (
             <CurrentPlanBrief
@@ -305,7 +303,7 @@ export const PremiumPage = () => {
 
         {explorePlans && (
           <Fade in={explorePlans}>
-            <Box bg="white" p={6} borderRadius="md" shadow="md" ref={plansContainerRef}>
+            <Box bg="warning.100" p={6} borderRadius="xl" ref={plansContainerRef}>
               <Heading as="h2" size="md" mb={6}>
                 {t('premium.availablePremiumPlans')}
               </Heading>
@@ -335,7 +333,7 @@ export const PremiumPage = () => {
 
         {/* Selected Plan Details Section */}
         {selectedPlan && explorePlans && (
-          <Box bg="white" p={6} borderRadius="md" shadow="md" ref={detailsSectionRef}>
+          <Box bg="secondary.200" borderRadius={'xl'} p={6} ref={detailsSectionRef}>
             <Heading as="h2" size="md" mb={4}>
               {t('premium.planDetails')}
             </Heading>

@@ -110,7 +110,6 @@ const Section = ({ title, children, bgColor, titleColor, icon }) => {
       p={padding}
       position="relative"
       overflow="hidden"
-      boxShadow="sm"
       height="100%"
       maxHeight="95vh"
       minHeight="85vh"
@@ -118,17 +117,18 @@ const Section = ({ title, children, bgColor, titleColor, icon }) => {
     >
       <Box position="relative" zIndex="1">
         <Flex align="center" mb={5}>
-          {icon
-           && 
-           <Box 
-           as="img" 
-           src={icon} 
-           alt={`${title} icon`} 
-           boxSize="48px" 
-           mx={2} 
-           borderRadius={"50%"} 
-           p={1} 
-           bg={"whiteAlpha.900"}/>}
+          {icon && (
+            <Box
+              as="img"
+              src={icon}
+              alt={`${title} icon`}
+              boxSize="48px"
+              mx={2}
+              borderRadius={'50%'}
+              p={1}
+              bg={'whiteAlpha.900'}
+            />
+          )}
           <Heading size="md" color={titleColor || 'brand.900'}>
             {title}
           </Heading>
@@ -481,11 +481,7 @@ const CheckoutPlan = () => {
 
         <SimpleGrid columns={gridColumns} spacing={4}>
           {/* Billing Information */}
-          <Section
-            title={t('checkout.billingInformation')}
-            bgColor="teal"
-            icon={saladIcon}
-          >
+          <Section title={t('checkout.billingInformation')} bgColor="teal" icon={saladIcon}>
             <Stack spacing={2}>
               <FormControl isRequired>
                 <FormLabel fontSize="sm">{t('checkout.fullName')}</FormLabel>
@@ -530,18 +526,18 @@ const CheckoutPlan = () => {
               <FormControl isRequired>
                 <FormLabel fontSize="sm">{t('checkout.deliveryAddress')}</FormLabel>
                 <Flex alignItems="center" maxW={'85%'}>
-                <Input
-                  placeholder={t('checkout.enterDeliveryAddress')}
-                  variant="outlined"
-                  bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
-                  focusBorderColor="brand.500"
-                  maxW={'85%'}
-                  value={ userAddress?.display_name ||billingInfo?.deliveryAddress?.display_name }
-                  onChange={(e) => handleBillingInfoChange('deliveryAddress', e.target.value)}
-                />
-                <Button mx={2} onClick={onOpenMap}>
-                  <Image src={locationPin} alt="Location Pin" boxSize="30px" />
-                </Button>
+                  <Input
+                    placeholder={t('checkout.enterDeliveryAddress')}
+                    variant="outlined"
+                    bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
+                    focusBorderColor="brand.500"
+                    maxW={'85%'}
+                    value={userAddress?.display_name || billingInfo?.deliveryAddress?.display_name}
+                    onChange={(e) => handleBillingInfoChange('deliveryAddress', e.target.value)}
+                  />
+                  <Button mx={2} onClick={onOpenMap}>
+                    <Image src={locationPin} alt="Location Pin" boxSize="30px" />
+                  </Button>
                 </Flex>
                 <MapModal
                   isOpen={isMapOpen}
@@ -606,7 +602,7 @@ const CheckoutPlan = () => {
               <Box>
                 <Flex alignItems="center" mb={2}>
                   <Image
-                    src={userPlan.image||saladIcon}
+                    src={userPlan.image || saladIcon}
                     alt={userPlan.title}
                     boxSize="60px"
                     borderRadius="25%"
@@ -615,9 +611,7 @@ const CheckoutPlan = () => {
                     p={2}
                   />
                   <Box>
-                    <Heading size="xs">
-                      {isArabic ? userPlan.title_arabic : userPlan.title}
-                    </Heading>
+                    <Heading size="xs">{isArabic ? userPlan.title_arabic : userPlan.title}</Heading>
                   </Box>
                 </Flex>
 
@@ -666,7 +660,8 @@ const CheckoutPlan = () => {
                   <Flex justify="space-between" align="center">
                     <Text fontSize="sm">{t('checkout.selectedMeals')}:</Text>
                     <Text fontSize="sm" color="brand.900">
-                       {' '}{getCombinedMeals().length}
+                      {' '}
+                      {getCombinedMeals().length}
                     </Text>
                   </Flex>
                 </Stack>
@@ -690,7 +685,9 @@ const CheckoutPlan = () => {
             <Divider my={1} />
 
             <Flex justify="space-between" mb={4}>
-              <Text fontSize="sm" fontWeight="bold">{t('checkout.totalToday')}</Text>
+              <Text fontSize="sm" fontWeight="bold">
+                {t('checkout.totalToday')}
+              </Text>
               <Text fontSize="sm" fontWeight="bold" color="brand.800">
                 ${totalPrice.toFixed(2)}
               </Text>

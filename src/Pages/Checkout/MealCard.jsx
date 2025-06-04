@@ -16,7 +16,6 @@ export const MealCard = ({ meal, index, onRemove, onChoose, isArabic, t }) => {
       bg={'brand.600'}
       _hover={{
         transform: onChoose ? 'scale(1.02)' : undefined,
-        boxShadow: onChoose ? 'lg' : undefined,
       }}
     >
       {/* Background Image */}

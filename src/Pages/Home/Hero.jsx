@@ -250,7 +250,6 @@ const HeroCard = ({ item }) => {
               width="96%"
               bgColor="brand.600"
               p={0}
-              boxShadow="lg"
             >
               <Heading
                 as="h1"
@@ -277,7 +276,6 @@ const HeroCard = ({ item }) => {
                 // mr={{ base: '15vw', md: '10vw', lg:'4vw'}}
                 // ml={{ base: '15vw', md: '10vw', lg:'4vw'}}
                 px={0}
-                boxShadow="lg"
               >
                 <Text
                   fontSize={['md', 'lg', 'xl']}

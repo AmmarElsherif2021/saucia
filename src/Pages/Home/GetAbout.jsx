@@ -154,7 +154,7 @@ export const AboutUs = ({ contactUs }) => {
             colorScheme="brand"
             size="lg"
             onClick={contactUs}
-            _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
+            _hover={{ transform: 'translateY(-2px)' }}
             transition="all 0.3s"
           >
             {t('about.contactUs')}

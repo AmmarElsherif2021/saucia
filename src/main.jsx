@@ -62,7 +62,7 @@ const Layout = ({ children }) => {
           position: 'absolute',
           top: '4rem',
           width: '100%',
-          overflowX:'hidden'
+          overflowX: 'hidden',
         }}
       >
         {children}

@@ -61,29 +61,41 @@ const ConfirmPlanModal = ({
   // Function to check if a meal contains user's allergens
   const isMealRestricted = (item) => {
     if (!user?.healthProfile?.allergies || !item?.allergens) {
-      return false;
+      return false
     }
 
-    const userAllergies = user.healthProfile.allergies.map(allergy => allergy.toLowerCase());
-    
-    return item.allergens.some(allergen => {
-      const allergenNameEn = allergen.en?.toLowerCase() || '';
-      const allergenNameAr = allergen.ar?.toLowerCase() || '';
-      
+    const userAllergies = user?.healthProfile?.allergies?.map(
+      (allergy) => typeof allergy === 'string' && allergy.toLowerCase(),
+    )
+
+    return item.allergens.some((allergen) => {
+      const allergenNameEn = allergen.en?.toLowerCase() || ''
+      const allergenNameAr = allergen.ar?.toLowerCase() || ''
+
       // Check if any user allergy matches the allergen name (English or Arabic)
-      return userAllergies.some(userAllergy => 
-        allergenNameEn.includes(userAllergy) || 
-        userAllergy.includes(allergenNameEn) ||
-        allergenNameAr.includes(userAllergy) || 
-        userAllergy.includes(allergenNameAr)
-      );
-    });
-  };
+      return userAllergies.some(
+        (userAllergy) =>
+          allergenNameEn.includes(userAllergy) ||
+          (typeof userAllergy === 'string' && userAllergy.includes(allergenNameEn)) ||
+          allergenNameAr.includes(userAllergy) ||
+          (typeof userAllergy === 'string' && userAllergy.includes(allergenNameAr)),
+      )
+    })
+  }
 
   // Enhanced MealCard wrapper component to handle allergen display
-  const AllergenAwareMealCard = ({ meal, index, onChoose, onRemove, isArabic, t, showDeliveryDate = false, deliveryDate = null }) => {
-    const isRestricted = isMealRestricted(meal);
-    
+  const AllergenAwareMealCard = ({
+    meal,
+    index,
+    onChoose,
+    onRemove,
+    isArabic,
+    t,
+    showDeliveryDate = false,
+    deliveryDate = null,
+  }) => {
+    const isRestricted = isMealRestricted(meal)
+
     return (
       <Box position="relative">
         {/* Overlay for restricted meals */}
@@ -101,19 +113,13 @@ const ConfirmPlanModal = ({
             alignItems="center"
             justifyContent="center"
           >
-            <Tooltip 
-              label={t('checkout.allergenNotice') || 'This meal contains allergens you are sensitive to'}
+            <Tooltip
+              label={
+                t('checkout.allergenNotice') || 'This meal contains allergens you are sensitive to'
+              }
               placement="top"
             >
-              <Flex
-                bg="red.500"
-                color="white"
-                p={2}
-                borderRadius="full"
-                boxShadow="lg"
-                align="center"
-                gap={1}
-              >
+              <Flex bg="red.500" color="white" p={2} borderRadius="full" align="center" gap={1}>
                 <Icon as={WarningIcon} boxSize={4} />
                 <Text fontSize="xs" fontWeight="bold">
                   {t('checkout.allergenNotice') || 'Allergen Alert'}
@@ -122,7 +128,7 @@ const ConfirmPlanModal = ({
             </Tooltip>
           </Box>
         )}
-        
+
         {/* Original MealCard with modified props */}
         <Box
           opacity={isRestricted ? 0.6 : 1}
@@ -139,40 +145,36 @@ const ConfirmPlanModal = ({
             t={t}
           />
         </Box>
-        
+
         {/* Show allergen details for restricted meals */}
         {isRestricted && meal.allergens && (
-          <Box
-            mt={2}
-            p={2}
-            bg="red.50"
-            borderRadius="md"
-            border="1px solid"
-            borderColor="red.200"
-          >
+          <Box mt={2} p={2} bg="red.50" borderRadius="md" border="1px solid" borderColor="red.200">
             <Text fontSize="xs" color="red.600" fontWeight="bold">
-              {t('checkout.contains') || 'Contains'}: 
+              {t('checkout.contains') || 'Contains'}:
             </Text>
             <Text fontSize="xs" color="red.500">
               {meal.allergens
-                .filter(allergen => {
-                  const userAllergies = user?.healthProfile?.allergies?.map(a => a.toLowerCase()) || [];
-                  const allergenNameEn = allergen.en?.toLowerCase() || '';
-                  const allergenNameAr = allergen.ar?.toLowerCase() || '';
-                  return userAllergies.some(userAllergy => 
-                    allergenNameEn.includes(userAllergy) || 
-                    userAllergy.includes(allergenNameEn) ||
-                    allergenNameAr.includes(userAllergy) || 
-                    userAllergy.includes(allergenNameAr)
-                  );
+                .filter((allergen) => {
+                  const userAllergies =
+                    user?.healthProfile?.allergies?.map(
+                      (a) => typeof a === 'string' && a.toLowerCase(),
+                    ) || []
+                  const allergenNameEn = allergen.en?.toLowerCase() || ''
+                  const allergenNameAr = allergen.ar?.toLowerCase() || ''
+                  return userAllergies.some(
+                    (userAllergy) =>
+                      allergenNameEn.includes(userAllergy) ||
+                      (typeof userAllergy === 'string' && userAllergy.includes(allergenNameEn)) ||
+                      allergenNameAr.includes(userAllergy) ||
+                      (typeof userAllergy === 'string' && userAllergy.includes(allergenNameAr)),
+                  )
                 })
-                .map(allergen => isArabic ? allergen.ar : allergen.en)
-                .join(', ')
-              }
+                .map((allergen) => (isArabic ? allergen.ar : allergen.en))
+                .join(', ')}
             </Text>
           </Box>
         )}
-        
+
         {/* Delivery date display */}
         {showDeliveryDate && deliveryDate && (
           <Text fontSize="xs" textAlign="center" mt={1} color="gray.500">
@@ -193,12 +195,14 @@ const ConfirmPlanModal = ({
     if (isMealRestricted(meal)) {
       toast({
         title: t('checkout.allergenNotice') || 'Allergen Warning',
-        description: t('checkout.allergenMealWarning') || 'This meal contains allergens you are sensitive to and cannot be selected.',
+        description:
+          t('checkout.allergenMealWarning') ||
+          'This meal contains allergens you are sensitive to and cannot be selected.',
         status: 'error',
         duration: 5000,
         isClosable: true,
       })
-      return;
+      return
     }
 
     // Check if user has remaining meals in their plan
@@ -234,7 +238,7 @@ const ConfirmPlanModal = ({
     toast({
       title: t('checkout.mealAddedTitle'),
       description: t('checkout.mealAddedDescription', {
-        mealName: isArabic?meal.name_arabic: meal.name,
+        mealName: isArabic ? meal.name_arabic : meal.name,
         deliveryDate: deliveryDate.toLocaleDateString('en-US', {
           weekday: 'short',
           month: 'short',
@@ -253,7 +257,7 @@ const ConfirmPlanModal = ({
 
   // Count restricted meals for display
   const getRestrictedMealsCount = (meals) => {
-    return meals?.filter(meal => isMealRestricted(meal)).length || 0;
+    return meals?.filter((meal) => isMealRestricted(meal)).length || 0
   }
 
   return (
@@ -294,15 +298,15 @@ const ConfirmPlanModal = ({
             <Divider />
 
             {/* Show allergen alert if there are restricted meals */}
-            {(getRestrictedMealsCount(signatureSalads) > 0 || (customizedSalad && isMealRestricted(customizedSalad))) && (
+            {(getRestrictedMealsCount(signatureSalads) > 0 ||
+              (customizedSalad && isMealRestricted(customizedSalad))) && (
               <Alert status="warning" borderRadius="md">
                 <AlertIcon />
                 <Box>
-                  <Text fontWeight="bold">
-                    {t('checkout.allergenNotice') || 'Allergen Notice'}
-                  </Text>
+                  <Text fontWeight="bold">{t('checkout.allergenNotice') || 'Allergen Notice'}</Text>
                   <Text fontSize="sm">
-                    {t('checkout.allergenNoticeDescription') || 'Some meals are not available due to your allergen preferences. These meals are grayed out and cannot be selected.'}
+                    {t('checkout.allergenNoticeDescription') ||
+                      'Some meals are not available due to your allergen preferences. These meals are grayed out and cannot be selected.'}
                   </Text>
                 </Box>
               </Alert>
@@ -320,7 +324,7 @@ const ConfirmPlanModal = ({
                   as={Button}
                   variant="outline"
                   onClick={handleSelectMeals}
-                  fontSize={"xs"}
+                  fontSize={'xs'}
                 >
                   {t('checkout.selectedMeal')}
                 </Box>
@@ -366,10 +370,10 @@ const ConfirmPlanModal = ({
                 </>
               )}
             </Box>
-            
+
             <Box>
               <SimpleGrid p={10} columns={{ base: 1, md: 2, lg: 3, xl: 3 }} spacing={3}>
-                {selectedMeals.length>0 &&
+                {selectedMeals.length > 0 &&
                   selectedMeals.map((meal, index) => {
                     const deliveryDate = calculateDeliveryDate(today, index)
                     return (
@@ -388,7 +392,7 @@ const ConfirmPlanModal = ({
                   })}
               </SimpleGrid>
             </Box>
-            
+
             <Alert status="info" borderRadius="md">
               <AlertIcon />
               {t('checkout.subscriptionRenewal')}

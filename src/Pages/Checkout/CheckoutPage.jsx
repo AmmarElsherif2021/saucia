@@ -113,18 +113,18 @@ const Section = ({ title, children, bgColor, titleColor, icon }) => {
     >
       <Box position="relative" zIndex="1">
         <Flex align="center" mb={4}>
-          {icon 
-            && 
-          <Box 
-            as="img" 
-            src={icon} 
-            alt={`${title} icon`} 
-            boxSize="48px" 
-            p={1} 
-            mx={4} 
-            bg={"whiteAlpha.900"} 
-            borderRadius="50%"
-            />}
+          {icon && (
+            <Box
+              as="img"
+              src={icon}
+              alt={`${title} icon`}
+              boxSize="48px"
+              p={1}
+              mx={4}
+              bg={'whiteAlpha.900'}
+              borderRadius="50%"
+            />
+          )}
           <Heading size="md" color={titleColor || 'gray.800'}>
             {title}
           </Heading>
@@ -572,7 +572,7 @@ const CheckoutPage = () => {
                 <Input
                   placeholder={t('checkout.couponCode')}
                   value={orderInfo.couponCode}
-                  variant={"ghost"}
+                  variant={'ghost'}
                   maxW={'85%'}
                   onChange={(e) => handleOrderInfoChange('couponCode', e.target.value)}
                 />

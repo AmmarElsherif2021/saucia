@@ -4,6 +4,7 @@ import { Box, Text, useDisclosure, Image, Heading, Flex } from '@chakra-ui/react
 import { CustomizableMealModal } from './CustomizableMealModal'
 import { useTranslation } from 'react-i18next'
 import { useI18nContext } from '../../Contexts/I18nContext'
+
 const SALAD_SECTION_FREE_COUNTS = {
   Protein: { value: 0, key_arabic: 'بروتين' },
   Nuts: { value: 1, key_arabic: 'مكسرات' },
@@ -16,14 +17,10 @@ const SALAD_SECTION_FREE_COUNTS = {
 }
 
 const FRUIT_SECTION_FREE_COUNT = {
-  'salad-fruit': { value: 5, key_arabic: 'سلطة فواكه' },
+  'salad-fruits': { value: 5, key_arabic: 'سلطة فواكه' },
 }
-export const CustomizableMealCard = ({
-  meal,
-  sectionRules,
-  selectableItems,
-  onhandleAddToCart,
-}) => {
+
+export const CustomizableMealCard = ({ meal, selectableItems, onhandleAddToCart }) => {
   const SECTION_FREE_COUNTS =
     meal.name === 'Make your own fruit salad' ? FRUIT_SECTION_FREE_COUNT : SALAD_SECTION_FREE_COUNTS
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -31,7 +28,7 @@ export const CustomizableMealCard = ({
   const { t } = useTranslation()
   const isArabic = currentLanguage === 'ar'
   const [selectedItems, setSelectedItems] = useState({})
-  const { addon_price = 0 } = sectionRules
+
   const groupedItems = selectableItems.reduce((acc, item) => {
     const section = item.section || 'Uncategorized'
     if (!acc[section]) {
@@ -41,28 +38,61 @@ export const CustomizableMealCard = ({
     return acc
   }, {})
 
-  // Calculate section-based charges
+  // Calculate section-based charges with individual item pricing
   const calculateTotal = () => {
-    const sectionQuantities = {}
+    let totalPrice = meal.price
 
-    // Calculate quantities per section
+    // Group selected items by section with their details
+    const sectionItems = {}
+
     Object.entries(selectedItems).forEach(([itemId, quantity]) => {
       const item = selectableItems.find((i) => i.id === itemId)
-      if (item) {
-        sectionQuantities[item.section] = (sectionQuantities[item.section] || 0) + quantity
+      if (item && quantity > 0) {
+        if (!sectionItems[item.section]) {
+          sectionItems[item.section] = []
+        }
+        sectionItems[item.section].push({
+          item,
+          quantity,
+        })
       }
     })
 
-    // Calculate total price considering free allowances
-    let totalPrice = meal.price
-    Object.entries(sectionQuantities).forEach(([section, quantity]) => {
+    // Calculate charges for each section
+    Object.entries(sectionItems).forEach(([section, items]) => {
       const freeAllowance = SECTION_FREE_COUNTS[section]?.value || 0
-      const extraItems = Math.max(quantity - freeAllowance, 0)
-      totalPrice += extraItems * addon_price
+      const totalQuantityInSection = items.reduce((sum, { quantity }) => sum + quantity, 0)
+
+      if (totalQuantityInSection > freeAllowance) {
+        // Sort items by price (ascending) to charge the cheapest items first as free
+        const sortedItems = [...items].sort(
+          (a, b) => (a.item.addon_price || 0) - (b.item.addon_price || 0),
+        )
+
+        let remainingFreeItems = freeAllowance
+
+        for (const { item, quantity } of sortedItems) {
+          const itemPrice = item.addon_price || 0
+
+          if (remainingFreeItems >= quantity) {
+            // All items of this type are free
+            remainingFreeItems -= quantity
+          } else if (remainingFreeItems > 0) {
+            // Some items are free, some are charged
+            const chargedQuantity = quantity - remainingFreeItems
+            totalPrice += chargedQuantity * itemPrice
+            remainingFreeItems = 0
+          } else {
+            // All items are charged
+            totalPrice += quantity * itemPrice
+          }
+        }
+      }
     })
 
     return totalPrice
   }
+
   // Handle selecting a single item
   const handleSelectItem = (item) => {
     setSelectedItems((prev) => {
@@ -106,7 +136,7 @@ export const CustomizableMealCard = ({
   const totalSelectedItems = Object.values(selectedItems).reduce((acc, curr) => acc + curr, 0)
 
   const handleConfirm = () => {
-    //AddOns array
+    // AddOns array
     const addOnsArray = Object.entries(selectedItems).flatMap(([id, qty]) => Array(qty).fill(id))
 
     onhandleAddToCart({
@@ -118,7 +148,6 @@ export const CustomizableMealCard = ({
       qty: 1,
     })
 
-    //console.log(`from customizable addOns`, addOnsArray); // Log the actual array instead of [object Object]
     onClose()
   }
 
@@ -127,10 +156,6 @@ export const CustomizableMealCard = ({
     setSelectedItems({})
     onOpen()
   }
-
-  // useEffect(() => {
-  //   //console.log(`selected items ${JSON.stringify(selectedItems)}`);
-  // }, [selectedItems]);
 
   return (
     <>
@@ -142,7 +167,7 @@ export const CustomizableMealCard = ({
         overflow="hidden"
         bg="gray.100"
         transition="transform 0.3s"
-        _hover={{ transform: 'translateY(-5px)', boxShadow: 'lg' }}
+        _hover={{ transform: 'translateY(-5px)' }}
         onClick={handleOpenModal}
         cursor="pointer"
       >
@@ -177,9 +202,6 @@ export const CustomizableMealCard = ({
                 ),
               })}
             </Text>
-            <Text fontSize="sm" color="gray.500">
-              {t('menuPage.additionalPrice')}: {addon_price} {t('common.currency')}
-            </Text>
           </Box>
         </Box>
       </Box>
@@ -194,7 +216,6 @@ export const CustomizableMealCard = ({
         handleQuantityChange={handleQuantityChange}
         calculateTotal={calculateTotal}
         totalSelectedItems={totalSelectedItems}
-        sectionRules={sectionRules}
         isArabic={isArabic}
         t={t}
         sectionFreeCounts={SECTION_FREE_COUNTS}

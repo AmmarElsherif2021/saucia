@@ -37,6 +37,7 @@ export const ItemsCarousel = ({
   auto = false,
   visibleButtons = true,
   transitionDuration = 15000,
+  carouselBg = 'brand.200',
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
   const { colorMode } = useColorMode()
@@ -100,8 +101,8 @@ export const ItemsCarousel = ({
       align="center"
       justifyContent="center"
       overflow="hidden"
-      bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
-      borderRadius="lg"
+      bg={carouselBg}
+      borderRadius="20px"
       py={4}
     >
       {showControls && (
@@ -135,7 +136,7 @@ export const ItemsCarousel = ({
           flexDirection="row"
           flexWrap="nowrap"
           gap={3}
-          bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
+          bg={'transparent'}
           px={8}
         >
           {visibleItems.map((item, index) => (
