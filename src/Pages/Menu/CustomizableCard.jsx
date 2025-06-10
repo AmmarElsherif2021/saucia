@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import mealImage from '../../assets/menu/defaultMeal.JPG'
-import { Box, Text, useDisclosure, Image, Heading, Flex } from '@chakra-ui/react'
+import { Box, Text, useDisclosure, Image, Heading, Flex, useColorMode } from '@chakra-ui/react'
 import { CustomizableMealModal } from './CustomizableMealModal'
 import { useTranslation } from 'react-i18next'
 import { useI18nContext } from '../../Contexts/I18nContext'
+
 
 const SALAD_SECTION_FREE_COUNTS = {
   Protein: { value: 0, key_arabic: 'بروتين' },
@@ -26,6 +27,7 @@ export const CustomizableMealCard = ({ meal, selectableItems, onhandleAddToCart 
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { currentLanguage } = useI18nContext()
   const { t } = useTranslation()
+  const { colorMode } = useColorMode()
   const isArabic = currentLanguage === 'ar'
   const [selectedItems, setSelectedItems] = useState({})
 
@@ -165,7 +167,7 @@ export const CustomizableMealCard = ({ meal, selectableItems, onhandleAddToCart 
         borderWidth="1px"
         borderRadius="lg"
         overflow="hidden"
-        bg="gray.100"
+        bg={colorMode === 'dark' ? 'gray.800' : 'secondary.300'}
         transition="transform 0.3s"
         _hover={{ transform: 'translateY(-5px)' }}
         onClick={handleOpenModal}

@@ -192,12 +192,12 @@ const MenuPage = () => {
         : t(`menuPage.${section.name}`, { defaultValue: section.name }),
     icon: sectionIcons[section.name] || makeSaladIcon,
     content: (
-      <Box>
+      <Box borderStyle={'none'} key={`section-${sections.indexOf(section)}`} p={4}>
         <SimpleGrid ref={sectionRefs[section.name]} columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
           {section.meals.map((meal, index) => {
             const isSelective = meal.policy === 'selective'
             let selectableItems = []
-            let sectionRules = {}
+            //let sectionRules = {}
 
             if (isSelective) {
               const itemSection = selectiveSectionMap[meal.name.toLowerCase()]

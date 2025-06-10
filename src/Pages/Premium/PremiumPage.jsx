@@ -46,7 +46,7 @@ const planImages = {
 }
 
 const PlanCard = ({ plan, isUserPlan, onSelect }) => {
-  const cardBg = useColorModeValue('accent.500', 'gray.700')
+  const cardBg = useColorModeValue('secondary.500', 'gray.700')
   const borderColor = isUserPlan ? 'teal.400' : 'gray.200'
   const { t } = useTranslation()
   const { currentLanguage } = useI18nContext()
@@ -224,7 +224,7 @@ export const PremiumPage = () => {
         description: t('premium.signInToSubscribe'),
         status: 'warning',
         duration: 5000,
-        isClosable: true,
+        isClosable: false,
       })
       return
     }
@@ -240,7 +240,7 @@ export const PremiumPage = () => {
         description: t('premium.nowSubscribedToPlan', { planTitle: selectedPlan.title }),
         status: 'success',
         duration: 5000,
-        isClosable: true,
+        isClosable: false,
       })
 
       setExplorePlans(false)
@@ -250,7 +250,7 @@ export const PremiumPage = () => {
         description: error.message || t('premium.failedToUpdatePlanSubscription'),
         status: 'error',
         duration: 5000,
-        isClosable: true,
+        isClosable: false,
       })
     } finally {
       setSubscribing(false)

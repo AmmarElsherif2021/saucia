@@ -378,7 +378,7 @@ const CheckoutPage = () => {
         description: t('checkout.pleaseSelectPaymentMethod') || 'Please select a payment method',
         status: 'warning',
         duration: 3000,
-        isClosable: true,
+        isClosable: false,
       })
       return
     }
@@ -389,7 +389,7 @@ const CheckoutPage = () => {
         description: t('checkout.pleaseFillAllRequiredFields') || 'Please fill all required fields',
         status: 'warning',
         duration: 3000,
-        isClosable: true,
+        isClosable: false,
       })
       return
     }
@@ -482,7 +482,7 @@ const CheckoutPage = () => {
           t('checkout.orderConfirmationSent') || 'Order confirmation has been sent to your email',
         status: 'success',
         duration: 5000,
-        isClosable: true,
+        isClosable: false,
       })
 
       navigate(`/order-confirmation/${createdOrder.id}`)
@@ -495,7 +495,7 @@ const CheckoutPage = () => {
         description: error.message || t('checkout.failedToPlaceOrder') || 'Failed to place order',
         status: 'error',
         duration: 5000,
-        isClosable: true,
+        isClosable: false,
       })
     }
   }

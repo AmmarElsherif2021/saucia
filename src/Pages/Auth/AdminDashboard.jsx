@@ -73,7 +73,7 @@ export const AdminDashboard = () => {
         description: 'Failed to fetch data. Please try again later.',
         status: 'error',
         duration: 3000,
-        isClosable: true,
+        isClosable: false,
       })
     } finally {
       setIsLoading(false)
@@ -113,7 +113,7 @@ export const AdminDashboard = () => {
         title: `${entityType} ${isEditing ? 'updated' : 'created'} successfully`,
         status: 'success',
         duration: 3000,
-        isClosable: true,
+        isClosable: false,
       })
       fetchData()
       onClose()
@@ -124,7 +124,7 @@ export const AdminDashboard = () => {
         description: `Failed to ${isEditing ? 'update' : 'create'} ${entityType}.`,
         status: 'error',
         duration: 3000,
-        isClosable: true,
+        isClosable: false,
       })
     }
   }
@@ -140,7 +140,7 @@ export const AdminDashboard = () => {
         title: `${type} deleted successfully`,
         status: 'success',
         duration: 3000,
-        isClosable: true,
+        isClosable: false,
       })
       fetchData()
     } catch (error) {
@@ -150,7 +150,7 @@ export const AdminDashboard = () => {
         description: `Failed to delete ${type}.`,
         status: 'error',
         duration: 3000,
-        isClosable: true,
+        isClosable: false,
       })
     }
   }

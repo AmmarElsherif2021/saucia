@@ -7,18 +7,18 @@ export class User {
   static fieldTypes = {
     string: [
       'email',
-      'displayName',
-      'firstName',
-      'lastName',
-      'phoneNumber',
-      'photoURL',
-      'defaultAddress',
-      'defaultPaymentMethod',
+      'displayName', //shortened to username
+      'firstName',  //shortened to username
+      'lastName',   //shortened to username
+      'phoneNumber', //phone
+      'photoURL',    //photo
+      'defaultAddress', // shortened to addresses
+      'defaultPaymentMethod', //shortened to paymentMethods
       'notes',
       'language',
       'gender',
     ],
-    array: ['addresses', 'favoriteItems', 'favoriteMeals', 'paymentMethods'],
+    array: ['addresses', 'favoriteItems', 'favoriteMeals', 'paymentMethods'], // ['addresses', 'favoriteMeals', 'paymentMethods'] //No 'favoriteItems'
     boolean: ['isAdmin'],
     number: ['loyaltyPoints', 'age'],
     healthProfile: {

@@ -59,8 +59,8 @@ const Layout = ({ children }) => {
       <Navbar />
       <main
         style={{
-          position: 'absolute',
-          top: '4rem',
+          position: 'relative',
+          marginTop: '4rem', 
           width: '100%',
           overflowX: 'hidden',
         }}

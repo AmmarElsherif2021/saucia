@@ -126,7 +126,7 @@ export const useMapLocation = (initialCenter = [26.386145, 50.075073], showUserL
             description: `Your location: ${data.display_name}`,
             status: 'success',
             duration: 3000,
-            isClosable: true,
+            isClosable: false,
           })
         }
       } catch (geocodeError) {
@@ -143,7 +143,7 @@ export const useMapLocation = (initialCenter = [26.386145, 50.075073], showUserL
           description: error.message || 'Could not determine your location',
           status: 'error',
           duration: 3000,
-          isClosable: true,
+          isClosable: false,
         })
       }
     } finally {

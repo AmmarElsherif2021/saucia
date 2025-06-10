@@ -414,7 +414,7 @@ export const ACC = ({ sections = [], expandedIndex, onToggle }) => {
 
   // Debug log
   useEffect(() => {
-    console.log('ACC rendering with expandedIndex:', expandedIndex)
+    //console.log('ACC rendering with expandedIndex:', expandedIndex)
     console.log('Using indexValue:', indexValue)
   }, [expandedIndex, indexValue])
 
@@ -433,8 +433,9 @@ export const ACC = ({ sections = [], expandedIndex, onToggle }) => {
         <AccordionItem key={index} id={`section-${index}`} data-section-name={section.title}>
           <h2>
             <AccordionButton
-              _expanded={{ bg: 'brand.300' }}
-              sx={{ borderStyle: 'none', bg: 'brand.200', color: 'gray.800' }}
+              _expanded={{border: '4px solid brand.500', bg: 'brand.500' }}
+              _hover={{ bg: 'brand.100' }}
+              sx={{ borderColor: 'brand.500', bg: 'brand.500', color: 'brand.900' }}
             >
               <Box flex="1" textAlign="left" textStyle="heading">
                 <Flex align="center" gap={2}>

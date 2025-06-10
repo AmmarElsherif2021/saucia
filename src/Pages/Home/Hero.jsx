@@ -407,11 +407,12 @@ export const Hero = () => {
       width="100%" // Ensure full width
       display="flex"
       alignItems="center"
-      justifyContent="center"
+      justifyContent="start"
       bg="transparent"
       color="white"
       position="relative"
-      marginY={8}
+      marginY={1}
+      paddingY={0}
     >
       <ItemsCarousel
         items={heroSlides}

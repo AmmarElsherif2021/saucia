@@ -209,7 +209,7 @@ export const UserDashboard = () => {
         title: t('profile.profileUpdated'),
         status: 'success',
         duration: 3000,
-        isClosable: true,
+        isClosable: false,
       })
       onClose()
     } catch (error) {
@@ -218,7 +218,7 @@ export const UserDashboard = () => {
         description: error.message,
         status: 'error',
         duration: 5000,
-        isClosable: true,
+        isClosable: false,
       })
     } finally {
       setIsUpdating(false)
@@ -598,7 +598,7 @@ export const UserDashboard = () => {
         <ModalContent
           maxW={{ base: '80vw', md: '70vw', lg: '60vw' }}
           mx={{ base: 10, md: 'auto' }}
-          maxH="70vh"
+          maxH="90vh"
           mt={{ base: 4, md: 8 }}
           sx={{ overflowY: 'auto', overflowX: 'hidden' }}
         >

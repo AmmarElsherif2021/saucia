@@ -158,7 +158,7 @@ export const CRT = ({
       title: t('toasts.quantityUpdated'),
       status: 'success',
       duration: 1000,
-      isClosable: true,
+      isClosable: false,
     })
   }
 
@@ -170,7 +170,7 @@ export const CRT = ({
         description: t('toasts.cantReduceQuantity'),
         status: 'warning',
         duration: 2000,
-        isClosable: true,
+        isClosable: false,
       })
       return
     }
@@ -184,7 +184,7 @@ export const CRT = ({
       description: t('toasts.mealRemovedDescription', { mealName: itemName }),
       status: 'info',
       duration: 2000,
-      isClosable: true,
+      isClosable: false,
     })
   }
 
@@ -195,7 +195,7 @@ export const CRT = ({
         description: t('toasts.discountApplied'),
         status: 'success',
         duration: 2000,
-        isClosable: true,
+        isClosable: false,
       })
     } else {
       toast({
@@ -203,7 +203,7 @@ export const CRT = ({
         description: t('toasts.checkPromoCode'),
         status: 'error',
         duration: 2000,
-        isClosable: true,
+        isClosable: false,
       })
     }
   }

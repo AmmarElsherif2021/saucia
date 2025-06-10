@@ -200,7 +200,7 @@ const ConfirmPlanModal = ({
           'This meal contains allergens you are sensitive to and cannot be selected.',
         status: 'error',
         duration: 5000,
-        isClosable: true,
+        isClosable: false,
       })
       return
     }
@@ -209,12 +209,12 @@ const ConfirmPlanModal = ({
     if (user.subscription.mealsCount && selectedMeals.length >= user.subscription.mealsCount) {
       toast({
         title: t('checkout.planLimitReachedTitle'),
-        description: t('checkout.planLimitReachedDescription', {
+        description: t('', {
           mealsCount: userPlan.mealsCount,
         }),
         status: 'error',
         duration: 5000,
-        isClosable: true,
+        //isClosable: false,
       })
       return
     }
@@ -229,7 +229,7 @@ const ConfirmPlanModal = ({
     //     description: t('checkout.planExpiredDescription', { endDate: formattedEndDate }),
     //     status: 'error',
     //     duration: 5000,
-    //     isClosable: true,
+    //     isClosable: false,
     //   })
     //   return
     // }
@@ -237,7 +237,7 @@ const ConfirmPlanModal = ({
     // Show success toast when meal is selected
     toast({
       title: t('checkout.mealAddedTitle'),
-      description: t('checkout.mealAddedDescription', {
+      description: t('', {
         mealName: isArabic ? meal.name_arabic : meal.name,
         deliveryDate: deliveryDate.toLocaleDateString('en-US', {
           weekday: 'short',
@@ -248,7 +248,7 @@ const ConfirmPlanModal = ({
       }),
       status: 'success',
       duration: 3000,
-      isClosable: true,
+      //isClosable: false,
     })
 
     // Proceed with adding the meal

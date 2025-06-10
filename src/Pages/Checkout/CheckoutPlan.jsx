@@ -329,7 +329,7 @@ const CheckoutPlan = () => {
         description: t('checkout.pleaseSelectPaymentMethod'),
         status: 'warning',
         duration: 3000,
-        isClosable: true,
+        isClosable: false,
       })
       return
     }
@@ -340,7 +340,7 @@ const CheckoutPlan = () => {
         description: t('checkout.pleaseFillAllRequiredFields'),
         status: 'warning',
         duration: 3000,
-        isClosable: true,
+        isClosable: false,
       })
       return
     }
@@ -440,7 +440,7 @@ const CheckoutPlan = () => {
         description: t('checkout.premiumPlanActive'),
         status: 'success',
         duration: 5000,
-        isClosable: true,
+        isClosable: false,
       })
 
       navigate('/account?subscription=success')
@@ -453,7 +453,7 @@ const CheckoutPlan = () => {
         description: error.message || t('checkout.failedToUpdatePlanSubscription'),
         status: 'error',
         duration: 5000,
-        isClosable: true,
+        isClosable: false,
       })
     }
   }

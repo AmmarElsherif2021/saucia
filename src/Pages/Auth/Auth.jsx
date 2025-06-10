@@ -50,7 +50,7 @@ const Auth = () => {
           description: `Welcome${user?.displayName ? `, ${user.displayName}` : ''}!`,
           status: 'success',
           duration: 3000,
-          isClosable: true,
+          isClosable: false,
         })
 
         // Navigate based on admin status
@@ -65,7 +65,7 @@ const Auth = () => {
           description: result.error || 'An error occurred during login',
           status: 'error',
           duration: 5000,
-          isClosable: true,
+          isClosable: false,
         })
       }
     } catch (error) {
@@ -75,7 +75,7 @@ const Auth = () => {
         description: error.message || 'Failed to sign in with Google',
         status: 'error',
         duration: 5000,
-        isClosable: true,
+        isClosable: false,
       })
     } finally {
       setIsLoggingIn(false)
@@ -90,7 +90,7 @@ const Auth = () => {
         description: 'You have been successfully logged out.',
         status: 'info',
         duration: 3000,
-        isClosable: true,
+        isClosable: false,
       })
     } catch (error) {
       //console.error("Error during logout:", error);
@@ -99,7 +99,7 @@ const Auth = () => {
         description: 'There was an issue logging you out.',
         status: 'error',
         duration: 5000,
-        isClosable: true,
+        isClosable: false,
       })
     }
   }

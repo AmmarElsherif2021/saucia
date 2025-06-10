@@ -57,7 +57,7 @@ export const FoodCard = ({ id, name, nameArabic, description, price, image }) =>
         borderWidth="1px"
         borderRadius="lg"
         overflow="hidden"
-        bg={colorMode === 'dark' ? 'gray.700' : 'gray.100'}
+        bg={colorMode === 'dark' ? 'gray.700' : 'secondary.300'}
         transition="transform 0.3s"
         _hover={{ transform: 'translateY(-5px)' }}
       >
@@ -388,7 +388,7 @@ export const FeaturedItemCard = ({ item }) => {
       description: `${quantity} × ${item.name} ${t('cart.addedToCart')}`,
       status: 'success',
       duration: 3000,
-      isClosable: true,
+      isClosable: false,
     })
   }
 
@@ -619,7 +619,7 @@ export const OfferCard = ({ item }) => {
       description: `${quantity} × ${item.name} ${t('cart.addedToCart')}`,
       status: 'success',
       duration: 3000,
-      isClosable: true,
+      isClosable: false,
     })
   }
 
@@ -840,8 +840,9 @@ export const PlanCard = ({ plan }) => {
   return (
     <Box
       width="98%"
+      minWidth={"250px"}
       height="55vh"
-      borderRadius="2xl"
+      borderRadius="50px"
       overflow="hidden"
       position="relative"
       bg={cardBg}

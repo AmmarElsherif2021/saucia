@@ -7,16 +7,17 @@ const createTheme = (config) => {
   return extendTheme({
     colors: {
       brand: {
-        50: '#e6f8f6',
-        100: '#c0ece7',
-        200: '#99e0d8',
-        300: '#73d4c9',
-        400: '#4dc8ba',
-        500: '#3DD5B4', // Primary color
-        600: '#009e90',
-        700: '#007e73',
-        800: '#005e56',
-        900: '#003f39',
+        50:  '#DAF8EF',  // Slightly deeper than original, keeping softness
+        100: '#B7EEDD',  // Adjusted to reflect refined saturation
+        200: '#9FE0CB',  // More cohesive with 500 while maintaining lightness
+        300: '#79D3B7',  // Matches saturation curve
+        400: '#54C3B5',  // Strengthened while avoiding oversaturation
+        500: '#3DD5B4',  // Primary anchor color
+        600: '#00A093',  // Keeps vibrant contrast against 500
+        700: '#007F76',  // Harmonized depth adjustment
+        800: '#005E59',  // Strong foundation for contrast
+        900: '#003F3C',  // Ensured deep richness without losing clarity
+
       },
 
       secondary: {
@@ -739,9 +740,10 @@ const createTheme = (config) => {
       },
       Toast: {
         baseStyle: (props) => ({
-          px: '30px',
+          px: '10px',
           fontSize: 'sm',
           fontWeight: 'medium',
+          maxWidth:"90vw"
         }),
         defaultProps: {
           position: isArabic ? position.right : position.left,

@@ -583,6 +583,9 @@
         "minimumOrder": "Minimum Order Required"
       },
       "checkout": {
+        "planLimitReachedTitle": "Plan Limit Reached",
+        "pleaseFillAllRequiredFields":"Please complete required fields",
+        "requiredFieldsMissing":"Required fields are missing!",
         "mealAddedTitle": "Added new meal",
         "contains": "contains",
         "allergenNoticeDescription": "Please be aware of potential allergens in your meal selections. If you have any allergies, please inform us.",
@@ -1256,6 +1259,9 @@
         "minimumOrder": "الحد الأدنى المطلوب للطلب"
       },
       "checkout": {
+        "planLimitReachedTitle": "تم الوصول إلى حد الخطة",
+        "pleaseFillAllRequiredFields":"من فضلك اكمل البيانات المطلوبة",
+        "requiredFieldsMissing":"بيانات مطلوبة غير مكتملة",
         "mealAddedTitle": "تم اضافة وجبة جديدة",
         "contains": "يحتوي على",
         "allergenNoticeDescription": "يرجى ملاحظة أن جميع الوجبات قد تحتوي على مكونات مسببة للحساسية. إذا كان لديك أي حساسية، يرجى إبلاغنا قبل تقديم الطلب.",

@@ -197,24 +197,24 @@ const CustomizableMealSelectionModal = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
-      <ModalContent sx={{ padding: '2vw', width: '80%', minWidth: '75vw', maxHeight: '85vh' }}>
+      <ModalContent sx={{ padding: '2vw', width: '90%', minWidth: '75vw', maxHeight: '90vh' }}>
         <ModalHeader sx={{ paddingTop: '6vh' }}>
-          <Flex justify="space-between" align="center" w="100%">
-            <Heading fontSize="xl" fontWeight="bold">
+          <Flex justify="space-between" align="center" w="100%" direction={'column'}>
+            <Heading fontSize="1.2em" fontWeight="bold">
               {t('checkout.customizeYourSalad')}
             </Heading>
-            <Text fontWeight="bold" color="green.600" fontSize="0.5em" mx={2}>
+            <Text fontWeight="bold" color="green.600" fontSize="0.4em" mx={1}>
               {t('checkout.customizePolicy')}
             </Text>
           </Flex>
         </ModalHeader>
         <ModalCloseButton />
-        <ModalBody sx={{ maxHeight: '50vh', overflowY: 'auto' }}>
+        <ModalBody>
           <Text mb={4} fontSize="sm" color="gray.600">
             {t('checkout.customizeSaladInstructions')}
           </Text>
 
-          <SimpleGrid p={10} m={0} columns={[1, 2]} spacing={3} bg={'warning.50'}>
+          <SimpleGrid p={10} m={0} columns={[1, 2]} spacing={3} bg={'accent.300'} borderRadius={'md'} sx={{ maxHeight: '40vh', overflowY: 'scroll' }}>
             {Object.entries(groupedItems).map(([section, items]) => (
               <Box key={section} mb={6}>
                 {renderSectionHeader(section)}
@@ -226,16 +226,20 @@ const CustomizableMealSelectionModal = ({
                   return (
                     <Flex
                       key={item.id}
-                      p={4}
-                      borderWidth={1}
+                      p={1}
+                      m={1}
+                      height={'fit-content'}
+                      minHeight={12}
+                      borderWidth={0}
                       borderRadius="md"
                       align="center"
                       justify="space-between"
-                      bg={isSelected ? 'brand.100' : isRestricted ? 'gray.50' : 'white'}
+                      bg={isSelected ? 'brand.300' : isRestricted ? 'gray.50' : 'white'}
+                      color={'brand.800'}
                       opacity={isRestricted ? 0.6 : 1}
                       onClick={() => handleSelectItem(item)}
                       cursor={isRestricted ? 'not-allowed' : 'pointer'}
-                      _hover={isRestricted ? {} : { bg: isSelected ? 'brand.200' : 'gray.50' }}
+                      _hover={isRestricted ? {} : { bg: isSelected ? 'brand.400' : 'gray.50' }}
                       borderColor={isRestricted ? 'red.200' : 'gray.200'}
                     >
                       {renderItemContent(item)}
@@ -259,7 +263,7 @@ const CustomizableMealSelectionModal = ({
             {t('menuPage.selectedCount', { count: totalSelectedItems })}
           </Tag>
 
-          <Button sx={{ marginX: 6 }} colorScheme="brand" onClick={() => onConfirm(selectedItems)}>
+          <Button sx={{ marginX: 2 }} colorScheme="brand" onClick={() => onConfirm(selectedItems)}>
             {t('checkout.confirmSelection')}
           </Button>
         </ModalFooter>

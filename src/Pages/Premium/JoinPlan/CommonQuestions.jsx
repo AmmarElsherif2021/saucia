@@ -212,10 +212,10 @@ const CommonQuestions = ({ onComplete }) => {
 
       toast({
         title: t('profile.profileUpdated'),
-        description: t('profile.profileSavedSuccessfully'),
+        //description: t('profile.profileSavedSuccessfully'),
         status: 'success',
         duration: 5000,
-        isClosable: true,
+        isClosable: false,
       })
 
       if (onComplete) {
@@ -230,7 +230,7 @@ const CommonQuestions = ({ onComplete }) => {
         description: error.message || t('premium.errorUpdatingProfile'),
         status: 'error',
         duration: 5000,
-        isClosable: true,
+        isClosable: false,
       })
     } finally {
       setIsSubmitting(false)
