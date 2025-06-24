@@ -1,94 +1,89 @@
-// controllers/users.js
-import { db } from '../firebase.js'
+import { User } from '../models/User.js';
 
-// Create user
+// Create user (handled by auth, just create profile)
 export const createUser = async (req, res) => {
   try {
-    const uid = req.user.uid
+    const uid = req.user.id; // Supabase user ID
     const userData = {
       email: req.user.email,
-      displayName: req.body.displayName || req.user.displayName,
-      createdAt: new Date(),
-      isAdmin: req.user.isAdmin || false, // Store admin status in Firestore
-    }
+      displayName: req.body.displayName || '',
+      ...req.body
+    };
 
-    // Check if user already exists (idempotent)
-    const userDoc = await db.collection('users').doc(uid).get()
-
-    if (userDoc.exists) {
-      return res.status(200).json({
-        uid,
-        ...userDoc.data(),
-        message: 'User already exists',
-      })
-    }
-
-    // Create new user
-    await db.collection('users').doc(uid).set(userData)
-    res.status(201).json({ uid, ...userData })
+    const newUser = await User.create(uid, userData);
+    res.status(201).json(newUser);
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
 }
 
 // Get all users (admin only)
 export const getAllUsers = async (req, res) => {
   try {
-    const snapshot = await db.collection('users').get()
-    const users = snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() }))
-    res.json(users)
+    // Add admin check in middleware first
+    const users = await User.getAll();
+    res.json(users);
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
 }
 
 // Get single user
 export const getUser = async (req, res) => {
   try {
-    const requestedUid = req.params.uid
-    const currentUserUid = req.user.uid
-    const isAdmin = req.user.isAdmin
+    const userId = req.params.id;
+    const currentUserId = req.user.id;
+    const isAdmin = req.user.isAdmin;
 
-    // Users can only access their own data unless they're an admin
-    if (requestedUid !== currentUserUid && !isAdmin) {
-      return res.status(403).json({ error: 'Forbidden - You can only access your own user data' })
+    if (userId !== currentUserId && !isAdmin) {
+      return res.status(403).json({ error: 'Forbidden' });
     }
 
-    const doc = await db.collection('users').doc(requestedUid).get()
-    if (!doc.exists) return res.status(404).json({ error: 'User not found' })
-
-    res.json({ uid: doc.id, ...doc.data() })
+    const user = await User.getById(userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    
+    res.json(user);
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
 }
 
 // Update user
 export const updateUser = async (req, res) => {
   try {
-    const requestedUid = req.params.uid
-    const currentUserUid = req.user.uid
-    const isAdmin = req.user.isAdmin
+    const userId = req.params.id;
+    const currentUserId = req.user.id;
+    const isAdmin = req.user.isAdmin;
 
-    // Users can only update their own data unless they're an admin
-    if (requestedUid !== currentUserUid && !isAdmin) {
-      return res.status(403).json({ error: 'Forbidden - You can only update your own user data' })
+    if (userId !== currentUserId && !isAdmin) {
+      return res.status(403).json({ error: 'Forbidden' });
     }
 
-    // Don't allow updating admin status via this endpoint
+    // Prevent non-admins from updating admin status
     if (req.body.isAdmin !== undefined && !isAdmin) {
-      delete req.body.isAdmin
+      delete req.body.isAdmin;
     }
 
-    const updatedData = {
-      ...req.body,
-      updatedAt: new Date(),
-    }
-
-    await db.collection('users').doc(requestedUid).update(updatedData)
-    const updatedDoc = await db.collection('users').doc(requestedUid).get()
-    res.json({ uid: updatedDoc.id, ...updatedDoc.data() })
+    const updatedUser = await User.update(userId, req.body);
+    res.json(updatedUser);
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
+  }
+}
+// Delete user (not implemented, handled by auth)
+export const deleteUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const currentUserId = req.user.id;
+    const isAdmin = req.user.isAdmin;
+
+    // Only admin can delete any account, user can delete only their own account
+    if (!isAdmin && userId !== currentUserId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    await User.delete(userId);
+    res.status(501).json({ error: 'Not implemented' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 }

@@ -3,7 +3,7 @@
 // import viteLogo from '/vite.svg'
 import './App.css'
 // import {ComponentsTrial} from './Components/ComponentsTrial'
-// import { FoodCards } from './Components/Cards'
+// import { MealCards } from './Components/Cards'
 // //import { CartDemo } from './Components/Cart'
 // import { ProfileDemo } from './Components/ProfileComponent'
 // import { FeaturedMeals } from './Components/FeaturedSlide'

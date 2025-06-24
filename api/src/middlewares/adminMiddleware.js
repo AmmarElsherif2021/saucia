@@ -1,26 +1,10 @@
-/* eslint-disable */
-import { auth } from '../firebase.js'
+import express from 'express'
+import { isAdmin } from '../middlewares/adminMiddleware.js'
 
-export const isAdmin = async (req, res, next) => {
-  try {
-    // Check for emulator dev user
-    if (req.user && req.user.uid === 'emulator-dev-user') {
-      console.log('⚠️ Emulator mode: Bypassing admin middleware check')
-      return next()
-    }
+const router = express.Router()
 
-    const { uid } = req.user
+router.get('/dashboard', isAdmin, (req, res) => {
+  res.json({ message: 'Welcome, admin!' })
+})
 
-    const userRecord = await auth.getUser(uid)
-    const customClaims = userRecord.customClaims || {}
-
-    if (customClaims.admin === true) {
-      next()
-    } else {
-      res.status(403).json({ error: 'Access denied: Admin privileges required' })
-    }
-  } catch (error) {
-    console.error('Admin verification error:', error)
-    res.status(500).json({ error: 'Server error during authorization' })
-  }
-}
+export default router

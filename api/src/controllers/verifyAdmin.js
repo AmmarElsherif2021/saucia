@@ -4,17 +4,20 @@
 
 export const verifyAdmin = async (req, res) => {
   try {
-    // Special case for emulator development user
-    if (req.user && req.user.uid === 'emulator-dev-user') {
-      console.log('⚠️ Emulator mode: Auto-approving admin verification')
-      return res.status(200).json({ isAdmin: true })
-    }
-
-    // For regular users, check if they have admin privileges
-    const isAdmin = req.user && req.user.admin === true
-
-    return res.status(200).json({ isAdmin })
-  } catch (error) {
+    // ENHANCED DEVELOPMENT CHECK
+    if (process.env.NODE_ENV === 'development') {
+      console.log('⚠️ Development mode: Auto-approving admin verification')
+      return res.status(200).json({ 
+        success: true, 
+        isAdmin: true,
+        user: {
+          id: 'emulator-dev-user',
+          email: 'dev@example.com',
+          is_admin: true,
+          display_name: 'Dev User'
+        }
+      })
+    }} catch (error) {
     console.error('Error in verifyAdmin controller:', error)
     return res.status(500).json({ error: 'Server error verifying admin status' })
   }

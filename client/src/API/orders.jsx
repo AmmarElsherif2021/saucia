@@ -6,12 +6,12 @@ import { fetchWithAuth } from './fetchWithAuth'
 
 // Get all orders (admin only)
 export const getAllOrders = async (token) => {
-  const url = `${import.meta.env.VITE_BASE_URL}/orders`
+  const url = `${import.meta.env.VITE_API_BASE_URL}/orders`
   return await fetchWithAuth(url, {}, token)
 }
 //Create order
 export const createOrder = async (token, orderData) => {
-  const url = `${import.meta.env.VITE_BASE_URL}/orders`
+  const url = `${import.meta.env.VITE_API_BASE_URL}/orders`
   return await fetchWithAuth(
     url,
     {
@@ -21,28 +21,22 @@ export const createOrder = async (token, orderData) => {
     token,
   )
 }
+
 // Get orders for the authenticated user
-export const getUserOrders = async (token) => {
-  const url = `${import.meta.env.VITE_BASE_URL}/orders/user`
-  return await fetchWithAuth(url, {}, token)
+export const getUserOrders = async () => {
+  return await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/orders/user`)
 }
 
 // Update an order by ID
-export const updateOrder = async (token, orderId, updates) => {
-  const url = `${import.meta.env.VITE_BASE_URL}/orders/${orderId}`
-  return await fetchWithAuth(
-    url,
-    {
-      method: 'PUT',
-      body: JSON.stringify(updates),
-    },
-    token,
-  )
+export const updateOrder = async (orderId, updates) => {
+  return await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/orders/${orderId}`, {
+    method: 'PUT',
+    body: JSON.stringify(updates),
+  })
 }
-
 // Delete an order by ID
 export const deleteOrder = async (token, orderId) => {
-  const url = `${import.meta.env.VITE_BASE_URL}/orders/${orderId}`
+  const url = `${import.meta.env.VITE_API_BASE_URL}/orders/${orderId}`
   return await fetchWithAuth(
     url,
     {

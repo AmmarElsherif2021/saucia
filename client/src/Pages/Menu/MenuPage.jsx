@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { CustomizableMealCard } from './CustomizableCard'
 import { Box, Heading, SimpleGrid, Text as ChakraText, Spinner, Center } from '@chakra-ui/react'
 import { ACC } from '../../Components/ComponentsTrial'
-import { FoodCard } from '../../Components/Cards'
+import { MealCard } from '../../Components/Cards'
 import { useTranslation } from 'react-i18next'
 import { useI18nContext } from '../../Contexts/I18nContext'
 import { useElements } from '../../Contexts/ElementsContext'
@@ -195,20 +195,14 @@ const MenuPage = () => {
       <Box borderStyle={'none'} key={`section-${sections.indexOf(section)}`} p={4}>
         <SimpleGrid ref={sectionRefs[section.name]} columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
           {section.meals.map((meal, index) => {
-            const isSelective = meal.policy === 'selective'
+            const isSelective = meal.preparation_instructions === 'selective'
             let selectableItems = []
             //let sectionRules = {}
-
             if (isSelective) {
               const itemSection = selectiveSectionMap[meal.name.toLowerCase()]
               //console.log('Item section:', itemSection)
               if (itemSection) {
                 selectableItems = selectiveItems[itemSection]
-                //console.log('Selectable items for section:', selectableItems[0])
-                // sectionRules = {
-                //   addon_price: meal.addon_price || 0,
-                //   free_count: meal.free_count || 0,
-                // }
                 // console.log('Section rules:', sectionRules)
               }
               //console.log('Selectable items for meal:', meal)
@@ -216,46 +210,18 @@ const MenuPage = () => {
 
             return isSelective ? (
               <CustomizableMealCard
-                key={index}
+                key={index+ meal.id}
                 meal={meal}
                 //sectionRules={sectionRules}
                 selectableItems={selectableItems}
                 onhandleAddToCart={handleAddToCart}
               />
             ) : (
-              <FoodCard
-                key={meal.id || index}
-                id={meal.id}
-                nameArabic={meal.name_arabic}
-                name={meal.name}
-                description={
-                  <Box>
-                    <ChakraText>{isArabic ? meal.ingredients_arabic : meal.ingredients}</ChakraText>
-                    <ChakraText>
-                      {t('menuPage.calories')}: {meal.kcal || 'N/A'}
-                    </ChakraText>
-                    {meal.protein > 0 && (
-                      <ChakraText>
-                        {t('menuPage.protein')}: {meal.protein}g
-                      </ChakraText>
-                    )}
-                    {meal.carb > 0 && (
-                      <ChakraText>
-                        {t('menuPage.carbs')}: {meal.carb}g
-                      </ChakraText>
-                    )}
-                    {isSelective && (
-                      <ChakraText color="green.500">{t('menuPage.customizable')}</ChakraText>
-                    )}
-                  </Box>
-                }
-                price={meal.price}
-                image={meal.image || null}
-                rating={meal.rating || 4}
-                category={section.name}
-                isSelective={isSelective}
-                policy={meal.policy}
+              <Box key={index + meal.id}>
+                <MealCard
+                meal={meal}
               />
+              </Box>
             )
           })}
         </SimpleGrid>

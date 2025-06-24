@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Box, Flex, IconButton, useColorMode, Button, useBreakpointValue } from '@chakra-ui/react'
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { useTranslation } from 'react-i18next'
-import { FeaturedItemCard } from './Cards'
+import { FeaturedMealCard } from './Cards'
 import { motion } from 'framer-motion'
 
 const containerVariants = {
@@ -32,7 +32,7 @@ const itemVariants = {
 
 export const ItemsCarousel = ({
   items,
-  CardComponent = FeaturedItemCard, // eslint-disable-line no-unused-vars
+  CardComponent = FeaturedMealCard, // eslint-disable-line no-unused-vars
   visibleCount = 1,
   auto = false,
   visibleButtons = true,
@@ -139,25 +139,26 @@ export const ItemsCarousel = ({
           bg={'transparent'}
           px={8}
         >
-          {visibleItems.map((item, index) => (
-            <Box
-              key={`item-${index}-${currentIndex}`}
-              as={motion.div}
-              variants={itemVariants}
-              flex={itemsToShow === 1 ? '0 0 auto' : `0 0 ${100 / itemsToShow}%`} // Modified this line
-              maxWidth={itemsToShow === 1 ? '100%' : `${100 / itemsToShow}%`} // Modified this line
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              px={0}
-            >
-              <Box width={itemsToShow === 1 ? '100%' : '100%'} px={0}>
-                {' '}
-                {/* Modified this line */}
-                {item ? <CardComponent key={item.id} item={item} /> : <Box visibility="hidden" />}
+          {visibleItems.map((item, index) =>
+            item.id!= undefined && (
+              <Box
+                key={`item-${index}-${currentIndex}`}
+                as={motion.div}
+                variants={itemVariants}
+                flex={itemsToShow === 1 ? '0 0 auto' : `0 0 ${100 / itemsToShow}%`} // Modified this line
+                maxWidth={itemsToShow === 1 ? '100%' : `${100 / itemsToShow}%`} // Modified this line
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                px={0}
+              >
+                <Box width={itemsToShow === 1 ? '100%' : '100%'} px={0}>
+                  {/* Modified this line */}
+                  {item ? <CardComponent key={item.id} item={item} /> : <Box visibility="hidden" />}
+                </Box>
               </Box>
-            </Box>
-          ))}
+            )
+          )}
         </Flex>
       </Box>
 

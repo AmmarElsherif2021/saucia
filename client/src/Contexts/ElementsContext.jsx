@@ -1,92 +1,80 @@
-/* eslint-disable */
-import { createContext, useState, useEffect, useContext } from 'react'
-import { listItems } from '../API/items'
-import { getMeals } from '../API/meals'
-import { listPlans } from '../API/plans'
+import { createContext, useContext, useCallback, useEffect } from 'react';
+import { useItems } from '../Hooks/useItems';
+import { useMeals } from '../Hooks/useMeals';
+import { usePlans } from '../Hooks/usePlans';
 
-const ElementsContext = createContext()
+const ElementsContext = createContext();
 
 export const ElementsProvider = ({ children }) => {
-  const [elementsState, setElementsState] = useState({
-    items: [],
-    meals: [],
-    plans: [],
-    featuredMeals: [],
-    offersMeals: [],
-    saladItems: [],
-    fruitItems: [],
-    elementsLoading: true,
-  })
+  const itemsHook = useItems();
+  const mealsHook = useMeals();
+  const plansHook = usePlans();
 
-  const fetchElements = async () => {
-    try {
-      console.log('Fetching elements data...')
+  // Add section field to items for backward compatibility
+  const itemsWithSection = itemsHook.items.map(item => ({
+    ...item,
+    section: item.category
+  }));
 
-      // Fetch all base data
-      const [items, meals, plans] = await Promise.all([listItems(), getMeals(), listPlans()])
+  // Compute derived data
+  const featuredMeals = mealsHook.getFeaturedMeals();
+  const offersMeals = mealsHook.getDiscountedMeals();
+  const signatureSalads = mealsHook.getMealsBySection('Our signature salad');
+  const saladItems = itemsWithSection.filter(
+    item => item.category !== 'salad-fruits'
+  );
+  const fruitItems = itemsWithSection.filter(
+    item => item.category === 'salad-fruits' // Adjust based on your actual fruit category
+  );
 
-      console.log('Data fetched successfully:', {
-        itemsCount: items?.length || 0,
-        mealsCount: meals?.length || 0,
-        plansCount: plans?.length || 0,
-      })
+  const elementsLoading = 
+    itemsHook.loading || 
+    mealsHook.loading || 
+    plansHook.loading;
 
-      // Filter featured and offer meals
-      const featuredMeals = meals?.filter((x) => x.rate > 4.7) || []
-      const offersMeals = meals?.filter((x) => x.offerRatio < 1) || []
-
-      // Fetch section-specific items for selective meals
-      const saladItems = items?.filter((item) => item.section !== 'salad-fruits') || []
-      const fruitItems = items?.filter((item) => item.section === 'salad-fruits') || []
-      const signatureSalads = meals?.filter((m) => m.section === 'Our signature salad') || []
-
-      setElementsState({
-        items: items || [],
-        meals: meals || [],
-        plans: plans || [],
-        featuredMeals,
-        offersMeals,
-        saladItems,
-        fruitItems,
-        signatureSalads,
-        elementsLoading: false,
-      })
-    } catch (error) {
-      console.error('Error fetching elements:', error)
-      setElementsState((prev) => ({ ...prev, elementsLoading: false }))
-    }
-  }
-
-  // Log meals when they change
-  // useEffect(() => {
-  //   if (elementsState.meals.length > 0) {
-  //     console.log(`Retrieved plans ${JSON.stringify(elementsState.plans)}`)
-  //   }
-  // }, [elementsState.meals])
-
-  // Fetch elements only once on component mount
+  const refreshElements = useCallback(() => {
+    itemsHook.fetchItems();
+    mealsHook.fetchMeals();
+    plansHook.fetchPlans();
+  }, [
+    itemsHook.fetchItems, 
+    mealsHook.fetchMeals, 
+    plansHook.fetchPlans
+  ]);
+   //Debug
+   useEffect(() => {
+    console.log('Featured meals:', featuredMeals);
+    console.log('Offers meals:', offersMeals);
+   },[])
+  // Initial fetch on mount
   useEffect(() => {
-    fetchElements()
-  }, [])
-
-  // Provide a way to manually refresh data if needed
-  const refreshElements = () => {
-    setElementsState((prev) => ({ ...prev, elementsLoading: true }))
-    fetchElements()
-  }
+    refreshElements();
+  }, [refreshElements]);
 
   const contextValue = {
-    ...elementsState,
+    items: itemsWithSection,
+    meals: mealsHook.meals,
+    plans: plansHook.plans,
+    featuredMeals,
+    offersMeals,
+    saladItems,
+    fruitItems,
+    signatureSalads,
+    elementsLoading,
     refreshElements,
-  }
+  };
 
-  return <ElementsContext.Provider value={contextValue}>{children}</ElementsContext.Provider>
-}
+  return (
+    <ElementsContext.Provider value={contextValue}>
+      {children}
+    </ElementsContext.Provider>
+  );
+};
 
 export const useElements = () => {
-  const context = useContext(ElementsContext)
+  const context = useContext(ElementsContext);
   if (!context) {
-    throw new Error('useElements must be used within an ElementsProvider')
+    throw new Error('useElements must be used within an ElementsProvider');
   }
-  return context
-}
+  return context;
+};

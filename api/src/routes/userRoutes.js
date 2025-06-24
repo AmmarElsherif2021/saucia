@@ -1,6 +1,5 @@
-// routes/userRoutes.js
 import express from 'express'
-import { createUser, getUser, updateUser } from '../controllers/users.js'
+import { createUser, deleteUser, getUser, updateUser } from '../controllers/users.js'
 import { authenticate } from '../middlewares/authMiddleware.js'
 
 const router = express.Router()
@@ -10,7 +9,10 @@ router.use(authenticate)
 
 // User routes
 router.post('/', createUser)
-router.get('/:uid', getUser)
-router.put('/:uid', updateUser)
+router.get('/:userId', getUser)   
+router.put('/:userId', updateUser)
+router.delete('delete/:userId', deleteUser)
+
+// Additional user-related routes can be added here
 
 export default router

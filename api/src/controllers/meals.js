@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { Meal } from '../models/Meal.js'
-
+import { Plan } from '../models/Plan.js'
 // Create a new meal
 export const createMeal = async (req, res) => {
   try {
@@ -30,7 +30,7 @@ export const getAllMeals = async (req, res) => {
   try {
     const meals = await Meal.getAll()
     res.json(meals)
-    console.log(`meals queries ${meals}`)
+    console.log(`meals queries ${meals.length}`)
   } catch (error) {
     console.error('Error fetching meals:', error)
     res.status(500).json({ error: 'Failed to fetch meals' })
@@ -40,11 +40,17 @@ export const getAllMeals = async (req, res) => {
 // Get meals by plan ID
 export const getMealsByPlan = async (req, res) => {
   try {
-    const { planId } = req.params
-    const meals = await Meal.getByPlan(planId)
-    res.json(meals)
+    const { planId } = req.params;
+    // Use Plan model to get meals
+    const planWithMeals = await Plan.getWithMeals(planId);
+    
+    if (!planWithMeals) {
+      return res.status(404).json({ error: 'Plan not found' });
+    }
+    
+    res.json(planWithMeals.meals);
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
 }
 

@@ -1,7 +1,63 @@
+// src/context/UserContext.jsx
+
+/**
+ * UserContext provides:
+ *   user: User | null
+ *   userPlan: Plan | null
+ *   loading: boolean
+ *   planLoading: boolean
+ *   userAddress: Address | null
+ *   logout: () => Promise<void>
+ *   updateUserProfile: (userId: string, updateData: UserProfileUpdate) => Promise<...>
+ *   updateUserSubscription: (subscriptionData: Subscription) => Promise<...>
+ *   refreshOrders: () => Promise<Array<Order>>
+ * 
+ * User schema:
+ *   id: string
+ *   email: string
+ *   firstName: string
+ *   lastName: string
+ *   phoneNumber: string
+ *   addresses: Array<Address>
+ *   orders: Array<Order>
+ *   subscription: Subscription
+ *   healthProfile: HealthProfile
+ *   isAdmin: boolean
+ * 
+ * Address schema:
+ *   id: string
+ *   street: string
+ *   city: string
+ *   state: string
+ *   postalCode: string
+ *   isDefault: boolean
+ * 
+ * Subscription schema:
+ *   planId: string
+ *   planName: string
+ *   startDate: string (ISO)
+ *   endDate: string (ISO)
+ *   status: 'active' | 'paused' | 'cancelled'
+ * 
+ * HealthProfile schema:
+ *   fitnessGoal: string
+ *   dietaryPreferences: Array<string>
+ *   allergies: Array<string>
+ * 
+ * Order schema:
+ *   id: string
+ *   items: Array<OrderItem>
+ *   total: number
+ *   status: 'pending' | 'delivered' | 'cancelled'
+ * 
+ * OrderItem schema:
+ *   itemId: string
+ *   quantity: number
+ *   price: number
+ */
+
 import { createContext, useContext, useState, useEffect } from 'react'
-import { onAuthStateChanged, signOut, getIdToken } from 'firebase/auth'
-import { auth } from '../../firebaseConfig.jsx'
-import { doc, getDoc, getFirestore, collection, query, where, getDocs } from 'firebase/firestore'
+import { supabase } from '../../supabaseClient.jsx'
 import { getUserOrders } from '../API/orders.jsx'
 import { getUserInfo, updateUserProfile as apiUpdateUserProfile } from '../API/users.jsx'
 
@@ -13,135 +69,94 @@ export const UserProvider = ({ children }) => {
   const [userPlan, setUserPlan] = useState(null)
   const [planLoading, setPlanLoading] = useState(false)
   const [userAddress, setUserAddress] = useState(null)
-  const db = getFirestore()
 
-  // Helper function to create default user structure
-  const createDefaultUserStructure = (firebaseUser, userData = {}) => {
+  const createDefaultUserStructure = (supabaseUser, profileData = {}) => {
+    // Core validation
+    if (!supabaseUser?.id) throw new Error('Invalid user data')
+    
     return {
-      id: firebaseUser.uid,
-      uid: firebaseUser.uid,
-      email: firebaseUser.email || '',
-      displayName: firebaseUser.displayName || userData?.displayName || '',
-      firstName: userData?.firstName || '',
-      lastName: userData?.lastName || '',
-      phoneNumber: userData?.phoneNumber || '',
-      photoURL: firebaseUser.photoURL || '',
-      emailVerified: firebaseUser.emailVerified,
-      addresses: userData?.addresses || [],
-      defaultAddress: userData?.defaultAddress || '',
-      favoriteItems: userData?.favoriteItems || [],
-      favoriteMeals: userData?.favoriteMeals || [],
-      paymentMethods: userData?.paymentMethods || [],
-      defaultPaymentMethod: userData?.defaultPaymentMethod || '',
-      loyaltyPoints: Number(userData?.loyaltyPoints) || 0,
-      notes: userData?.notes || '',
-      language: userData?.language || 'en',
-      age: userData?.age || 0,
-      gender: userData?.gender || 'male',
-      createdAt: userData?.createdAt || new Date().toISOString(),
-      updatedAt: userData?.updatedAt || new Date().toISOString(),
-      lastLogin: userData?.lastLogin || new Date(),
-      orders: [], // Will be populated separately
-      subscription: userData?.subscription || {
+      // Required fields
+      id: supabaseUser.id,
+      email: supabaseUser.email || '',
+      firstName: profileData?.first_name || '',
+      lastName: profileData?.last_name || '',
+      phoneNumber: profileData?.phone_number || '',
+      isAdmin: profileData?.is_admin || false,
+      
+      // Structured nested objects
+      addresses: (profileData?.user_addresses || []).map(a => ({
+        id: a.id,
+        street: a.street,
+        city: a.city,
+        state: a.state,
+        postalCode: a.postal_code,
+        isDefault: a.is_default
+      })),
+      
+      subscription: profileData?.subscription ? {
+        planId: profileData.subscription.plan_id,
+        planName: profileData.subscription.plan_name || '',
+        startDate: profileData.subscription.start_date,
+        endDate: profileData.subscription.end_date,
+        status: profileData.subscription.status || 'inactive'
+      } : {
         planId: '',
-        price: 0,
-        endDate: null,
-        paymentMethod: '',
         planName: '',
         startDate: null,
-        status: 'inactive',
-        mealsCount: 0,
-        consumedMeals: 0,
+        endDate: null,
+        status: 'inactive'
       },
-      notificationPreferences: userData?.notificationPreferences || {
-        email: true,
-        sms: false,
-        push: true,
+      
+      healthProfile: {
+        fitnessGoal: profileData?.fitness_goal || '',
+        dietaryPreferences: profileData?.dietary_preferences || [],
+        allergies: profileData?.allergies || []
       },
-      healthProfile: userData?.healthProfile || {
-        fitnessGoal: '',
-        gender: '',
-        height: null,
-        weight: null,
-        dietaryPreferences: [],
-        allergies: [],
-        activityLevel: '',
-      },
+      
+      orders: [] // Populated separately
     }
   }
-
-  const refreshOrders = async (firebaseUser) => {
-    try {
-      const token = await firebaseUser.getIdToken()
-      const orders = await getUserOrders(token)
-      return Array.isArray(orders) ? orders : []
-    } catch (error) {
-      console.error('Error fetching orders:', error)
-      return []
-    }
-  }
-
-  // Use API instead of direct Firestore access
-  const getUserInfoFromAPI = async (uid) => {
-    try {
-      const userData = await getUserInfo(uid)
-      return userData
-    } catch (error) {
-      console.error('Error getting user from API:', error)
-      // Fallback to Firestore if API fails
-      return await getUserInfoFromFirestore(uid)
-    }
-  }
-
-  // Keep as fallback for API failures
-  const getUserInfoFromFirestore = async (uid) => {
-    try {
-      const userRef = doc(db, 'users', uid)
-      const userSnap = await getDoc(userRef)
-      return userSnap.exists() ? userSnap.data() : null
-    } catch (error) {
-      console.error('Error getting user from Firestore:', error)
-      return null
-    }
+  
+  const refreshOrders = async () => {
+    const orders = await getUserOrders(user.id)
+    
+    return orders.map(o => ({
+      id: o.id,
+      total: o.total,
+      status: o.status,
+      createdAt: o.created_at,
+      items: (o.items || []).map(i => ({
+        itemId: i.item_id,
+        quantity: i.quantity,
+        price: i.price
+      }))
+    }))
   }
 
   const fetchUserPlanDetails = async (planId) => {
-    if (!planId) return null
-
+    if (!planId) return null;
+    
     try {
-      setPlanLoading(true)
-      const planRef = doc(db, 'plans', planId)
-      const planSnap = await getDoc(planRef)
+      const { data, error } = await supabase
+        .from('plans')
+        .select('*')
+        .eq('id', planId)
+        .single()
 
-      if (planSnap.exists()) {
-        return { id: planSnap.id, ...planSnap.data() }
-      }
-
-      const plansRef = collection(db, 'plans')
-      const planQuery = query(plansRef, where('title', '==', planId))
-      const querySnapshot = await getDocs(planQuery)
-
-      if (!querySnapshot.empty) {
-        const planDoc = querySnapshot.docs[0]
-        return { id: planDoc.id, ...planDoc.data() }
-      }
-
-      return null
+      if (error) throw error
+      return data
     } catch (error) {
-      console.error('Error fetching plan details:', error)
+      console.error('Plan fetch error:', error)
       return null
-    } finally {
-      setPlanLoading(false)
     }
-  }
+  };
 
-  // Updated to use API function
-  const updateUserProfile = async (uid, updateData) => {
-    if (!uid) throw new Error('User ID is required')
+  const updateUserProfile = async (userId, updateData) => {
+    if (!userId) throw new Error('User ID is required')
 
     try {
-      // Use API function instead of direct Firestore update
-      const result = await apiUpdateUserProfile(uid, updateData)
+      // Use API function instead of direct Supabase update
+      const result = await apiUpdateUserProfile(userId, updateData)
 
       // Update local user state immediately for better UX
       setUser((prevUser) => ({
@@ -157,9 +172,8 @@ export const UserProvider = ({ children }) => {
     }
   }
 
-  // Updated to use API for subscription updates
   const updateUserSubscription = async (subscriptionData) => {
-    if (!user?.uid) return null
+    if (!user?.id) return null
 
     try {
       // Use API to update subscription
@@ -168,7 +182,7 @@ export const UserProvider = ({ children }) => {
         updatedAt: new Date().toISOString(),
       }
 
-      await apiUpdateUserProfile(user.uid, updateData)
+      await apiUpdateUserProfile(user.id, updateData)
 
       const updatedUser = {
         ...user,
@@ -189,7 +203,7 @@ export const UserProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await signOut(auth)
+      await supabase.auth.signOut()
       setUser(null)
       setUserPlan(null)
     } catch (error) {
@@ -209,32 +223,55 @@ export const UserProvider = ({ children }) => {
   }, [user?.subscription?.planId])
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setLoading(true)
+        
         try {
-          const tokenResult = await firebaseUser.getIdTokenResult()
-          const [userData, orders] = await Promise.all([
-            getUserInfoFromAPI(firebaseUser.uid), // Use API instead of Firestore
-            refreshOrders(firebaseUser),
-          ])
+          if (session?.user) {
+            const userId = session.user.id
+            const [profile, orders] = await Promise.all([
+              getUserProfileFromSupabase(userId),
+              refreshOrders()
+            ])
 
-          // Create user object with default structure
-          const userInfo = createDefaultUserStructure(firebaseUser, userData)
-          userInfo.isAdmin = !!tokenResult.claims.admin
-          userInfo.orders = orders
+            // Create user object with default structure
+            const userInfo = createDefaultUserStructure(session.user, profile)
+            userInfo.orders = orders
 
-          setUser(userInfo)
+            setUser(userInfo)
+          } else {
+            setUser(null)
+          }
         } catch (error) {
           console.error('Error in auth state change:', error)
           setUser(null)
+        } finally {
+          setLoading(false)
         }
-      } else {
-        setUser(null)
+      }
+    )
+
+    // Check initial session
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        const userId = session.user.id
+        const profile = await getUserProfileFromSupabase(userId)
+        const orders = await refreshOrders()
+        
+        const userInfo = createDefaultUserStructure(session.user, profile)
+        userInfo.orders = orders
+        
+        setUser(userInfo)
       }
       setLoading(false)
-    })
+    }
 
-    return () => unsubscribe()
+    checkSession()
+
+    return () => subscription?.unsubscribe()
   }, [])
 
   const contextValue = {
@@ -248,11 +285,12 @@ export const UserProvider = ({ children }) => {
     updateUserSubscription,
     updateUserProfile,
     refreshOrders: async () => {
-      if (auth.currentUser) {
-        const orders = await refreshOrders(auth.currentUser)
+      if (user?.id) {
+        const orders = await refreshOrders()
         setUser((prev) => ({ ...prev, orders }))
         return orders
       }
+      return []
     },
     userAddress,
     setUserAddress,

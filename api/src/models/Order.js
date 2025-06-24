@@ -1,167 +1,168 @@
-import { db } from '../firebase.js'
+// models/Order.js
+import { supabase, supabaseAdmin } from '../supabase.js'
 
 export class Order {
-  static collection = db.collection('orders')
+  static tableName = 'orders'
 
-  // Helper function to serialize Firestore data
-  static serialize(doc) {
-    if (!doc.exists) return null
-    const data = doc.data()
-
-    // Handle dates that could be either Firestore timestamps or ISO strings
-    const createdAt =
-      data.createdAt instanceof Object && typeof data.createdAt.toDate === 'function'
-        ? data.createdAt.toDate().toISOString()
-        : data.createdAt
-
-    const updatedAt =
-      data.updatedAt instanceof Object && typeof data.updatedAt.toDate === 'function'
-        ? data.updatedAt.toDate().toISOString()
-        : data.updatedAt
-
-    const deliveryDate =
-      data.deliveryDate instanceof Object && typeof data.deliveryDate.toDate === 'function'
-        ? data.deliveryDate.toDate().toISOString()
-        : data.deliveryDate
-
-    const paymentDate =
-      data.paymentDate instanceof Object && typeof data.paymentDate.toDate === 'function'
-        ? data.paymentDate.toDate().toISOString()
-        : data.paymentDate
-
+  static serialize(orderData) {
+    if (!orderData) return null
+    
     return {
-      id: doc.id,
-      userId: data.userId || '',
-      user: data.user || null,
-      items: Array.isArray(data.items) ? data.items : [],
-      meals: Array.isArray(data.meals) ? data.meals : [],
-      totalPrice: Number(data.totalPrice) || 0,
-      subtotal: Number(data.subtotal) || 0,
-      tax: Number(data.tax) || 0,
-      discount: Number(data.discount) || 0,
-      deliveryFee: Number(data.deliveryFee) || 0,
-      status: data.status || 'pending',
-      isPaid: Boolean(data.isPaid),
-      paymentMethod: data.paymentMethod || 'cash',
-      paymentId: data.paymentId || '',
-      paymentDate,
-      deliveryAddress: data.deliveryAddress || '',
-      deliveryInstructions: data.deliveryInstructions || '',
-      deliveryDate,
-      contactPhone: data.contactPhone || '',
-      notes: data.notes || '',
-      couponCode: data.couponCode || '',
-      createdAt,
-      updatedAt,
+      id: orderData.id,
+      userId: orderData.user_id || null,
+      subscriptionId: orderData.subscription_id || null,
+      orderNumber: orderData.order_number || '',
+      subtotal: Number(orderData.subtotal) || 0,
+      tax: Number(orderData.tax_amount) || 0,
+      discount: Number(orderData.discount_amount) || 0,
+      deliveryFee: Number(orderData.delivery_fee) || 0,
+      totalPrice: Number(orderData.total_amount) || 0,
+      status: orderData.status || 'pending',
+      paymentStatus: orderData.payment_status || 'pending',
+      paymentMethod: orderData.payment_method || null,
+      paymentId: orderData.payment_reference || '',
+      paymentDate: orderData.paid_at || null,
+      deliveryAddressId: orderData.delivery_address_id || null,
+      deliveryInstructions: orderData.delivery_instructions || '',
+      deliveryDate: orderData.scheduled_delivery_date || null,
+      contactPhone: orderData.contact_phone || '',
+      notes: orderData.special_instructions || '',
+      couponCode: orderData.coupon_code || '',
+      loyaltyPointsUsed: Number(orderData.loyalty_points_used) || 0,
+      loyaltyPointsEarned: Number(orderData.loyalty_points_earned) || 0,
+      createdAt: orderData.created_at,
+      updatedAt: orderData.updated_at,
     }
   }
 
   static async create(orderData) {
-    // Ensure proper data typing
-    const processedData = {
-      userId: String(orderData.userId || ''),
-      user: orderData.user || null,
-      items: Array.isArray(orderData.items) ? orderData.items : [],
-      meals: Array.isArray(orderData.meals) ? orderData.meals : [],
-      totalPrice: Number(orderData.totalPrice) || 0,
-      subtotal: Number(orderData.subtotal) || 0,
-      tax: Number(orderData.tax) || 0,
-      discount: Number(orderData.discount) || 0,
-      deliveryFee: Number(orderData.deliveryFee) || 0,
-      status: String(orderData.status || 'pending'),
-      isPaid: Boolean(orderData.isPaid || false),
-      paymentMethod: String(orderData.paymentMethod || 'cash'),
-      paymentId: String(orderData.paymentId || ''),
-      paymentDate: orderData.paymentDate || null,
-      deliveryAddress: String(orderData.deliveryAddress || ''),
-      deliveryInstructions: String(orderData.deliveryInstructions || ''),
-      deliveryDate: orderData.deliveryDate || null,
-      contactPhone: String(orderData.contactPhone || ''),
-      notes: String(orderData.notes || ''),
-      couponCode: String(orderData.couponCode || ''),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    try {
+      const newOrder = {
+        user_id: orderData.userId || null,
+        subscription_id: orderData.subscriptionId || null,
+        subtotal: Number(orderData.subtotal) || 0,
+        tax_amount: Number(orderData.tax) || 0,
+        discount_amount: Number(orderData.discount) || 0,
+        delivery_fee: Number(orderData.deliveryFee) || 0,
+        total_amount: Number(orderData.totalPrice) || 0,
+        status: orderData.status || 'pending',
+        payment_status: orderData.paymentStatus || 'pending',
+        payment_method: orderData.paymentMethod || null,
+        payment_reference: orderData.paymentId || '',
+        paid_at: orderData.paymentDate || null,
+        delivery_address_id: orderData.deliveryAddressId || null,
+        delivery_instructions: orderData.deliveryInstructions || '',
+        scheduled_delivery_date: orderData.deliveryDate || null,
+        contact_phone: orderData.contactPhone || '',
+        special_instructions: orderData.notes || '',
+        coupon_code: orderData.couponCode || '',
+        loyalty_points_used: Number(orderData.loyaltyPointsUsed) || 0,
+        loyalty_points_earned: Number(orderData.loyaltyPointsEarned) || 0,
+      }
+
+      const { data, error } = await supabaseAdmin
+        .from(this.tableName)
+        .insert(newOrder)
+        .select('*')
+        .single()
+
+      if (error) throw error
+      return this.serialize(data)
+    } catch (error) {
+      console.error('Error creating order:', error)
+      throw error
     }
-
-    const docRef = await this.collection.add(processedData)
-    const doc = await docRef.get()
-    return this.serialize(doc)
   }
+  // Add these methods to the Order class
 
+static async getAll() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from(this.tableName)
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data ? data.map(this.serialize) : [];
+  } catch (error) {
+    console.error('Error fetching all orders:', error);
+    throw error;
+  }
+}
+
+static async delete(id) {
+  try {
+    const { error } = await supabaseAdmin
+      .from(this.tableName)
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    return { success: true, id };
+  } catch (error) {
+    console.error('Error deleting order:', error);
+    throw error;
+  }
+}
   static async getByUser(userId) {
-    const snapshot = await this.collection.where('userId', '==', userId).get()
-    return snapshot.docs.map(this.serialize)
-  }
+    try {
+      const { data, error } = await supabaseAdmin
+        .from(this.tableName)
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
 
-  static async getByStatus(status) {
-    const snapshot = await this.collection.where('status', '==', status).get()
-    return snapshot.docs.map(this.serialize)
-  }
-
-  static async getByPaymentStatus(isPaid) {
-    const snapshot = await this.collection.where('isPaid', '==', Boolean(isPaid)).get()
-    return snapshot.docs.map(this.serialize)
-  }
-
-  static async getAll() {
-    const snapshot = await this.collection.get()
-    return snapshot.docs.map(this.serialize)
+      if (error) throw error
+      return data.map(this.serialize)
+    } catch (error) {
+      console.error('Error fetching orders:', error)
+      return []
+    }
   }
 
   static async getById(orderId) {
-    const doc = await this.collection.doc(orderId).get()
-    return this.serialize(doc)
+    try {
+      const { data, error } = await supabaseAdmin
+        .from(this.tableName)
+        .select('*')
+        .eq('id', orderId)
+        .single()
+
+      if (error) return null
+      return this.serialize(data)
+    } catch (error) {
+      console.error('Error fetching order:', error)
+      return null
+    }
   }
 
   static async update(orderId, updateData) {
     try {
-      // Ensure proper data typing
-      const processedData = {}
+      const dbData = {
+        status: updateData.status,
+        payment_status: updateData.paymentStatus,
+        payment_method: updateData.paymentMethod,
+        payment_reference: updateData.paymentId,
+        paid_at: updateData.paymentDate,
+        delivery_address_id: updateData.deliveryAddressId,
+        delivery_instructions: updateData.deliveryInstructions,
+        scheduled_delivery_date: updateData.deliveryDate,
+        contact_phone: updateData.contactPhone,
+        special_instructions: updateData.notes,
+      }
 
-      if (updateData.userId !== undefined) processedData.userId = String(updateData.userId)
-      if (updateData.user !== undefined) processedData.user = updateData.user
-      if (updateData.items !== undefined)
-        processedData.items = Array.isArray(updateData.items) ? updateData.items : []
-      if (updateData.meals !== undefined)
-        processedData.meals = Array.isArray(updateData.meals) ? updateData.meals : []
-      if (updateData.totalPrice !== undefined)
-        processedData.totalPrice = Number(updateData.totalPrice)
-      if (updateData.subtotal !== undefined) processedData.subtotal = Number(updateData.subtotal)
-      if (updateData.tax !== undefined) processedData.tax = Number(updateData.tax)
-      if (updateData.discount !== undefined) processedData.discount = Number(updateData.discount)
-      if (updateData.deliveryFee !== undefined)
-        processedData.deliveryFee = Number(updateData.deliveryFee)
-      if (updateData.status !== undefined) processedData.status = String(updateData.status)
-      if (updateData.isPaid !== undefined) processedData.isPaid = Boolean(updateData.isPaid)
-      if (updateData.paymentMethod !== undefined)
-        processedData.paymentMethod = String(updateData.paymentMethod)
-      if (updateData.paymentId !== undefined) processedData.paymentId = String(updateData.paymentId)
-      if (updateData.paymentDate !== undefined) processedData.paymentDate = updateData.paymentDate
-      if (updateData.deliveryAddress !== undefined)
-        processedData.deliveryAddress = String(updateData.deliveryAddress)
-      if (updateData.deliveryInstructions !== undefined)
-        processedData.deliveryInstructions = String(updateData.deliveryInstructions)
-      if (updateData.deliveryDate !== undefined)
-        processedData.deliveryDate = updateData.deliveryDate
-      if (updateData.contactPhone !== undefined)
-        processedData.contactPhone = String(updateData.contactPhone)
-      if (updateData.notes !== undefined) processedData.notes = String(updateData.notes)
-      if (updateData.couponCode !== undefined)
-        processedData.couponCode = String(updateData.couponCode)
+      const { data, error } = await supabaseAdmin
+        .from(this.tableName)
+        .update(dbData)
+        .eq('id', orderId)
+        .select('*')
+        .single()
 
-      processedData.updatedAt = new Date().toISOString()
-
-      await this.collection.doc(orderId).update(processedData)
-      const updatedDoc = await this.collection.doc(orderId).get()
-      return this.serialize(updatedDoc)
+      if (error) throw error
+      return this.serialize(data)
     } catch (error) {
       console.error('Error updating order:', error)
-      throw new Error('Failed to update order')
+      throw error
     }
-  }
-
-  static async delete(orderId) {
-    await this.collection.doc(orderId).delete()
-    return { success: true, id: orderId }
   }
 }

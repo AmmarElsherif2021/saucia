@@ -37,7 +37,7 @@ import { useNavigate } from 'react-router-dom'
 import { useUser } from '../../Contexts/UserContext'
 import { updateUserProfile } from '../../API/users'
 import { useElements } from '../../Contexts/ElementsContext'
-import { MealCard } from './MealCard'
+import { MealPlanCard } from './MealPlanCard'
 import ConfirmPlanModal from './ConfirmPlanModal'
 import CustomizableMealSelectionModal from './CustomizableMealSelectionModal'
 
@@ -741,7 +741,7 @@ const CheckoutPlan = () => {
         formattedEndDate={formattedEndDate}
         isSubmitting={isSubmitting}
         t={t}
-        MealCard={MealCard}
+        MealPlanCard={MealPlanCard}
         today={today}
         calculateDeliveryDate={calculateDeliveryDate}
       />

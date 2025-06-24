@@ -40,7 +40,7 @@ const ConfirmPlanModal = ({
   formattedEndDate,
   isSubmitting,
   t,
-  MealCard,
+  MealPlanCard,
   today,
   calculateDeliveryDate,
 }) => {
@@ -83,8 +83,8 @@ const ConfirmPlanModal = ({
     })
   }
 
-  // Enhanced MealCard wrapper component to handle allergen display
-  const AllergenAwareMealCard = ({
+  // Enhanced MealPlanCard wrapper component to handle allergen display
+  const AllergenAwareMealPlanCard = ({
     meal,
     index,
     onChoose,
@@ -129,13 +129,13 @@ const ConfirmPlanModal = ({
           </Box>
         )}
 
-        {/* Original MealCard with modified props */}
+        {/* Original MealPlanCard with modified props */}
         <Box
           opacity={isRestricted ? 0.6 : 1}
           filter={isRestricted ? 'grayscale(50%)' : 'none'}
           pointerEvents={isRestricted ? 'none' : 'auto'}
         >
-          <MealCard
+          <MealPlanCard
             key={index}
             meal={meal}
             index={index}
@@ -335,7 +335,7 @@ const ConfirmPlanModal = ({
                   <Text mb={2}>{t('checkout.selectedMeals')}:</Text>
                   <SimpleGrid p={10} columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={5}>
                     {[...signatureSalads, customizedSalad].map((meal, index) => (
-                      <AllergenAwareMealCard
+                      <AllergenAwareMealPlanCard
                         key={index}
                         meal={meal}
                         index={index}
@@ -352,7 +352,7 @@ const ConfirmPlanModal = ({
                   <SimpleGrid p={5} columns={{ base: 1, md: 2, lg: 3, xl: 3 }} spacing={1}>
                     {signatureSalads?.map((meal, index) => (
                       <Box key={index}>
-                        <AllergenAwareMealCard
+                        <AllergenAwareMealPlanCard
                           index={meal.id}
                           onChoose={handleMealSelection}
                           meal={meal}
@@ -378,7 +378,7 @@ const ConfirmPlanModal = ({
                     const deliveryDate = calculateDeliveryDate(today, index)
                     return (
                       <Flex key={index} direction="column">
-                        <AllergenAwareMealCard
+                        <AllergenAwareMealPlanCard
                           meal={meal}
                           index={index}
                           onRemove={handleRemoveMeal}

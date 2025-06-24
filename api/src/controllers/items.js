@@ -30,6 +30,7 @@ export const getAllItems = async (req, res) => {
     const items = await Item.getAll()
     res.json(items)
     console.log(`items query!`)
+    console.log(`Items fetched: ${items.length}`)
   } catch (error) {
     console.error('Error fetching items:', error)
     res.status(500).json({ error: error.message })

@@ -1,6 +1,6 @@
 import { VStack, Heading, Text } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
-import { FeaturedItemCard } from '../../Components/Cards'
+import { FeaturedMealCard } from '../../Components/Cards'
 import { ItemsCarousel } from '../../Components/ItemsCarousel'
 
 export const FeaturedMeals = ({ featuredMeals }) => {
@@ -17,7 +17,7 @@ export const FeaturedMeals = ({ featuredMeals }) => {
       {featuredMeals?.length > 0 ? (
         <ItemsCarousel
           items={featuredMeals}
-          CardComponent={FeaturedItemCard}
+          CardComponent={FeaturedMealCard}
           visibleCount={3}
           visibleButtons={true}
         />

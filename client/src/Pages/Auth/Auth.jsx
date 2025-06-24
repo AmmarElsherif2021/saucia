@@ -1,4 +1,3 @@
-// components/Auth.jsx
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
@@ -6,59 +5,59 @@ import {
   Heading,
   Text,
   Button,
-  Icon,
   useToast,
   Spinner,
   Alert,
   AlertIcon,
+  Divider,
+  Box,
 } from '@chakra-ui/react'
 import { FcGoogle } from 'react-icons/fc'
-import './Auth.css'
-import { useAuthContext } from '../../Contexts/AuthContext'
+import { FaFacebook } from 'react-icons/fa'
+import { useAuth } from '../../Hooks/useAuth'
 import logoIcon from '../../assets/logo.PNG'
 
 const Auth = () => {
-  const { user, loading, authError, loginWithGoogle, logout } = useAuthContext()
+  const { 
+    user, 
+    loading, 
+    authError, 
+    isInitialized,
+    loginWithOAuth, 
+    logout 
+  } = useAuth()
+  
   const navigate = useNavigate()
   const location = useLocation()
   const toast = useToast()
   const [isLoggingIn, setIsLoggingIn] = useState(false)
+  const [loginProvider, setLoginProvider] = useState(null)
 
-  // Get redirect location if any
   const from = location.state?.from?.pathname || '/'
 
+  // Handle authentication redirect after login
   useEffect(() => {
-    // If user is already logged in, redirect them
     if (user && !loading) {
-      // Check if user is admin to redirect to appropriate page
-      if (user.isAdmin) {
-        navigate('/admin')
-      } else {
-        navigate(from)
-      }
+      navigate(user.isAdmin || user.is_admin ? '/admin' : '/')
     }
-  }, [user, loading, navigate, from])
+  }, [user, loading])
 
-  const handleGoogleSignIn = async () => {
+  const handleOAuthSignIn = async (provider) => {
     setIsLoggingIn(true)
+    setLoginProvider(provider)
+    
     try {
-      const result = await loginWithGoogle()
-
+      const result = await loginWithOAuth(provider)
+      
       if (result.success) {
+        const providerName = provider === 'google' ? 'Google' : 'Facebook'
         toast({
-          title: 'Login successful',
-          description: `Welcome${user?.displayName ? `, ${user.displayName}` : ''}!`,
-          status: 'success',
+          title: `Redirecting to ${providerName}`,
+          description: 'You will be redirected to complete sign-in...',
+          status: 'info',
           duration: 3000,
           isClosable: false,
         })
-
-        // Navigate based on admin status
-        if (result.isAdmin) {
-          navigate('/admin')
-        } else {
-          navigate(from)
-        }
       } else {
         toast({
           title: 'Login failed',
@@ -69,34 +68,48 @@ const Auth = () => {
         })
       }
     } catch (error) {
-      //console.error("Error during Google sign in:", error);
+      const providerName = provider === 'google' ? 'Google' : 'Facebook'
       toast({
         title: 'Authentication error',
-        description: error.message || 'Failed to sign in with Google',
+        description: error.message || `Failed to sign in with ${providerName}`,
         status: 'error',
         duration: 5000,
         isClosable: false,
       })
     } finally {
       setIsLoggingIn(false)
+      setLoginProvider(null)
     }
   }
 
+  const handleGoogleSignIn = () => handleOAuthSignIn('google')
+  const handleFacebookSignIn = () => handleOAuthSignIn('facebook')
+
   const handleLogout = async () => {
     try {
-      await logout()
-      toast({
-        title: 'Logged out',
-        description: 'You have been successfully logged out.',
-        status: 'info',
-        duration: 3000,
-        isClosable: false,
-      })
+      const result = await logout()
+      
+      if (result.success) {
+        toast({
+          title: 'Logged out',
+          description: 'You have been successfully logged out.',
+          status: 'info',
+          duration: 3000,
+          isClosable: false,
+        })
+      } else {
+        toast({
+          title: 'Logout error',
+          description: result.error || 'There was an issue logging you out.',
+          status: 'error',
+          duration: 5000,
+          isClosable: false,
+        })
+      }
     } catch (error) {
-      //console.error("Error during logout:", error);
       toast({
         title: 'Logout error',
-        description: 'There was an issue logging you out.',
+        description: error.message || 'There was an issue logging you out.',
         status: 'error',
         duration: 5000,
         isClosable: false,
@@ -104,11 +117,27 @@ const Auth = () => {
     }
   }
 
+  // Show loading while initializing
+  if (!isInitialized || loading) {
+    return (
+      <div className="auth-container">
+        <div className="auth-card">
+          <VStack spacing={4}>
+            <Spinner size="xl" color="blue.500" />
+            <Text>
+              {!isInitialized ? 'Initializing...' : 'Checking authentication...'}
+            </Text>
+          </VStack>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-logo">
-          <img src={logoIcon} width={'50px'} />
+          <img src={logoIcon} width={'50px'} alt="Logo" />
         </div>
 
         <Heading>Welcome</Heading>
@@ -121,41 +150,84 @@ const Auth = () => {
           </Alert>
         )}
 
-        {loading ? (
-          <VStack spacing={4}>
-            <Spinner size="xl" color="blue.500" />
-            <Text>Checking authentication...</Text>
+        {!user ? (
+          <VStack spacing={4} width="full">
+            <Text>Sign in to continue</Text>
+            
+            <Button
+              leftIcon={<FcGoogle />}
+              onClick={handleGoogleSignIn}
+              colorScheme="blue"
+              variant="solid"
+              isLoading={isLoggingIn && loginProvider === 'google'}
+              loadingText="Redirecting..."
+              size="lg"
+              width="full"
+              disabled={loading || isLoggingIn}
+            >
+              Sign in with Google
+            </Button>
+
+            <Box position="relative" width="full">
+              <Divider />
+              <Text
+                position="absolute"
+                top="50%"
+                left="50%"
+                transform="translate(-50%, -50%)"
+                bg="white"
+                px={2}
+                fontSize="sm"
+                color="gray.500"
+              >
+                or
+              </Text>
+            </Box>
+
+            <Button
+              leftIcon={<FaFacebook />}
+              onClick={handleFacebookSignIn}
+              colorScheme="facebook"
+              variant="solid"
+              isLoading={isLoggingIn && loginProvider === 'facebook'}
+              loadingText="Redirecting..."
+              size="lg"
+              width="full"
+              disabled={loading || isLoggingIn}
+              bg="#1877F2"
+              _hover={{ bg: "#166FE5" }}
+              _active={{ bg: "#1464CC" }}
+            >
+              Sign in with Facebook
+            </Button>
           </VStack>
-        ) : !user ? (
-          <Button
-            w="full"
-            variant="outline"
-            leftIcon={isLoggingIn ? <Spinner size="sm" /> : <Icon as={FcGoogle} boxSize={5} />}
-            borderRadius="12px"
-            height="52px"
-            borderColor="gray.200"
-            onClick={handleGoogleSignIn}
-            isDisabled={isLoggingIn}
-            _hover={{
-              transform: 'translateY(-1px)',
-            }}
-            transition="all 0.2s"
-          >
-            {isLoggingIn ? 'Signing in...' : 'Sign in with Google'}
-          </Button>
         ) : (
           <VStack spacing={4}>
             <Text>
-              Welcome, {user.displayName || user.email}!{user.isAdmin && ' (Admin)'}
+              Welcome, {user.displayName || user.email}!
+              {user.isAdmin && ' (Admin)'}
             </Text>
-            <Button onClick={handleLogout} colorScheme="red" variant="outline">
+            <Button 
+              onClick={handleLogout} 
+              colorScheme="red" 
+              variant="outline"
+              disabled={loading}
+            >
               Sign Out
             </Button>
-            <Button onClick={() => navigate('/')} colorScheme="brand">
+            <Button 
+              onClick={() => navigate('/')} 
+              colorScheme="brand"
+              disabled={loading}
+            >
               Go to Home
             </Button>
             {user.isAdmin && (
-              <Button onClick={() => navigate('/admin')} colorScheme="green">
+              <Button 
+                onClick={() => navigate('/admin')} 
+                colorScheme="green"
+                disabled={loading}
+              >
                 Admin Dashboard
               </Button>
             )}
@@ -163,16 +235,12 @@ const Auth = () => {
         )}
 
         <div className="auth-footer">
-          <p>New user? Access is automatic with Google sign in</p>
+          <p>New user? Access is automatic with Google or Facebook sign in</p>
           <p className="auth-terms">
             By continuing, you agree to our{' '}
-            <a href="/terms" className="auth-link">
-              Terms
-            </a>
-            and{' '}
-            <a href="/privacy" className="auth-link">
-              Privacy Policy
-            </a>
+            <a href="/terms" className="auth-link">Terms</a>
+            {' '}and{' '}
+            <a href="/privacy" className="auth-link">Privacy Policy</a>
           </p>
         </div>
       </div>

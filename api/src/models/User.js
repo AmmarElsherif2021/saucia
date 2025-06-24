@@ -1,439 +1,496 @@
-/* eslint-disable */
-import { db } from '../firebase.js'
+// Enhanced User.js model optimized for Supabase auth.users relationship
+
+import { supabase, supabaseAdmin } from '../supabase.js'
 
 export class User {
-  static collection = db.collection('users')
-
-  static fieldTypes = {
-    string: [
-      'email',
-      'displayName', //shortened to username
-      'firstName',  //shortened to username
-      'lastName',   //shortened to username
-      'phoneNumber', //phone
-      'photoURL',    //photo
-      'defaultAddress', // shortened to addresses
-      'defaultPaymentMethod', //shortened to paymentMethods
-      'notes',
-      'language',
-      'gender',
-    ],
-    array: ['addresses', 'favoriteItems', 'favoriteMeals', 'paymentMethods'], // ['addresses', 'favoriteMeals', 'paymentMethods'] //No 'favoriteItems'
-    boolean: ['isAdmin'],
-    number: ['loyaltyPoints', 'age'],
-    healthProfile: {
-      string: ['fitnessGoal', 'activityLevel'],
-      number: ['height', 'weight'],
-      array: ['dietaryPreferences', 'allergies'],
-    },
-    subscription: {
-      string: [
-        'paymentMethod',
-        'planId',
-        'planName',
-        'startDate',
-        'endDate',
-        'status',
-        'deliveryAddress',
-        'deliveryTime',
-        'pausedAt',
-        'resumedAt',
-        'nextMealDate',
-        'mealSchedule', // JSON string for complex scheduling
-      ],
-      number: ['price', 'mealsCount', 'consumedMeals'],
-      boolean: ['autoRenewal', 'deliveryPaused'],
-    },
-  }
+  static tableName = 'user_profiles'
 
   static defaultValues = {
-    // Base user defaults
-    isAdmin: false,
-    addresses: [],
-    defaultAddress: '',
-    favoriteItems: [],
-    favoriteMeals: [],
-    paymentMethods: [],
-    defaultPaymentMethod: '',
-    loyaltyPoints: 0,
+    display_name: '',
+    first_name: '',
+    last_name: '',
+    phone_number: '',
+    avatar_url: '',
+    is_admin: false,
+    loyalty_points: 0,
     notes: '',
     language: 'en',
-    age: 0,
-    gender: 'male',
-    // Enhanced subscription defaults
-    subscription: {
-      price: 0,
-      endDate: null,
-      paymentMethod: '',
-      planId: '',
-      planName: '',
-      startDate: null,
-      status: 'inactive', // 'active', 'paused', 'expired', 'cancelled'
-      mealsCount: 0,
-      consumedMeals: 0,
-      deliveryAddress: '', // Selected delivery address
-      deliveryTime: '12:00', // Preferred delivery time (24h format)
-      autoRenewal: false,
-      deliveryPaused: false,
-      pausedAt: null, // When plan was paused
-      resumedAt: null, // When plan was resumed
-      nextMealDate: null, // Next scheduled meal delivery
-      mealSchedule: '{}', // JSON string for meal scheduling data
-    },
-    // Default notification preferences
-    notificationPreferences: {
-      email: true,
-      sms: false,
-      push: true,
-      mealReminders: true,
-      deliveryUpdates: true,
-      planUpdates: true,
-    },
-    // Default health profile
-    healthProfile: {
-      fitnessGoal: '',
-      height: null,
-      weight: null,
-      dietaryPreferences: [],
-      allergies: [],
-      activityLevel: '',
-    },
+    age: null,
+    gender: null,
+    email_verified: false,
+    phone_verified: false,
+    account_status: 'active',
+    timezone: 'Asia/Riyadh'
   }
 
-  // Helper function to serialize Firestore data
-  static serialize(doc) {
-    if (!doc.exists) return null
-    const data = doc.data()
-
-    // Handle Firestore timestamps
-    const createdAt = data.createdAt?.toDate?.().toISOString() || data.createdAt
-    const updatedAt = data.updatedAt?.toDate?.().toISOString() || data.updatedAt
-    const lastLogin = data.lastLogin?.toDate?.().toISOString() || data.lastLogin
-
-    // Build user object with correct types
-    const result = {
-      id: doc.id,
-      uid: doc.id,
-      email: data.email || '',
-      displayName: data.displayName || '',
-      firstName: data.firstName || '',
-      lastName: data.lastName || '',
-      phoneNumber: data.phoneNumber || '',
-      photoURL: data.photoURL || '',
-      isAdmin: Boolean(data.isAdmin || this.defaultValues.isAdmin),
-      addresses: Array.isArray(data.addresses) ? data.addresses : this.defaultValues.addresses,
-      defaultAddress: data.defaultAddress || this.defaultValues.defaultAddress,
-      favoriteItems: Array.isArray(data.favoriteItems)
-        ? data.favoriteItems
-        : this.defaultValues.favoriteItems,
-      favoriteMeals: Array.isArray(data.favoriteMeals)
-        ? data.favoriteMeals
-        : this.defaultValues.favoriteMeals,
-      paymentMethods: Array.isArray(data.paymentMethods)
-        ? data.paymentMethods
-        : this.defaultValues.paymentMethods,
-      defaultPaymentMethod: data.defaultPaymentMethod || this.defaultValues.defaultPaymentMethod,
-      loyaltyPoints: Number(data.loyaltyPoints) || this.defaultValues.loyaltyPoints,
-      notes: data.notes || this.defaultValues.notes,
-      language: data.language || this.defaultValues.language,
-      age: data.age || this.defaultValues.age,
-      gender: data.gender || this.defaultValues.gender,
-      createdAt,
-      updatedAt,
-      lastLogin,
+  static serialize(userData, authData = null) {
+    if (!userData) {
+      console.warn('Serialization called with null/undefined userData');
+      return null;
     }
-
-    // Process subscription with enhanced fields
-    result.subscription = this._processSubscription(data.subscription)
-
-    // Process health profile
-    result.healthProfile = this._processHealthProfile(data.healthProfile)
-
-    // Process enhanced notification preferences
-    result.notificationPreferences = this._processNotificationPreferences(
-      data.notificationPreferences,
-    )
-
-    return result
-  }
-
-  static _processSubscription(subscriptionData) {
-    const defaults = this.defaultValues.subscription
-
-    if (!subscriptionData) return { ...defaults }
+    if(userData.id && userData.id != undefined) {
+      console.log(`Serializing user data for ID: ${userData.id}`);
+    } else {
+      console.warn('User data does not have a valid ID for serialization');
+    }
+    // Merge auth data if provided
+    const email = authData?.email || userData.email || '';
+    const emailVerified = authData?.email_confirmed_at ? true : (userData.email_verified || false);
 
     return {
-      price: Number(subscriptionData.price) || defaults.price,
-      endDate: subscriptionData.endDate || defaults.endDate,
-      paymentMethod: String(subscriptionData.paymentMethod || defaults.paymentMethod),
-      planId: String(subscriptionData.planId || defaults.planId),
-      planName: String(subscriptionData.planName || defaults.planName),
-      startDate: subscriptionData.startDate || defaults.startDate,
-      status: String(subscriptionData.status || defaults.status),
-      mealsCount: Number(subscriptionData.mealsCount) || defaults.mealsCount,
-      consumedMeals: Number(subscriptionData.consumedMeals) || defaults.consumedMeals,
-      // Enhanced subscription fields
-      deliveryAddress: String(subscriptionData.deliveryAddress || defaults.deliveryAddress),
-      deliveryTime: String(subscriptionData.deliveryTime || defaults.deliveryTime),
-      autoRenewal: Boolean(subscriptionData.autoRenewal ?? defaults.autoRenewal),
-      deliveryPaused: Boolean(subscriptionData.deliveryPaused ?? defaults.deliveryPaused),
-      pausedAt: subscriptionData.pausedAt || defaults.pausedAt,
-      resumedAt: subscriptionData.resumedAt || defaults.resumedAt,
-      nextMealDate: subscriptionData.nextMealDate || defaults.nextMealDate,
-      mealSchedule: String(subscriptionData.mealSchedule || defaults.mealSchedule),
+      id: userData.id,
+      email: email,
+      displayName: userData.display_name || '',
+      firstName: userData.first_name || '',
+      lastName: userData.last_name || '',
+      phoneNumber: userData.phone_number || '',
+      avatarUrl: userData.avatar_url || '',
+      isAdmin: Boolean(userData.is_admin),
+      loyaltyPoints: Number(userData.loyalty_points) || 0,
+      notes: userData.notes || '',
+      language: userData.language || 'en',
+      age: userData.age,
+      gender: userData.gender,
+      emailVerified: emailVerified,
+      phoneVerified: userData.phone_verified || false,
+      accountStatus: userData.account_status || 'active',
+      timezone: userData.timezone || 'Asia/Riyadh',
+      createdAt: userData.created_at,
+      updatedAt: userData.updated_at,
+      lastLogin: userData.last_login,
+      // Related data
+      addresses: userData.user_addresses || [],
+      paymentMethods: userData.user_payment_methods || [],
+      healthProfile: (userData.user_health_profiles && userData.user_health_profiles.length) 
+        ? userData.user_health_profiles[0] 
+        : null,
+      subscriptions: userData.user_subscriptions || [],
     }
   }
 
-  static _processHealthProfile(profileData) {
-    const defaults = this.defaultValues.healthProfile
-
-    if (!profileData) return { ...defaults }
-
-    return {
-      fitnessGoal: String(profileData.fitnessGoal || defaults.fitnessGoal),
-      height: Number(profileData.height) || defaults.height,
-      weight: Number(profileData.weight) || defaults.weight,
-      dietaryPreferences: Array.isArray(profileData.dietaryPreferences)
-        ? profileData.dietaryPreferences
-        : defaults.dietaryPreferences,
-      allergies: Array.isArray(profileData.allergies) ? profileData.allergies : defaults.allergies,
-      activityLevel: String(profileData.activityLevel || defaults.activityLevel),
-    }
-  }
-
-  static _processNotificationPreferences(notificationData) {
-    const defaults = this.defaultValues.notificationPreferences
-
-    if (!notificationData) return { ...defaults }
-
-    return {
-      email: Boolean(notificationData.email ?? defaults.email),
-      sms: Boolean(notificationData.sms ?? defaults.sms),
-      push: Boolean(notificationData.push ?? defaults.push),
-      mealReminders: Boolean(notificationData.mealReminders ?? defaults.mealReminders),
-      deliveryUpdates: Boolean(notificationData.deliveryUpdates ?? defaults.deliveryUpdates),
-      planUpdates: Boolean(notificationData.planUpdates ?? defaults.planUpdates),
-    }
-  }
-
-  static _processFieldsByType(data, parentField = null) {
-    const processedData = {}
-    const fieldTypesToUse = parentField ? this.fieldTypes[parentField] : this.fieldTypes
-
-    // Process string fields
-    fieldTypesToUse.string?.forEach((field) => {
-      if (data[field] !== undefined) {
-        processedData[field] = String(data[field])
-      }
-    })
-
-    // Process array fields
-    fieldTypesToUse.array?.forEach((field) => {
-      if (data[field] !== undefined) {
-        processedData[field] = Array.isArray(data[field]) ? data[field] : []
-      }
-    })
-
-    // Process boolean fields
-    fieldTypesToUse.boolean?.forEach((field) => {
-      if (data[field] !== undefined) {
-        processedData[field] = Boolean(data[field])
-      }
-    })
-
-    // Process number fields
-    fieldTypesToUse.number?.forEach((field) => {
-      if (data[field] !== undefined) {
-        processedData[field] = Number(data[field]) || 0
-      }
-    })
-
-    return processedData
-  }
-
-  // Enhanced subscription management methods
-  static async updateSubscriptionStatus(uid, status, additionalData = {}) {
+  // Get user from auth and create/update profile as needed
+  static async createFromAuth(uid, authUserData) {
     try {
-      const updateData = {
-        'subscription.status': status,
-        'subscription.updatedAt': new Date().toISOString(),
-        ...additionalData,
+      console.log(`Creating/updating user profile for auth UID: ${uid}`);
+      
+      // First, check if profile already exists
+      const existingProfile = await this.getById(uid);
+      if (existingProfile) {
+        console.log(`Profile already exists for UID: ${uid}`);
+        // Update last_login
+        await this.updateLastLogin(uid);
+        return this.serialize(existingProfile, authUserData);
       }
 
-      if (status === 'paused') {
-        updateData['subscription.pausedAt'] = new Date().toISOString()
-        updateData['subscription.deliveryPaused'] = true
-      } else if (status === 'active') {
-        updateData['subscription.resumedAt'] = new Date().toISOString()
-        updateData['subscription.deliveryPaused'] = false
-      }
-
-      await this.collection.doc(uid).update(updateData)
-      return await this.getById(uid)
-    } catch (error) {
-      console.error('Error updating subscription status:', error)
-      throw error
-    }
-  }
-
-  static async updateDeliverySettings(uid, deliveryAddress, deliveryTime) {
-    try {
-      const updateData = {
-        'subscription.deliveryAddress': deliveryAddress,
-        'subscription.deliveryTime': deliveryTime,
-        updatedAt: new Date().toISOString(),
-      }
-
-      await this.collection.doc(uid).update(updateData)
-      return await this.getById(uid)
-    } catch (error) {
-      console.error('Error updating delivery settings:', error)
-      throw error
-    }
-  }
-
-  static async incrementConsumedMeals(uid, increment = 1) {
-    try {
-      const userDoc = await this.getById(uid)
-      if (!userDoc) throw new Error('User not found')
-
-      const newConsumedMeals = (userDoc.subscription.consumedMeals || 0) + increment
-      const updateData = {
-        'subscription.consumedMeals': newConsumedMeals,
-        updatedAt: new Date().toISOString(),
-      }
-
-      // Check if plan should be completed
-      if (newConsumedMeals >= userDoc.subscription.mealsCount) {
-        updateData['subscription.status'] = 'completed'
-        updateData['subscription.completedAt'] = new Date().toISOString()
-      }
-
-      await this.collection.doc(uid).update(updateData)
-      return await this.getById(uid)
-    } catch (error) {
-      console.error('Error incrementing consumed meals:', error)
-      throw error
-    }
-  }
-
-  static async scheduleNextMeal(uid, nextMealDate, mealScheduleData = {}) {
-    try {
-      const updateData = {
-        'subscription.nextMealDate': nextMealDate,
-        'subscription.mealSchedule': JSON.stringify(mealScheduleData),
-        updatedAt: new Date().toISOString(),
-      }
-
-      await this.collection.doc(uid).update(updateData)
-      return await this.getById(uid)
-    } catch (error) {
-      console.error('Error scheduling next meal:', error)
-      throw error
-    }
-  }
-
-  // Existing methods remain the same...
-  static async create(uid, userData) {
-    try {
-      const defaultUserData = {
+      // Create new profile from auth data
+      const newUserData = {
+        id: uid,
         ...this.defaultValues,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        lastLogin: new Date(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        last_login: new Date().toISOString(),
+      };
+      //Debug console
+      console.log('New user data before auth extraction:', newUserData);
+      // Extract data from auth user metadata
+      if (authUserData) {
+        if (authUserData.user_metadata?.full_name) {
+          newUserData.display_name = authUserData.user_metadata.full_name;
+        } else if (authUserData.email) {
+          newUserData.display_name = authUserData.email.split('@')[0];
+        }
+
+        if (authUserData.user_metadata?.given_name) {
+          newUserData.first_name = authUserData.user_metadata.given_name;
+        }
+        if (authUserData.user_metadata?.family_name) {
+          newUserData.last_name = authUserData.user_metadata.family_name;
+        }
+        if (authUserData.user_metadata?.avatar_url) {
+          newUserData.avatar_url = authUserData.user_metadata.avatar_url;
+        }
+        if (authUserData.phone) {
+          newUserData.phone_number = authUserData.phone;
+        }
+
+        // Set email verification status based on auth
+        newUserData.email_verified = Boolean(authUserData.email_confirmed_at);
       }
 
-      const newUserData = { ...defaultUserData, ...userData }
-      await this.collection.doc(uid).set(newUserData)
-      return await this.getById(uid)
+      console.log('Creating new user profile with data:', {
+        id: newUserData.id,
+        display_name: newUserData.display_name,
+        email_verified: newUserData.email_verified
+      });
+
+      const { data, error } = await supabaseAdmin
+        .from(this.tableName)
+        .insert(newUserData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase error creating user profile:', error);
+        throw error;
+      }
+
+      console.log('User profile created successfully:', data.id);
+      return this.serialize(data, authUserData);
     } catch (error) {
-      console.error('Error creating user:', error)
-      throw error
+      console.error('Error creating user from auth:', error);
+      throw error;
     }
   }
 
-  static async update(uid, updateData) {
+  // Enhanced getById with auth data correlation
+  static async getById(id, includeAuthData = true) {
     try {
-      const { email, emailVerified, ...safeUpdateData } = updateData
-      let processedData = this._processFieldsByType(safeUpdateData)
+      console.log(`Fetching user profile for ID: ${id}`);
+      
+      const { data: profileData, error: profileError } = await supabaseAdmin
+        .from(this.tableName)
+        .select(`
+          *,
+          user_addresses(*),
+          user_payment_methods(*),
+          user_health_profiles(*),
+          user_subscriptions(*)
+        `)
+        .eq('id', id)
+        .maybeSingle();
 
-      // Handle health profile updates
-      if (safeUpdateData.healthProfile) {
-        processedData.healthProfile = this._processFieldsByType(
-          safeUpdateData.healthProfile,
-          'healthProfile',
-        )
+      if (profileError) {
+        console.error(`Supabase error fetching user profile ${id}:`, profileError);
+        return null;
+      }
+      
+      if (!profileData) {
+        console.log(`No user profile found for ID: ${id}`);
+        return null;
       }
 
-      // Handle subscription updates
-      if (safeUpdateData.subscription) {
-        processedData.subscription = this._processFieldsByType(
-          safeUpdateData.subscription,
-          'subscription',
-        )
-      }
-
-      // Handle notification preferences
-      if (safeUpdateData.notificationPreferences) {
-        processedData.notificationPreferences = {
-          email: Boolean(safeUpdateData.notificationPreferences.email ?? true),
-          sms: Boolean(safeUpdateData.notificationPreferences.sms ?? false),
-          push: Boolean(safeUpdateData.notificationPreferences.push ?? true),
+      // Optionally fetch auth data for correlation
+      let authData = null;
+      if (includeAuthData) {
+        try {
+          const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(id);
+          if (!authError && authUser?.user) {
+            authData = authUser.user;
+          }
+        } catch (authError) {
+          console.warn(`Could not fetch auth data for user ${id}:`, authError.message);
         }
       }
-
-      processedData.updatedAt = new Date().toISOString()
-
-      await this.collection.doc(uid).update(processedData)
-      return await this.getById(uid)
+      
+      console.log(`Successfully fetched user ${id}`);
+      return { ...profileData, authData };
     } catch (error) {
-      console.error('Error updating user:', error)
-      throw error
+      console.error(`Error fetching user ${id}:`, error);
+      return null;
     }
   }
 
-  static async getAll() {
-    const snapshot = await this.collection.get()
-    return snapshot.docs.map(this.serialize)
-  }
-
-  static async getById(uid) {
+  // Get current user with automatic profile creation/sync
+  static async getCurrentUser() {
     try {
-      const doc = await this.collection.doc(uid).get()
-      return this.serialize(doc)
+      console.log('Getting current user from auth session');
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        console.error('Auth error:', authError);
+        return null;
+      }
+
+      if (!authUser) {
+        console.log('No authenticated user found');
+        return null;
+      }
+      
+      console.log(`Found authenticated user: ${authUser.id}`);
+      
+      // Get or create profile
+      let userProfile = await this.getById(authUser.id, false);
+      if (!userProfile) {
+        console.log('User profile not found, creating from auth data...');
+        return await this.createFromAuth(authUser.id, authUser);
+      }
+      
+      // Update last login
+      await this.updateLastLogin(authUser.id);
+      
+      return this.serialize(userProfile, authUser);
     } catch (error) {
-      console.error('Error fetching user:', error)
-      throw error
+      console.error('Error fetching current user:', error);
+      return null;
     }
   }
 
-  static async getByEmail(email) {
+  // Update user profile (optimized to avoid auth fields)
+  static async update(id, updateData) {
     try {
-      const snapshot = await this.collection.where('email', '==', email).limit(1).get()
-      return snapshot.empty ? null : this.serialize(snapshot.docs[0])
+      console.log(`Updating user ${id} with data:`, updateData);
+      
+      const processedData = {
+        display_name: updateData.displayName || updateData.display_name,
+        first_name: updateData.firstName || updateData.first_name,
+        last_name: updateData.lastName || updateData.last_name,
+        phone_number: updateData.phoneNumber || updateData.phone_number,
+        avatar_url: updateData.avatarUrl || updateData.avatar_url,
+        is_admin: updateData.isAdmin !== undefined ? updateData.isAdmin : updateData.is_admin,
+        loyalty_points: updateData.loyaltyPoints || updateData.loyalty_points,
+        notes: updateData.notes,
+        language: updateData.language,
+        age: updateData.age,
+        gender: updateData.gender,
+        phone_verified: updateData.phoneVerified || updateData.phone_verified,
+        account_status: updateData.accountStatus || updateData.account_status,
+        timezone: updateData.timezone,
+        updated_at: new Date().toISOString()
+      };
+
+      // Remove undefined values
+      Object.keys(processedData).forEach(key => {
+        if (processedData[key] === undefined) {
+          delete processedData[key];
+        }
+      });
+
+      console.log('Processed update data:', processedData);
+
+      const { data, error } = await supabaseAdmin
+        .from(this.tableName)
+        .update(processedData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error(`Supabase error updating user ${id}:`, error);
+        throw error;
+      }
+      
+      console.log(`User ${id} updated successfully`);
+      
+      // Get auth data for complete serialization
+      const userWithAuth = await this.getById(id, true);
+      return this.serialize(userWithAuth, userWithAuth?.authData);
     } catch (error) {
-      console.error('Error fetching user by email:', error)
-      throw error
+      console.error(`Error updating user ${id}:`, error);
+      throw error;
     }
   }
 
-  static async getAdmins() {
+  // Update last login timestamp
+  static async updateLastLogin(id) {
     try {
-      const snapshot = await this.collection.where('isAdmin', '==', true).get()
-      return snapshot.docs.map(this.serialize)
+      const { error } = await supabaseAdmin
+        .from(this.tableName)
+        .update({ 
+          last_login: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) {
+        console.error(`Error updating last login for user ${id}:`, error);
+      }
     } catch (error) {
-      console.error('Error fetching admin users:', error)
-      throw error
+      console.error(`Error updating last login for user ${id}:`, error);
     }
   }
 
-  static async delete(uid) {
+  // Get all users with pagination and search (admin only)
+  static async getAll(options = {}) {
     try {
-      await this.collection.doc(uid).delete()
-      return true
+      const { 
+        page = 1, 
+        limit = 20, 
+        search = '', 
+        includeAuthData = false,
+        orderBy = 'created_at',
+        orderDirection = 'desc'
+      } = options;
+      
+      console.log('Fetching all users with options:', options);
+      
+      const offset = (page - 1) * limit;
+
+      let query = supabaseAdmin
+        .from(this.tableName)
+        .select('*', { count: 'exact' })
+        .order(orderBy, { ascending: orderDirection === 'asc' })
+        .range(offset, offset + limit - 1);
+
+      // Add search functionality
+      if (search) {
+        query = query.or(`display_name.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%,phone_number.ilike.%${search}%`);
+      }
+
+      const { data: users, error, count } = await query;
+
+      if (error) {
+        console.error('Error fetching all users:', error);
+        throw error;
+      }
+
+      let serializedUsers = users.map(user => this.serialize(user));
+
+      // Optionally include auth data (expensive operation)
+      if (includeAuthData && users.length > 0) {
+        console.log('Fetching auth data for users...');
+        try {
+          const authPromises = users.map(async (user) => {
+            try {
+              const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(user.id);
+              return { userId: user.id, authData: authUser?.user };
+            } catch (error) {
+              console.warn(`Could not fetch auth data for user ${user.id}`);
+              return { userId: user.id, authData: null };
+            }
+          });
+
+          const authResults = await Promise.allSettled(authPromises);
+          const authDataMap = {};
+          
+          authResults.forEach((result, index) => {
+            if (result.status === 'fulfilled' && result.value) {
+              authDataMap[result.value.userId] = result.value.authData;
+            }
+          });
+
+          // Re-serialize with auth data
+          serializedUsers = users.map(user => 
+            this.serialize(user, authDataMap[user.id])
+          );
+        } catch (error) {
+          console.warn('Error fetching auth data for users:', error);
+        }
+      }
+      
+      console.log(`Fetched ${users.length} users`);
+      return {
+        users: serializedUsers,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: count || 0,
+          totalPages: Math.ceil((count || 0) / limit)
+        }
+      };
     } catch (error) {
-      console.error('Error deleting user:', error)
-      throw error
+      console.error('Error fetching users:', error);
+      throw error;
+    }
+  }
+
+  // Ensure user profile exists (creates if missing)
+  static async ensureProfile(userId, userData = {}) {
+    try {
+      let userProfile = await this.getById(userId, false);
+      
+      if (!userProfile) {
+        console.log(`Creating missing profile for user: ${userId}`);
+        
+        // Try to get auth data to populate profile
+        let authData = null;
+        try {
+          const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+          authData = authUser?.user;
+        } catch (error) {
+          console.warn(`Could not fetch auth data for user ${userId}:`, error.message);
+        }
+
+        userProfile = await this.createFromAuth(userId, authData);
+      }
+      
+      return this.serialize(userProfile, userProfile?.authData);
+    } catch (error) {
+      console.error(`Error ensuring profile for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  // Sync profile with auth data
+  static async syncWithAuth(userId) {
+    try {
+      console.log(`Syncing profile with auth data for user: ${userId}`);
+      
+      const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
+      
+      if (authError || !authUser?.user) {
+        console.error(`Could not fetch auth data for user ${userId}:`, authError);
+        return null;
+      }
+
+      const profile = await this.getById(userId, false);
+      if (!profile) {
+        return await this.createFromAuth(userId, authUser.user);
+      }
+
+      // Update profile with auth data
+      const updateData = {
+        email_verified: Boolean(authUser.user.email_confirmed_at),
+        updated_at: new Date().toISOString()
+      };
+
+      // Update metadata if available
+      if (authUser.user.user_metadata?.avatar_url && !profile.avatar_url) {
+        updateData.avatar_url = authUser.user.user_metadata.avatar_url;
+      }
+
+      if (authUser.user.phone && !profile.phone_number) {
+        updateData.phone_number = authUser.user.phone;
+      }
+
+      const { data, error } = await supabaseAdmin
+        .from(this.tableName)
+        .update(updateData)
+        .eq('id', userId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error(`Error syncing profile for user ${userId}:`, error);
+        throw error;
+      }
+
+      return this.serialize(data, authUser.user);
+    } catch (error) {
+      console.error(`Error syncing user ${userId} with auth:`, error);
+      throw error;
+    }
+  }
+
+  // Helper method to check if user exists in auth
+  static async existsInAuth(userId) {
+    try {
+      const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId);
+      return !error && data?.user;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  // Delete user profile (does not delete auth user)
+  static async deleteProfile(userId) {
+    try {
+      console.log(`Deleting user profile for: ${userId}`);
+      
+      const { error } = await supabaseAdmin
+        .from(this.tableName)
+        .delete()
+        .eq('id', userId);
+
+      if (error) {
+        console.error(`Error deleting user profile ${userId}:`, error);
+        throw error;
+      }
+
+      console.log(`User profile ${userId} deleted successfully`);
+      return true;
+    } catch (error) {
+      console.error(`Error deleting user profile ${userId}:`, error);
+      throw error;
     }
   }
 }

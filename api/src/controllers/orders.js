@@ -7,27 +7,24 @@ export const createOrder = async (req, res) => {
   try {
     const orderData = {
       userId: req.user.uid,
-      items: req.body.items,
-      total: req.body.total,
-      deliveryAddress: req.body.deliveryAddress,
-    }
+      ...req.body
+    };
 
-    const newOrder = await Order.create(orderData)
-    res.status(201).json(newOrder)
+    const newOrder = await Order.create(orderData);
+    res.status(201).json(newOrder);
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
 }
 
 export const getUserOrders = async (req, res) => {
   try {
-    const orders = await Order.getByUser(req.user.uid)
-    res.json(orders)
+    const orders = await Order.getByUser(req.user.uid);
+    res.json(orders);
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
 }
-
 export const deleteOrder = async (req, res) => {
   try {
     const orderId = req.params.id
@@ -45,10 +42,15 @@ export const deleteOrder = async (req, res) => {
 
 export const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.getAll()
-    res.json(orders)
+    // Add admin check
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    
+    const orders = await Order.getAll();
+    res.json(orders);
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
 }
 

@@ -18,9 +18,6 @@ const HomePage = () => {
   //   }
   // ];
   const {
-    //items,
-    //meals,
-    //plans,
     featuredMeals,
     offersMeals,
     //elementsLoading

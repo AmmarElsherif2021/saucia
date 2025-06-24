@@ -14,9 +14,9 @@ const router = express.Router()
 // Routes for items
 router.post('/', authenticate, requireAdmin, createItem) // Create a new item
 router.get('/', getAllItems) // Get all items
-router.get('/:id', getItemById) // Get an item by ID
-router.get('/section/:section', getItemsBySection) // Get items by section
-router.put('/:id', authenticate, requireAdmin, updateItem)
-router.delete('/:id', authenticate, requireAdmin, deleteItem) // Delete an item by ID
+router.get('/section/:section', getItemsBySection) // Changed from :sectionName to :section
+router.get('/:id', getItemById) // Changed from :itemId to :id
+router.put('/:id', authenticate, requireAdmin, updateItem) // Changed from :itemId to :id
+router.delete('/:id', authenticate, requireAdmin, deleteItem) // Changed from :itemId to :id
 
 export default router

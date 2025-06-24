@@ -4,57 +4,42 @@ import { fetchWithAuth } from './fetchWithAuth'
 
 export const listItems = async (queryParams = {}) => {
   const searchParams = new URLSearchParams(queryParams)
-  const url = `${import.meta.env.VITE_BASE_URL}/items?${searchParams}`
+  const url = `${import.meta.env.VITE_API_BASE_URL}/items?${searchParams}`
   const response = await fetch(url)
   return await response.json() // Add JSON parsing
 }
 
 export const getItemById = async (itemId) => {
-  const url = `${import.meta.env.VITE_BASE_URL}/items/${itemId}`
+  const url = `${import.meta.env.VITE_API_BASE_URL}/items/${itemId}`
   const response = await fetch(url)
   return await response.json() // Add JSON parsing
 }
 
 export const getItemsBySection = async (section) => {
-  const url = `${import.meta.env.VITE_BASE_URL}/items/section/${section}`
+  const url = `${import.meta.env.VITE_API_BASE_URL}/items/section/${section}`
   const response = await fetch(url)
   return await response.json()
 }
 
 // Create a new item
-export const createItem = async (token, itemData) => {
-  const url = `${import.meta.env.VITE_BASE_URL}/items`
-  return await fetchWithAuth(
-    url,
-    {
-      method: 'POST',
-      body: JSON.stringify(itemData),
-    },
-    token,
-  )
+export const createItem = async (itemData) => {
+  return await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/items`, {
+    method: 'POST',
+    body: JSON.stringify(itemData),
+  })
 }
 
 // Update an item by ID
-export const updateItem = async (token, itemId, updates) => {
-  const url = `${import.meta.env.VITE_BASE_URL}/items/${itemId}`
-  return await fetchWithAuth(
-    url,
-    {
-      method: 'PUT',
-      body: JSON.stringify(updates),
-    },
-    token,
-  )
+export const updateItem = async (itemId, updates) => {
+  return await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/items/${itemId}`, {
+    method: 'PUT',
+    body: JSON.stringify(updates),
+  })
 }
 
 // Delete an item by ID
-export const deleteItem = async (token, itemId) => {
-  const url = `${import.meta.env.VITE_BASE_URL}/items/${itemId}`
-  return await fetchWithAuth(
-    url,
-    {
-      method: 'DELETE',
-    },
-    token,
-  )
+export const deleteItem = async (itemId) => {
+  return await fetchWithAuth(`${import.meta.env.VITE_API_BASE_URL}/items/${itemId}`, {
+    method: 'DELETE',
+  })
 }

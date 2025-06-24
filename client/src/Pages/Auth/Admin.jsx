@@ -25,7 +25,8 @@ import { listItems, createItem, updateItem, deleteItem } from '../../API/items'
 import { getMeals, createMeal, updateMeal, deleteMeal } from '../../API/meals'
 import { listPlans, createPlan, updatePlan, deletePlan } from '../../API/plans'
 import { getAllOrders } from '../../API/orders'
-import { auth } from '../../../firebaseConfig.jsx'
+// import { auth } from '../../../firebaseConfig.jsx'
+import { useAuth } from '../../Hooks/useAuth'
 import {
   StatCard,
   LoadingSpinner,
@@ -123,6 +124,7 @@ const initialState = {
 
 // MAIN COMPONENT
 const Admin = () => {
+  const {user}= useAuth()
   const [state, dispatch] = useReducer(adminReducer, initialState)
   const { dashboardData, users, items, meals, plans, orders, loading, error } = state
   // Responsive table display
@@ -155,7 +157,7 @@ const Admin = () => {
   const fetchAdminData = async () => {
     dispatch({ type: 'FETCH_START' })
     try {
-      const token = auth.currentUser ? await auth.currentUser.getIdToken() : null
+      const token = user ? await user.getIdToken() : null
       const [dashboardData, users, items, meals, plans, orders] = await Promise.all([
         getAdminDashboard(),
         getAllUsers(),
@@ -186,7 +188,7 @@ const Admin = () => {
   // Item handlers
   const handleAddItem = async (itemData) => {
     try {
-      const token = auth.currentUser ? await auth.currentUser.getIdToken() : null
+      const token = user ? await user.getIdToken() : null
       const newItem = await createItem(token, itemData)
       dispatch({ type: 'ADD_ITEM', payload: newItem })
       itemModals.add.onClose()
@@ -197,7 +199,7 @@ const Admin = () => {
 
   const handleEditItem = async (itemId, updatedData) => {
     try {
-      const token = auth.currentUser ? await auth.currentUser.getIdToken() : null
+      const token = user ? await user.getIdToken() : null
       const updatedItem = await updateItem(token, itemId, updatedData)
       dispatch({ type: 'EDIT_ITEM', payload: updatedItem })
       itemModals.edit.onClose()
@@ -208,7 +210,7 @@ const Admin = () => {
 
   const handleDeleteItem = async (itemId) => {
     try {
-      const token = auth.currentUser ? await auth.currentUser.getIdToken() : null
+      const token = user ? await user.getIdToken() : null
       await deleteItem(token, itemId)
       dispatch({ type: 'DELETE_ITEM', payload: itemId })
       itemModals.delete.onClose()
@@ -220,8 +222,9 @@ const Admin = () => {
   // Meal handlers
   const handleAddMeal = async (mealData) => {
     try {
-      const token = auth.currentUser ? await auth.currentUser.getIdToken() : null
-      const newMeal = await createMeal(token, mealData)
+      //const token =await user.getIdToken() || null
+      //const newMeal = token=== null? await createMeal(mealData): await createMeal(token, mealData)
+      const newMeal = await createMeal(mealData)
       dispatch({ type: 'ADD_MEAL', payload: newMeal })
       mealModals.add.onClose()
     } catch (error) {
@@ -231,7 +234,7 @@ const Admin = () => {
 
   const handleEditMeal = async (mealId, updatedData) => {
     try {
-      const token = auth.currentUser ? await auth.currentUser.getIdToken() : null
+      const token = user ? await user.getIdToken() : null
       const updatedMeal = await updateMeal(token, mealId, updatedData)
       dispatch({ type: 'EDIT_MEAL', payload: updatedMeal })
       mealModals.edit.onClose()
@@ -242,7 +245,7 @@ const Admin = () => {
 
   const handleDeleteMeal = async (mealId) => {
     try {
-      const token = auth.currentUser ? await auth.currentUser.getIdToken() : null
+      const token = user ? await user.getIdToken() : null
       await deleteMeal(token, mealId)
       dispatch({ type: 'DELETE_MEAL', payload: mealId })
       mealModals.delete.onClose()
@@ -254,7 +257,7 @@ const Admin = () => {
   // Plan handlers
   const handleAddPlan = async (planData) => {
     try {
-      const token = auth.currentUser ? await auth.currentUser.getIdToken() : null
+      const token = user ? await user.getIdToken() : null
       const newPlan = await createPlan(token, planData)
       dispatch({ type: 'ADD_PLAN', payload: newPlan })
       planModals.add.onClose()
@@ -265,7 +268,7 @@ const Admin = () => {
 
   const handleEditPlan = async (planId, updatedData) => {
     try {
-      const token = auth.currentUser ? await auth.currentUser.getIdToken() : null
+      const token = user ? await user.getIdToken() : null
       const updatedPlan = await updatePlan(token, planId, updatedData)
       dispatch({ type: 'EDIT_PLAN', payload: updatedPlan })
       planModals.edit.onClose()
@@ -276,7 +279,7 @@ const Admin = () => {
 
   const handleDeletePlan = async (planId) => {
     try {
-      const token = auth.currentUser ? await auth.currentUser.getIdToken() : null
+      const token = user ? await user.getIdToken() : null
       await deletePlan(token, planId)
       dispatch({ type: 'DELETE_PLAN', payload: planId })
       planModals.delete.onClose()
@@ -352,7 +355,7 @@ const Admin = () => {
     reader.onload = async (e) => {
       try {
         const items = JSON.parse(e.target.result)
-        const token = auth.currentUser ? await auth.currentUser.getIdToken() : null
+        const token = user ? await user.getIdToken() : null
         for (const itemData of items) {
           const newItem = await createItem(token, itemData)
           dispatch({ type: 'ADD_ITEM', payload: newItem })
@@ -364,7 +367,25 @@ const Admin = () => {
     }
     reader.readAsText(file)
   }
-
+  //Handle export items json files
+  const handleExportItems = async () => {
+    try {
+      //const token = user ? await user.getIdToken() : null
+      const items = await listItems()
+      const dataStr = JSON.stringify(items || [])
+      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
+      const exportFileDefaultName = 'items.json'
+      const linkElement = document.createElement('a')
+      linkElement.setAttribute('href', dataUri)
+      linkElement.setAttribute('download', exportFileDefaultName)
+      document.body.appendChild(linkElement)
+      linkElement.click()
+      document.body.removeChild(linkElement)
+    } catch (error) {
+      window.alert('Failed to export items: ' + error.message)
+    }
+  }
+  // Handle import meals from JSON
   const handleImportMeals = async (event) => {
     const file = event.target.files[0]
     if (!file) return
@@ -373,7 +394,7 @@ const Admin = () => {
     reader.onload = async (e) => {
       try {
         const meals = JSON.parse(e.target.result)
-        const token = auth.currentUser ? await auth.currentUser.getIdToken() : null
+        const token = user ? await user.getIdToken() : null
         for (const mealData of meals) {
           const newMeal = await createMeal(token, mealData)
           dispatch({ type: 'ADD_MEAL', payload: newMeal })
@@ -388,6 +409,43 @@ const Admin = () => {
   if (loading) return <LoadingSpinner />
   if (error) return <ErrorAlert message={error} retry={fetchAdminData} />
 
+  //Handle export meals json files
+  const handleExportMeals = async () => {
+    try {
+      //const token = user ? await user.getIdToken() : null
+      const meals = await getMeals()
+      const dataStr = JSON.stringify(meals || [])
+      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
+      const exportFileDefaultName = 'meals.json'
+      const linkElement = document.createElement('a')
+      linkElement.setAttribute('href', dataUri)
+      linkElement.setAttribute('download', exportFileDefaultName)
+      document.body.appendChild(linkElement)
+      linkElement.click()
+      document.body.removeChild(linkElement)
+    } catch (error) {
+      window.alert('Failed to export meals: ' + error.message)
+    }
+  }
+  //Handle export plans json files
+    //Handle export items json files
+    const handleExportPlans = async () => {
+      try {
+        //const token = user ? await user.getIdToken() : null
+        const plans = await listPlans()
+        const dataStr = JSON.stringify(plans || [])
+        const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
+        const exportFileDefaultName = 'plans.json'
+        const linkElement = document.createElement('a')
+        linkElement.setAttribute('href', dataUri)
+        linkElement.setAttribute('download', exportFileDefaultName)
+        document.body.appendChild(linkElement)
+        linkElement.click()
+        document.body.removeChild(linkElement)
+      } catch (error) {
+        window.alert('Failed to export items: ' + error.message)
+      }
+    }
   return (
     <Box
       sx={{
@@ -469,6 +527,9 @@ const Admin = () => {
             Import Items
             <input type="file" hidden accept=".json" onChange={handleImportItems} />
           </Button>
+          <Button as="label" colorScheme="brand" cursor="pointer" onClick={handleExportItems}>
+            Export Items
+          </Button>
         </Flex>
         <ScrollableTableContainer>
           <TableContainer overflow="auto">
@@ -549,6 +610,9 @@ const Admin = () => {
           <Button as="label" colorScheme="brand" cursor="pointer">
             Import Meals
             <input type="file" hidden accept=".json" onChange={handleImportMeals} />
+          </Button>
+          <Button as="label" colorScheme="brand" cursor="pointer" onClick={handleExportMeals}>
+            Export Items
           </Button>
         </Flex>
         <ScrollableTableContainer>
@@ -639,6 +703,9 @@ const Admin = () => {
           buttonText="Create New"
         />
         <SearchInput value={planSearch} onChange={setPlanSearch} />
+        <Button as="label" colorScheme="brand" cursor="pointer" onClick={handleExportPlans}>
+          Export Plans
+        </Button>
         <ScrollableTableContainer>
           <TableContainer overflowX="auto">
             <Table variant="simple" size="sm" style={{ overflowY: 'auto', maxHeight: '70vh' }}>

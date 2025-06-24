@@ -13,7 +13,7 @@ const router = express.Router()
 // Routes for orders
 router.post('/', authenticate, createOrder) // Create a new order
 router.get('/', authenticate, getAllOrders) // Get all orders
-router.get('/:uid', authenticate, getUserOrders) // Get orders for the authenticated user
+router.get('/user', authenticate, getUserOrders)
 router.put('/:id', authenticate, updateOrder) // Update an order by ID
 router.delete('/:id', authenticate, deleteOrder) // Delete an order by ID
 

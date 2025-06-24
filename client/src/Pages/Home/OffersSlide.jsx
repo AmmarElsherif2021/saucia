@@ -1,6 +1,6 @@
 import { Heading, VStack, Text } from '@chakra-ui/react'
 import { ItemsCarousel } from '../../Components/ItemsCarousel'
-import { OfferCard } from '../../Components/Cards'
+import { OfferMealCard } from '../../Components/Cards'
 import { useTranslation } from 'react-i18next'
 //import { useEffect } from "react";
 export const OffersSlide = ({ offersMeals }) => {
@@ -14,7 +14,7 @@ export const OffersSlide = ({ offersMeals }) => {
       </Heading>
 
       {offersMeals?.length > 0 ? (
-        <ItemsCarousel items={offersMeals} CardComponent={OfferCard} visibleCount={3} />
+        <ItemsCarousel items={offersMeals} CardComponent={OfferMealCard} visibleCount={3} />
       ) : (
         <Text>{t('offerSlide.noOffers')}</Text>
       )}

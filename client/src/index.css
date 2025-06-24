@@ -20,9 +20,8 @@
 ::-webkit-scrollbar {
   margin-top: 5px;
   margin-bottom: 5px;
-  margin-left: 5px;
-  margin-right: 5px;
-  padding: 5px;
+  margin-left: 7px;
+  margin-right: 7px;
   width: 10px;
 }
 
@@ -30,16 +29,19 @@
 ::-webkit-scrollbar-track {
   margin-top: 5px;
   margin-bottom: 5px;
-  margin-left: 5px;
-  margin-right: 5px;
+  margin-left: 7px !important;
+  margin-right: 7px;
   background: #f1f1f14e;
   border-radius: 5px;
+  padding-left: 7px !important;
+  padding-right: 7px;
 }
 
 /* Styling the thumb */
 ::-webkit-scrollbar-thumb {
   background: #009e90;
   border-radius: 5px;
+  margin: 5px;
 }
 
 /* On hover */

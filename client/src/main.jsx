@@ -25,7 +25,7 @@ const PremiumPage = React.lazy(() => import('./Pages/Premium/PremiumPage.jsx'))
 const Auth = React.lazy(() => import('./Pages/Auth/Auth.jsx'))
 const Admin = React.lazy(() => import('./Pages/Auth/Admin.jsx'))
 const JoinPlanPage = React.lazy(() => import('./Pages/Premium/JoinPlan/JoinPlanPage.jsx'))
-
+const AuthCallback = React.lazy(() => import('./Pages/Auth/AuthCallback.jsx'))
 const PageLoader = () => (
   <div
     style={{
@@ -93,7 +93,22 @@ const router = createBrowserRouter([
         </Suspense>
       </div>
     ),
-  },
+    children: [
+      {
+        path: 'callback',
+        element: (
+          <div
+            style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
+          >
+            <Suspense fallback={<PageLoader />}>
+              <AuthCallback />
+            </Suspense>
+          </div>
+        ),
+      },
+    ]
+    },
+
   {
     path: '/admin',
     element: (

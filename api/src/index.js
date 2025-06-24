@@ -1,15 +1,16 @@
-/* eslint-disable */
-
-// server/index.js
+// index.js - Clean server setup for Supabase
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import { authenticate } from './middlewares/authMiddleware.js'
+// Import routes
 import userRoutes from './routes/userRoutes.js'
 import adminRoutes from './routes/adminRoute.js'
 import mealRoutes from './routes/mealRoutes.js'
 import planRoutes from './routes/planRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
 import itemRoutes from './routes/itemRoutes.js'
+import authRoutes from './routes/authRoutes.js'
 
 // Load environment variables
 dotenv.config()
@@ -17,100 +18,141 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 3000
 
-// CORS configuration
-app.use(
-  cors({
-    origin:
-      process.env.NODE_ENV === 'production'
-        ? (process.env.ALLOWED_ORIGINS || 'http://localhost:5173').split(',')
-        : '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  }),
-)
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:5173', 
+      'http://localhost:3000',
+      'https://your-production-domain.com'
+    ];
+    
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'x-dev-mode',
+    'X-Dev-Mode'  
+  ],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
 
 // Middleware
-app.use(express.json())
+app.use(express.json({ limit: '10mb' }))
+app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
+// Request logging middleware (development only)
+if (process.env.NODE_ENV === 'development') {
+  app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`)
+    next()
+  })
+}
+//preflight cors requests
+app.options('*', cors(corsOptions));
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'ok', message: 'Server is running' })
+  res.status(200).json({ 
+    status: 'ok', 
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  })
 })
 
-// Routes - Note the /api prefix to match frontend expectations
+// Routes
+app.use('/api/auth', authRoutes)
+app.use('/api/orders', orderRoutes) 
 app.use('/api/users', userRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/meals', mealRoutes)
 app.use('/api/plans', planRoutes)
-app.use('/api/orders', orderRoutes)
 app.use('/api/items', itemRoutes)
 
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack)
-  res.status(500).json({
-    error: 'An unexpected error occurred',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined,
+//Protected routes
+app.use('/api/admin/*', authenticate)
+app.use('/api/users/*', authenticate)
+// Catch-all route for unmatched API paths
+app.all('/api/*', (req, res) => {
+  res.status(404).json({
+    error: 'Not Found',
+    message: `API endpoint ${req.method} ${req.path} not found`,
+    availableEndpoints: [
+      'GET /api/health',
+      'POST /api/users/...',
+      'GET /api/admin/...',
+      'GET /api/meals/...',
+      'GET /api/plans/...',
+      'GET /api/orders/...',
+      'GET /api/items/...'
+    ]
   })
 })
 
-// Start the server
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
-/*
-// Firebase Functions entry point
-import * as functions from 'firebase-functions';
-import express from 'express';
-import cors from 'cors';
-import userRoutes from './routes/userRoutes.js';
-import adminRoutes from './routes/adminRoute.js';
-import mealRoutes from './routes/mealRoutes.js';
-import planRoutes from './routes/planRoutes.js';
-import orderRoutes from './routes/orderRoutes.js';
-import itemRoutes from './routes/itemRoutes.js';
-
-const app = express();
-
-// Environment configuration
-const isProduction = process.env.NODE_ENV === 'production';
-
-// CORS configuration
-const corsOptions = {
-  origin: isProduction 
-    ? functions.config().allowed?.origins?.split(',') 
-    : 'http://localhost:5173', // Match Vite's default port
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true // Required if using cookies/auth
-};
-
-// Handle preflight requests
-app.options('*', cors(corsOptions)); 
-app.use(cors(corsOptions));
-
-// Middleware
-app.use(express.json());
-
-// Routes
-app.get("/api/health", (req, res) => {
-  res.status(200).json({ status: "ok", message: "Server is running" });
-});
-
-app.use("/api/users", userRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/meals", mealRoutes);
-app.use("/api/plans", planRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/items", itemRoutes);
-
-// Error handler
+// Global error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    error: 'An unexpected error occurred',
-    message: !isProduction ? err.message : undefined
-  });
-});
+  console.error('Global error handler:', {
+    error: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    path: req.path,
+    method: req.method,
+    timestamp: new Date().toISOString()
+  })
 
-// Export as Firebase Function
-export const api = functions.https.onRequest(app);
-*/ 
+  // Handle specific error types
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      error: 'Validation Error',
+      message: err.message
+    })
+  }
+
+  if (err.name === 'UnauthorizedError') {
+    return res.status(401).json({
+      error: 'Unauthorized',
+      message: 'Invalid or expired token'
+    })
+  }
+
+  // Default error response
+  res.status(err.status || 500).json({
+    error: 'Internal Server Error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  })
+})
+
+// Handle 404 for non-API routes - FIXED
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'Not Found',
+    message: `Route ${req.method} ${req.path} not found`
+  })
+})
+
+// Graceful shutdown handler
+const gracefulShutdown = (signal) => {
+  console.log(`${signal} received: closing HTTP server`)
+  
+  process.exit(0)
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
+process.on('SIGINT', () => gracefulShutdown('SIGINT'))
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`
+🚀 Server running on port ${PORT}
+📝 Environment: ${process.env.NODE_ENV || 'development'}
+🔗 Health check: http://localhost:${PORT}/api/health
+📚 API base URL: http://localhost:${PORT}/api
+  `)
+})

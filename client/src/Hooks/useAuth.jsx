@@ -1,221 +1,342 @@
-// hooks/useAuth.js
-/* eslint-disable */
-import { useState, useEffect, useCallback } from 'react'
-import { signInWithPopup, signOut, onAuthStateChanged, getIdTokenResult } from 'firebase/auth'
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
-import { auth, googleProvider, db } from '../../firebaseConfig.jsx'
-import { verifyAdmin } from '../API/admin'
-
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { authAPI } from '../API/authenticate';
+import { AUTH_CONFIG } from '../config/auth';
 export function useAuth() {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [authError, setAuthError] = useState(null)
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
+  const refreshLock = useRef(false);
 
-  // Refresh the user's token to get the latest claims
-  const refreshToken = useCallback(async () => {
-    try {
-      if (auth.currentUser) {
-        // Force refresh to get latest claims
-        await auth.currentUser.getIdToken(true)
-        const tokenResult = await getIdTokenResult(auth.currentUser)
-        console.log('Token refreshed, claims:', tokenResult.claims)
-        return tokenResult.claims
-      }
-    } catch (error) {
-      console.error('Error refreshing token:', error)
+  const initializeAuth = useCallback(async () => {
+    // SINGLE POINT: Development mode bypass
+    if (AUTH_CONFIG.isDevelopment) {
+      setUser(AUTH_CONFIG.DEV_USER);
+      setLoading(false);
+      setIsInitialized(true);
+      return;
     }
-    return null
-  }, [])
 
-  // Check if user has admin role with the backend
-  const checkAdminStatus = useCallback(async () => {
     try {
-      console.log('Checking admin status with backend')
-      const result = await verifyAdmin()
-      const isAdmin = result?.isAdmin ?? false
-
-      console.log('Admin status from backend:', isAdmin)
-
-      setUser((prevUser) => {
-        if (!prevUser) return null
-        return { ...prevUser, isAdmin }
-      })
-
-      return isAdmin
-    } catch (error) {
-      console.error('Error checking admin status:', error)
-      setUser((prevUser) => {
-        if (!prevUser) return null
-        return { ...prevUser, isAdmin: false }
-      })
-      return false
-    }
-  }, [])
-
-  // Save or update user in Firestore
-  const saveUserToFirestore = useCallback(async (firebaseUser) => {
-    try {
-      if (!firebaseUser || !firebaseUser.uid) {
-        console.error('Invalid firebase user object')
-        return null
-      }
-
-      const userRef = doc(db, 'users', firebaseUser.uid)
-      const userSnap = await getDoc(userRef)
-
-      if (userSnap.exists()) {
-        // Update existing user - only update last login
-        await setDoc(
-          userRef,
-          {
-            lastLogin: serverTimestamp(),
-          },
-          { merge: true },
-        )
+      setLoading(true);
+      setAuthError(null);
+      
+      const sessionData = await authAPI.getSession();
+      
+      if (sessionData?.user) {
+        const profileData = await authAPI.getUserProfile();
+        
+        setUser({
+          id: sessionData.user.id,
+          email: sessionData.user.email,
+          displayName: profileData.displayName || 
+                      sessionData.user.user_metadata?.full_name || 
+                      sessionData.user.email,
+          photoURL: profileData.avatarUrl || 
+                    sessionData.user.user_metadata?.avatar_url,
+          isAdmin: profileData.isAdmin || false,
+          provider: sessionData.user.app_metadata?.provider,
+          ...profileData
+        });
       } else {
-        // Create new user with default fields
-        await setDoc(userRef, {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email || '',
-          displayName: firebaseUser.displayName || '',
-          photoURL: firebaseUser.photoURL || '',
-          isAdmin: false, // Default to non-admin
-          createdAt: serverTimestamp(),
-          lastLogin: serverTimestamp(),
-        })
+        const storedSession = localStorage.getItem('supabase_session');
+        if (storedSession) {
+          authAPI.setSession(JSON.parse(storedSession));
+          await refreshSession();
+        }
       }
-
-      // Get the updated user doc
-      const updatedSnap = await getDoc(userRef)
-      return updatedSnap.exists() ? updatedSnap.data() : null
     } catch (error) {
-      console.error('Error saving user to Firestore:', error)
-      throw error
-    }
-  }, [])
-
-  // Sign in with Google
-  const loginWithGoogle = async () => {
-    try {
-      setLoading(true)
-      setAuthError(null)
-
-      const result = await signInWithPopup(auth, googleProvider)
-      const firebaseUser = result.user
-
-      if (!firebaseUser) {
-        throw new Error('Sign in failed - no user returned')
-      }
-
-      // console.log("Google sign in successful:", firebaseUser.uid);
-
-      // Save user to Firestore
-      const firestoreData = await saveUserToFirestore(firebaseUser)
-
-      // Force refresh token to get updated claims
-      const claims = await refreshToken()
-
-      // Check admin status with backend
-      const isAdmin = await checkAdminStatus()
-
-      // Set user state with all available data
-      setUser({
-        uid: firebaseUser.uid,
-        email: firebaseUser.email || '',
-        displayName: firebaseUser.displayName || '',
-        photoURL: firebaseUser.photoURL || '',
-        emailVerified: firebaseUser.emailVerified,
-        isAdmin: Boolean(isAdmin || claims?.admin),
-        ...(firestoreData || {}),
-      })
-
-      return { success: true, isAdmin }
-    } catch (error) {
-      console.error('Error signing in with Google:', error)
-      setAuthError(error.message)
-      return { success: false, error: error.message }
+      console.error('Auth initialization error:', error);
+      setAuthError(error.message || 'Failed to initialize authentication');
+      authAPI.clearSession();
+      localStorage.removeItem('supabase_session');
     } finally {
-      setLoading(false)
+      setLoading(false);
+      setIsInitialized(true);
     }
-  }
+  }, []);
 
-  // Sign out
+  const loginWithOAuth = async (provider) => {
+    // SINGLE POINT: Development mode bypass  
+    if (AUTH_CONFIG.isDevelopment) {
+      setUser(AUTH_CONFIG.DEV_USER);
+      return { success: true };
+    }
+    
+    try {
+      setLoading(true);
+      setAuthError(null);
+      localStorage.removeItem('supabase_session');
+      
+      const result = await authAPI.initiateOAuthLogin(provider);
+      return { success: true, ...result };
+    } catch (error) {
+      console.error(`${provider} login error:`, error);
+      setAuthError(error.message || `Failed to sign in with ${provider}`);
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOAuthCallback = async (code, state) => {
+    try {
+      setLoading(true);
+      setAuthError(null);
+      
+      const result = await authAPI.handleOAuthCallback(code, state);
+      
+      if (result?.user) {
+        if (!result.user.displayName) {
+          await authAPI.updateUserProfile({
+            displayName: result.user.email.split('@')[0]
+          });
+        }
+        
+        if (result.session && !AUTH_CONFIG.isDevelopment) {
+          localStorage.setItem('supabase_session', JSON.stringify(result.session));
+        }
+
+        if (result.isNewUser) {
+          setIsNewUser(true);
+        }
+
+        const profileData = await authAPI.getUserProfile();
+        
+        const userData = {
+          id: result.user.id,
+          email: result.user.email,
+          displayName: profileData.displayName || 
+                      result.user.user_metadata?.full_name || 
+                      result.user.email,
+          photoURL: profileData.avatarUrl || 
+                    result.user.user_metadata?.avatar_url,
+          isAdmin: profileData.isAdmin || false,
+          provider: result.user.app_metadata?.provider,
+          ...profileData
+        };
+        
+        setUser(userData);
+        return { 
+          success: true, 
+          user: userData, 
+          isNewUser: result.isNewUser 
+        };
+      }
+      
+      return { success: false, error: 'No user data received' };
+    } catch (error) {
+      console.error('OAuth callback error:', error);
+      setAuthError(error.message || 'Authentication failed');
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     try {
-      await signOut(auth)
-      setUser(null)
-      return { success: true }
-    } catch (error) {
-      console.error('Error signing out:', error)
-      setAuthError(error.message)
-      return { success: false, error: error.message }
-    }
-  }
-
-  // Listen for auth state changes
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true)
-
-      try {
-        if (firebaseUser) {
-          console.log('Auth state changed - user signed in:', firebaseUser.uid)
-
-          // Get Firestore data
-          const userRef = doc(db, 'users', firebaseUser.uid)
-          const userSnap = await getDoc(userRef)
-
-          let firestoreData = null
-
-          // If user doesn't exist in Firestore, create them
-          if (!userSnap.exists()) {
-            firestoreData = await saveUserToFirestore(firebaseUser)
-          } else {
-            firestoreData = userSnap.data()
-            // Update lastLogin time
-            await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true })
-          }
-
-          // Get token to check admin status
-          const tokenResult = await getIdTokenResult(firebaseUser)
-          const isAdminClaim = tokenResult.claims?.admin === true
-
-          // Check admin status with backend
-          const isAdminBackend = await checkAdminStatus()
-
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            displayName: firebaseUser.displayName || '',
-            photoURL: firebaseUser.photoURL || '',
-            emailVerified: firebaseUser.emailVerified,
-            isAdmin: Boolean(isAdminClaim || isAdminBackend || firestoreData?.isAdmin === true),
-            ...(firestoreData || {}),
-          })
-        } else {
-          console.log('Auth state changed - user signed out')
-          setUser(null)
-        }
-      } catch (error) {
-        console.error('Error in auth state change:', error)
-        setAuthError(error.message)
-        setUser(null)
-      } finally {
-        setLoading(false)
+      setLoading(true);
+      setAuthError(null);
+      
+      await authAPI.signOut();
+      setUser(null);
+      setIsNewUser(false);
+      
+      if (!AUTH_CONFIG.isDevelopment) {
+        localStorage.removeItem('supabase_session');
       }
-    })
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Logout error:', error);
+      setAuthError(error.message || 'Failed to log out');
+      authAPI.clearSession();
+      
+      if (!AUTH_CONFIG.isDevelopment) {
+        localStorage.removeItem('supabase_session');
+      }
+      
+      setUser(null);
+      setIsNewUser(false);
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // Cleanup subscription
-    return () => unsubscribe()
-  }, [saveUserToFirestore, checkAdminStatus, refreshToken])
+  const refreshSession = useCallback(async () => {
+    if (refreshLock.current) return;
+    refreshLock.current = true;
+
+    try {
+      const result = await authAPI.refreshSession();
+      
+      if (result.session && result.user) {
+        if (!AUTH_CONFIG.isDevelopment) {
+          localStorage.setItem('supabase_session', JSON.stringify(result.session));
+        }
+        
+        const profileData = await authAPI.getUserProfile();
+        
+        const userData = {
+          id: result.user.id,
+          email: result.user.email,
+          displayName: profileData.displayName || 
+                      result.user.user_metadata?.full_name || 
+                      result.user.email,
+          photoURL: profileData.avatarUrl || 
+                    result.user.user_metadata?.avatar_url,
+          isAdmin: profileData.isAdmin || false,
+          provider: result.user.app_metadata?.provider,
+          ...profileData
+        };
+        
+        setUser(userData);
+        return { success: true, user: userData };
+      }
+      
+      return { success: false };
+    } catch (error) {
+      console.error('Refresh session error:', error);
+      
+      if (error.message.includes('invalid') || 
+          error.message.includes('expired')) {
+        await logout();
+      }
+      
+      return { success: false, error: error.message };
+    } finally {
+      refreshLock.current = false;
+    }
+  }, [logout]);
+
+  const checkAdminStatus = useCallback(async () => {
+    if (AUTH_CONFIG.isDevelopment) return true;
+    
+    try {
+      if (!user) return false;
+      const result = await authAPI.checkAdminStatus();
+      return result.is_admin || false;
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      return false;
+    }
+  }, [user]);
+
+  const updateProfile = async (profileData) => {
+    try {
+      setLoading(true);
+      setAuthError(null);
+      
+      const updatedProfile = await authAPI.updateUserProfile(profileData);
+      
+      setUser(prev => ({
+        ...prev,
+        ...updatedProfile
+      }));
+      
+      return { success: true, profile: updatedProfile };
+    } catch (error) {
+      console.error('Update profile error:', error);
+      setAuthError(error.message || 'Failed to update profile');
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const completeProfile = async (profileData) => {
+    try {
+      setLoading(true);
+      setAuthError(null);
+      
+      const result = await authAPI.completeUserProfile(profileData);
+      
+      if (result.success) {
+        setUser(prev => ({
+          ...prev,
+          ...result.user
+        }));
+        setIsNewUser(false);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Complete profile error:', error);
+      setAuthError(error.message || 'Failed to complete profile');
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Auto-refresh session (skip in development)
+  useEffect(() => {
+    if (!user || AUTH_CONFIG.isDevelopment) return;
+
+    const interval = setInterval(async () => {
+      try {
+        await refreshSession();
+      } catch (error) {
+        console.error('Auto-refresh failed:', error);
+      }
+    }, 50 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [user, refreshSession]);
+
+  useEffect(() => {
+    if (!isInitialized) initializeAuth();
+
+    const handleOnline = () => {
+      if (authAPI.isAuthenticated() && !user) {
+        initializeAuth();
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [initializeAuth, isInitialized, user]);
+
+  useEffect(() => {
+    if (user && authError) {
+      setAuthError(null);
+    }
+  }, [user, authError]);
+
+  // Session expiration watchdog (skip in development)
+  useEffect(() => {
+    if (!user || !authAPI.getCurrentSession() || AUTH_CONFIG.isDevelopment) return;
+
+    const expiresAt = authAPI.getCurrentSession().expires_at;
+    if (!expiresAt) return;
+
+    const expiresIn = new Date(expiresAt * 1000) - Date.now();
+    if (expiresIn <= 0) return;
+
+    const timeout = setTimeout(() => {
+      refreshSession();
+    }, expiresIn - 60000);
+
+    return () => clearTimeout(timeout);
+  }, [user, refreshSession]);
 
   return {
     user,
     loading,
     authError,
-    loginWithGoogle,
+    isInitialized,
+    isNewUser,
+    loginWithOAuth,
+    handleOAuthCallback,
     logout,
-    refreshToken,
+    refreshSession,
+    updateProfile,
+    completeProfile,
     checkAdminStatus,
-  }
+    clearError: () => setAuthError(null),
+    clearNewUserFlag: () => setIsNewUser(false)
+  };
 }

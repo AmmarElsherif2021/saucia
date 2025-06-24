@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Contexts/AuthContext.jsx
-import React, { createContext, useContext } from 'react'
-import { useAuth } from '../Hooks/UseAuth'
+import { createContext, useContext } from 'react'
+import { useAuth } from '../Hooks/useAuth'
 
 // Create context
 const AuthContext = createContext()
