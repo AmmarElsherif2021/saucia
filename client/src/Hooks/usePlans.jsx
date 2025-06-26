@@ -1,11 +1,5 @@
 import { useState, useCallback } from 'react';
-import { 
-  listPlans, 
-  getPlanById, 
-  createPlan, 
-  updatePlan, 
-  deletePlan 
-} from '../API/plans';
+import {plansAPI} from '../API/planAPI';
 
 /**
  * Custom hook for managing subscription plans according to Supabase schema
@@ -31,6 +25,7 @@ import {
  */
 
 export function usePlans() {
+ 
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -111,7 +106,7 @@ export function usePlans() {
     setLoading(true);
     setError(null);
     try {
-      const data = await listPlans(queryParams);
+      const data = await plansAPI.listPlans(queryParams);
       const validatedPlans = data
         .map(validatePlanData)
         .filter(Boolean)
@@ -132,7 +127,7 @@ export function usePlans() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getPlanById(planId);
+      const data = await plansAPI.getPlanById(planId);
       const validatedPlan = validatePlanData(data);
       return validatedPlan;
     } catch (err) {
@@ -154,7 +149,7 @@ export function usePlans() {
         throw new Error('Invalid plan data provided');
       }
 
-      const newPlan = await createPlan(token, validatedData);
+      const newPlan = await plansAPI.createPlan(token, validatedData);
       const normalizedPlan = validatePlanData(newPlan);
       
       if (normalizedPlan) {
@@ -175,7 +170,7 @@ export function usePlans() {
     setLoading(true);
     setError(null);
     try {
-      const updatedPlan = await updatePlan(token, planId, updates);
+      const updatedPlan = await plansAPI.updatePlan(token, planId, updates);
       const normalizedPlan = validatePlanData(updatedPlan);
       
       if (normalizedPlan) {
@@ -199,7 +194,7 @@ export function usePlans() {
     setLoading(true);
     setError(null);
     try {
-      await deletePlan(token, planId);
+      await plansAPI.deletePlan(token, planId);
       setPlans(prev => prev.filter(plan => plan.id !== planId));
     } catch (err) {
       console.error('Error removing plan:', err);

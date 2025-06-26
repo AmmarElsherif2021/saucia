@@ -1,5 +1,7 @@
 // index.js - Clean server setup for Supabase
 import express from 'express'
+import session from 'express-session'
+import passport from './passport-config.js'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import { authenticate } from './middlewares/authMiddleware.js'
@@ -19,34 +21,35 @@ const app = express()
 const PORT = process.env.PORT || 3000
 
 const corsOptions = {
-  origin: function (origin, callback) {
-    const allowedOrigins = [
-      'http://localhost:5173', 
-      'http://localhost:3000',
-      'https://your-production-domain.com'
-    ];
-    
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: [
+    'http://localhost:5173',
+    'https://knkdolmwerudrbwmamgp.supabase.co'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: [
     'Content-Type', 
     'Authorization', 
-    'x-dev-mode',
-    'X-Dev-Mode'  
+    //'x-dev-mode',
+    //'X-Dev-Mode'  
   ],
   credentials: true
 };
 
 app.use(cors(corsOptions));
-
+app.options('*', cors(corsOptions));
 // Middleware
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: false, // Disable in development
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000
+  }
+}));
 
 // Request logging middleware (development only)
 if (process.env.NODE_ENV === 'development') {
@@ -55,8 +58,12 @@ if (process.env.NODE_ENV === 'development') {
     next()
   })
 }
-//preflight cors requests
-app.options('*', cors(corsOptions));
+
+
+// Passport.js initialization
+
+app.use(passport.initialize());
+app.use(passport.session());
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
@@ -66,6 +73,8 @@ app.get('/api/health', (req, res) => {
     environment: process.env.NODE_ENV || 'development'
   })
 })
+
+
 
 // Routes
 app.use('/api/auth', authRoutes)

@@ -1,7 +1,7 @@
 import express from 'express'
 import { supabase, supabaseAdmin } from '../supabase.js'
 import { User } from '../models/User.js'
-
+import passport from '../passport-config.js'
 const router = express.Router()
 
 // Development mode check
@@ -23,7 +23,18 @@ const createDevSession = () => ({
       avatar_url: 'https://via.placeholder.com/150'
     }
   }
-})
+});
+
+router.get('/google', passport.authenticate('google'));
+router.get('/google/callback', 
+  passport.authenticate('google', {
+    failureRedirect: '/login',
+    session: true
+  }),
+  (req, res) => {
+    res.redirect(process.env.FRONTEND_CALLBACK_URL);
+  }
+);
 
 const createDevUser = () => ({
   id: 'emulator-dev-user',
@@ -44,13 +55,13 @@ const createDevUser = () => ({
 router.post('/oauth/init', async (req, res) => {
   try {
     // DEVELOPMENT MODE BYPASS
-    if (isDevelopment) {
-      console.log('🔧 Development mode: Bypassing OAuth init')
-      return res.json({ 
-        authUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/callback?code=dev-auth-code`,
-        message: 'Development mode - using mock OAuth'
-      })
-    }
+    // if (isDevelopment) {
+    //   console.log('🔧 Development mode: Bypassing OAuth init')
+    //   return res.json({ 
+    //     authUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/callback?code=dev-auth-code`,
+    //     message: 'Development mode - using mock OAuth'
+    //   })
+    // }
 
     const { provider, redirectUrl } = req.body
 
@@ -88,18 +99,18 @@ router.post('/oauth/init', async (req, res) => {
 router.post('/oauth/callback', async (req, res) => {
   try {
     // DEVELOPMENT MODE BYPASS
-    if (isDevelopment) {
-      console.log('🔧 Development mode: Bypassing OAuth callback')
-      const mockSession = createDevSession()
-      const mockUser = createDevUser()
+    // if (isDevelopment) {
+    //   console.log('🔧 Development mode: Bypassing OAuth callback')
+    //   const mockSession = createDevSession()
+    //   const mockUser = createDevUser()
       
-      return res.json({
-        session: mockSession,
-        user: mockUser,
-        isNewUser: false,
-        message: 'Development mode - using mock authentication'
-      })
-    }
+    //   return res.json({
+    //     session: mockSession,
+    //     user: mockUser,
+    //     isNewUser: false,
+    //     message: 'Development mode - using mock authentication'
+    //   })
+    // }
 
     const { code } = req.body;
     console.log('Received OAuth callback with code:', code);
@@ -238,17 +249,17 @@ router.get('/session', async (req, res) => {
 router.post('/refresh', async (req, res) => {
   try {
     // DEVELOPMENT MODE BYPASS
-    if (isDevelopment) {
-      console.log('🔧 Development mode: Bypassing session refresh')
-      const mockSession = createDevSession()
-      const mockUser = createDevUser()
+    // if (isDevelopment) {
+    //   console.log('🔧 Development mode: Bypassing session refresh')
+    //   const mockSession = createDevSession()
+    //   const mockUser = createDevUser()
       
-      return res.json({
-        session: mockSession,
-        user: mockUser,
-        message: 'Development mode - mock session refreshed'
-      })
-    }
+    //   return res.json({
+    //     session: mockSession,
+    //     user: mockUser,
+    //     message: 'Development mode - mock session refreshed'
+    //   })
+    // }
 
     const authHeader = req.headers.authorization
     const refreshToken = req.body?.refresh_token || authHeader?.split('Bearer ')[1]
@@ -340,10 +351,10 @@ router.post('/signout', async (req, res) => {
 router.get('/profile', async (req, res) => {
   try {
     // DEVELOPMENT MODE BYPASS
-    if (isDevelopment) {
-      console.log('🔧 Development mode: Returning mock profile')
-      return res.json(createDevUser())
-    }
+    // if (isDevelopment) {
+    //   console.log('🔧 Development mode: Returning mock profile')
+    //   return res.json(createDevUser())
+    // }
 
     const authHeader = req.headers.authorization
     const accessToken = authHeader?.split('Bearer ')[1]
@@ -375,11 +386,11 @@ router.get('/profile', async (req, res) => {
 router.put('/profile', async (req, res) => {
   try {
     // DEVELOPMENT MODE BYPASS
-    if (isDevelopment) {
-      console.log('🔧 Development mode: Mock profile update')
-      const updatedUser = { ...createDevUser(), ...req.body }
-      return res.json(updatedUser)
-    }
+    // if (isDevelopment) {
+    //   console.log('🔧 Development mode: Mock profile update')
+    //   const updatedUser = { ...createDevUser(), ...req.body }
+    //   return res.json(updatedUser)
+    // }
 
     const authHeader = req.headers.authorization
     const accessToken = authHeader?.split('Bearer ')[1]
@@ -412,15 +423,15 @@ router.put('/profile', async (req, res) => {
 router.post('/complete-profile', async (req, res) => {
   try {
     // DEVELOPMENT MODE BYPASS
-    if (isDevelopment) {
-      console.log('🔧 Development mode: Mock profile completion')
-      const completedUser = { ...createDevUser(), ...req.body }
-      return res.json({
-        success: true,
-        user: completedUser,
-        message: 'Development mode - mock profile completed'
-      })
-    }
+    // if (isDevelopment) {
+    //   console.log('🔧 Development mode: Mock profile completion')
+    //   const completedUser = { ...createDevUser(), ...req.body }
+    //   return res.json({
+    //     success: true,
+    //     user: completedUser,
+    //     message: 'Development mode - mock profile completed'
+    //   })
+    // }
 
     const authHeader = req.headers.authorization
     const accessToken = authHeader?.split('Bearer ')[1]
@@ -460,10 +471,10 @@ router.post('/complete-profile', async (req, res) => {
 router.get('/admin-status', async (req, res) => {
   try {
     // DEVELOPMENT MODE BYPASS
-    if (isDevelopment) {
-      console.log('🔧 Development mode: Mock admin status check')
-      return res.json({ is_admin: true })
-    }
+    // if (isDevelopment) {
+    //   console.log('🔧 Development mode: Mock admin status check')
+    //   return res.json({ is_admin: true })
+    // }
 
     const authHeader = req.headers.authorization
     const accessToken = authHeader?.split('Bearer ')[1]

@@ -1,13 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  getMeals, 
-  getPlanMeals, 
-  getMealById, 
-  createMeal, 
-  updateMeal, 
-  deleteMeal,
-  getFavMealsOfClient
-} from '../API/meals';
+import { mealsAPI } from '../API/mealAPI';
 
 /**
  * Custom hook for managing meals according to Supabase schema
@@ -55,7 +47,6 @@ export function useMeals() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Validate and normalize meal data according to schema
   // Validate and normalize meal data according to schema
   const validateMealData = (meal) => {
     if (!meal) return null;
@@ -137,7 +128,7 @@ export function useMeals() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getMeals(queryParams);
+      const data = await mealsAPI.getMeals(queryParams);
       const validatedMeals = data
         .map(validateMealData)
         .filter(Boolean);
@@ -157,7 +148,7 @@ export function useMeals() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getPlanMeals(planId, queryParams);
+      const data = await mealsAPI.getPlanMeals(planId);
       const validatedMeals = data
         .map(validateMealData)
         .filter(Boolean);
@@ -176,7 +167,7 @@ export function useMeals() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getMealById(mealId);
+      const data = await mealsAPI.getMealById(mealId);
       const validatedMeal = validateMealData(data);
       return validatedMeal;
     } catch (err) {
@@ -188,7 +179,7 @@ export function useMeals() {
     }
   }, []);
 
-  const addMeal = useCallback(async (token, mealData) => {
+  const addMeal = useCallback(async (mealData) => {
     setLoading(true);
     setError(null);
     try {
@@ -198,7 +189,7 @@ export function useMeals() {
         throw new Error('Invalid meal data provided');
       }
 
-      const newMeal = await createMeal(token, validatedData);
+      const newMeal = await mealsAPI.createMeal(validatedData);
       const normalizedMeal = validateMealData(newMeal);
       
       if (normalizedMeal) {
@@ -215,11 +206,11 @@ export function useMeals() {
     }
   }, []);
 
-  const modifyMeal = useCallback(async (token, mealId, mealData) => {
+  const modifyMeal = useCallback(async (mealId, mealData) => {
     setLoading(true);
     setError(null);
     try {
-      const updatedMeal = await updateMeal(token, mealId, mealData);
+      const updatedMeal = await mealsAPI.updateMeal(mealId, mealData);
       const normalizedMeal = validateMealData(updatedMeal);
       
       if (normalizedMeal) {
@@ -238,11 +229,11 @@ export function useMeals() {
     }
   }, []);
 
-  const removeMeal = useCallback(async (token, mealId) => {
+  const removeMeal = useCallback(async (mealId) => {
     setLoading(true);
     setError(null);
     try {
-      await deleteMeal(token, mealId);
+      await mealsAPI.deleteMeal(mealId);
       setMeals(prev => prev.filter(meal => meal.id !== mealId));
     } catch (err) {
       console.error('Error removing meal:', err);
@@ -253,11 +244,11 @@ export function useMeals() {
     }
   }, []);
 
-  const fetchFavorites = useCallback(async (token, userId) => {
+  const fetchFavorites = useCallback(async (userId) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getFavMealsOfClient(token, userId);
+      const data = await mealsAPI.getFavMealsOfClient(userId);
       const validatedMeals = data
         .map(validateMealData)
         .filter(Boolean);
@@ -265,6 +256,131 @@ export function useMeals() {
       return validatedMeals;
     } catch (err) {
       console.error('Error fetching favorite meals:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const addToFavorites = useCallback(async (mealId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await mealsAPI.addToFavorites(mealId);
+    } catch (err) {
+      console.error('Error adding meal to favorites:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const removeFromFavorites = useCallback(async (mealId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await mealsAPI.removeFromFavorites(mealId);
+    } catch (err) {
+      console.error('Error removing meal from favorites:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const rateMeal = useCallback(async (mealId, rating) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await mealsAPI.rateMeal(mealId, rating);
+      // Update local state with new rating
+      setMeals(prev => 
+        prev.map(meal => 
+          meal.id === mealId 
+            ? { ...meal, rating: result.rating, rating_count: result.rating_count }
+            : meal
+        )
+      );
+      return result;
+    } catch (err) {
+      console.error('Error rating meal:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const toggleMealAvailability = useCallback(async (mealId, isAvailable) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await mealsAPI.toggleMealAvailability(mealId, isAvailable);
+      setMeals(prev => 
+        prev.map(meal => 
+          meal.id === mealId ? { ...meal, is_available: isAvailable } : meal
+        )
+      );
+    } catch (err) {
+      console.error('Error toggling meal availability:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const bulkUpdateMeals = useCallback(async (updates) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const updatedMeals = await mealsAPI.bulkUpdateMeals(updates);
+      const validatedMeals = updatedMeals
+        .map(validateMealData)
+        .filter(Boolean);
+      
+      setMeals(validatedMeals);
+      return validatedMeals;
+    } catch (err) {
+      console.error('Error bulk updating meals:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getMealAnalytics = useCallback(async (timeframe = '30d') => {
+    setLoading(true);
+    setError(null);
+    try {
+      const analytics = await mealsAPI.getMealAnalytics(timeframe);
+      return analytics;
+    } catch (err) {
+      console.error('Error fetching meal analytics:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchMealsBySection = useCallback(async (section) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await mealsAPI.getMealsBySection(section);
+      const validatedMeals = data
+        .map(validateMealData)
+        .filter(Boolean);
+      
+      setMeals(validatedMeals);
+      return validatedMeals;
+    } catch (err) {
+      console.error('Error fetching meals by section:', err);
       setError(err);
       throw err;
     } finally {
@@ -309,6 +425,13 @@ export function useMeals() {
     modifyMeal,
     removeMeal,
     fetchFavorites,
+    addToFavorites,
+    removeFromFavorites,
+    rateMeal,
+    toggleMealAvailability,
+    bulkUpdateMeals,
+    getMealAnalytics,
+    fetchMealsBySection,
     
     // Helper functions
     getFeaturedMeals,

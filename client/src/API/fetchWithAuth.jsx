@@ -1,6 +1,6 @@
 import { AUTH_CONFIG } from '../config/auth.js';
 import { sessionManager } from './SessionManager.jsx';
-import { authAPI } from './authenticate.jsx';
+import { authAPI } from './authAPI.jsx';
 // Development mode mock data generator
 const generateMockResponse = (url, options) => {
   const method = options.method || 'GET';
@@ -58,28 +58,33 @@ const generateMockResponse = (url, options) => {
 };
 
 export const fetchWithAuth = async (url, options = {}) => {
-  // SINGLE POINT: Development mode bypass
-  if (AUTH_CONFIG.isDevelopment) {
-    console.warn('🔧 Dev mode bypass:', url);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
+  if (import.meta.env.DEV) {
     return generateMockResponse(url, options);
   }
-
-  // Production authentication flow
   try {
-    const session = sessionManager.getSession();
-    
+    // 1. Get current session
+    let session = sessionManager.getSession();
+    if (!session) {
+      // Attempt to load session from local storage directly
+      const storedSession = localStorage.getItem('supabase_session');
+      if (storedSession) {
+        session = JSON.parse(storedSession);
+        sessionManager.saveSession(session);
+      }
+    }
+    // 2. Refresh if no session exists
     if (!session?.access_token) {
       const sessionData = await authAPI.getSession();
-      if (!sessionData.session) {
+      if (sessionData.session) {
+        sessionManager.saveSession(sessionData.session);
+        session = sessionData.session; // Update local reference
+      } else {
         throw new Error('No authenticated session');
       }
     }
 
-    const response = await fetch(url, {
+    // 3. Make initial request
+    let response = await fetch(url, {
       ...options,
       headers: {
         ...options.headers,
@@ -88,27 +93,26 @@ export const fetchWithAuth = async (url, options = {}) => {
       },
     });
 
-    // Handle 401 - token refresh
+    // 4. Handle 401 Unauthorized (token refresh)
     if (response.status === 401) {
-      try {        
-        const refreshResult = await authAPI.refreshSession();
+      const refreshResult = await authAPI.refreshSession();
+      
+      if (refreshResult.session) {
+        // Save refreshed session and update reference
+        sessionManager.saveSession(refreshResult.session);
+        session = refreshResult.session;
         
-        if (refreshResult.session) {
-          const retryResponse = await fetch(url, {
-            ...options,
-            headers: {
-              ...options.headers,
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${refreshResult.session.access_token}`,
-            },
-          });
-          return await handleResponse(retryResponse);
-        } else {
-          throw new Error('Session expired and refresh failed');
-        }
-      } catch (refreshError) {
-        authAPI.clearSession();
-        throw new Error('Authentication required');
+        // Retry request with new token
+        response = await fetch(url, {
+          ...options,
+          headers: {
+            ...options.headers,
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${refreshResult.session.access_token}`,
+          },
+        });
+      } else {
+        throw new Error('Session refresh failed');
       }
     }
 

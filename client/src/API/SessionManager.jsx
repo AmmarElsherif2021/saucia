@@ -1,60 +1,43 @@
 import { AUTH_CONFIG } from "../config/auth";
-
 class SessionManager {
   constructor() {
-    this.session = this.loadSession();
+    this.sessionKey = AUTH_CONFIG.SESSION_KEY;
   }
 
-  loadSession() {
-    // In development, always return mock session
-    if (AUTH_CONFIG.isDevelopment) {
-      return AUTH_CONFIG.DEV_SESSION;
-    }
-    
+  getSession() {
     try {
-      const stored = localStorage.getItem('supabase_session');
+      const stored = localStorage.getItem(this.sessionKey);
       return stored ? JSON.parse(stored) : null;
     } catch (error) {
-      console.error('Error loading session from localStorage:', error);
+      console.error('Error loading session:', error);
       return null;
     }
   }
 
   saveSession(session) {
-    // Skip localStorage in development
-    if (AUTH_CONFIG.isDevelopment) {
-      this.session = AUTH_CONFIG.DEV_SESSION;
-      return;
-    }
-    
     try {
-      if (session) {
-        localStorage.setItem('supabase_session', JSON.stringify(session));
-        this.session = session;
-      } else {
-        this.clearSession();
-      }
+      if (!session) return;
+      
+      const normalizedSession = {
+        ...session,
+        access_token: session.access_token || session.accessToken,
+        refresh_token: session.refresh_token || session.refreshToken,
+        expires_at: session.expires_at || session.expiresAt,
+        user: session.user
+      };
+      
+      localStorage.setItem(this.sessionKey, JSON.stringify(normalizedSession));
     } catch (error) {
-      console.error('Error saving session to localStorage:', error);
+      console.error('Error saving session:', error);
     }
   }
 
   clearSession() {
-    if (AUTH_CONFIG.isDevelopment) {
-      this.session = null;
-      return;
-    }
-    
     try {
-      localStorage.removeItem('supabase_session');
-      this.session = null;
+      localStorage.removeItem(this.sessionKey);
     } catch (error) {
-      console.error('Error clearing session from localStorage:', error);
+      console.error('Error clearing session:', error);
     }
-  }
-
-  getSession() {
-    return AUTH_CONFIG.isDevelopment ? AUTH_CONFIG.DEV_SESSION : this.session;
   }
 
   getAccessToken() {
@@ -62,19 +45,18 @@ class SessionManager {
   }
 
   isAuthenticated() {
-    if (AUTH_CONFIG.isDevelopment) return true;
-    return !!(this.session?.access_token && this.session?.user);
+    const session = this.getSession();
+    return !!(session?.access_token && session?.user);
   }
 
   isSessionExpired() {
-    if (AUTH_CONFIG.isDevelopment) return false;
-    if (!this.session?.expires_at) return true;
+    const session = this.getSession();
+    if (!session?.expires_at) return true;
     
-    const expiryTime = new Date(this.session.expires_at * 1000);
-    const now = new Date();
-    const bufferTime = 5 * 60 * 1000; // 5 minutes buffer
+    const expiryTime = new Date(session.expires_at * 1000);
+    const bufferTime = AUTH_CONFIG.TOKEN_REFRESH_BUFFER;
     
-    return now >= (expiryTime.getTime() - bufferTime);
+    return Date.now() >= (expiryTime.getTime() - bufferTime);
   }
 }
 

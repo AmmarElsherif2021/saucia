@@ -20,11 +20,11 @@ import {
   Badge,
 } from '@chakra-ui/react'
 
-import { getAdminDashboard, getAllUsers } from '../../API/admin'
-import { listItems, createItem, updateItem, deleteItem } from '../../API/items'
-import { getMeals, createMeal, updateMeal, deleteMeal } from '../../API/meals'
-import { listPlans, createPlan, updatePlan, deletePlan } from '../../API/plans'
-import { getAllOrders } from '../../API/orders'
+import { adminAPI } from '../../API/adminAPI.jsx'
+import { itemsAPI } from '../../API/itemAPI.jsx'
+import { mealsAPI } from '../../API/mealAPI.jsx'
+import { plansAPI } from '../../API/planAPI.jsx'
+import { ordersAPI } from '../../API/orderAPI.jsx'
 // import { auth } from '../../../firebaseConfig.jsx'
 import { useAuth } from '../../Hooks/useAuth'
 import {
@@ -159,12 +159,12 @@ const Admin = () => {
     try {
       const token = user ? await user.getIdToken() : null
       const [dashboardData, users, items, meals, plans, orders] = await Promise.all([
-        getAdminDashboard(),
-        getAllUsers(),
-        listItems(),
-        getMeals(),
-        listPlans(),
-        getAllOrders(token),
+        adminAPI.getDashboard(),
+        adminAPI.getAllUsers(),
+        itemsAPI.listItems(),
+        mealsAPI.getMeals(),
+        plansAPI.listPlans(),
+        ordersAPI.getAllOrders(token),
       ])
 
       dispatch({
@@ -189,7 +189,7 @@ const Admin = () => {
   const handleAddItem = async (itemData) => {
     try {
       const token = user ? await user.getIdToken() : null
-      const newItem = await createItem(token, itemData)
+      const newItem = await itemsAPI.createItem(token, itemData)
       dispatch({ type: 'ADD_ITEM', payload: newItem })
       itemModals.add.onClose()
     } catch (error) {
@@ -200,7 +200,7 @@ const Admin = () => {
   const handleEditItem = async (itemId, updatedData) => {
     try {
       const token = user ? await user.getIdToken() : null
-      const updatedItem = await updateItem(token, itemId, updatedData)
+      const updatedItem = await itemsAPI.updateItem(token, itemId, updatedData)
       dispatch({ type: 'EDIT_ITEM', payload: updatedItem })
       itemModals.edit.onClose()
     } catch (error) {
@@ -208,10 +208,10 @@ const Admin = () => {
     }
   }
 
-  const handleDeleteItem = async (itemId) => {
+  const handleitems = async (itemId) => {
     try {
       const token = user ? await user.getIdToken() : null
-      await deleteItem(token, itemId)
+      await itemsAPI.deleteItem(token, itemId)
       dispatch({ type: 'DELETE_ITEM', payload: itemId })
       itemModals.delete.onClose()
     } catch (error) {
@@ -223,8 +223,8 @@ const Admin = () => {
   const handleAddMeal = async (mealData) => {
     try {
       //const token =await user.getIdToken() || null
-      //const newMeal = token=== null? await createMeal(mealData): await createMeal(token, mealData)
-      const newMeal = await createMeal(mealData)
+      //const newMeal = token=== null? await mealsAPI.createMeal(mealData): await mealsAPI.createMeal(token, mealData)
+      const newMeal = await mealsAPI.createMeal(mealData)
       dispatch({ type: 'ADD_MEAL', payload: newMeal })
       mealModals.add.onClose()
     } catch (error) {
@@ -235,7 +235,7 @@ const Admin = () => {
   const handleEditMeal = async (mealId, updatedData) => {
     try {
       const token = user ? await user.getIdToken() : null
-      const updatedMeal = await updateMeal(token, mealId, updatedData)
+      const updatedMeal = await mealsAPI.updateMeal(token, mealId, updatedData)
       dispatch({ type: 'EDIT_MEAL', payload: updatedMeal })
       mealModals.edit.onClose()
     } catch (error) {
@@ -243,10 +243,10 @@ const Admin = () => {
     }
   }
 
-  const handleDeleteMeal = async (mealId) => {
+  const handlemeals = async (mealId) => {
     try {
       const token = user ? await user.getIdToken() : null
-      await deleteMeal(token, mealId)
+      await mealsAPI.deleteMeal(token, mealId)
       dispatch({ type: 'DELETE_MEAL', payload: mealId })
       mealModals.delete.onClose()
     } catch (error) {
@@ -258,7 +258,7 @@ const Admin = () => {
   const handleAddPlan = async (planData) => {
     try {
       const token = user ? await user.getIdToken() : null
-      const newPlan = await createPlan(token, planData)
+      const newPlan = await plansAPI.createPlan(token, planData)
       dispatch({ type: 'ADD_PLAN', payload: newPlan })
       planModals.add.onClose()
     } catch (error) {
@@ -269,7 +269,7 @@ const Admin = () => {
   const handleEditPlan = async (planId, updatedData) => {
     try {
       const token = user ? await user.getIdToken() : null
-      const updatedPlan = await updatePlan(token, planId, updatedData)
+      const updatedPlan = await plansAPI.updatePlan(token, planId, updatedData)
       dispatch({ type: 'EDIT_PLAN', payload: updatedPlan })
       planModals.edit.onClose()
     } catch (error) {
@@ -277,10 +277,10 @@ const Admin = () => {
     }
   }
 
-  const handleDeletePlan = async (planId) => {
+  const handleplans= async (planId) => {
     try {
       const token = user ? await user.getIdToken() : null
-      await deletePlan(token, planId)
+      await plansAPI.deletePlan(token, planId)
       dispatch({ type: 'DELETE_PLAN', payload: planId })
       planModals.delete.onClose()
     } catch (error) {
@@ -357,7 +357,7 @@ const Admin = () => {
         const items = JSON.parse(e.target.result)
         const token = user ? await user.getIdToken() : null
         for (const itemData of items) {
-          const newItem = await createItem(token, itemData)
+          const newItem = await itemsAPI.createItem(token, itemData)
           dispatch({ type: 'ADD_ITEM', payload: newItem })
         }
         alert('Items imported successfully!')
@@ -371,7 +371,7 @@ const Admin = () => {
   const handleExportItems = async () => {
     try {
       //const token = user ? await user.getIdToken() : null
-      const items = await listItems()
+      const items = await itemsAPI.listItems()
       const dataStr = JSON.stringify(items || [])
       const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
       const exportFileDefaultName = 'items.json'
@@ -396,7 +396,7 @@ const Admin = () => {
         const meals = JSON.parse(e.target.result)
         const token = user ? await user.getIdToken() : null
         for (const mealData of meals) {
-          const newMeal = await createMeal(token, mealData)
+          const newMeal = await mealsAPI.createMeal(token, mealData)
           dispatch({ type: 'ADD_MEAL', payload: newMeal })
         }
         window.alert('Meals imported successfully!')
@@ -413,7 +413,7 @@ const Admin = () => {
   const handleExportMeals = async () => {
     try {
       //const token = user ? await user.getIdToken() : null
-      const meals = await getMeals()
+      const meals = await mealsAPI.getMeals()
       const dataStr = JSON.stringify(meals || [])
       const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
       const exportFileDefaultName = 'meals.json'
@@ -432,7 +432,7 @@ const Admin = () => {
     const handleExportPlans = async () => {
       try {
         //const token = user ? await user.getIdToken() : null
-        const plans = await listPlans()
+        const plans = await plansAPI.listPlans()
         const dataStr = JSON.stringify(plans || [])
         const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
         const exportFileDefaultName = 'plans.json'
@@ -861,7 +861,7 @@ const Admin = () => {
       <ConfirmationModal
         isOpen={itemModals.delete.isOpen}
         onClose={itemModals.delete.onClose}
-        onConfirm={() => state.selectedItem?.id && handleDeleteItem(state.selectedItem.id)}
+        onConfirm={() => state.selectedItem?.id && handleitemsAPI.DeleteItem(state.selectedItem.id)}
         title="Confirm Delete"
         message="Are you sure you want to delete this item?"
       />
@@ -903,7 +903,7 @@ const Admin = () => {
       <ConfirmationModal
         isOpen={mealModals.delete.isOpen}
         onClose={mealModals.delete.onClose}
-        onConfirm={() => state.selectedMeal?.id && handleDeleteMeal(state.selectedMeal.id)}
+        onConfirm={() => state.selectedMeal?.id && handlemealsAPI.DeleteMeal(state.selectedMeal.id)}
         title="Confirm Delete"
         message="Are you sure you want to delete this meal?"
       />
@@ -942,7 +942,7 @@ const Admin = () => {
       <ConfirmationModal
         isOpen={planModals.delete.isOpen}
         onClose={planModals.delete.onClose}
-        onConfirm={() => state.selectedPlan?.id && handleDeletePlan(state.selectedPlan.id)}
+        onConfirm={() => state.selectedPlan?.id && handleplansAPI.DeletePlan(state.selectedPlan.id)}
         title="Confirm Delete"
         message="Are you sure you want to delete this plan?"
       />

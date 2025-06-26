@@ -21,128 +21,19 @@ const createDevUser = () => ({
   updatedAt: new Date().toISOString()
 })
 
-export const authenticate = async (req, res, next) => {
-  try {
-    // DEVELOPMENT MODE BYPASS
-    if (isDevelopment) {
-      console.log('🔧 Development mode: Bypassing authentication')
-      req.user = createDevUser()
-      req.authUser = {
-        id: 'dev-user-123',
-        email: 'dev@example.com',
-        user_metadata: {
-          full_name: 'Development User',
-          given_name: 'Dev',
-          family_name: 'User'
-        }
-      }
-      return next()
-    }
-
-    const authHeader = req.headers.authorization
-    
-    if (!authHeader) {
-      return res.status(401).json({ 
-        error: 'Authentication required', 
-        message: 'Authorization header is missing' 
-      })
-    }
-
-    const token = authHeader.split('Bearer ')[1]
-    
-    if (!token) {
-      return res.status(401).json({ 
-        error: 'Authentication required', 
-        message: 'Bearer token is missing' 
-      })
-    }
-
-    console.log('Authenticating user with token...');
-
-    // Verify token with Supabase
-    const { data: { user }, error } = await supabase.auth.getUser(token)
-    
-    if (error || !user) {
-      console.error('Token verification failed:', error);
-      return res.status(401).json({ 
-        error: 'Invalid token', 
-        message: 'Token verification failed' 
-      })
-    }
-
-    console.log(`Token verified for user: ${user.id}`);
-
-    // Ensure user profile exists - this is critical for new users
-    let userProfile = null;
-    
-    try {
-      console.log(`Checking profile for user from authenticate fn: ${user.id}`);
-      userProfile = await User.getById(user.id);
-      
-      if (!userProfile) {
-        console.log(`No profile found for user ${user.id}, creating...`);
-        // Create minimal profile from auth user data
-        const userData = {
-          email: user.email,
-          display_name: extractDisplayName(user),
-          first_name: user.user_metadata?.given_name || user.user_metadata?.first_name || '',
-          last_name: user.user_metadata?.family_name || user.user_metadata?.last_name || '',
-          avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || '',
-          language: extractLanguage(user) || 'en',
-        };
-
-        userProfile = await User.createFromAuth(user.id, user);
-        
-        if (!userProfile) {
-          console.error('Failed to create user profile');
-          return res.status(500).json({
-            error: 'Profile creation failed',
-            message: 'Unable to create user profile'
-          });
-        }
-        
-        console.log(`Profile created for user: ${user.id}`);
-      }
-      
-    } catch (profileError) {
-      console.error('Error handling user profile:', profileError);
-      
-      // Last attempt - try to get existing profile
-      userProfile = await User.getById(user.id);
-      
-      if (!userProfile) {
-        return res.status(500).json({
-          error: 'Profile access failed',
-          message: 'Unable to access or create user profile'
-        });
-      }
-    }
-
-    // Serialize and attach to request
-    const serializedUser = User.serialize(userProfile);
-    
-    if (!serializedUser) {
-      console.error('Failed to serialize user profile');
-      return res.status(500).json({
-        error: 'Profile serialization failed',
-        message: 'Unable to process user profile'
-      });
-    }
-
-    req.user = serializedUser;
-    req.authUser = user; // Keep original auth user data
-    
-    console.log(`Authentication successful for user: ${user.id}`);
-    next();
-
-  } catch (error) {
-    console.error('Authentication middleware error:', error)
-    res.status(500).json({ 
-      error: 'Internal server error', 
-      message: 'Authentication failed' 
-    })
+// Replace authenticate middleware
+export const authenticate = (req, res, next) => {
+  if (isDevelopment) {
+    req.user = createDevUser();
+    return next();
   }
-}
+  
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  
+  res.status(401).json({ error: 'Unauthorized' });
+};
 
 export const requireAdmin = (req, res, next) => {
   // DEVELOPMENT MODE BYPASS

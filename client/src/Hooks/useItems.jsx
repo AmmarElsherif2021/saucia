@@ -1,12 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  listItems, 
-  getItemById, 
-  createItem, 
-  updateItem, 
-  deleteItem,
-  getItemsBySection
-} from '../API/items';
+import { itemsAPI } from '../API/itemAPI';
 
 /**
  * Custom hook for managing items according to Supabase schema
@@ -74,7 +67,7 @@ export function useItems() {
     setLoading(true);
     setError(null);
     try {
-      const data = await listItems(queryParams);
+      const data = await itemsAPI.listItems(queryParams);
       const validatedItems = data
         .map(validateItemData)
         .filter(Boolean)
@@ -95,7 +88,7 @@ export function useItems() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getItemById(itemId);
+      const data = await itemsAPI.getItemById(itemId);
       const validatedItem = validateItemData(data);
       return validatedItem;
     } catch (err) {
@@ -107,7 +100,7 @@ export function useItems() {
     }
   }, []);
 
-  const addItem = useCallback(async (token, itemData) => {
+  const addItem = useCallback(async (itemData) => {
     setLoading(true);
     setError(null);
     try {
@@ -117,7 +110,7 @@ export function useItems() {
         throw new Error('Invalid item data provided');
       }
 
-      const newItem = await createItem(token, validatedData);
+      const newItem = await itemsAPI.createItem(validatedData);
       const normalizedItem = validateItemData(newItem);
       
       if (normalizedItem) {
@@ -134,11 +127,11 @@ export function useItems() {
     }
   }, []);
 
-  const modifyItem = useCallback(async (token, itemId, updates) => {
+  const modifyItem = useCallback(async (itemId, updates) => {
     setLoading(true);
     setError(null);
     try {
-      const updatedItem = await updateItem(token, itemId, updates);
+      const updatedItem = await itemsAPI.updateItem(itemId, updates);
       const normalizedItem = validateItemData(updatedItem);
       
       if (normalizedItem) {
@@ -158,11 +151,11 @@ export function useItems() {
     }
   }, []);
 
-  const removeItem = useCallback(async (token, itemId) => {
+  const removeItem = useCallback(async (itemId) => {
     setLoading(true);
     setError(null);
     try {
-      await deleteItem(token, itemId);
+      await itemsAPI.deleteItem(itemId);
       setItems(prev => prev.filter(item => item.id !== itemId));
     } catch (err) {
       console.error('Error removing item:', err);
@@ -177,8 +170,7 @@ export function useItems() {
     setLoading(true);
     setError(null);
     try {
-      // Use the existing getItemsBySection function but rename parameter for clarity
-      const data = await getItemsBySection(category);
+      const data = await itemsAPI.getItemsBySection(category);
       const validatedItems = data
         .map(validateItemData)
         .filter(Boolean)
@@ -188,6 +180,61 @@ export function useItems() {
       return validatedItems;
     } catch (err) {
       console.error('Error fetching items by category:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const toggleItemAvailability = useCallback(async (itemId, isAvailable) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await itemsAPI.toggleItemAvailability(itemId, isAvailable);
+      setItems(prev => 
+        prev.map(item => 
+          item.id === itemId ? { ...item, is_available: isAvailable } : item
+        )
+      );
+    } catch (err) {
+      console.error('Error toggling item availability:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const bulkUpdateItems = useCallback(async (updates) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const updatedItems = await itemsAPI.bulkUpdateItems(updates);
+      const validatedItems = updatedItems
+        .map(validateItemData)
+        .filter(Boolean)
+        .sort((a, b) => a.sort_order - b.sort_order);
+      
+      setItems(validatedItems);
+      return validatedItems;
+    } catch (err) {
+      console.error('Error bulk updating items:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getItemAnalytics = useCallback(async (timeframe = '30d') => {
+    setLoading(true);
+    setError(null);
+    try {
+      const analytics = await itemsAPI.getItemAnalytics(timeframe);
+      return analytics;
+    } catch (err) {
+      console.error('Error fetching item analytics:', err);
       setError(err);
       throw err;
     } finally {
@@ -215,6 +262,9 @@ export function useItems() {
     modifyItem,
     removeItem,
     fetchItemsByCategory,
+    toggleItemAvailability,
+    bulkUpdateItems,
+    getItemAnalytics,
     getItemsByCategory,
     getAvailableItems
   };

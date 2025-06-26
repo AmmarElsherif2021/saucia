@@ -1,7 +1,6 @@
 // Enhanced User.js model optimized for Supabase auth.users relationship
 
 import { supabase, supabaseAdmin } from '../supabase.js'
-
 export class User {
   static tableName = 'user_profiles'
 
@@ -493,4 +492,40 @@ export class User {
       throw error;
     }
   }
+
+// Google OAuth integration
+
+static async findOrCreateFromGoogle(profile) {
+  const { id, displayName, emails, photos } = profile;
+  const email = emails?.[0]?.value || '';
+
+  // Check if user exists
+  let user = await this.getByGoogleId(id);
+  let isNew = false;
+
+  if (!user) {
+    // Create new user
+    const newUser = {
+      id: id,  // Use Google ID as user ID
+      google_id: id,
+      email: email,
+      display_name: displayName,
+      avatar_url: photos?.[0]?.value || '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const { data, error } = await supabaseAdmin
+      .from(this.tableName)
+      .insert(newUser)
+      .select()
+      .single();
+
+    if (error) throw error;
+    user = data;
+    isNew = true;
+  }
+  
+  return { user, isNew };
+}
 }

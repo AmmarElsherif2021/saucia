@@ -1,6 +1,18 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { authAPI } from '../API/authenticate';
-import { AUTH_CONFIG } from '../config/auth';
+import { authAPI } from '../API/authAPI';
+import { AUTH_CONFIG } from '../config/auth.js';
+
+const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development';
+
+const DEV_USER = {
+  id: 'dev-user',
+  email: 'dev@example.com',
+  displayName: 'Development User',
+  photoURL: 'https://via.placeholder.com/150',
+  isAdmin: true,
+  provider: 'development',
+};
+
 export function useAuth() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -9,10 +21,12 @@ export function useAuth() {
   const [isNewUser, setIsNewUser] = useState(false);
   const refreshLock = useRef(false);
 
+  const clearError = useCallback(() => setAuthError(null), []);
+  const clearNewUserFlag = useCallback(() => setIsNewUser(false), []);
+
   const initializeAuth = useCallback(async () => {
-    // SINGLE POINT: Development mode bypass
-    if (AUTH_CONFIG.isDevelopment) {
-      setUser(AUTH_CONFIG.DEV_USER);
+    if (isDevelopment) {
+      setUser(DEV_USER);
       setLoading(false);
       setIsInitialized(true);
       return;
@@ -20,14 +34,14 @@ export function useAuth() {
 
     try {
       setLoading(true);
-      setAuthError(null);
+      clearError();
       
       const sessionData = await authAPI.getSession();
       
       if (sessionData?.user) {
         const profileData = await authAPI.getUserProfile();
         
-        setUser({
+        const userData = {
           id: sessionData.user.id,
           email: sessionData.user.email,
           displayName: profileData.displayName || 
@@ -38,38 +52,26 @@ export function useAuth() {
           isAdmin: profileData.isAdmin || false,
           provider: sessionData.user.app_metadata?.provider,
           ...profileData
-        });
-      } else {
-        const storedSession = localStorage.getItem('supabase_session');
-        if (storedSession) {
-          authAPI.setSession(JSON.parse(storedSession));
-          await refreshSession();
-        }
+        };
+        
+        setUser(userData);
       }
     } catch (error) {
       console.error('Auth initialization error:', error);
       setAuthError(error.message || 'Failed to initialize authentication');
       authAPI.clearSession();
-      localStorage.removeItem('supabase_session');
     } finally {
       setLoading(false);
       setIsInitialized(true);
     }
-  }, []);
+  }, [clearError]);
 
   const loginWithOAuth = async (provider) => {
-    // SINGLE POINT: Development mode bypass  
-    if (AUTH_CONFIG.isDevelopment) {
-      setUser(AUTH_CONFIG.DEV_USER);
-      return { success: true };
-    }
-    
     try {
       setLoading(true);
-      setAuthError(null);
-      localStorage.removeItem('supabase_session');
+      clearError();
       
-      const result = await authAPI.initiateOAuthLogin(provider);
+      const result = await authAPI.initiateOAuth(provider);
       return { success: true, ...result };
     } catch (error) {
       console.error(`${provider} login error:`, error);
@@ -83,21 +85,11 @@ export function useAuth() {
   const handleOAuthCallback = async (code, state) => {
     try {
       setLoading(true);
-      setAuthError(null);
+      clearError();
       
       const result = await authAPI.handleOAuthCallback(code, state);
       
       if (result?.user) {
-        if (!result.user.displayName) {
-          await authAPI.updateUserProfile({
-            displayName: result.user.email.split('@')[0]
-          });
-        }
-        
-        if (result.session && !AUTH_CONFIG.isDevelopment) {
-          localStorage.setItem('supabase_session', JSON.stringify(result.session));
-        }
-
         if (result.isNewUser) {
           setIsNewUser(true);
         }
@@ -138,26 +130,16 @@ export function useAuth() {
   const logout = async () => {
     try {
       setLoading(true);
-      setAuthError(null);
+      clearError();
       
       await authAPI.signOut();
       setUser(null);
       setIsNewUser(false);
       
-      if (!AUTH_CONFIG.isDevelopment) {
-        localStorage.removeItem('supabase_session');
-      }
-      
       return { success: true };
     } catch (error) {
       console.error('Logout error:', error);
       setAuthError(error.message || 'Failed to log out');
-      authAPI.clearSession();
-      
-      if (!AUTH_CONFIG.isDevelopment) {
-        localStorage.removeItem('supabase_session');
-      }
-      
       setUser(null);
       setIsNewUser(false);
       return { success: false, error: error.message };
@@ -167,17 +149,13 @@ export function useAuth() {
   };
 
   const refreshSession = useCallback(async () => {
-    if (refreshLock.current) return;
+    if (refreshLock.current || isDevelopment) return;
     refreshLock.current = true;
 
     try {
       const result = await authAPI.refreshSession();
       
-      if (result.session && result.user) {
-        if (!AUTH_CONFIG.isDevelopment) {
-          localStorage.setItem('supabase_session', JSON.stringify(result.session));
-        }
-        
+      if (result?.user) {
         const profileData = await authAPI.getUserProfile();
         
         const userData = {
@@ -213,7 +191,7 @@ export function useAuth() {
   }, [logout]);
 
   const checkAdminStatus = useCallback(async () => {
-    if (AUTH_CONFIG.isDevelopment) return true;
+    if (isDevelopment) return true;
     
     try {
       if (!user) return false;
@@ -228,7 +206,7 @@ export function useAuth() {
   const updateProfile = async (profileData) => {
     try {
       setLoading(true);
-      setAuthError(null);
+      clearError();
       
       const updatedProfile = await authAPI.updateUserProfile(profileData);
       
@@ -250,7 +228,7 @@ export function useAuth() {
   const completeProfile = async (profileData) => {
     try {
       setLoading(true);
-      setAuthError(null);
+      clearError();
       
       const result = await authAPI.completeUserProfile(profileData);
       
@@ -272,9 +250,9 @@ export function useAuth() {
     }
   };
 
-  // Auto-refresh session (skip in development)
+  // Auto-refresh session
   useEffect(() => {
-    if (!user || AUTH_CONFIG.isDevelopment) return;
+    if (!user || isDevelopment) return;
 
     const interval = setInterval(async () => {
       try {
@@ -282,46 +260,24 @@ export function useAuth() {
       } catch (error) {
         console.error('Auto-refresh failed:', error);
       }
-    }, 50 * 60 * 1000);
+    }, AUTH_CONFIG.SESSION_REFRESH_INTERVAL);
 
     return () => clearInterval(interval);
   }, [user, refreshSession]);
 
+  // Initialize auth on mount
   useEffect(() => {
-    if (!isInitialized) initializeAuth();
+    if (!isInitialized) {
+      initializeAuth();
+    }
+  }, [initializeAuth, isInitialized]);
 
-    const handleOnline = () => {
-      if (authAPI.isAuthenticated() && !user) {
-        initializeAuth();
-      }
-    };
-
-    window.addEventListener('online', handleOnline);
-    return () => window.removeEventListener('online', handleOnline);
-  }, [initializeAuth, isInitialized, user]);
-
+  // Clear errors when user changes
   useEffect(() => {
     if (user && authError) {
       setAuthError(null);
     }
   }, [user, authError]);
-
-  // Session expiration watchdog (skip in development)
-  useEffect(() => {
-    if (!user || !authAPI.getCurrentSession() || AUTH_CONFIG.isDevelopment) return;
-
-    const expiresAt = authAPI.getCurrentSession().expires_at;
-    if (!expiresAt) return;
-
-    const expiresIn = new Date(expiresAt * 1000) - Date.now();
-    if (expiresIn <= 0) return;
-
-    const timeout = setTimeout(() => {
-      refreshSession();
-    }, expiresIn - 60000);
-
-    return () => clearTimeout(timeout);
-  }, [user, refreshSession]);
 
   return {
     user,
@@ -336,7 +292,7 @@ export function useAuth() {
     updateProfile,
     completeProfile,
     checkAdminStatus,
-    clearError: () => setAuthError(null),
-    clearNewUserFlag: () => setIsNewUser(false)
+    clearError,
+    clearNewUserFlag
   };
 }

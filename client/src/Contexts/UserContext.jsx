@@ -56,32 +56,46 @@
  *   price: number
  */
 
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { useAuth } from '../hooks/useAuth'
+import { useOrders } from '../hooks/useOrders'
 import { supabase } from '../../supabaseClient.jsx'
-import { getUserOrders } from '../API/orders.jsx'
-import { getUserInfo, updateUserProfile as apiUpdateUserProfile } from '../API/users.jsx'
-
+import { userAPI } from '../API/userAPI.jsx'
 const UserContext = createContext()
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
   const [userPlan, setUserPlan] = useState(null)
   const [planLoading, setPlanLoading] = useState(false)
   const [userAddress, setUserAddress] = useState(null)
+  
+  // Use the auth hook
+  const { 
+    user: authUser, 
+    loading: authLoading, 
+    logout: authLogout,
+    updateProfile: authUpdateProfile 
+  } = useAuth()
+  
+  // Use the orders hook
+  const { 
+    orders,
+    fetchUserOrders,
+    loading: ordersLoading 
+  } = useOrders()
 
-  const createDefaultUserStructure = (supabaseUser, profileData = {}) => {
+  const createDefaultUserStructure = (authUserData, profileData = {}) => {
     // Core validation
-    if (!supabaseUser?.id) throw new Error('Invalid user data')
+    if (!authUserData?.id) throw new Error('Invalid user data')
     
     return {
       // Required fields
-      id: supabaseUser.id,
-      email: supabaseUser.email || '',
+      id: authUserData.id,
+      email: authUserData.email || '',
       firstName: profileData?.first_name || '',
       lastName: profileData?.last_name || '',
       phoneNumber: profileData?.phone_number || '',
-      isAdmin: profileData?.is_admin || false,
+      isAdmin: profileData?.is_admin || authUserData.isAdmin || false,
       
       // Structured nested objects
       addresses: (profileData?.user_addresses || []).map(a => ({
@@ -116,27 +130,45 @@ export const UserProvider = ({ children }) => {
       orders: [] // Populated separately
     }
   }
-  
-  const refreshOrders = async () => {
-    const orders = await getUserOrders(user.id)
-    
-    return orders.map(o => ({
-      id: o.id,
-      total: o.total,
-      status: o.status,
-      createdAt: o.created_at,
-      items: (o.items || []).map(i => ({
-        itemId: i.item_id,
-        quantity: i.quantity,
-        price: i.price
-      }))
-    }))
+
+  const getUserProfileFromAPI = async (userId) => {
+    try {
+      const profileData = await userAPI.getUserInfo(userId)
+      return profileData
+    } catch (error) {
+      console.error('Error fetching user profile:', error)
+      return null
+    }
   }
 
-  const fetchUserPlanDetails = async (planId) => {
-    if (!planId) return null;
+  const refreshOrders = useCallback(async () => {
+    if (!user?.id) return []
     
     try {
+      const fetchedOrders = await fetchUserOrders()
+      
+      return fetchedOrders.map(o => ({
+        id: o.id,
+        total: o.total,
+        status: o.status,
+        createdAt: o.created_at,
+        items: (o.items || []).map(i => ({
+          itemId: i.item_id,
+          quantity: i.quantity,
+          price: i.price
+        }))
+      }))
+    } catch (error) {
+      console.error('Error refreshing orders:', error)
+      return []
+    }
+  }, [user?.id, fetchUserOrders])
+
+  const fetchUserPlanDetails = async (planId) => {
+    if (!planId) return null
+    
+    try {
+      setPlanLoading(true)
       const { data, error } = await supabase
         .from('plans')
         .select('*')
@@ -148,15 +180,17 @@ export const UserProvider = ({ children }) => {
     } catch (error) {
       console.error('Plan fetch error:', error)
       return null
+    } finally {
+      setPlanLoading(false)
     }
-  };
+  }
 
   const updateUserProfile = async (userId, updateData) => {
     if (!userId) throw new Error('User ID is required')
 
     try {
-      // Use API function instead of direct Supabase update
-      const result = await apiUpdateUserProfile(userId, updateData)
+      // Use userAPI instead of direct API call
+      const result = await userAPI.updateUserProfile(userId, updateData)
 
       // Update local user state immediately for better UX
       setUser((prevUser) => ({
@@ -176,13 +210,13 @@ export const UserProvider = ({ children }) => {
     if (!user?.id) return null
 
     try {
-      // Use API to update subscription
+      // Use userAPI to update subscription
       const updateData = {
         subscription: subscriptionData,
         updatedAt: new Date().toISOString(),
       }
 
-      await apiUpdateUserProfile(user.id, updateData)
+      await userAPI.updateUserProfile(user.id, updateData)
 
       const updatedUser = {
         ...user,
@@ -203,15 +237,43 @@ export const UserProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut()
+      await authLogout()
       setUser(null)
       setUserPlan(null)
+      setUserAddress(null)
     } catch (error) {
       console.error('Error signing out:', error)
     }
   }
 
-  // Load user plan whenever the user changes
+  // Sync with auth user changes
+  useEffect(() => {
+    const syncUserData = async () => {
+      if (authUser) {
+        try {
+          const profile = await getUserProfileFromAPI(authUser.id)
+          const userInfo = createDefaultUserStructure(authUser, profile)
+          
+          // Get orders separately
+          const userOrders = await refreshOrders()
+          userInfo.orders = userOrders
+          
+          setUser(userInfo)
+        } catch (error) {
+          console.error('Error syncing user data:', error)
+          setUser(null)
+        }
+      } else {
+        setUser(null)
+        setUserPlan(null)
+        setUserAddress(null)
+      }
+    }
+
+    syncUserData()
+  }, [authUser, refreshOrders])
+
+  // Load user plan whenever the user subscription changes
   useEffect(() => {
     if (user?.subscription?.planId) {
       fetchUserPlanDetails(user.subscription.planId).then((planData) => {
@@ -222,73 +284,43 @@ export const UserProvider = ({ children }) => {
     }
   }, [user?.subscription?.planId])
 
+  // Update user orders when orders from hook change
   useEffect(() => {
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setLoading(true)
-        
-        try {
-          if (session?.user) {
-            const userId = session.user.id
-            const [profile, orders] = await Promise.all([
-              getUserProfileFromSupabase(userId),
-              refreshOrders()
-            ])
+    if (user && orders.length > 0) {
+      const formattedOrders = orders.map(o => ({
+        id: o.id,
+        total: o.total,
+        status: o.status,
+        createdAt: o.created_at || o.createdAt,
+        items: (o.items || []).map(i => ({
+          itemId: i.item_id || i.itemId,
+          quantity: i.quantity,
+          price: i.price
+        }))
+      }))
 
-            // Create user object with default structure
-            const userInfo = createDefaultUserStructure(session.user, profile)
-            userInfo.orders = orders
-
-            setUser(userInfo)
-          } else {
-            setUser(null)
-          }
-        } catch (error) {
-          console.error('Error in auth state change:', error)
-          setUser(null)
-        } finally {
-          setLoading(false)
-        }
-      }
-    )
-
-    // Check initial session
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
-        const userId = session.user.id
-        const profile = await getUserProfileFromSupabase(userId)
-        const orders = await refreshOrders()
-        
-        const userInfo = createDefaultUserStructure(session.user, profile)
-        userInfo.orders = orders
-        
-        setUser(userInfo)
-      }
-      setLoading(false)
+      setUser(prev => ({
+        ...prev,
+        orders: formattedOrders
+      }))
     }
-
-    checkSession()
-
-    return () => subscription?.unsubscribe()
-  }, [])
+  }, [orders, user?.id])
 
   const contextValue = {
     user,
     setUser,
     userPlan,
     setUserPlan,
+    loading: authLoading || ordersLoading,
     planLoading,
     logout,
-    loading,
     updateUserSubscription,
     updateUserProfile,
     refreshOrders: async () => {
       if (user?.id) {
-        const orders = await refreshOrders()
-        setUser((prev) => ({ ...prev, orders }))
-        return orders
+        const freshOrders = await refreshOrders()
+        setUser((prev) => ({ ...prev, orders: freshOrders }))
+        return freshOrders
       }
       return []
     },
