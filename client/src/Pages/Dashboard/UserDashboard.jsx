@@ -50,26 +50,28 @@ import {
 } from '@chakra-ui/react'
 import { StarIcon, EditIcon } from '@chakra-ui/icons'
 import { useTranslation } from 'react-i18next'
-import { useUser } from '../../Contexts/UserContext'
+import { useAuthContext } from '../../Contexts/AuthContext'
 import { useState, useEffect } from 'react'
 import MapModal from '../Checkout/MapModal'
 import locationPin from '../../assets/locationPin.svg'
 import { useNavigate } from 'react-router-dom'
+
 export const UserDashboard = () => {
   const navigate = useNavigate()
   const { colorMode } = useColorMode()
   const { t } = useTranslation()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { isOpen: isMapOpen, onOpen: onOpenMap, onClose: onCloseMap } = useDisclosure()
+  // Updated context usage
   const {
-    user,
-    loading,
-    userPlan,
-    planLoading,
-    refreshOrders,
+    user,           // Complete unified user data
+    userPlan,       // User's subscription plan
+    userAddress,    // Default user address
+    orders,         // User's orders
+    updateUserProfile,
     updateUserSubscription,
-    updateUserProfile, // Use context function instead of API directly
-  } = useUser()
+    isLoading
+  } = useAuthContext()
 
   const [isOrdersLoading, setIsOrdersLoading] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
@@ -77,14 +79,12 @@ export const UserDashboard = () => {
   const toast = useToast()
   const createDefaultFormData = (userData) => ({
     displayName: userData?.displayName || '',
-    firstName: userData?.firstName || '',
-    lastName: userData?.lastName || '',
     phoneNumber: userData?.phoneNumber || '',
     age: userData?.age || 0,
     gender: userData?.gender || 'male',
     language: userData?.language || 'en',
     notes: userData?.notes || '',
-    defaultAddress: userData?.defaultAddress || '',
+    defaultAddress: userData?.defaultAddress || userAddress || '',
     deliveryTime: userData?.subscription?.deliveryTime || '12:00',
     healthProfile: {
       height: userData?.healthProfile?.height || null,
@@ -104,15 +104,16 @@ export const UserDashboard = () => {
   // Initialize form data when user loads
   useEffect(() => {
     if (user) {
-      console.log(`From user dashboard user data ${JSON.stringify(user)}`)
       setFormData(createDefaultFormData(user))
     }
-  }, [user])
+  }, [user, userAddress])
 
   const handleRefreshOrders = async () => {
     setIsOrdersLoading(true)
     try {
-      await refreshOrders()
+      // If you have a refreshOrders function in context, call it here
+      // Otherwise, just simulate a refresh
+      // await refreshOrders()
     } finally {
       setIsOrdersLoading(false)
     }
@@ -131,13 +132,20 @@ export const UserDashboard = () => {
 
   // Generic nested field change handler
   const handleNestedFieldChange = (parentField, field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [parentField]: {
-        ...prev[parentField],
+    if (!parentField) {
+      setFormData((prev) => ({
+        ...prev,
         [field]: value,
-      },
-    }))
+      }))
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [parentField]: {
+          ...prev[parentField],
+          [field]: value,
+        },
+      }))
+    }
   }
 
   // Simplified handlers using the generic function
@@ -203,7 +211,6 @@ export const UserDashboard = () => {
 
     setIsUpdating(true)
     try {
-      // Use context function instead of direct API call
       await updateUserProfile(user.uid, formData)
       toast({
         title: t('profile.profileUpdated'),
@@ -298,7 +305,6 @@ export const UserDashboard = () => {
         onChange={onChange}
         min={min}
         max={max}
-        // Removed focusInputOnChange to fix stepper/focus issue
         sx={{
           paddingX: '10px',
         }}
@@ -425,7 +431,7 @@ export const UserDashboard = () => {
           </Tr>
         </Thead>
         <Tbody>
-          {user.orders?.map((order) => (
+          {(orders || user.orders)?.map((order) => (
             <Tr key={order.id}>
               <Td>{order.id.slice(0, 8)}...</Td>
               <Td>
@@ -460,7 +466,7 @@ export const UserDashboard = () => {
           ))}
         </Tbody>
       </Table>
-      {user.orders?.length === 0 && (
+      {(orders || user.orders)?.length === 0 && (
         <Text textAlign="center" p={4} color="gray.500">
           {t('profile.noOrdersFound')}
         </Text>
@@ -469,7 +475,7 @@ export const UserDashboard = () => {
   )
 
   const SubscriptionDetails = () => {
-    if (planLoading) return <Spinner />
+    if (isLoading) return <Spinner />
 
     return (
       <Box bg={'secondary.200'}>
@@ -533,7 +539,7 @@ export const UserDashboard = () => {
     )
   }
 
-  if (loading)
+  if (isLoading)
     return (
       <Box p={4}>
         <Spinner size="xl" />
@@ -617,20 +623,6 @@ export const UserDashboard = () => {
                     name="displayName"
                     value={formData.displayName || ''}
                     placeholder={t('profile.enterDisplayName')}
-                  />
-
-                  <BasicFormControl
-                    label={t('profile.firstName')}
-                    name="firstName"
-                    value={formData.firstName || ''}
-                    placeholder={t('profile.enterFirstName')}
-                  />
-
-                  <BasicFormControl
-                    label={t('profile.lastName')}
-                    name="lastName"
-                    value={formData.lastName || ''}
-                    placeholder={t('profile.enterLastName')}
                   />
 
                   <BasicFormControl
@@ -849,8 +841,6 @@ export const UserDashboard = () => {
                     verified={user.emailVerified}
                   />
                   <UserInfoItem label={t('profile.displayName')} value={user.displayName} />
-                  <UserInfoItem label={t('profile.firstName')} value={user.firstName} />
-                  <UserInfoItem label={t('profile.lastName')} value={user.lastName} />
                   <UserInfoItem label={t('profile.phoneNumber')} value={user.phoneNumber} />
                   <UserInfoItem label={t('profile.age')} value={user.age} />
                   <UserInfoItem label={t('profile.gender')} value={user.gender} />
@@ -859,14 +849,6 @@ export const UserDashboard = () => {
                     label={t('profile.accountCreated')}
                     value={new Date(user.createdAt).toLocaleDateString()}
                   />
-                  {/*<UserInfoItem
-                    label={t('profile.lastUpdated')}
-                    value={new Date(user.updatedAt?.seconds * 1000).toLocaleString()}
-                  />
-                  <UserInfoItem
-                    label={t('profile.lastLogin')}
-                    value={new Date(user.lastLogin?.seconds * 1000).toLocaleString()}
-                  />*/}
                   <UserInfoItem
                     label={t('profile.loyaltyPoints')}
                     value={user.loyaltyPoints || 0}

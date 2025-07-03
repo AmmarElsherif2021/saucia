@@ -18,8 +18,9 @@ import {
   Tooltip,
 } from '@chakra-ui/react'
 import { useTranslation } from 'react-i18next'
-import { useUser } from '../../Contexts/UserContext'
+import { useAuthContext } from '../../Contexts/AuthContext'
 import { WarningIcon } from '@chakra-ui/icons'
+import { useAuth } from '../../hooks/useAuth'
 
 const CustomizableMealSelectionModal = ({
   isOpen,
@@ -32,7 +33,7 @@ const CustomizableMealSelectionModal = ({
   const [selectedItems, setSelectedItems] = useState({})
   const [groupedItems, setGroupedItems] = useState({})
   const [sectionFreeCounts, setSectionFreeCounts] = useState({})
-  const { user } = useUser()
+  const { user } = useAuthContext()
 
   useEffect(() => {
     if (user) {

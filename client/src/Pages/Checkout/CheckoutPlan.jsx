@@ -34,7 +34,7 @@ import MapModal from './MapModal'
 import { useTranslation } from 'react-i18next'
 import { useI18nContext } from '../../Contexts/I18nContext'
 import { useNavigate } from 'react-router-dom'
-import { useUser } from '../../Contexts/UserContext'
+import { useAuthContext } from '../../Contexts/AuthContext'
 import { updateUserProfile } from '../../API/users'
 import { useElements } from '../../Contexts/ElementsContext'
 import { MealPlanCard } from './MealPlanCard'
@@ -250,7 +250,7 @@ const CheckoutPlan = () => {
   // Hooks and context
   const navigate = useNavigate()
   const { colorMode } = useColorMode()
-  const { user, userPlan, setUser, userAddress } = useUser()
+  const { user, userPlan, userAddress, updateUserProfile } = useAuthContext();
   const { saladItems, signatureSalads } = useElements()
   const toast = useToast()
   const { t } = useTranslation()
@@ -425,16 +425,6 @@ const CheckoutPlan = () => {
       }
 
       await updateUserProfile(user.uid, subscriptionData)
-
-      // Update local user context
-      setUser((prev) => ({
-        ...prev,
-        ...userProfileUpdates,
-        addresses: updatedAddresses,
-        defaultAddress: deliveryAddress,
-        subscription: subscriptionData.subscription,
-      }))
-
       toast({
         title: t('checkout.subscriptionSuccessful'),
         description: t('checkout.premiumPlanActive'),

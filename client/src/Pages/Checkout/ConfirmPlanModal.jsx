@@ -23,7 +23,7 @@ import {
 import { WarningIcon } from '@chakra-ui/icons'
 import { useI18nContext } from '../../Contexts/I18nContext'
 import { useEffect, useState } from 'react'
-import { useUser } from '../../Contexts/UserContext'
+import { useAuthContext } from '../../Contexts/AuthContext'
 
 const ConfirmPlanModal = ({
   isOpen,
@@ -48,7 +48,7 @@ const ConfirmPlanModal = ({
   const isArabic = currentLanguage === 'ar'
   const toast = useToast()
   const [endDateObj, setEndDateObj] = useState(null)
-  const { user } = useUser()
+  const { user } = useAuthContext();
 
   // Convert formattedEndDate to Date object when component mounts or formattedEndDate changes
   useEffect(() => {

@@ -1,13 +1,13 @@
 // Enhanced User.js model optimized for Supabase auth.users relationship
-
+import { v4 as uuidv4 } from 'uuid';
 import { supabase, supabaseAdmin } from '../supabase.js'
 export class User {
   static tableName = 'user_profiles'
 
   static defaultValues = {
     display_name: '',
-    first_name: '',
-    last_name: '',
+    //first_name: '',
+    //last_name: '',
     phone_number: '',
     avatar_url: '',
     is_admin: false,
@@ -40,8 +40,8 @@ export class User {
       id: userData.id,
       email: email,
       displayName: userData.display_name || '',
-      firstName: userData.first_name || '',
-      lastName: userData.last_name || '',
+      //firstName: userData.first_name || '',
+      //lastName: userData.last_name || '',
       phoneNumber: userData.phone_number || '',
       avatarUrl: userData.avatar_url || '',
       isAdmin: Boolean(userData.is_admin),
@@ -99,12 +99,12 @@ export class User {
           newUserData.display_name = authUserData.email.split('@')[0];
         }
 
-        if (authUserData.user_metadata?.given_name) {
-          newUserData.first_name = authUserData.user_metadata.given_name;
-        }
-        if (authUserData.user_metadata?.family_name) {
-          newUserData.last_name = authUserData.user_metadata.family_name;
-        }
+        // if (authUserData.user_metadata?.given_name) {
+        //   newUserData.first_name = authUserData.user_metadata.given_name;
+        // }
+        // if (authUserData.user_metadata?.family_name) {
+        //   newUserData.last_name = authUserData.user_metadata.family_name;
+        // }
         if (authUserData.user_metadata?.avatar_url) {
           newUserData.avatar_url = authUserData.user_metadata.avatar_url;
         }
@@ -146,49 +146,28 @@ export class User {
     try {
       console.log(`Fetching user profile for ID: ${id}`);
       
-      const { data: profileData, error: profileError } = await supabaseAdmin
+      const { data, error } = await supabaseAdmin
         .from(this.tableName)
-        .select(`
-          *,
-          user_addresses(*),
-          user_payment_methods(*),
-          user_health_profiles(*),
-          user_subscriptions(*)
-        `)
+        .select('*')
         .eq('id', id)
-        .maybeSingle();
-
-      if (profileError) {
-        console.error(`Supabase error fetching user profile ${id}:`, profileError);
+        .single(); // Simplify to single row
+  
+      if (error) {
+        console.error(`Supabase error fetching user profile ${id}:`, error);
         return null;
       }
       
-      if (!profileData) {
+      if (!data) {
         console.log(`No user profile found for ID: ${id}`);
         return null;
       }
-
-      // Optionally fetch auth data for correlation
-      let authData = null;
-      if (includeAuthData) {
-        try {
-          const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(id);
-          if (!authError && authUser?.user) {
-            authData = authUser.user;
-          }
-        } catch (authError) {
-          console.warn(`Could not fetch auth data for user ${id}:`, authError.message);
-        }
-      }
-      
-      console.log(`Successfully fetched user ${id}`);
-      return { ...profileData, authData };
+  
+      return data;
     } catch (error) {
       console.error(`Error fetching user ${id}:`, error);
       return null;
     }
   }
-
   // Get current user with automatic profile creation/sync
   static async getCurrentUser() {
     try {
@@ -205,7 +184,7 @@ export class User {
         return null;
       }
       
-      console.log(`Found authenticated user: ${authUser.id}`);
+      console.log(`Found authenticated user !!!!!!!!!!: ${authUser.id}`);
       
       // Get or create profile
       let userProfile = await this.getById(authUser.id, false);
@@ -227,52 +206,39 @@ export class User {
   // Update user profile (optimized to avoid auth fields)
   static async update(id, updateData) {
     try {
+      // Debug log
       console.log(`Updating user ${id} with data:`, updateData);
       
       const processedData = {
-        display_name: updateData.displayName || updateData.display_name,
-        first_name: updateData.firstName || updateData.first_name,
-        last_name: updateData.lastName || updateData.last_name,
+        // first_name: updateData.firstName || updateData.first_name,
+        // last_name: updateData.lastName || updateData.last_name,
         phone_number: updateData.phoneNumber || updateData.phone_number,
-        avatar_url: updateData.avatarUrl || updateData.avatar_url,
-        is_admin: updateData.isAdmin !== undefined ? updateData.isAdmin : updateData.is_admin,
-        loyalty_points: updateData.loyaltyPoints || updateData.loyalty_points,
-        notes: updateData.notes,
-        language: updateData.language,
-        age: updateData.age,
-        gender: updateData.gender,
-        phone_verified: updateData.phoneVerified || updateData.phone_verified,
-        account_status: updateData.accountStatus || updateData.account_status,
-        timezone: updateData.timezone,
         updated_at: new Date().toISOString()
       };
-
-      // Remove undefined values
-      Object.keys(processedData).forEach(key => {
-        if (processedData[key] === undefined) {
-          delete processedData[key];
-        }
-      });
-
-      console.log('Processed update data:', processedData);
-
+  
+      // Handle profile completion
+      if (updateData.profile_completed !== undefined) {
+        processedData.profile_completed = updateData.profile_completed;
+      }
+  
+      // Add date of birth if provided
+      if (updateData.age || updateData.age) {
+        processedData.age = updateData.age || updateData.age;
+      }
+  
       const { data, error } = await supabaseAdmin
         .from(this.tableName)
         .update(processedData)
         .eq('id', id)
         .select()
         .single();
-
+  
       if (error) {
-        console.error(`Supabase error updating user ${id}:`, error);
+        console.error('Supabase update error:', error);
         throw error;
       }
       
-      console.log(`User ${id} updated successfully`);
-      
-      // Get auth data for complete serialization
-      const userWithAuth = await this.getById(id, true);
-      return this.serialize(userWithAuth, userWithAuth?.authData);
+      return data;
     } catch (error) {
       console.error(`Error updating user ${id}:`, error);
       throw error;
@@ -494,20 +460,75 @@ export class User {
   }
 
 // Google OAuth integration
-
 static async findOrCreateFromGoogle(profile) {
-  const { id, displayName, emails, photos } = profile;
+  const { id: googleId, displayName, emails, photos } = profile;
   const email = emails?.[0]?.value || '';
 
-  // Check if user exists
-  let user = await this.getByGoogleId(id);
-  let isNew = false;
+  try {
+    // 1. Check if we have a user with this Google ID
+    let user = await this.getByGoogleId(googleId);
+    let isNew = false;
 
-  if (!user) {
-    // Create new user
+    if (user) {
+      return { user, isNew };
+    }
+
+    // 2. Check if email exists in auth system
+    let authUser = null;
+    try {
+      const { data, error } = await supabaseAdmin.auth.admin.listUsers({
+        page: 1,
+        perPage: 1,
+        filter: `email:eq:${email}`
+      });
+
+      if (!error && data.users.length > 0) {
+        authUser = data.users[0];
+      }
+    } catch (error) {
+      console.log('Error checking existing email:', error.message);
+    }
+
+    // 3. If email exists, link Google ID to existing account
+    if (authUser) {
+      // Ensure profile exists before updating
+      let profileData = await this.getById(authUser.id);
+      
+      if (!profileData) {
+        // Create profile if missing
+        profileData = await this.createFromAuth(authUser.id, authUser);
+      }
+
+      // Update profile with Google ID
+      const { data: updatedProfile, error: updateError } = await supabaseAdmin
+        .from(this.tableName)
+        .update({ google_id: googleId })
+        .eq('id', authUser.id)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      return { user: updatedProfile, isNew: false };
+    }
+
+    // 4. Create new user if no existing email
+    const { data: newAuthUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: email,
+      email_confirm: true,
+      user_metadata: {
+        full_name: displayName,
+        avatar_url: photos?.[0]?.value || '',
+        provider: 'google'
+      }
+    });
+
+    if (authError) throw authError;
+
+    // Create profile with auth user's ID
     const newUser = {
-      id: id,  // Use Google ID as user ID
-      google_id: id,
+      id: newAuthUser.user.id,
+      google_id: googleId,
       email: email,
       display_name: displayName,
       avatar_url: photos?.[0]?.value || '',
@@ -515,17 +536,63 @@ static async findOrCreateFromGoogle(profile) {
       updated_at: new Date().toISOString()
     };
 
-    const { data, error } = await supabaseAdmin
+    const { data: profileData, error: profileError } = await supabaseAdmin
       .from(this.tableName)
       .insert(newUser)
       .select()
       .single();
 
-    if (error) throw error;
-    user = data;
-    isNew = true;
+    if (profileError) throw profileError;
+
+    return { user: profileData, isNew: true };
+  } catch (error) {
+    console.error('Error in findOrCreateFromGoogle:', error);
+    throw error;
   }
-  
-  return { user, isNew };
+}
+
+static async getByGoogleId(googleId) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from(this.tableName)
+      .select('*')
+      .eq('google_id', googleId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error(`Error fetching user by Google ID ${googleId}:`, error);
+    return null;
+  }
+}
+
+static defaultValues = {
+  display_name: '',
+  //first_name: '',
+  //last_name: '',
+  phone_number: '',
+  avatar_url: '',
+  is_admin: false,
+  loyalty_points: 0,
+  notes: '',
+  language: 'en',
+  age: null,
+  gender: null,
+  email_verified: false,
+  phone_verified: false,
+  account_status: 'active',
+  timezone: 'Asia/Riyadh'
+}
+static async markProfileComplete(userId) {
+  try {
+    await supabaseAdmin
+      .from(this.tableName)
+      .update({ account_status: 'active' })
+      .eq('id', userId);
+  } catch (error) {
+    console.error(`Error marking profile complete: ${error}`);
+  }
 }
 }
+//CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

@@ -41,13 +41,13 @@ import {
   FiUser,
 } from 'react-icons/fi'
 import { useTranslation } from 'react-i18next'
-import { useUser } from '../../Contexts/UserContext'
+import { useAuthContext } from '../../Contexts/AuthContext'
 import { useI18nContext } from '../../Contexts/I18nContext'
 
 const PlanSettingsModal = ({ isOpen, onClose }) => {
   const { t } = useTranslation()
   const { currentLanguage } = useI18nContext()
-  const { user, userPlan, updateUserProfile, planLoading } = useUser()
+  const { user, userPlan, updateUserProfile, planLoading } = useAuthContext()
   const [loading, setLoading] = useState(false)
   const [planStatus, setPlanStatus] = useState('active')
   const [deliveryTime, setDeliveryTime] = useState({ hours: '12', minutes: '00' })

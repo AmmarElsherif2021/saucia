@@ -20,7 +20,7 @@ import {
 } from '@chakra-ui/react'
 
 import { useElements } from '../../Contexts/ElementsContext'
-import { useUser } from '../../Contexts/UserContext'
+import { useAuthContext } from '../../Contexts/AuthContext'
 
 import { CurrentPlanBrief } from './CurrentPlanBrief'
 import { Link } from 'react-router-dom'
@@ -170,7 +170,12 @@ const PlanDetails = ({ plan }) => {
 
 export const PremiumPage = () => {
   const { plans, elementsLoading } = useElements()
-  const { user, userPlan, setUserPlan, planLoading, updateUserSubscription } = useUser()
+  const { 
+    user, 
+    userPlan, 
+    updateUserSubscription,
+    planLoading 
+  } = useAuthContext();
   const [explorePlans, setExplorePlans] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState(null)
   const [subscribing, setSubscribing] = useState(false)
@@ -187,10 +192,7 @@ export const PremiumPage = () => {
       setSelectedPlan(userPlan)
     }
   }, [userPlan, selectedPlan])
-  useEffect(() => {
-    console.log(`from Premium selecting plan event ${JSON.stringify(selectedPlan)}`)
-    setUserPlan(selectedPlan)
-  }, [selectedPlan])
+
   const handlePlanSelect = (plan) => {
     setSelectedPlan(plan)
     // Scroll to details section after a small delay
@@ -233,8 +235,13 @@ export const PremiumPage = () => {
 
     try {
       setSubscribing(true)
-      await updateUserSubscription(selectedPlan.id)
-
+      // Updated subscription call
+      await updateUserSubscription({
+        planId: selectedPlan.id,
+        planName: selectedPlan.title,
+        startDate: new Date().toISOString(),
+        status: 'active'
+      })
       toast({
         title: t('premium.planUpdated'),
         description: t('premium.nowSubscribedToPlan', { planTitle: selectedPlan.title }),

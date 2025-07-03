@@ -1,10 +1,10 @@
 // index.js - Clean server setup for Supabase
 import express from 'express'
-import session from 'express-session'
 import passport from './passport-config.js'
 import cors from 'cors'
 import dotenv from 'dotenv'
-import { authenticate } from './middlewares/authMiddleware.js'
+import { completeUserProfile } from './controllers/users.js'
+import { authenticate, requireCompleteProfile } from './middlewares/authMiddleware.js'
 // Import routes
 import userRoutes from './routes/userRoutes.js'
 import adminRoutes from './routes/adminRoute.js'
@@ -29,10 +29,10 @@ const corsOptions = {
   allowedHeaders: [
     'Content-Type', 
     'Authorization', 
-    //'x-dev-mode',
-    //'X-Dev-Mode'  
+    'X-Requested-With'
   ],
-  credentials: true
+  credentials: true,
+  maxAge: 86400
 };
 
 app.use(cors(corsOptions));
@@ -40,30 +40,22 @@ app.options('*', cors(corsOptions));
 // Middleware
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: false, // Disable in development
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000
-  }
-}));
 
 // Request logging middleware (development only)
 if (process.env.NODE_ENV === 'development') {
   app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`)
+    console.log('Headers:', req.headers.authorization ? 'Authorization header present' : 'No authorization header')
+    if (req.headers.authorization) {
+      console.log('Auth header:', req.headers.authorization.substring(0, 20) + '...')
+    }
     next()
   })
 }
 
-
 // Passport.js initialization
-
 app.use(passport.initialize());
-app.use(passport.session());
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
@@ -74,20 +66,20 @@ app.get('/api/health', (req, res) => {
   })
 })
 
-
-
-// Routes
+// Auth routes (includes OAuth)
 app.use('/api/auth', authRoutes)
-app.use('/api/orders', orderRoutes) 
-app.use('/api/users', userRoutes)
-app.use('/api/admin', adminRoutes)
-app.use('/api/meals', mealRoutes)
-app.use('/api/plans', planRoutes)
-app.use('/api/items', itemRoutes)
 
-//Protected routes
-app.use('/api/admin/*', authenticate)
-app.use('/api/users/*', authenticate)
+// Special profile completion route (authenticate only, no profile completion check)
+app.post('/api/auth/complete-profile', authenticate, completeUserProfile);
+
+// Protected routes with profile completion requirement
+app.use('/api/users', authenticate, requireCompleteProfile, userRoutes)
+app.use('/api/admin', authenticate, adminRoutes)
+app.use('/api/orders', authenticate, requireCompleteProfile, orderRoutes) 
+app.use('/api/meals', mealRoutes) 
+app.use('/api/plans', planRoutes) 
+app.use('/api/items', itemRoutes) 
+
 // Catch-all route for unmatched API paths
 app.all('/api/*', (req, res) => {
   res.status(404).json({
@@ -138,7 +130,7 @@ app.use((err, req, res, next) => {
   })
 })
 
-// Handle 404 for non-API routes - FIXED
+// Handle 404 for non-API routes
 app.use('*', (req, res) => {
   res.status(404).json({
     error: 'Not Found',
@@ -149,7 +141,6 @@ app.use('*', (req, res) => {
 // Graceful shutdown handler
 const gracefulShutdown = (signal) => {
   console.log(`${signal} received: closing HTTP server`)
-  
   process.exit(0)
 }
 

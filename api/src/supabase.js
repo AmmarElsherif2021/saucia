@@ -36,6 +36,7 @@ export const supabaseAdmin = createClient(
     }
   }
 )
+supabase.realtime.setAuth(process.env.SUPABASE_KEY)
 
 // Helper function to verify JWT token and get user
 export const verifyToken = async (token) => {

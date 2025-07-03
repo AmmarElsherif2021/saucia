@@ -20,7 +20,6 @@ import {
 import { useEffect, useCallback, useState, useRef } from 'react'
 import { FaCrosshairs, FaMapMarkerAlt, FaSearch, FaCopy } from 'react-icons/fa'
 import MapBox from '../../Components/Map/MapBox'
-import { useUser } from '../../Contexts/UserContext'
 const MapModal = ({ isOpen, onClose }) => {
   const toast = useToast()
   const center = [26.386145, 50.075073]

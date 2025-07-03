@@ -1,11 +1,10 @@
 /* eslint-disable */
 import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import DynamicThemeProvider from './Contexts/ThemeProvider.jsx'
 import { I18nProvider } from './Contexts/I18nContext.jsx'
-import { UserProvider } from './Contexts/UserContext.jsx'
-import { AuthProvider } from './Contexts/AuthContext.jsx'
+import { AuthProvider, useAuthContext } from './Contexts/AuthContext.jsx'
 import { ElementsProvider } from './Contexts/ElementsContext.jsx'
 import { Navbar } from './Components/Navbar/Navbar.jsx'
 import './index.css'
@@ -26,6 +25,8 @@ const Auth = React.lazy(() => import('./Pages/Auth/Auth.jsx'))
 const Admin = React.lazy(() => import('./Pages/Auth/Admin.jsx'))
 const JoinPlanPage = React.lazy(() => import('./Pages/Premium/JoinPlan/JoinPlanPage.jsx'))
 const AuthCallback = React.lazy(() => import('./Pages/Auth/AuthCallback.jsx'))
+const AuthCompleteProfile = React.lazy(() => import('./Pages/Auth/CompleteProfile.jsx'))
+
 const PageLoader = () => (
   <div
     style={{
@@ -38,6 +39,20 @@ const PageLoader = () => (
     <Spinner />
   </div>
 )
+
+const RouteGuard = ({ children }) => {
+  const { user, requiresCompletion } = useAuthContext();
+  
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+  
+  if (requiresCompletion) {
+    return <Navigate to="/auth/complete-profile" replace />;
+  }
+  
+  return children;
+};
 
 const Layout = ({ children }) => {
   return (
@@ -93,22 +108,29 @@ const router = createBrowserRouter([
         </Suspense>
       </div>
     ),
-    children: [
-      {
-        path: 'callback',
-        element: (
-          <div
-            style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
-          >
-            <Suspense fallback={<PageLoader />}>
-              <AuthCallback />
-            </Suspense>
-          </div>
-        ),
-      },
-    ]
-    },
-
+  },
+  {
+    path: '/auth/callback',
+    element: (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Suspense fallback={<PageLoader />}>
+          <AuthCallback />
+        </Suspense>
+      </div>
+    ),
+  },
+  {
+    path: '/auth/complete-profile',
+    element: (
+      <div
+        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
+      >
+        <Suspense fallback={<PageLoader />}>
+          <AuthCompleteProfile />
+        </Suspense>
+      </div>
+    ),
+  },
   {
     path: '/admin',
     element: (
@@ -130,11 +152,13 @@ const router = createBrowserRouter([
   {
     path: '/account',
     element: (
-      <Layout>
-        <Suspense fallback={<PageLoader />}>
-          <UserAccountPage />
-        </Suspense>
-      </Layout>
+      <RouteGuard>
+        <Layout>
+          <Suspense fallback={<PageLoader />}>
+            <UserAccountPage />
+          </Suspense>
+        </Layout>
+      </RouteGuard>
     ),
   },
   {
@@ -217,11 +241,9 @@ ReactDOM.createRoot(root).render(
       <DynamicThemeProvider>
         <ElementsProvider>
           <CartProvider>
-            <UserProvider>
               <AuthProvider>
                 <RouterProvider router={router} />
               </AuthProvider>
-            </UserProvider>
           </CartProvider>
         </ElementsProvider>
       </DynamicThemeProvider>

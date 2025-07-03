@@ -2,11 +2,11 @@ import { Heading, Box, Button, VStack } from '@chakra-ui/react'
 import { useState } from 'react'
 import CommonQuestions from './CommonQuestions'
 import { useNavigate } from 'react-router-dom'
-import { useUser } from '../../../Contexts/UserContext'
+import { useAuthContext } from '../../../Contexts/AuthContext'
 
 const JoinPlanPage = () => {
   const navigate = useNavigate()
-  const { userPlan } = useUser()
+  const { userPlan } = useAuthContext()
   const [currentStep, setCurrentStep] = useState(0)
 
   const handleCompleteQuestions = () => {

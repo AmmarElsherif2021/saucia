@@ -152,17 +152,40 @@ export const authAPI = {
   },
 
   async completeUserProfile(profileData) {
-    const session = sessionManager.getSession();
-    
-    if (!session?.access_token) {
+    const token = localStorage.getItem('jwt');
+    if (!token) {
       throw new Error('No authentication token available');
     }
 
-    return await httpClient.post(`${AUTH_CONFIG.API_BASE_URL}/auth/complete-profile`, profileData, {
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`
-      }
-    });
+    // Debug logging
+    console.log('completeUserProfile called with:', profileData);
+    console.log('Token available:', !!token);
+    console.log('Token preview:', token.substring(0, 20) + '...');
+    console.log('API URL:', `${AUTH_CONFIG.API_BASE_URL}/auth/complete-profile`);
+
+    try {
+      const response = await httpClient.post(
+        `${AUTH_CONFIG.API_BASE_URL}/auth/complete-profile`,
+        profileData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log('Profile completion response:', response);
+      return response;
+    } catch (error) {
+      console.error('Profile completion API error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        token: token ? 'Present' : 'Missing'
+      });
+      throw error;
+    }
   },
 
   async checkAdminStatus() {
@@ -184,10 +207,22 @@ export const authAPI = {
     }
   },
 
-  // Utility methods
-  getCurrentSession: () => sessionManager.getSession(),
-  getAccessToken: () => sessionManager.getAccessToken(),
-  isAuthenticated: () => sessionManager.isAuthenticated(),
-  clearSession: () => sessionManager.clearSession(),
-  isSessionExpired: () => sessionManager.isSessionExpired(),
+   // Utility methods
+   getCurrentSession: () => ({ 
+    access_token: localStorage.getItem('jwt') 
+  }),
+  getAccessToken: () => localStorage.getItem('jwt'),
+  isAuthenticated: () => !!localStorage.getItem('jwt'),
+  clearSession: () => localStorage.removeItem('jwt'),
+  isSessionExpired: () => {
+    const token = localStorage.getItem('jwt');
+    if (!token) return true;
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.exp * 1000 < Date.now();
+    } catch {
+      return true;
+    }
+  },
 };

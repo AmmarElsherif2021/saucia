@@ -4,7 +4,6 @@ import { FeaturedMeals } from './FeaturedSlide'
 import { OffersSlide } from './OffersSlide'
 import { AboutUs } from './GetAbout'
 import { Footer } from './Footer'
-//import { useUser } from "../../Contexts/UserContext";
 import { useEffect } from 'react'
 import { useElements } from '../../Contexts/ElementsContext'
 import ExpertPortal from './ExpertPortal'

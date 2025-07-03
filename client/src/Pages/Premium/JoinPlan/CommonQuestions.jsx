@@ -17,14 +17,14 @@ import {
   Wrap,
   WrapItem,
 } from '@chakra-ui/react'
-import { useUser } from '../../../Contexts/UserContext'
+import { useAuthContext } from '../../../Contexts/AuthContext'
 import { updateUserProfile } from '../../../API/users'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 
 const CommonQuestions = ({ onComplete }) => {
   const { t } = useTranslation()
-  const { user, setUser, userPlan } = useUser()
+  const { user, updateUserProfile } = useAuthContext();
   const toast = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formError, setFormError] = useState(null)
@@ -171,7 +171,7 @@ const CommonQuestions = ({ onComplete }) => {
     setFormError(null)
 
     try {
-      if (!user?.uid) {
+      if (!user?.id) {
         throw new Error('User not authenticated')
       }
 
@@ -194,7 +194,7 @@ const CommonQuestions = ({ onComplete }) => {
       }
 
       console.log('Updating user profile with data:', updateData)
-      const updatedUser = await updateUserProfile(user.uid, updateData)
+      await updateUserProfile(user.id, updateData)
 
       // Only update user state if we got a response
       if (updatedUser) {

@@ -13,13 +13,13 @@ import {
 } from '@chakra-ui/react'
 import { PieChart } from 'react-minimal-pie-chart'
 import profileIcon from '../../assets/profile-b.svg'
-//import { MOD } from "../ComponentsTrial.jsx";
 import { useNavigate } from 'react-router'
-import { useUser } from '../../Contexts/UserContext'
+import { useAuthContext } from '../../Contexts/AuthContext' // <-- Use new AuthContext hook
 import { useTranslation } from 'react-i18next'
+
 export const ProfileModal = ({ isOpen, onClose }) => {
   const { t } = useTranslation()
-  const { user, logout } = useUser()
+  const { user, logout } = useAuthContext() // <-- Use new AuthContext
   const navigate = useNavigate()
 
   const handleProfileClick = () => {

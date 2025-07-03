@@ -1,18 +1,17 @@
 import express from 'express'
 import { createUser, deleteUser, getUser, updateUser } from '../controllers/users.js'
-import { authenticate } from '../middlewares/authMiddleware.js'
 
 const router = express.Router()
 
-// All routes require authentication
-router.use(authenticate)
+// Note: Authentication middleware is applied at the app level
+// These routes assume user is already authenticated
 
 // User routes
 router.post('/', createUser)
-router.get('/:userId', getUser)   
+router.get('/:userId', getUser)
 router.put('/:userId', updateUser)
-router.delete('delete/:userId', deleteUser)
+router.delete('/delete/:userId', deleteUser)
 
-// Additional user-related routes can be added here
+// Remove the complete-profile route from here since it's handled at app level
 
 export default router

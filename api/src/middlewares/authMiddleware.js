@@ -1,18 +1,16 @@
-// Enhanced authMiddleware.js with development mode bypass
+import jwt from 'jsonwebtoken';
 
-import { supabase } from '../supabase.js'
-import { User } from '../models/User.js'
 
 // Development mode check
-const isDevelopment = process.env.NODE_ENV === 'development' || process.env.MODE === 'development'
+const isDevelopment = false
 
 // Mock development user
 const createDevUser = () => ({
   id: 'dev-user-123',
   email: 'dev@example.com',
   displayName: 'Development User',
-  firstName: 'Dev',
-  lastName: 'User',
+  //firstName: 'Dev',
+  //lastName: 'User',
   isAdmin: true,
   emailVerified: true,
   accountStatus: 'active',
@@ -21,18 +19,31 @@ const createDevUser = () => ({
   updatedAt: new Date().toISOString()
 })
 
-// Replace authenticate middleware
+
 export const authenticate = (req, res, next) => {
+  // Development bypass remains the same
   if (isDevelopment) {
     req.user = createDevUser();
     return next();
   }
+
+  // JWT verification for production
+  const authHeader = req.headers.authorization;
   
-  if (req.isAuthenticated()) {
-    return next();
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing or invalid Authorization header' });
   }
+
+  const token = authHeader.split(' ')[1];
   
-  res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    console.error('JWT verification failed:', error.message);
+    res.status(401).json({ error: 'Invalid or expired token' });
+  }
 };
 
 export const requireAdmin = (req, res, next) => {
@@ -58,8 +69,7 @@ export const requireAdmin = (req, res, next) => {
 export const requireCompleteProfile = (req, res, next) => {
   // DEVELOPMENT MODE BYPASS
   if (isDevelopment) {
-    console.log('🔧 Development mode: Bypassing profile completeness check')
-    return next()
+    return next();
   }
 
   if (!req.user) {
@@ -69,77 +79,20 @@ export const requireCompleteProfile = (req, res, next) => {
     });
   }
 
-  // Define required fields for a complete profile
-  const requiredFields = ['firstName', 'lastName', 'phoneNumber'];
-  const missingFields = requiredFields.filter(field => !req.user[field]);
-
-  if (missingFields.length > 0) {
-    return res.status(400).json({
-      error: 'Incomplete profile',
-      message: 'Profile must be completed before accessing this resource',
-      missingFields: missingFields
-    });
-  }
-
-  next();
-}
-
-// Optional: Middleware for user or admin access
-export const requireUserOrAdmin = (req, res, next) => {
-  // DEVELOPMENT MODE BYPASS
-  if (isDevelopment) {
-    console.log('🔧 Development mode: Bypassing user/admin access check')
-    return next()
-  }
-
-  const targetUserId = req.params.id || req.params.userId;
-  const currentUserId = req.user?.id;
-  const isAdmin = req.user?.isAdmin;
-
-  if (!targetUserId) {
-    return res.status(400).json({
-      error: 'Invalid request',
-      message: 'User ID is required'
-    });
-  }
-
-  if (targetUserId !== currentUserId && !isAdmin) {
+  // Efficient check for required fields
+  if (!req.user.firstName || !req.user.lastName || !req.user.phoneNumber) {
     return res.status(403).json({
-      error: 'Forbidden',
-      message: 'Access denied - can only access own resources or must be admin'
+      error: 'Incomplete profile',
+      message: 'Complete your profile to access this resource',
+      requiredFields: ['firstName', 'lastName', 'phoneNumber']
     });
   }
 
   next();
-}
+};
 
 // Helper functions
-function extractDisplayName(user) {
-  if (user.user_metadata?.full_name) {
-    return user.user_metadata.full_name;
-  }
-  
-  if (user.user_metadata?.name) {
-    return user.user_metadata.name;
-  }
-  
-  const firstName = user.user_metadata?.given_name || user.user_metadata?.first_name;
-  const lastName = user.user_metadata?.family_name || user.user_metadata?.last_name;
-  
-  if (firstName && lastName) {
-    return `${firstName} ${lastName}`;
-  }
-  
-  if (firstName) {
-    return firstName;
-  }
-  
-  if (user.email) {
-    return user.email.split('@')[0];
-  }
-  
-  return `User_${user.id.substring(0, 8)}`;
-}
+
 
 function extractLanguage(user) {
   if (user.user_metadata?.locale) {

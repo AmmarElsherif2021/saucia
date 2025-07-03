@@ -13,12 +13,13 @@ import { PieChart } from 'react-minimal-pie-chart'
 import profileIcon from '../../assets/profile-b.svg'
 import { useNavigate } from 'react-router-dom'
 import { useDisclosure } from '@chakra-ui/react'
-import { useUser } from '../../Contexts/UserContext'
+import { useAuthContext } from '../../Contexts/AuthContext' // <-- Use new AuthContext
 
 export const ProfileDD = ({ disabled = false }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const navigate = useNavigate()
-  const { user, logout } = useUser()
+  // const { user, logout } = useUser()
+  const { user, logout } = useAuthContext() // <-- Use new AuthContext
 
   const handleProfileClick = () => {
     if (user) {

@@ -2,7 +2,7 @@ import { Text, Flex, Box, Button, Collapse, Spinner, Badge } from '@chakra-ui/re
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useI18nContext } from '../../Contexts/I18nContext'
-import { useUser } from '../../Contexts/UserContext'
+import { useAuthContext } from '../../Contexts/AuthContext'
 import planIcon from '../../assets/premium/planIcon.svg'
 import PlanSettingsModal from './PlanSettingsModal' // Add this import
 
@@ -11,7 +11,7 @@ export const CurrentPlanBrief = ({ plan, loading }) => {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false) // Add state for modal
   const { t } = useTranslation()
   const { currentLanguage } = useI18nContext()
-  const { user } = useUser()
+  const { user } = useAuthContext()
   const isArabic = currentLanguage === 'ar'
 
   if (loading) {

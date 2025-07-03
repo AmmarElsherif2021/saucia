@@ -27,7 +27,7 @@ import {
   useBreakpointValue,
   Divider,
 } from '@chakra-ui/react'
-import { ALT, TXT, BTN } from '../../Components/ComponentsTrial'
+import { ALT} from '../../Components/ComponentsTrial'
 import saladIcon from '../../assets/menu/salad.svg'
 import paymentIcon from '../../assets/payment.svg'
 import orderIcon from '../../assets/order.svg'
@@ -35,7 +35,7 @@ import MapModal from './MapModal'
 import { useTranslation } from 'react-i18next'
 import { useI18nContext } from '../../Contexts/I18nContext'
 import { useNavigate } from 'react-router-dom'
-import { useUser } from '../../Contexts/UserContext'
+import { useAuthContext } from '../../Contexts/AuthContext' // Updated import
 import { updateUserProfile } from '../../API/users'
 import { createOrder } from '../../API/orders'
 
@@ -316,25 +316,27 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData, isSubmi
 }
 
 const CheckoutPage = () => {
-  // Hooks and context
+  // Hooks and context - Updated to use AuthContext
   const navigate = useNavigate()
   const { colorMode } = useColorMode()
-  const { user, userAddress, setUser } = useUser()
+  const { user, userAddress, setUser } = useAuthContext() // Updated hook
   const toast = useToast()
   const { t } = useTranslation()
   const { currentLanguage } = useI18nContext()
   const isArabic = currentLanguage === 'ar'
+  
   useEffect(() => {
-    console.log(`Current user from context to checkout page:`, user)
+    console.log(`Current user from AuthContext to checkout page:`, user)
   }, [user])
+  
   // Checkout state
   const [state, dispatch] = useReducer(checkoutReducer, {
     ...initialState,
     orderInfo: {
       ...initialState.orderInfo,
-      userId: user?.id || '',
+      userId: user?.uid || '', // Updated to use uid from Firebase Auth
       user: {
-        id: user?.id || '',
+        id: user?.uid || '',
         email: user?.email || '',
         displayName: user?.displayName || '',
         phoneNumber: user?.phoneNumber || '',

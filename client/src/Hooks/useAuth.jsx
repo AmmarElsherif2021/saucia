@@ -1,298 +1,333 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { authAPI } from '../API/authAPI';
-import { AUTH_CONFIG } from '../config/auth.js';
-
-const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development';
-
-const DEV_USER = {
-  id: 'dev-user',
-  email: 'dev@example.com',
-  displayName: 'Development User',
-  photoURL: 'https://via.placeholder.com/150',
-  isAdmin: true,
-  provider: 'development',
-};
+import { useState, useEffect, useCallback } from 'react';
+import { jwtDecode } from 'jwt-decode';
+import { unifiedUserAPI } from '../API/userAPI';
+import { supabase } from '../../supabaseClient.jsx';
 
 export function useAuth() {
+  // Core auth state
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [authError, setAuthError] = useState(null);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [isNewUser, setIsNewUser] = useState(false);
-  const refreshLock = useRef(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Extended user data state
+  const [userPlan, setUserPlan] = useState(null);
+  const [planLoading, setPlanLoading] = useState(false);
+  const [userAddress, setUserAddress] = useState(null);
+  const [orders, setOrders] = useState([]);
 
-  const clearError = useCallback(() => setAuthError(null), []);
-  const clearNewUserFlag = useCallback(() => setIsNewUser(false), []);
-
-  const initializeAuth = useCallback(async () => {
-    if (isDevelopment) {
-      setUser(DEV_USER);
-      setLoading(false);
-      setIsInitialized(true);
-      return;
-    }
-
+  // Helper function to fetch unified user data
+  const fetchUnifiedUserData = useCallback(async (userId) => {
     try {
-      setLoading(true);
-      clearError();
+      // Fetch from user_profiles table (contains extended profile data)
+      const profileData = await unifiedUserAPI.getUserProfile(userId);      
+      // Combine JWT user data with profile data
+      const token = localStorage.getItem('jwt');
+      const jwtUser = token ? jwtDecode(token) : null;
       
-      const sessionData = await authAPI.getSession();
-      
-      if (sessionData?.user) {
-        const profileData = await authAPI.getUserProfile();
-        
-        const userData = {
-          id: sessionData.user.id,
-          email: sessionData.user.email,
-          displayName: profileData.displayName || 
-                      sessionData.user.user_metadata?.full_name || 
-                      sessionData.user.email,
-          photoURL: profileData.avatarUrl || 
-                    sessionData.user.user_metadata?.avatar_url,
-          isAdmin: profileData.isAdmin || false,
-          provider: sessionData.user.app_metadata?.provider,
-          ...profileData
-        };
-        
-        setUser(userData);
-      }
+      return {
+        // JWT data (auth-related)
+        id: jwtUser?.id || userId,
+        email: jwtUser?.email,
+        displayName: jwtUser?.displayName,
+        isAdmin: jwtUser?.isAdmin || false,
+        profile_completed: jwtUser?.profile_completed || profileData?.profile_completed || false,        
+        // Profile data (from user_profiles table)
+        ...profileData,        
+        // Ensure consistent naming
+        profileCompleted: jwtUser?.profile_completed || profileData?.profile_completed || false,
+      };
     } catch (error) {
-      console.error('Auth initialization error:', error);
-      setAuthError(error.message || 'Failed to initialize authentication');
-      authAPI.clearSession();
-    } finally {
-      setLoading(false);
-      setIsInitialized(true);
-    }
-  }, [clearError]);
-
-  const loginWithOAuth = async (provider) => {
-    try {
-      setLoading(true);
-      clearError();
-      
-      const result = await authAPI.initiateOAuth(provider);
-      return { success: true, ...result };
-    } catch (error) {
-      console.error(`${provider} login error:`, error);
-      setAuthError(error.message || `Failed to sign in with ${provider}`);
-      return { success: false, error: error.message };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOAuthCallback = async (code, state) => {
-    try {
-      setLoading(true);
-      clearError();
-      
-      const result = await authAPI.handleOAuthCallback(code, state);
-      
-      if (result?.user) {
-        if (result.isNewUser) {
-          setIsNewUser(true);
+      console.error('Error fetching unified user data:', error);
+      // Return minimal user data from JWT if profile fetch fails
+      const token = localStorage.getItem('jwt');
+      if (token) {
+        try {
+          const jwtUser = jwtDecode(token);
+          return {
+            id: jwtUser.id,
+            email: jwtUser.email,
+            displayName: jwtUser.displayName,
+            isAdmin: jwtUser.isAdmin || false,
+            profile_completed: jwtUser.profile_completed || false,
+            profileCompleted: jwtUser.profile_completed || false,
+          };
+        } catch (jwtError) {
+          console.error('Invalid JWT token:', jwtError);
+          localStorage.removeItem('jwt');
+          return null;
         }
-
-        const profileData = await authAPI.getUserProfile();
-        
-        const userData = {
-          id: result.user.id,
-          email: result.user.email,
-          displayName: profileData.displayName || 
-                      result.user.user_metadata?.full_name || 
-                      result.user.email,
-          photoURL: profileData.avatarUrl || 
-                    result.user.user_metadata?.avatar_url,
-          isAdmin: profileData.isAdmin || false,
-          provider: result.user.app_metadata?.provider,
-          ...profileData
-        };
-        
-        setUser(userData);
-        return { 
-          success: true, 
-          user: userData, 
-          isNewUser: result.isNewUser 
-        };
       }
-      
-      return { success: false, error: 'No user data received' };
-    } catch (error) {
-      console.error('OAuth callback error:', error);
-      setAuthError(error.message || 'Authentication failed');
-      return { success: false, error: error.message };
-    } finally {
-      setLoading(false);
+      return null;
     }
-  };
+  }, []);
 
-  const logout = async () => {
-    try {
-      setLoading(true);
-      clearError();
-      
-      await authAPI.signOut();
-      setUser(null);
-      setIsNewUser(false);
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Logout error:', error);
-      setAuthError(error.message || 'Failed to log out');
-      setUser(null);
-      setIsNewUser(false);
-      return { success: false, error: error.message };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const refreshSession = useCallback(async () => {
-    if (refreshLock.current || isDevelopment) return;
-    refreshLock.current = true;
-
-    try {
-      const result = await authAPI.refreshSession();
-      
-      if (result?.user) {
-        const profileData = await authAPI.getUserProfile();
-        
-        const userData = {
-          id: result.user.id,
-          email: result.user.email,
-          displayName: profileData.displayName || 
-                      result.user.user_metadata?.full_name || 
-                      result.user.email,
-          photoURL: profileData.avatarUrl || 
-                    result.user.user_metadata?.avatar_url,
-          isAdmin: profileData.isAdmin || false,
-          provider: result.user.app_metadata?.provider,
-          ...profileData
-        };
-        
-        setUser(userData);
-        return { success: true, user: userData };
-      }
-      
-      return { success: false };
-    } catch (error) {
-      console.error('Refresh session error:', error);
-      
-      if (error.message.includes('invalid') || 
-          error.message.includes('expired')) {
-        await logout();
-      }
-      
-      return { success: false, error: error.message };
-    } finally {
-      refreshLock.current = false;
-    }
-  }, [logout]);
-
-  const checkAdminStatus = useCallback(async () => {
-    if (isDevelopment) return true;
+  // Fetch user plan details
+  const fetchUserPlanDetails = useCallback(async (planId) => {
+    if (!planId) return null;
     
     try {
-      if (!user) return false;
-      const result = await authAPI.checkAdminStatus();
-      return result.is_admin || false;
+      setPlanLoading(true);
+      const { data, error } = await supabase
+        .from('plans')
+        .select('*')
+        .eq('id', planId)
+        .single();
+
+      if (error) throw error;
+      return data;
     } catch (error) {
-      console.error('Error checking admin status:', error);
-      return false;
+      console.error('Plan fetch error:', error);
+      return null;
+    } finally {
+      setPlanLoading(false);
     }
+  }, []);
+
+  // Initialize user from JWT and fetch complete profile
+  useEffect(() => {
+    const initializeUser = async () => {
+      setIsLoading(true);
+      const token = localStorage.getItem('jwt');
+      
+      if (token) {
+        try {
+          const jwtUser = jwtDecode(token);
+          
+          // Check if token is expired
+          if (jwtUser.exp * 1000 < Date.now()) {
+            localStorage.removeItem('jwt');
+            setUser(null);
+            setIsLoading(false);
+            return;
+          }
+          
+          // Fetch unified user data
+          const unifiedUser = await fetchUnifiedUserData(jwtUser.id);
+          setUser(unifiedUser);
+          
+        } catch (error) {
+          console.error('Error initializing user:', error);
+          localStorage.removeItem('jwt');
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+      
+      setIsLoading(false);
+    };
+
+    initializeUser();
+  }, [fetchUnifiedUserData]);
+
+  // Load user plan when user subscription changes
+  useEffect(() => {
+    if (user?.subscription?.planId) {
+      fetchUserPlanDetails(user.subscription.planId).then(setUserPlan);
+    } else {
+      setUserPlan(null);
+    }
+  }, [user?.subscription?.planId, fetchUserPlanDetails]);
+
+  // Set default address
+  useEffect(() => {
+    if (user?.addresses?.length > 0) {
+      const defaultAddress = user.addresses.find(addr => addr.isDefault) || user.addresses[0];
+      setUserAddress(defaultAddress);
+    } else {
+      setUserAddress(null);
+    }
+  }, [user?.addresses]);
+
+  // Authentication methods
+  const loginWithGoogle = useCallback(() => {
+    unifiedUserAPI.initiateGoogleAuth();
+  }, []);
+
+  const handleToken = useCallback(async (token) => {
+    localStorage.setItem('jwt', token);
+    
+    try {
+      const jwtUser = jwtDecode(token);
+      const unifiedUser = await fetchUnifiedUserData(jwtUser.id);
+      setUser(unifiedUser);
+      return unifiedUser;
+    } catch (error) {
+      console.error('Error handling token:', error);
+      localStorage.removeItem('jwt');
+      throw error;
+    }
+  }, [fetchUnifiedUserData]);
+
+  const logout = useCallback(async () => {
+    try {
+      // Call API logout using unifiedUserAPI
+      await unifiedUserAPI.signOut();
+    } catch (error) {
+      console.error('Error during logout:', error);
+    } finally {
+      // Clear local state regardless of API call success
+      localStorage.removeItem('jwt');
+      setUser(null);
+      setUserPlan(null);
+      setUserAddress(null);
+      setOrders([]);
+    }
+  }, []);
+
+  // Profile management
+  const completeProfile = useCallback(async (profileData) => {
+    try {
+      const token = localStorage.getItem('jwt');
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      console.log('Completing profile with data:', profileData);
+      
+      const response = await unifiedUserAPI.completeUserProfile(profileData);
+      
+      if (response.token) {
+        localStorage.setItem('jwt', response.token);
+        const updatedUser = await fetchUnifiedUserData(response.user?.id || user?.id);
+        setUser(updatedUser);
+        console.log('Profile completed successfully:', updatedUser);
+        return updatedUser;
+      }
+
+      throw new Error('Profile completion failed - no token in response');
+    } catch (error) {
+      console.error('Profile completion error:', error);
+      setError(error.message);
+      throw error;
+    }
+  }, [fetchUnifiedUserData, user?.id]);
+
+  const updateUserProfile = useCallback(async (userId, updateData) => {
+    if (!userId) throw new Error('User ID is required');
+
+    try {
+      setError(null);
+      const result = await unifiedUserAPI.updateUserProfile(userId, updateData);
+
+      // Refresh unified user data
+      const updatedUser = await fetchUnifiedUserData(userId);
+      setUser(updatedUser);
+
+      return { success: true, data: result };
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      setError(error.message);
+      throw error;
+    }
+  }, [fetchUnifiedUserData]);
+
+  const updateUserSubscription = useCallback(async (subscriptionData) => {
+    if (!user?.id) return null;
+
+    try {
+      setError(null);
+      const updateData = {
+        subscription: subscriptionData,
+        updatedAt: new Date().toISOString(),
+      };
+
+      await unifiedUserAPI.updateUserProfile(user.id, updateData);
+
+      // Update local state immediately
+      const updatedUser = {
+        ...user,
+        subscription: subscriptionData,
+      };
+      setUser(updatedUser);
+
+      // Fetch new plan details
+      const newPlan = await fetchUserPlanDetails(subscriptionData.planId);
+      setUserPlan(newPlan);
+
+      return { user: updatedUser, plan: newPlan };
+    } catch (error) {
+      console.error('Error updating user subscription:', error);
+      setError(error.message);
+      throw error;
+    }
+  }, [user, fetchUserPlanDetails]);
+
+  // Orders management
+  const refreshOrders = useCallback(async () => {
+    if (!user?.id) return [];
+    
+    try {
+      setError(null);
+      // You'll need to implement fetchUserOrders in your API
+      // const fetchedOrders = await orderAPI.fetchUserOrders(user.id);
+      
+      // For now, return empty array - implement based on your orders API
+      const fetchedOrders = [];
+      
+      const formattedOrders = fetchedOrders.map(o => ({
+        id: o.id,
+        total: o.total,
+        status: o.status,
+        createdAt: o.created_at,
+        items: (o.items || []).map(i => ({
+          itemId: i.item_id,
+          quantity: i.quantity,
+          price: i.price
+        }))
+      }));
+
+      setOrders(formattedOrders);
+      return formattedOrders;
+    } catch (error) {
+      console.error('Error refreshing orders:', error);
+      setError(error.message);
+      return [];
+    }
+  }, [user?.id]);
+
+  // Helper functions
+  const requiresProfileCompletion = useCallback(() => {
+    return user && !user.profile_completed && !user.profileCompleted;
   }, [user]);
 
-  const updateProfile = async (profileData) => {
-    try {
-      setLoading(true);
-      clearError();
-      
-      const updatedProfile = await authAPI.updateUserProfile(profileData);
-      
-      setUser(prev => ({
-        ...prev,
-        ...updatedProfile
-      }));
-      
-      return { success: true, profile: updatedProfile };
-    } catch (error) {
-      console.error('Update profile error:', error);
-      setAuthError(error.message || 'Failed to update profile');
-      return { success: false, error: error.message };
-    } finally {
-      setLoading(false);
-    }
-  };
+  const isAuthenticated = useCallback(() => {
+    return unifiedUserAPI.isAuthenticated();
+  }, []);
 
-  const completeProfile = async (profileData) => {
-    try {
-      setLoading(true);
-      clearError();
-      
-      const result = await authAPI.completeUserProfile(profileData);
-      
-      if (result.success) {
-        setUser(prev => ({
-          ...prev,
-          ...result.user
-        }));
-        setIsNewUser(false);
-      }
-      
-      return result;
-    } catch (error) {
-      console.error('Complete profile error:', error);
-      setAuthError(error.message || 'Failed to complete profile');
-      return { success: false, error: error.message };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Auto-refresh session
-  useEffect(() => {
-    if (!user || isDevelopment) return;
-
-    const interval = setInterval(async () => {
-      try {
-        await refreshSession();
-      } catch (error) {
-        console.error('Auto-refresh failed:', error);
-      }
-    }, AUTH_CONFIG.SESSION_REFRESH_INTERVAL);
-
-    return () => clearInterval(interval);
-  }, [user, refreshSession]);
-
-  // Initialize auth on mount
-  useEffect(() => {
-    if (!isInitialized) {
-      initializeAuth();
-    }
-  }, [initializeAuth, isInitialized]);
-
-  // Clear errors when user changes
-  useEffect(() => {
-    if (user && authError) {
-      setAuthError(null);
-    }
-  }, [user, authError]);
+  const isSessionExpired = useCallback(() => {
+    return unifiedUserAPI.isSessionExpired();
+  }, []);
 
   return {
+    // User data
     user,
-    loading,
-    authError,
-    isInitialized,
-    isNewUser,
-    loginWithOAuth,
-    handleOAuthCallback,
+    userPlan,
+    userAddress,
+    orders,
+    
+    // Loading states
+    isLoading,
+    planLoading,
+    
+    // Error state
+    error,
+    
+    // Authentication methods
+    loginWithGoogle,
+    handleToken,
     logout,
-    refreshSession,
-    updateProfile,
+    
+    // Profile methods
     completeProfile,
-    checkAdminStatus,
-    clearError,
-    clearNewUserFlag
+    updateUserProfile,
+    updateUserSubscription,
+    refreshOrders,
+    
+    // Helper methods
+    requiresProfileCompletion,
+    isAuthenticated,
+    isSessionExpired,
   };
 }
