@@ -40,6 +40,11 @@ import { mealsAPI } from '../API/mealAPI';
  * - is_available: boolean
  * - created_at: string (TIMESTAMPTZ)
  * - updated_at: string (TIMESTAMPTZ)
+ * 
+ * Relations:
+ * - meal_items: junction table with items
+ * - meal_allergies: junction table with allergies
+ * - meal_reviews: reviews with user profiles
  */
 
 export function useMeals() {
@@ -51,43 +56,59 @@ export function useMeals() {
   const validateMealData = (meal) => {
     if (!meal) return null;
 
+    // Handle nested relations from API
+    const processedMeal = {
+      ...meal,
+      // Extract items from meal_items junction table
+      items: meal.meal_items?.map(mi => mi.items) || [],
+      // Extract allergies from meal_allergies junction table
+      allergies: meal.meal_allergies?.map(ma => ma.allergies) || [],
+      // Extract reviews with user profiles
+      reviews: meal.meal_reviews || []
+    };
+
     // Map camelCase keys to snake_case for compatibility
     const normalizedMeal = {
-      id: meal.id,
-      name: meal.name,
-      name_arabic: meal.nameArabic || meal.name_arabic || null,
-      description: meal.description || null,
-      description_arabic: meal.descriptionArabic || meal.description_arabic || null,
-      section: meal.section || 'main',
-      section_arabic: meal.sectionArabic || meal.section_arabic || null,
-      base_price: meal.basePrice || meal.base_price || 0,
-      calories: meal.calories || 0,
-      protein_g: meal.proteinG || meal.protein_g || 0,
-      carbs_g: meal.carbsG || meal.carbs_g || 0,
-      fat_g: meal.fatG || meal.fat_g || 0,
-      fiber_g: meal.fiberG || meal.fiber_g || null,
-      sugar_g: meal.sugarG || meal.sugar_g || null,
-      sodium_mg: meal.sodiumMg || meal.sodium_mg || null,
-      ingredients: meal.ingredients || null,
-      ingredients_arabic: meal.ingredientsArabic || meal.ingredients_arabic || null,
-      preparation_instructions: meal.preparationInstructions || meal.preparation_instructions || null,
-      image_url: meal.imageUrl || meal.image_url || null,
-      thumbnail_url: meal.thumbnailUrl || meal.thumbnail_url || null,
-      is_premium: meal.isPremium || meal.is_premium || false,
-      is_vegetarian: meal.isVegetarian || meal.is_vegetarian || false,
-      is_vegan: meal.isVegan || meal.is_vegan || false,
-      is_gluten_free: meal.isGlutenFree || meal.is_gluten_free || false,
-      is_dairy_free: meal.isDairyFree || meal.is_dairy_free || false,
-      spice_level: meal.spiceLevel || meal.spice_level || 0,
-      prep_time_minutes: meal.prepTimeMinutes || meal.prep_time_minutes || null,
-      rating: meal.rating || 0,
-      rating_count: meal.ratingCount || meal.rating_count || 0,
-      is_featured: meal.isFeatured || meal.is_featured || false,
-      discount_percentage: meal.discountPercentage || meal.discount_percentage || 0,
-      discount_valid_until: meal.discountValidUntil || meal.discount_valid_until || null,
-      is_available: meal.isAvailable !== undefined ? meal.isAvailable : (meal.is_available !== undefined ? meal.is_available : true),
-      created_at: meal.createdAt || meal.created_at,
-      updated_at: meal.updatedAt || meal.updated_at
+      id: processedMeal.id,
+      name: processedMeal.name,
+      name_arabic: processedMeal.nameArabic || processedMeal.name_arabic || null,
+      description: processedMeal.description || null,
+      description_arabic: processedMeal.descriptionArabic || processedMeal.description_arabic || null,
+      section: processedMeal.section || 'main',
+      section_arabic: processedMeal.sectionArabic || processedMeal.section_arabic || null,
+      base_price: processedMeal.basePrice || processedMeal.base_price || 0,
+      calories: processedMeal.calories || 0,
+      protein_g: processedMeal.proteinG || processedMeal.protein_g || 0,
+      carbs_g: processedMeal.carbsG || processedMeal.carbs_g || 0,
+      fat_g: processedMeal.fatG || processedMeal.fat_g || 0,
+      fiber_g: processedMeal.fiberG || processedMeal.fiber_g || null,
+      sugar_g: processedMeal.sugarG || processedMeal.sugar_g || null,
+      sodium_mg: processedMeal.sodiumMg || processedMeal.sodium_mg || null,
+      ingredients: processedMeal.ingredients || null,
+      ingredients_arabic: processedMeal.ingredientsArabic || processedMeal.ingredients_arabic || null,
+      preparation_instructions: processedMeal.preparationInstructions || processedMeal.preparation_instructions || null,
+      image_url: processedMeal.imageUrl || processedMeal.image_url || null,
+      thumbnail_url: processedMeal.thumbnailUrl || processedMeal.thumbnail_url || null,
+      is_premium: processedMeal.isPremium || processedMeal.is_premium || false,
+      is_vegetarian: processedMeal.isVegetarian || processedMeal.is_vegetarian || false,
+      is_vegan: processedMeal.isVegan || processedMeal.is_vegan || false,
+      is_gluten_free: processedMeal.isGlutenFree || processedMeal.is_gluten_free || false,
+      is_dairy_free: processedMeal.isDairyFree || processedMeal.is_dairy_free || false,
+      spice_level: processedMeal.spiceLevel || processedMeal.spice_level || 0,
+      prep_time_minutes: processedMeal.prepTimeMinutes || processedMeal.prep_time_minutes || null,
+      rating: processedMeal.rating || 0,
+      rating_count: processedMeal.ratingCount || processedMeal.rating_count || 0,
+      is_featured: processedMeal.isFeatured || processedMeal.is_featured || false,
+      discount_percentage: processedMeal.discountPercentage || processedMeal.discount_percentage || 0,
+      discount_valid_until: processedMeal.discountValidUntil || processedMeal.discount_valid_until || null,
+      is_available: processedMeal.isAvailable !== undefined ? processedMeal.isAvailable : (processedMeal.is_available !== undefined ? processedMeal.is_available : true),
+      created_at: processedMeal.createdAt || processedMeal.created_at,
+      updated_at: processedMeal.updatedAt || processedMeal.updated_at,
+      
+      // Include processed relations
+      items: processedMeal.items,
+      allergies: processedMeal.allergies,
+      reviews: processedMeal.reviews
     };
 
     // Ensure required fields exist
@@ -124,6 +145,7 @@ export function useMeals() {
     };
   };
 
+  // Public API methods (no authentication required)
   const fetchMeals = useCallback(async (queryParams = {}) => {
     setLoading(true);
     setError(null);
@@ -137,25 +159,6 @@ export function useMeals() {
       return validatedMeals;
     } catch (err) {
       console.error('Error fetching meals:', err);
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchPlanMeals = useCallback(async (planId, queryParams = {}) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await mealsAPI.getPlanMeals(planId);
-      const validatedMeals = data
-        .map(validateMealData)
-        .filter(Boolean);
-      
-      return validatedMeals;
-    } catch (err) {
-      console.error('Error fetching plan meals:', err);
       setError(err);
       throw err;
     } finally {
@@ -179,6 +182,120 @@ export function useMeals() {
     }
   }, []);
 
+  const fetchMealsBySection = useCallback(async (section) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await mealsAPI.getMealsBySection(section);
+      const validatedMeals = data
+        .map(validateMealData)
+        .filter(Boolean);
+      
+      setMeals(validatedMeals);
+      return validatedMeals;
+    } catch (err) {
+      console.error('Error fetching meals by section:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Authenticated API methods (require user authentication)
+  const fetchPlanMeals = useCallback(async (planId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await mealsAPI.getPlanMeals(planId);
+      // Plan meals come with meals nested, so we need to extract them
+      const validatedMeals = data
+        .map(planMeal => validateMealData(planMeal.meals))
+        .filter(Boolean);
+      
+      return validatedMeals;
+    } catch (err) {
+      console.error('Error fetching plan meals:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchFavorites = useCallback(async (userId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await mealsAPI.getFavMealsOfClient(userId);
+      const validatedMeals = data
+        .map(validateMealData)
+        .filter(Boolean);
+      
+      return validatedMeals;
+    } catch (err) {
+      console.error('Error fetching favorite meals:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const addToFavorites = useCallback(async (mealId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await mealsAPI.addToFavorites(mealId);
+      return result;
+    } catch (err) {
+      console.error('Error adding meal to favorites:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const removeFromFavorites = useCallback(async (mealId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await mealsAPI.removeFromFavorites(mealId);
+      return result;
+    } catch (err) {
+      console.error('Error removing meal from favorites:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const rateMeal = useCallback(async (mealId, rating) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await mealsAPI.rateMeal(mealId, rating);
+      // Update local state with new rating if meal exists in current state
+      setMeals(prev => 
+        prev.map(meal => 
+          meal.id === mealId 
+            ? { ...meal, rating: result.rating }
+            : meal
+        )
+      );
+      return result;
+    } catch (err) {
+      console.error('Error rating meal:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Admin API methods (require admin authentication)
   const addMeal = useCallback(async (mealData) => {
     setLoading(true);
     setError(null);
@@ -233,80 +350,11 @@ export function useMeals() {
     setLoading(true);
     setError(null);
     try {
-      await mealsAPI.deleteMeal(mealId);
+      const result = await mealsAPI.deleteMeal(mealId);
       setMeals(prev => prev.filter(meal => meal.id !== mealId));
-    } catch (err) {
-      console.error('Error removing meal:', err);
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchFavorites = useCallback(async (userId) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await mealsAPI.getFavMealsOfClient(userId);
-      const validatedMeals = data
-        .map(validateMealData)
-        .filter(Boolean);
-      
-      return validatedMeals;
-    } catch (err) {
-      console.error('Error fetching favorite meals:', err);
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const addToFavorites = useCallback(async (mealId) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await mealsAPI.addToFavorites(mealId);
-    } catch (err) {
-      console.error('Error adding meal to favorites:', err);
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const removeFromFavorites = useCallback(async (mealId) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await mealsAPI.removeFromFavorites(mealId);
-    } catch (err) {
-      console.error('Error removing meal from favorites:', err);
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const rateMeal = useCallback(async (mealId, rating) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await mealsAPI.rateMeal(mealId, rating);
-      // Update local state with new rating
-      setMeals(prev => 
-        prev.map(meal => 
-          meal.id === mealId 
-            ? { ...meal, rating: result.rating, rating_count: result.rating_count }
-            : meal
-        )
-      );
       return result;
     } catch (err) {
-      console.error('Error rating meal:', err);
+      console.error('Error removing meal:', err);
       setError(err);
       throw err;
     } finally {
@@ -318,12 +366,13 @@ export function useMeals() {
     setLoading(true);
     setError(null);
     try {
-      await mealsAPI.toggleMealAvailability(mealId, isAvailable);
+      const result = await mealsAPI.toggleMealAvailability(mealId, isAvailable);
       setMeals(prev => 
         prev.map(meal => 
           meal.id === mealId ? { ...meal, is_available: isAvailable } : meal
         )
       );
+      return result;
     } catch (err) {
       console.error('Error toggling meal availability:', err);
       setError(err);
@@ -368,26 +417,6 @@ export function useMeals() {
     }
   }, []);
 
-  const fetchMealsBySection = useCallback(async (section) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await mealsAPI.getMealsBySection(section);
-      const validatedMeals = data
-        .map(validateMealData)
-        .filter(Boolean);
-      
-      setMeals(validatedMeals);
-      return validatedMeals;
-    } catch (err) {
-      console.error('Error fetching meals by section:', err);
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   // Helper functions for filtered meal queries
   const getFeaturedMeals = useCallback(() => {
     return meals.filter(meal => meal.is_featured && meal.is_available);
@@ -414,24 +443,63 @@ export function useMeals() {
     return meals.filter(meal => meal.is_vegan && meal.is_available);
   }, [meals]);
 
+  const getGlutenFreeMeals = useCallback(() => {
+    return meals.filter(meal => meal.is_gluten_free && meal.is_available);
+  }, [meals]);
+
+  const getDairyFreeMeals = useCallback(() => {
+    return meals.filter(meal => meal.is_dairy_free && meal.is_available);
+  }, [meals]);
+
+  const getMealsBySpiceLevel = useCallback((spiceLevel) => {
+    return meals.filter(meal => meal.spice_level === spiceLevel && meal.is_available);
+  }, [meals]);
+
+  const getPremiumMeals = useCallback(() => {
+    return meals.filter(meal => meal.is_premium && meal.is_available);
+  }, [meals]);
+
+  const searchMeals = useCallback((searchTerm) => {
+    if (!searchTerm) return meals;
+    
+    const lowercaseSearch = searchTerm.toLowerCase();
+    return meals.filter(meal => 
+      meal.is_available && (
+        meal.name?.toLowerCase().includes(lowercaseSearch) ||
+        meal.name_arabic?.toLowerCase().includes(lowercaseSearch) ||
+        meal.description?.toLowerCase().includes(lowercaseSearch) ||
+        meal.description_arabic?.toLowerCase().includes(lowercaseSearch) ||
+        meal.ingredients?.toLowerCase().includes(lowercaseSearch) ||
+        meal.ingredients_arabic?.toLowerCase().includes(lowercaseSearch)
+      )
+    );
+  }, [meals]);
+
   return {
+    // State
     meals,
     loading,
     error,
+    
+    // Public API methods
     fetchMeals,
-    fetchPlanMeals,
     fetchMeal,
-    addMeal,
-    modifyMeal,
-    removeMeal,
+    fetchMealsBySection,
+    
+    // Authenticated API methods
+    fetchPlanMeals,
     fetchFavorites,
     addToFavorites,
     removeFromFavorites,
     rateMeal,
+    
+    // Admin API methods
+    addMeal,
+    modifyMeal,
+    removeMeal,
     toggleMealAvailability,
     bulkUpdateMeals,
     getMealAnalytics,
-    fetchMealsBySection,
     
     // Helper functions
     getFeaturedMeals,
@@ -439,6 +507,11 @@ export function useMeals() {
     getMealsBySection,
     getHighRatedMeals,
     getVegetarianMeals,
-    getVeganMeals
+    getVeganMeals,
+    getGlutenFreeMeals,
+    getDairyFreeMeals,
+    getMealsBySpiceLevel,
+    getPremiumMeals,
+    searchMeals
   };
 }

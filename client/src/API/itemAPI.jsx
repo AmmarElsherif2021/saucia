@@ -1,46 +1,168 @@
-import { AUTH_CONFIG } from "../config/auth.js";
-import { httpClient, authClient } from './httpClient.jsx';
+import { supabase, handleSupabaseError } from '../../supabaseClient'
 
 export const itemsAPI = {
   // Public endpoints - no authentication required
   async listItems(queryParams = {}) {
-    const searchParams = new URLSearchParams(queryParams);
-    return await httpClient.get(`${AUTH_CONFIG.API_BASE_URL}/items?${searchParams}`);
+    try {
+      let query = supabase
+        .from('items')
+        .select('*')
+        .eq('is_available', true)
+
+      // Apply filters from queryParams
+      if (queryParams.category) {
+        query = query.eq('category', queryParams.category)
+      }
+      if (queryParams.search) {
+        query = query.or(`name.ilike.%${queryParams.search}%,description.ilike.%${queryParams.search}%`)
+      }
+      if (queryParams.sort) {
+        const [field, order] = queryParams.sort.split(':')
+        query = query.order(field, { ascending: order === 'asc' })
+      } else {
+        query = query.order('sort_order', { ascending: true })
+      }
+
+      const { data, error } = await query
+
+      if (error) throw error
+      return data
+    } catch (error) {
+      handleSupabaseError(error)
+    }
   },
 
   async getItemById(itemId) {
-    return await httpClient.get(`${AUTH_CONFIG.API_BASE_URL}/items/${itemId}`);
+    try {
+      const { data, error } = await supabase
+        .from('items')
+        .select('*')
+        .eq('id', itemId)
+        .eq('is_available', true)
+        .single()
+
+      if (error) throw error
+      return data
+    } catch (error) {
+      handleSupabaseError(error)
+    }
   },
 
-  async getItemsBySection(section) {
-    return await httpClient.get(`${AUTH_CONFIG.API_BASE_URL}/items/section/${section}`);
+  async getItemsByCategory(category) {
+    try {
+      const { data, error } = await supabase
+        .from('items')
+        .select('*')
+        .eq('category', category)
+        .eq('is_available', true)
+        .order('sort_order', { ascending: true })
+
+      if (error) throw error
+      return data
+    } catch (error) {
+      handleSupabaseError(error)
+    }
   },
 
   // Authenticated endpoints - require admin/user authentication
   async createItem(itemData) {
-    return await authClient.post(`${AUTH_CONFIG.API_BASE_URL}/items`, itemData);
+    try {
+      const { data, error } = await supabase
+        .from('items')
+        .insert([{
+          ...itemData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    } catch (error) {
+      handleSupabaseError(error)
+    }
   },
 
   async updateItem(itemId, updates) {
-    return await authClient.put(`${AUTH_CONFIG.API_BASE_URL}/items/${itemId}`, updates);
+    try {
+      const { data, error } = await supabase
+        .from('items')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', itemId)
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    } catch (error) {
+      handleSupabaseError(error)
+    }
   },
 
   async deleteItem(itemId) {
-    return await authClient.delete(`${AUTH_CONFIG.API_BASE_URL}/items/${itemId}`);
-  },
+    try {
+      const { error } = await supabase
+        .from('items')
+        .delete()
+        .eq('id', itemId)
 
-  // Admin-specific endpoints
-  async getItemAnalytics(timeframe = '30d') {
-    return await authClient.get(`${AUTH_CONFIG.API_BASE_URL}/admin/analytics/items?timeframe=${timeframe}`);
-  },
-
-  async bulkUpdateItems(updates) {
-    return await authClient.put(`${AUTH_CONFIG.API_BASE_URL}/admin/items/bulk`, updates);
+      if (error) throw error
+      return { success: true }
+    } catch (error) {
+      handleSupabaseError(error)
+    }
   },
 
   async toggleItemAvailability(itemId, isAvailable) {
-    return await authClient.put(`${AUTH_CONFIG.API_BASE_URL}/items/${itemId}/availability`, {
-      isAvailable
-    });
+    try {
+      const { data, error } = await supabase
+        .from('items')
+        .update({
+          is_available: isAvailable,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', itemId)
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    } catch (error) {
+      handleSupabaseError(error)
+    }
   },
-};
+
+  // Analytics would typically be handled by database functions
+  async getItemAnalytics(timeframe = '30d') {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_item_analytics', { timeframe_param: timeframe })
+
+      if (error) throw error
+      return data
+    } catch (error) {
+      handleSupabaseError(error)
+    }
+  },
+
+  async bulkUpdateItems(updates) {
+    try {
+      const { data, error } = await supabase
+        .from('items')
+        .upsert(updates.map(item => ({
+          ...item,
+          updated_at: new Date().toISOString()
+        })))
+        .select()
+
+      if (error) throw error
+      return data
+    } catch (error) {
+      handleSupabaseError(error)
+    }
+  }
+}

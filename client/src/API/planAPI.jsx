@@ -1,114 +1,373 @@
-import { AUTH_CONFIG } from "../config/auth.js";
-import { httpClient, authClient } from './httpClient.jsx';
+import { supabase } from "../../supabaseClient";
 
 export const plansAPI = {
   // Public endpoints - no authentication required
   async listPlans(queryParams = {}) {
-    const searchParams = new URLSearchParams(queryParams);
-    return await httpClient.get(`${AUTH_CONFIG.API_BASE_URL}/plans?${searchParams}`);
+    const { data, error } = await supabase
+      .from('plans')
+      .select('*')
+      .match(queryParams);
+    
+    if (error) throw error;
+    return data;
   },
 
   async getPlanById(planId) {
-    return await httpClient.get(`${AUTH_CONFIG.API_BASE_URL}/plans/${planId}`);
+    const { data, error } = await supabase
+      .from('plans')
+      .select('*')
+      .eq('id', planId)
+      .single();
+    
+    if (error) throw error;
+    return data;
   },
 
   async getFeaturedPlans() {
-    return await httpClient.get(`${AUTH_CONFIG.API_BASE_URL}/plans/featured`);
+    const { data, error } = await supabase
+      .from('plans')
+      .select('*')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true });
+    
+    if (error) throw error;
+    return data;
   },
 
   // User endpoints - require user authentication
   async getUserSubscriptions() {
-    return await authClient.get(`${AUTH_CONFIG.API_BASE_URL}/plans/subscriptions`);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('user_subscriptions')
+      .select('*')
+      .eq('user_id', user.id);
+    
+    if (error) throw error;
+    return data;
   },
 
   async subscribeToPlan(planId, subscriptionData) {
-    return await authClient.post(`${AUTH_CONFIG.API_BASE_URL}/plans/${planId}/subscribe`, subscriptionData);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // Get plan details
+    const { data: plan, error: planError } = await supabase
+      .from('plans')
+      .select('price_per_meal, meals_per_week')
+      .eq('id', planId)
+      .single();
+    
+    if (planError) throw planError;
+
+    // Calculate dates
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + plan.duration_days);
+    
+    const { data, error } = await supabase
+      .from('user_subscriptions')
+      .insert({
+        ...subscriptionData,
+        user_id: user.id,
+        plan_id: planId,
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString(),
+        price_per_meal: plan.price_per_meal,
+        meals_per_week: plan.meals_per_week,
+        status: 'active'
+      });
+    
+    if (error) throw error;
+    return data;
   },
 
   async updateSubscription(subscriptionId, updates) {
-    return await authClient.put(`${AUTH_CONFIG.API_BASE_URL}/plans/subscriptions/${subscriptionId}`, updates);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('user_subscriptions')
+      .update(updates)
+      .eq('id', subscriptionId)
+      .eq('user_id', user.id);
+    
+    if (error) throw error;
+    return data;
   },
 
   async cancelSubscription(subscriptionId, reason = '') {
-    return await authClient.post(`${AUTH_CONFIG.API_BASE_URL}/plans/subscriptions/${subscriptionId}/cancel`, {
-      reason
-    });
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('user_subscriptions')
+      .update({ 
+        status: 'cancelled',
+        end_date: new Date().toISOString(),
+        pause_reason: reason 
+      })
+      .eq('id', subscriptionId)
+      .eq('user_id', user.id);
+    
+    if (error) throw error;
+    return data;
   },
 
   async pauseSubscription(subscriptionId, pauseData) {
-    return await authClient.post(`${AUTH_CONFIG.API_BASE_URL}/plans/subscriptions/${subscriptionId}/pause`, pauseData);
+    return this.updateSubscription(subscriptionId, {
+      is_paused: true,
+      paused_at: new Date().toISOString(),
+      ...pauseData
+    });
   },
 
   async resumeSubscription(subscriptionId) {
-    return await authClient.post(`${AUTH_CONFIG.API_BASE_URL}/plans/subscriptions/${subscriptionId}/resume`);
+    return this.updateSubscription(subscriptionId, {
+      is_paused: false,
+      resume_date: null,
+      paused_at: null,
+      pause_reason: null
+    });
   },
 
   async getSubscriptionHistory(subscriptionId) {
-    return await authClient.get(`${AUTH_CONFIG.API_BASE_URL}/plans/subscriptions/${subscriptionId}/history`);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // In a real implementation, you would query an audit table
+    // Here we're just returning the current subscription state
+    const { data, error } = await supabase
+      .from('user_subscriptions')
+      .select('*')
+      .eq('id', subscriptionId)
+      .eq('user_id', user.id)
+      .single();
+    
+    if (error) throw error;
+    return [data]; // Return as array for consistency
   },
 
   async calculatePlanCost(planId, options = {}) {
-    return await authClient.post(`${AUTH_CONFIG.API_BASE_URL}/plans/${planId}/calculate`, options);
+    const { data: plan, error } = await supabase
+      .from('plans')
+      .select('price_per_meal, meals_per_week')
+      .eq('id', planId)
+      .single();
+    
+    if (error) throw error;
+    
+    // Simple calculation - extend with your business logic
+    const weeks = options.durationWeeks || 4;
+    return {
+      subtotal: plan.price_per_meal * plan.meals_per_week * weeks,
+      tax: 0,
+      total: plan.price_per_meal * plan.meals_per_week * weeks
+    };
   },
 
   // Admin endpoints - require admin authentication
   async createPlan(planData) {
-    return await authClient.post(`${AUTH_CONFIG.API_BASE_URL}/plans`, planData);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    
+    // Verify admin status
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single();
+    
+    if (!profile?.is_admin) throw new Error('Admin access required');
+
+    const { data, error } = await supabase
+      .from('plans')
+      .insert(planData);
+    
+    if (error) throw error;
+    return data;
   },
 
   async updatePlan(planId, updates) {
-    return await authClient.put(`${AUTH_CONFIG.API_BASE_URL}/plans/${planId}`, updates);
+    await this.verifyAdmin();
+
+    const { data, error } = await supabase
+      .from('plans')
+      .update(updates)
+      .eq('id', planId);
+    
+    if (error) throw error;
+    return data;
   },
 
   async deletePlan(planId) {
-    return await authClient.delete(`${AUTH_CONFIG.API_BASE_URL}/plans/${planId}`);
+    await this.verifyAdmin();
+
+    const { data, error } = await supabase
+      .from('plans')
+      .delete()
+      .eq('id', planId);
+    
+    if (error) throw error;
+    return data;
   },
 
   async togglePlanStatus(planId, isActive) {
-    return await authClient.put(`${AUTH_CONFIG.API_BASE_URL}/plans/${planId}/status`, {
-      isActive
-    });
+    await this.verifyAdmin();
+
+    const { data, error } = await supabase
+      .from('plans')
+      .update({ is_active: isActive })
+      .eq('id', planId);
+    
+    if (error) throw error;
+    return data;
   },
 
   async getPlanAnalytics(timeframe = '30d') {
-    return await authClient.get(`${AUTH_CONFIG.API_BASE_URL}/admin/analytics/plans?timeframe=${timeframe}`);
+    await this.verifyAdmin();
+
+    // In a real implementation, you would use a Postgres function
+    const { data, error } = await supabase.rpc('get_plan_analytics', {
+      timeframe
+    });
+    
+    if (error) throw error;
+    return data;
   },
 
   async getAllSubscriptions(queryParams = {}) {
-    const searchParams = new URLSearchParams(queryParams);
-    return await authClient.get(`${AUTH_CONFIG.API_BASE_URL}/admin/subscriptions?${searchParams}`);
+    await this.verifyAdmin();
+
+    const { data, error } = await supabase
+      .from('user_subscriptions')
+      .select('*')
+      .match(queryParams);
+    
+    if (error) throw error;
+    return data;
   },
 
   async getSubscriptionById(subscriptionId) {
-    return await authClient.get(`${AUTH_CONFIG.API_BASE_URL}/admin/subscriptions/${subscriptionId}`);
+    await this.verifyAdmin();
+
+    const { data, error } = await supabase
+      .from('user_subscriptions')
+      .select('*')
+      .eq('id', subscriptionId)
+      .single();
+    
+    if (error) throw error;
+    return data;
   },
 
   async updateSubscriptionStatus(subscriptionId, status, notes = '') {
-    return await authClient.put(`${AUTH_CONFIG.API_BASE_URL}/admin/subscriptions/${subscriptionId}/status`, {
-      status,
-      notes
-    });
+    await this.verifyAdmin();
+
+    const { data, error } = await supabase
+      .from('user_subscriptions')
+      .update({ status, notes })
+      .eq('id', subscriptionId);
+    
+    if (error) throw error;
+    return data;
   },
 
   async bulkUpdateSubscriptions(updates) {
-    return await authClient.put(`${AUTH_CONFIG.API_BASE_URL}/admin/subscriptions/bulk`, updates);
+    await this.verifyAdmin();
+
+    // This would need a custom function in a real implementation
+    const results = [];
+    for (const update of updates) {
+      const { data, error } = await supabase
+        .from('user_subscriptions')
+        .update(update.changes)
+        .eq('id', update.id);
+      
+      if (error) throw error;
+      results.push(data);
+    }
+    return results;
   },
 
   async exportSubscriptions(filters = {}) {
-    return await authClient.post(`${AUTH_CONFIG.API_BASE_URL}/admin/subscriptions/export`, filters);
+    await this.verifyAdmin();
+
+    // In a real implementation, use a Postgres function
+    const { data, error } = await supabase
+      .from('user_subscriptions')
+      .select('*')
+      .match(filters);
+    
+    if (error) throw error;
+    return data; // Return as JSON, convert to CSV/Excel on client
   },
 
   async getUserSubscriptions(userId) {
-    return await authClient.get(`${AUTH_CONFIG.API_BASE_URL}/admin/users/${userId}/subscriptions`);
+    await this.verifyAdmin();
+
+    const { data, error } = await supabase
+      .from('user_subscriptions')
+      .select('*')
+      .eq('user_id', userId);
+    
+    if (error) throw error;
+    return data;
   },
 
   async setPlanFeatured(planId, isFeatured) {
-    return await authClient.put(`${AUTH_CONFIG.API_BASE_URL}/admin/plans/${planId}/featured`, {
-      isFeatured
-    });
+    await this.verifyAdmin();
+
+    const { data, error } = await supabase
+      .from('plans')
+      .update({ is_featured: isFeatured })
+      .eq('id', planId);
+    
+    if (error) throw error;
+    return data;
   },
 
   async duplicatePlan(planId, newPlanData = {}) {
-    return await authClient.post(`${AUTH_CONFIG.API_BASE_URL}/admin/plans/${planId}/duplicate`, newPlanData);
+    await this.verifyAdmin();
+
+    // Get existing plan
+    const { data: existingPlan, error: fetchError } = await supabase
+      .from('plans')
+      .select('*')
+      .eq('id', planId)
+      .single();
+    
+    if (fetchError) throw fetchError;
+
+    // Create new plan with modified data
+    const newPlan = {
+      ...existingPlan,
+      ...newPlanData,
+      id: undefined, // Let DB generate new ID
+      created_at: undefined,
+      updated_at: undefined
+    };
+
+    const { data, error } = await supabase
+      .from('plans')
+      .insert(newPlan);
+    
+    if (error) throw error;
+    return data;
   },
+
+  // Helper method to verify admin status
+  async verifyAdmin() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single();
+    
+    if (!profile?.is_admin) throw new Error('Admin access required');
+  }
 };

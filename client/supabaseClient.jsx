@@ -11,3 +11,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     flowType: 'pkce'
   }
 })
+export const handleSupabaseError = (error) => {
+  if (error) {
+    console.error('Supabase error:', error)
+    throw new Error(error.message || 'An unexpected error occurred')
+  }
+}

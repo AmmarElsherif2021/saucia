@@ -166,11 +166,12 @@ export function useItems() {
     }
   }, []);
 
+  // Fixed: Updated to use the correct API method name
   const fetchItemsByCategory = useCallback(async (category) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await itemsAPI.getItemsBySection(category);
+      const data = await itemsAPI.getItemsByCategory(category);
       const validatedItems = data
         .map(validateItemData)
         .filter(Boolean)
@@ -191,12 +192,18 @@ export function useItems() {
     setLoading(true);
     setError(null);
     try {
-      await itemsAPI.toggleItemAvailability(itemId, isAvailable);
-      setItems(prev => 
-        prev.map(item => 
-          item.id === itemId ? { ...item, is_available: isAvailable } : item
-        )
-      );
+      const updatedItem = await itemsAPI.toggleItemAvailability(itemId, isAvailable);
+      const normalizedItem = validateItemData(updatedItem);
+      
+      if (normalizedItem) {
+        setItems(prev => 
+          prev.map(item => 
+            item.id === itemId ? normalizedItem : item
+          )
+        );
+      }
+      
+      return normalizedItem;
     } catch (err) {
       console.error('Error toggling item availability:', err);
       setError(err);

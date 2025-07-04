@@ -1,119 +1,24 @@
 import { useState, useCallback } from 'react';
-import {plansAPI} from '../API/planAPI';
+import { plansAPI } from '../API/planAPI';
 
 /**
- * Custom hook for managing subscription plans according to Supabase schema
- * 
- * Plan schema (from Supabase):
- * - id: number (SERIAL PRIMARY KEY)
- * - title: string
- * - title_arabic: string
- * - description: string
- * - description_arabic: string
- * - price_per_meal: number (NUMERIC(10,2))
- * - short_term_meals: number (INTEGER)
- * - medium_term_meals: number (INTEGER)
- * - duration_days: number (INTEGER)
- * - target_calories_per_meal: number (INTEGER)
- * - target_protein_per_meal: number (INTEGER)
- * - target_carbs_per_meal: number (INTEGER)
- * - avatar_url: string
- * - is_active: boolean
- * - sort_order: number (INTEGER)
- * - created_at: string (TIMESTAMPTZ)
- * - updated_at: string (TIMESTAMPTZ)
+ * Custom hook for managing subscription plans
+ * Aligned with the plansAPI implementation
  */
-
 export function usePlans() {
- 
   const [plans, setPlans] = useState([]);
+  const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Validate and normalize plan data according to schema
-  const validatePlanData = (plan) => {
-    if (!plan) return null;
-    
-    // Ensure required fields exist
-    if (!plan.title || typeof plan.price_per_meal !== 'number') {
-      console.warn('Invalid plan data - missing required fields:', plan);
-      return null;
-    }
-
-    // Validate business logic constraints
-    const shortTermMeals = Number(plan.short_term_meals) || 0;
-    const mediumTermMeals = Number(plan.medium_term_meals) || shortTermMeals;
-    const durationDays = Number(plan.duration_days) || 0;
-
-    if (shortTermMeals <= 0 || durationDays <= 0) {
-      console.warn('Invalid plan data - invalid meal count or duration:', plan);
-      return null;
-    }
-
-    if (mediumTermMeals < shortTermMeals) {
-      console.warn('Invalid plan data - medium term meals cannot be less than short term:', plan);
-      return null;
-    }
-
-    // Calculate total plan price for different meal counts
-    const pricePerMeal = Number(plan.price_per_meal) || 0;
-    const shortTermPrice = shortTermMeals * pricePerMeal;
-    const mediumTermPrice = mediumTermMeals * pricePerMeal;
-
-    // Normalize the plan data to match schema
-    return {
-      id: plan.id,
-      title: plan.title,
-      title_arabic: plan.title_arabic || null,
-      description: plan.description || null,
-      description_arabic: plan.description_arabic || null,
-      
-      // Pricing
-      price_per_meal: pricePerMeal,
-      price: pricePerMeal, // For backward compatibility
-      
-      // Meal configurations
-      short_term_meals: shortTermMeals,
-      medium_term_meals: mediumTermMeals,
-      duration_days: durationDays,
-      
-      // Calculated prices for different meal counts
-      short_term_price: shortTermPrice,
-      medium_term_price: mediumTermPrice,
-      
-      // Nutritional targets
-      target_calories_per_meal: Number(plan.target_calories_per_meal) || null,
-      target_protein_per_meal: Number(plan.target_protein_per_meal) || null,
-      target_carbs_per_meal: Number(plan.target_carbs_per_meal) || null,
-      
-      // Visual and organizational
-      avatar_url: plan.avatar_url || null,
-      is_active: Boolean(plan.is_active ?? true),
-      sort_order: Number(plan.sort_order) || 0,
-      
-      // Legacy compatibility fields
-      name: plan.title, // For backward compatibility
-      mealsCount: mediumTermMeals, // For backward compatibility
-      duration: durationDays, // For backward compatibility
-      
-      // Timestamps
-      created_at: plan.created_at,
-      updated_at: plan.updated_at
-    };
-  };
-
+  // Public plan operations (no auth required)
   const fetchPlans = useCallback(async (queryParams = {}) => {
     setLoading(true);
     setError(null);
     try {
       const data = await plansAPI.listPlans(queryParams);
-      const validatedPlans = data
-        .map(validatePlanData)
-        .filter(Boolean)
-        .sort((a, b) => a.sort_order - b.sort_order);
-      
-      setPlans(validatedPlans);
-      return validatedPlans;
+      setPlans(data || []);
+      return data;
     } catch (err) {
       console.error('Error fetching plans:', err);
       setError(err);
@@ -123,13 +28,12 @@ export function usePlans() {
     }
   }, []);
 
-  const fetchPlan = useCallback(async (planId) => {
+  const fetchPlanById = useCallback(async (planId) => {
     setLoading(true);
     setError(null);
     try {
       const data = await plansAPI.getPlanById(planId);
-      const validatedPlan = validatePlanData(data);
-      return validatedPlan;
+      return data;
     } catch (err) {
       console.error('Error fetching plan:', err);
       setError(err);
@@ -139,24 +43,209 @@ export function usePlans() {
     }
   }, []);
 
-  const addPlan = useCallback(async (token, planData) => {
+  const fetchFeaturedPlans = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // Validate data before sending
-      const validatedData = validatePlanData(planData);
-      if (!validatedData) {
-        throw new Error('Invalid plan data provided');
-      }
+      const data = await plansAPI.getFeaturedPlans();
+      setPlans(data || []);
+      return data;
+    } catch (err) {
+      console.error('Error fetching featured plans:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-      const newPlan = await plansAPI.createPlan(token, validatedData);
-      const normalizedPlan = validatePlanData(newPlan);
-      
-      if (normalizedPlan) {
-        setPlans(prev => [...prev, normalizedPlan].sort((a, b) => a.sort_order - b.sort_order));
+  // User subscription operations (require auth)
+  const fetchUserSubscriptions = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await plansAPI.getUserSubscriptions();
+      setSubscriptions(data || []);
+      return data;
+    } catch (err) {
+      console.error('Error fetching user subscriptions:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const subscribeToPlan = useCallback(async (planId, subscriptionData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const newSubscription = await plansAPI.subscribeToPlan(planId, subscriptionData);
+      if (newSubscription) {
+        setSubscriptions(prev => [...prev, newSubscription]);
       }
-      
-      return normalizedPlan;
+      return newSubscription;
+    } catch (err) {
+      console.error('Error subscribing to plan:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const updateSubscription = useCallback(async (subscriptionId, updates) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await plansAPI.updateSubscription(subscriptionId, updates);
+      if (result) {
+        setSubscriptions(prev => 
+          prev.map(sub => 
+            sub.id === subscriptionId 
+              ? { ...sub, ...updates }
+              : sub
+          )
+        );
+      }
+      return result;
+    } catch (err) {
+      console.error('Error updating subscription:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const cancelSubscription = useCallback(async (subscriptionId, reason = '') => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await plansAPI.cancelSubscription(subscriptionId, reason);
+      if (result) {
+        setSubscriptions(prev => 
+          prev.map(sub => 
+            sub.id === subscriptionId 
+              ? { 
+                  ...sub, 
+                  status: 'cancelled',
+                  end_date: new Date().toISOString(),
+                  pause_reason: reason
+                }
+              : sub
+          )
+        );
+      }
+      return result;
+    } catch (err) {
+      console.error('Error cancelling subscription:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const pauseSubscription = useCallback(async (subscriptionId, pauseData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await plansAPI.pauseSubscription(subscriptionId, pauseData);
+      if (result) {
+        setSubscriptions(prev => 
+          prev.map(sub => 
+            sub.id === subscriptionId 
+              ? { 
+                  ...sub, 
+                  is_paused: true,
+                  paused_at: new Date().toISOString(),
+                  ...pauseData
+                }
+              : sub
+          )
+        );
+      }
+      return result;
+    } catch (err) {
+      console.error('Error pausing subscription:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const resumeSubscription = useCallback(async (subscriptionId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await plansAPI.resumeSubscription(subscriptionId);
+      if (result) {
+        setSubscriptions(prev => 
+          prev.map(sub => 
+            sub.id === subscriptionId 
+              ? { 
+                  ...sub, 
+                  is_paused: false,
+                  resume_date: null,
+                  paused_at: null,
+                  pause_reason: null
+                }
+              : sub
+          )
+        );
+      }
+      return result;
+    } catch (err) {
+      console.error('Error resuming subscription:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getSubscriptionHistory = useCallback(async (subscriptionId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const history = await plansAPI.getSubscriptionHistory(subscriptionId);
+      return history;
+    } catch (err) {
+      console.error('Error fetching subscription history:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const calculatePlanCost = useCallback(async (planId, options = {}) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const cost = await plansAPI.calculatePlanCost(planId, options);
+      return cost;
+    } catch (err) {
+      console.error('Error calculating plan cost:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Admin operations (require admin auth)
+  const createPlan = useCallback(async (planData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const newPlan = await plansAPI.createPlan(planData);
+      if (newPlan) {
+        setPlans(prev => [...prev, newPlan]);
+      }
+      return newPlan;
     } catch (err) {
       console.error('Error creating plan:', err);
       setError(err);
@@ -166,21 +255,21 @@ export function usePlans() {
     }
   }, []);
 
-  const modifyPlan = useCallback(async (token, planId, updates) => {
+  const updatePlan = useCallback(async (planId, updates) => {
     setLoading(true);
     setError(null);
     try {
-      const updatedPlan = await plansAPI.updatePlan(token, planId, updates);
-      const normalizedPlan = validatePlanData(updatedPlan);
-      
-      if (normalizedPlan) {
+      const result = await plansAPI.updatePlan(planId, updates);
+      if (result) {
         setPlans(prev => 
-          prev.map(plan => plan.id === planId ? normalizedPlan : plan)
-            .sort((a, b) => a.sort_order - b.sort_order)
+          prev.map(plan => 
+            plan.id === planId 
+              ? { ...plan, ...updates }
+              : plan
+          )
         );
       }
-      
-      return normalizedPlan;
+      return result;
     } catch (err) {
       console.error('Error updating plan:', err);
       setError(err);
@@ -190,14 +279,14 @@ export function usePlans() {
     }
   }, []);
 
-  const removePlan = useCallback(async (token, planId) => {
+  const deletePlan = useCallback(async (planId) => {
     setLoading(true);
     setError(null);
     try {
-      await plansAPI.deletePlan(token, planId);
+      await plansAPI.deletePlan(planId);
       setPlans(prev => prev.filter(plan => plan.id !== planId));
     } catch (err) {
-      console.error('Error removing plan:', err);
+      console.error('Error deleting plan:', err);
       setError(err);
       throw err;
     } finally {
@@ -205,9 +294,184 @@ export function usePlans() {
     }
   }, []);
 
-  // Helper functions for filtered plan queries
+  const togglePlanStatus = useCallback(async (planId, isActive) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await plansAPI.togglePlanStatus(planId, isActive);
+      if (result) {
+        setPlans(prev => 
+          prev.map(plan => 
+            plan.id === planId 
+              ? { ...plan, is_active: isActive }
+              : plan
+          )
+        );
+      }
+      return result;
+    } catch (err) {
+      console.error('Error toggling plan status:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getPlanAnalytics = useCallback(async (timeframe = '30d') => {
+    setLoading(true);
+    setError(null);
+    try {
+      const analytics = await plansAPI.getPlanAnalytics(timeframe);
+      return analytics;
+    } catch (err) {
+      console.error('Error fetching plan analytics:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getAllSubscriptions = useCallback(async (queryParams = {}) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await plansAPI.getAllSubscriptions(queryParams);
+      return data;
+    } catch (err) {
+      console.error('Error fetching all subscriptions:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getSubscriptionById = useCallback(async (subscriptionId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await plansAPI.getSubscriptionById(subscriptionId);
+      return data;
+    } catch (err) {
+      console.error('Error fetching subscription:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const updateSubscriptionStatus = useCallback(async (subscriptionId, status, notes = '') => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await plansAPI.updateSubscriptionStatus(subscriptionId, status, notes);
+      return result;
+    } catch (err) {
+      console.error('Error updating subscription status:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const bulkUpdateSubscriptions = useCallback(async (updates) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const results = await plansAPI.bulkUpdateSubscriptions(updates);
+      return results;
+    } catch (err) {
+      console.error('Error bulk updating subscriptions:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const exportSubscriptions = useCallback(async (filters = {}) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await plansAPI.exportSubscriptions(filters);
+      return data;
+    } catch (err) {
+      console.error('Error exporting subscriptions:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getUserSubscriptions = useCallback(async (userId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await plansAPI.getUserSubscriptions(userId);
+      return data;
+    } catch (err) {
+      console.error('Error fetching user subscriptions:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const setPlanFeatured = useCallback(async (planId, isFeatured) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await plansAPI.setPlanFeatured(planId, isFeatured);
+      if (result) {
+        setPlans(prev => 
+          prev.map(plan => 
+            plan.id === planId 
+              ? { ...plan, is_featured: isFeatured }
+              : plan
+          )
+        );
+      }
+      return result;
+    } catch (err) {
+      console.error('Error setting plan featured status:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const duplicatePlan = useCallback(async (planId, newPlanData = {}) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const duplicatedPlan = await plansAPI.duplicatePlan(planId, newPlanData);
+      if (duplicatedPlan) {
+        setPlans(prev => [...prev, duplicatedPlan]);
+      }
+      return duplicatedPlan;
+    } catch (err) {
+      console.error('Error duplicating plan:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Helper functions for filtering and managing plans
   const getActivePlans = useCallback(() => {
     return plans.filter(plan => plan.is_active);
+  }, [plans]);
+
+  const getFeaturedPlans = useCallback(() => {
+    return plans.filter(plan => plan.is_featured && plan.is_active);
   }, [plans]);
 
   const getPlansByPriceRange = useCallback((minPrice, maxPrice) => {
@@ -218,54 +482,85 @@ export function usePlans() {
     );
   }, [plans]);
 
-  const getPlansByDuration = useCallback((maxDays) => {
-    return plans.filter(plan => 
-      plan.is_active && 
-      plan.duration_days <= maxDays
-    );
-  }, [plans]);
-
   const getPlansByMealCount = useCallback((minMeals, maxMeals) => {
     return plans.filter(plan => 
       plan.is_active && 
-      plan.medium_term_meals >= minMeals && 
-      plan.medium_term_meals <= maxMeals
+      plan.meals_per_week >= minMeals && 
+      plan.meals_per_week <= maxMeals
     );
   }, [plans]);
 
-  // Calculate plan metrics
-  const calculatePlanMetrics = useCallback((plan, mealCount = null) => {
-    if (!plan) return null;
+  // Helper functions for managing subscriptions
+  const getActiveSubscriptions = useCallback(() => {
+    return subscriptions.filter(sub => sub.status === 'active');
+  }, [subscriptions]);
 
-    const effectiveMealCount = mealCount || plan.medium_term_meals;
-    const totalPrice = effectiveMealCount * plan.price_per_meal;
-    const pricePerDay = totalPrice / plan.duration_days;
-    const mealsPerDay = effectiveMealCount / plan.duration_days;
+  const getPausedSubscriptions = useCallback(() => {
+    return subscriptions.filter(sub => sub.is_paused);
+  }, [subscriptions]);
 
-    return {
-      total_price: totalPrice,
-      price_per_day: pricePerDay,
-      meals_per_day: mealsPerDay,
-      effective_meal_count: effectiveMealCount,
-      duration_weeks: Math.ceil(plan.duration_days / 7)
-    };
-  }, []);
+  const getCancelledSubscriptions = useCallback(() => {
+    return subscriptions.filter(sub => sub.status === 'cancelled');
+  }, [subscriptions]);
+
+  const getSubscriptionsByStatus = useCallback((status) => {
+    return subscriptions.filter(sub => sub.status === status);
+  }, [subscriptions]);
+
+  const getExpiringSubscriptions = useCallback((daysAhead = 7) => {
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + daysAhead);
+    
+    return subscriptions.filter(sub => {
+      if (sub.status !== 'active') return false;
+      const endDate = new Date(sub.end_date);
+      return endDate <= futureDate;
+    });
+  }, [subscriptions]);
 
   return {
+    // State
     plans,
+    subscriptions,
     loading,
     error,
-    fetchPlans,
-    fetchPlan,
-    addPlan,
-    modifyPlan,
-    removePlan,
     
-    // Helper functions
+    // Public plan operations
+    fetchPlans,
+    fetchPlanById,
+    fetchFeaturedPlans,
+    
+    // User subscription operations
+    fetchUserSubscriptions,
+    subscribeToPlan,
+    updateSubscription,
+    cancelSubscription,
+    pauseSubscription,
+    resumeSubscription,
+    getSubscriptionHistory,
+    calculatePlanCost,
+    
+    // Admin plan operations
+    createPlan,
+    updatePlan,
+    deletePlan,
+    togglePlanStatus,
+    getPlanAnalytics,
+    setPlanFeatured,
+    duplicatePlan,
+    
+    // Admin subscription operations
+    getAllSubscriptions,
+    getSubscriptionById,
+    updateSubscriptionStatus,
+    bulkUpdateSubscriptions,
+    exportSubscriptions,
+    getUserSubscriptions,
+    
+    // Helper functions for plans
     getActivePlans,
     getPlansByPriceRange,
-    getPlansByDuration,
     getPlansByMealCount,
-    calculatePlanMetrics
+    getPlanAnalytics
   };
 }

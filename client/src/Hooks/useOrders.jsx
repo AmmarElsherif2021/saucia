@@ -13,7 +13,7 @@ export function useOrders() {
     setError(null);
     try {
       const data = await ordersAPI.getUserOrders(queryParams);
-      setOrders(data);
+      setOrders(data || []);
       return data;
     } catch (err) {
       console.error('Error fetching user orders:', err);
@@ -44,7 +44,9 @@ export function useOrders() {
     setError(null);
     try {
       const newOrder = await ordersAPI.createOrder(orderData);
-      setOrders(prev => [...prev, newOrder]);
+      if (newOrder) {
+        setOrders(prev => [newOrder, ...prev]);
+      }
       return newOrder;
     } catch (err) {
       console.error('Error creating order:', err);
@@ -60,9 +62,11 @@ export function useOrders() {
     setError(null);
     try {
       const updatedOrder = await ordersAPI.updateOrder(orderId, updates);
-      setOrders(prev => 
-        prev.map(order => order.id === orderId ? updatedOrder : order)
-      );
+      if (updatedOrder) {
+        setOrders(prev => 
+          prev.map(order => order.id === orderId ? updatedOrder : order)
+        );
+      }
       return updatedOrder;
     } catch (err) {
       console.error('Error updating order:', err);
@@ -78,14 +82,15 @@ export function useOrders() {
     setError(null);
     try {
       const result = await ordersAPI.cancelOrder(orderId, reason);
-      // Update the order status in local state
-      setOrders(prev => 
-        prev.map(order => 
-          order.id === orderId 
-            ? { ...order, status: 'cancelled', cancellation_reason: reason }
-            : order
-        )
-      );
+      if (result) {
+        setOrders(prev => 
+          prev.map(order => 
+            order.id === orderId 
+              ? { ...order, status: 'cancelled', special_instructions: reason }
+              : order
+          )
+        );
+      }
       return result;
     } catch (err) {
       console.error('Error cancelling order:', err);
@@ -116,7 +121,9 @@ export function useOrders() {
     setError(null);
     try {
       const newOrder = await ordersAPI.reorderItems(orderId);
-      setOrders(prev => [...prev, newOrder]);
+      if (newOrder) {
+        setOrders(prev => [newOrder, ...prev]);
+      }
       return newOrder;
     } catch (err) {
       console.error('Error reordering items:', err);
@@ -133,14 +140,20 @@ export function useOrders() {
     setError(null);
     try {
       const result = await ordersAPI.processPayment(orderId, paymentData);
-      // Update order payment status in local state
-      setOrders(prev => 
-        prev.map(order => 
-          order.id === orderId 
-            ? { ...order, payment_status: 'paid' }
-            : order
-        )
-      );
+      if (result) {
+        setOrders(prev => 
+          prev.map(order => 
+            order.id === orderId 
+              ? { 
+                  ...order, 
+                  payment_status: 'paid',
+                  payment_reference: paymentData.reference,
+                  paid_at: new Date().toISOString()
+                }
+              : order
+          )
+        );
+      }
       return result;
     } catch (err) {
       console.error('Error processing payment:', err);
@@ -156,14 +169,20 @@ export function useOrders() {
     setError(null);
     try {
       const result = await ordersAPI.refundOrder(orderId, refundData);
-      // Update order refund status in local state
-      setOrders(prev => 
-        prev.map(order => 
-          order.id === orderId 
-            ? { ...order, payment_status: 'refunded' }
-            : order
-        )
-      );
+      if (result) {
+        setOrders(prev => 
+          prev.map(order => 
+            order.id === orderId 
+              ? { 
+                  ...order, 
+                  payment_status: 'refunded',
+                  status: 'refunded',
+                  special_instructions: refundData.reason
+                }
+              : order
+          )
+        );
+      }
       return result;
     } catch (err) {
       console.error('Error processing refund:', err);
@@ -180,7 +199,7 @@ export function useOrders() {
     setError(null);
     try {
       const data = await ordersAPI.getAllOrders(queryParams);
-      setOrders(data);
+      setOrders(data || []);
       return data;
     } catch (err) {
       console.error('Error fetching all orders:', err);
@@ -196,13 +215,15 @@ export function useOrders() {
     setError(null);
     try {
       const result = await ordersAPI.updateOrderStatus(orderId, status, notes);
-      setOrders(prev => 
-        prev.map(order => 
-          order.id === orderId 
-            ? { ...order, status, notes }
-            : order
-        )
-      );
+      if (result) {
+        setOrders(prev => 
+          prev.map(order => 
+            order.id === orderId 
+              ? { ...order, status, special_instructions: notes }
+              : order
+          )
+        );
+      }
       return result;
     } catch (err) {
       console.error('Error updating order status:', err);
@@ -265,9 +286,9 @@ export function useOrders() {
       const result = await ordersAPI.bulkUpdateOrders(updates);
       // Refresh orders after bulk update
       if (updates.length > 0) {
-        // If we have user orders loaded, refresh them
-        const currentUserOrders = orders.some(order => !order.isAdmin);
-        if (currentUserOrders) {
+        // Check if we have user orders or admin orders loaded
+        const hasUserOrders = orders.some(order => order.user_id);
+        if (hasUserOrders) {
           await fetchUserOrders();
         } else {
           await fetchAllOrders();
@@ -304,13 +325,19 @@ export function useOrders() {
     setError(null);
     try {
       const result = await ordersAPI.assignDelivery(orderId, deliveryData);
-      setOrders(prev => 
-        prev.map(order => 
-          order.id === orderId 
-            ? { ...order, delivery_assigned: true, delivery_data: deliveryData }
-            : order
-        )
-      );
+      if (result) {
+        setOrders(prev => 
+          prev.map(order => 
+            order.id === orderId 
+              ? { 
+                  ...order, 
+                  delivery_driver_id: deliveryData.driver_id,
+                  status: 'out_for_delivery'
+                }
+              : order
+          )
+        );
+      }
       return result;
     } catch (err) {
       console.error('Error assigning delivery:', err);
@@ -326,13 +353,20 @@ export function useOrders() {
     setError(null);
     try {
       const result = await ordersAPI.updateDeliveryStatus(orderId, status, location);
-      setOrders(prev => 
-        prev.map(order => 
-          order.id === orderId 
-            ? { ...order, delivery_status: status, delivery_location: location }
-            : order
-        )
-      );
+      if (result) {
+        const updates = { status };
+        if (status === 'delivered') {
+          updates.actual_delivery_date = new Date().toISOString();
+        }
+        
+        setOrders(prev => 
+          prev.map(order => 
+            order.id === orderId 
+              ? { ...order, ...updates }
+              : order
+          )
+        );
+      }
       return result;
     } catch (err) {
       console.error('Error updating delivery status:', err);
@@ -343,7 +377,7 @@ export function useOrders() {
     }
   }, []);
 
-  // Helper functions
+  // Helper functions for filtering orders
   const getOrdersByStatus = useCallback((status) => {
     return orders.filter(order => order.status === status);
   }, [orders]);
@@ -358,6 +392,21 @@ export function useOrders() {
 
   const getCancelledOrders = useCallback(() => {
     return orders.filter(order => order.status === 'cancelled');
+  }, [orders]);
+
+  const getOrdersWithStatus = useCallback((statuses) => {
+    return orders.filter(order => statuses.includes(order.status));
+  }, [orders]);
+
+  const getOrdersInDateRange = useCallback((startDate, endDate) => {
+    return orders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      return orderDate >= new Date(startDate) && orderDate <= new Date(endDate);
+    });
+  }, [orders]);
+
+  const getOrdersWithPaymentStatus = useCallback((paymentStatus) => {
+    return orders.filter(order => order.payment_status === paymentStatus);
   }, [orders]);
 
   return {
@@ -396,6 +445,9 @@ export function useOrders() {
     getOrdersByStatus,
     getPendingOrders,
     getCompletedOrders,
-    getCancelledOrders
+    getCancelledOrders,
+    getOrdersWithStatus,
+    getOrdersInDateRange,
+    getOrdersWithPaymentStatus
   };
 }

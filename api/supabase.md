@@ -81,10 +81,8 @@ Extends Supabase auth.users with application-specific data.
 
 ```sql
 CREATE TABLE user_profiles (
-    id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+    id UUID REFERENCES auth.users(uid) ON DELETE CASCADE PRIMARY KEY,
     display_name TEXT,
-    first_name TEXT,
-    last_name TEXT,
     phone_number TEXT,
     avatar_url TEXT,
     is_admin BOOLEAN NOT NULL DEFAULT false,
@@ -570,13 +568,7 @@ CREATE TABLE user_favorite_meals (
     PRIMARY KEY (user_id, meal_id)
 );
 
--- User favorite items
-CREATE TABLE user_favorite_items (
-    user_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
-    item_id INTEGER NOT NULL REFERENCES items(id) ON DELETE CASCADE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (user_id, item_id)
-);
+
 ```
 
 ## Relationships
@@ -597,7 +589,6 @@ user_profiles
     ├── user_allergies (many:many via allergies)
     ├── user_dietary_preferences (many:many via dietary_preferences)
     ├── user_favorite_meals (many:many via meals)
-    ├── user_favorite_items (many:many via items)
     └── meal_reviews
 
 plans

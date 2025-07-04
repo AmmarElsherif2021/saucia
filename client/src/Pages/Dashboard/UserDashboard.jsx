@@ -45,8 +45,6 @@ import {
   VStack,
   IconButton,
   Image,
-  HStack,
-  useBreakpointValue,
 } from '@chakra-ui/react'
 import { StarIcon, EditIcon } from '@chakra-ui/icons'
 import { useTranslation } from 'react-i18next'
@@ -64,13 +62,21 @@ export const UserDashboard = () => {
   const { isOpen: isMapOpen, onOpen: onOpenMap, onClose: onCloseMap } = useDisclosure()
   // Updated context usage
   const {
-    user,           // Complete unified user data
-    userPlan,       // User's subscription plan
-    userAddress,    // Default user address
-    orders,         // User's orders
+    user,
+    userPlan,
+    userAddress,
+    orders,
+    isLoading,
+    planLoading,
+    completeProfile,
     updateUserProfile,
-    updateUserSubscription,
-    isLoading
+    requiresProfileCompletion,
+    isAuthenticated,
+    isSessionExpired,
+    refreshUserData,
+    loadUserSubscriptions,
+    loadUserAddresses,
+    loadUserOrders,
   } = useAuthContext()
 
   const [isOrdersLoading, setIsOrdersLoading] = useState(false)
@@ -78,12 +84,24 @@ export const UserDashboard = () => {
   const [formData, setFormData] = useState({})
   const toast = useToast()
   const createDefaultFormData = (userData) => ({
-    displayName: userData?.displayName || '',
-    phoneNumber: userData?.phoneNumber || '',
-    age: userData?.age || 0,
-    gender: userData?.gender || 'male',
-    language: userData?.language || 'en',
-    notes: userData?.notes || '',
+          display_name: userData?.display_name,
+          is_admin: userData?.is_admin || false,
+          profile_completed: userData?.profile_completed || false,
+          phone_number: userData?.phone_number,
+          avatar_url: userData?.avatar_url,
+          loyalty_points: userData?.loyalty_points || 0,
+          age: userData?.age,
+          gender: userData?.gender,
+          language: userData?.language,
+          timezone: userData?.timezone,
+          phone_verified: userData?.phone_verified || false,
+          email_verified: userData?.email_verified || false,
+          account_status: userData?.account_status,
+          created_at: userData?.created_at,
+          updated_at: userData?.updated_at,
+          last_login: userData?.last_login,
+          notes: userData?.notes,
+   
     defaultAddress: userData?.defaultAddress || userAddress || '',
     deliveryTime: userData?.subscription?.deliveryTime || '12:00',
     healthProfile: {

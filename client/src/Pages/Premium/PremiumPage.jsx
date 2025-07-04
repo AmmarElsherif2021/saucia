@@ -185,7 +185,10 @@ export const PremiumPage = () => {
   const plansSectionRef = useRef(null)
   const detailsSectionRef = useRef(null)
   const plansContainerRef = useRef(null)
-
+   //test effect
+  useEffect(() => {
+    console.log('PremiumPage mounted')
+    console.log('USER HERE IS',JSON.stringify(user))},[]);
   // Set the selected plan to match the user's plan when loaded
   useEffect(() => {
     if (userPlan && !selectedPlan) {
@@ -287,9 +290,9 @@ export const PremiumPage = () => {
         {/* Current Plan Section */}
         <Box as={VStack} bg="white" p={6} borderRadius="xl" alignItems={'center'}>
           <JoinPremiumTeaser />
-          {user?.subscription?.planId && (
+          {userPlan && (
             <CurrentPlanBrief
-              plan={plans.filter((p) => p.id === user.subscription.planId)[0]}
+              plan={userPlan}
               loading={planLoading}
             />
           )}
@@ -324,7 +327,7 @@ export const PremiumPage = () => {
                         ...plan,
                         image: planImages[plan.title] || dailyMealPlanImage,
                       }}
-                      isUserPlan={userPlan && user.subscription.planId === plan.id}
+                      isUserPlan={userPlan?.id === plan.id}
                       onSelect={handlePlanSelect}
                     />
                   ))}
@@ -349,7 +352,7 @@ export const PremiumPage = () => {
 
             <Divider my={4} />
 
-            {user.subscription.planId != selectedPlan.id && (
+            {userPlan?.id !== selectedPlan.id && (
               <Link
                 to="/premium/join"
                 state={{ planId: selectedPlan.id }}
@@ -362,7 +365,7 @@ export const PremiumPage = () => {
                   width="full"
                   isLoading={subscribing}
                   loadingText={t('premium.updatingSubscription')}
-                  isDisabled={!user || (userPlan && userPlan.id != selectedPlan.id)}
+                  isDisabled={!user}
                 >
                   {t('premium.subscribeToPlan')}
                 </Button>

@@ -21,7 +21,7 @@ const CheckoutPlan = React.lazy(() => import('./Pages/Checkout/CheckoutPlan.jsx'
 const InfoPage = React.lazy(() => import('./Pages/InfoPage.jsx'))
 const AboutPage = React.lazy(() => import('./Pages/About/AboutPage.jsx'))
 const PremiumPage = React.lazy(() => import('./Pages/Premium/PremiumPage.jsx'))
-const Auth = React.lazy(() => import('./Pages/Auth/Auth.jsx'))
+const OAuth = React.lazy(() => import('./Pages/Auth/Auth.jsx'))
 const Admin = React.lazy(() => import('./Pages/Auth/Admin.jsx'))
 const JoinPlanPage = React.lazy(() => import('./Pages/Premium/JoinPlan/JoinPlanPage.jsx'))
 const AuthCallback = React.lazy(() => import('./Pages/Auth/AuthCallback.jsx'))
@@ -104,7 +104,7 @@ const router = createBrowserRouter([
         style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
       >
         <Suspense fallback={<PageLoader />}>
-          <Auth />
+          <OAuth />
         </Suspense>
       </div>
     ),
