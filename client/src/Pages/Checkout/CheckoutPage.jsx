@@ -27,7 +27,7 @@ import {
   useBreakpointValue,
   Divider,
 } from '@chakra-ui/react'
-import { ALT} from '../../Components/ComponentsTrial'
+import { ALT } from '../../Components/ComponentsTrial'
 import saladIcon from '../../assets/menu/salad.svg'
 import paymentIcon from '../../assets/payment.svg'
 import orderIcon from '../../assets/order.svg'
@@ -35,11 +35,10 @@ import MapModal from './MapModal'
 import { useTranslation } from 'react-i18next'
 import { useI18nContext } from '../../Contexts/I18nContext'
 import { useNavigate } from 'react-router-dom'
-import { useAuthContext } from '../../Contexts/AuthContext' // Updated import
-import { updateUserProfile } from '../../API/users'
-import { createOrder } from '../../API/orders'
+import { useAuthContext } from '../../Contexts/AuthContext'
+import { useUserProfile, useUserAddresses } from '../../hooks/userHooks'
+import { useOrders } from '../../Hooks/useOrders'
 
-// Checkout state
 const initialState = {
   isSubmitting: false,
   paymentMethod: '',
@@ -51,6 +50,8 @@ const initialState = {
     deliveryInstructions: '',
     saveAddress: false,
     saveCard: false,
+    notes: '',
+    couponCode: '',
   },
   paymentInfo: {
     cardNumber: '',
@@ -66,7 +67,6 @@ const initialState = {
   },
 }
 
-// Reducer function to manage checkout state
 function checkoutReducer(state, action) {
   switch (action.type) {
     case 'SET_PAYMENT_METHOD':
@@ -135,7 +135,6 @@ const Section = ({ title, children, bgColor, titleColor, icon }) => {
   )
 }
 
-// Payment Method Input Components
 const PaymentMethodInputs = ({ paymentMethod, paymentInfo, onPaymentInfoChange, t, colorMode }) => {
   switch (paymentMethod) {
     case 'credit-card':
@@ -230,7 +229,6 @@ const PaymentMethodInputs = ({ paymentMethod, paymentInfo, onPaymentInfoChange, 
   }
 }
 
-// Order Confirmation Modal
 const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData, isSubmitting, t }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
@@ -253,9 +251,11 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData, isSubmi
                 <strong>{t('checkout.deliveryAddress')}:</strong>{' '}
                 {orderData.orderInfo.deliveryAddress}
               </Text>
-              <Text fontSize="sm">
-                <strong>{t('checkout.city')}:</strong> {orderData.orderInfo.city}
-              </Text>
+              {orderData.orderInfo.city && (
+                <Text fontSize="sm">
+                  <strong>{t('checkout.city')}:</strong> {orderData.orderInfo.city}
+                </Text>
+              )}
             </Box>
 
             <Divider />
@@ -315,35 +315,35 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData, isSubmi
   )
 }
 
+// Main component - changed from named export to default export
 const CheckoutPage = () => {
-  // Hooks and context - Updated to use AuthContext
+  // Hooks and context
   const navigate = useNavigate()
   const { colorMode } = useColorMode()
-  const { user, userAddress, setUser } = useAuthContext() // Updated hook
+  const { user } = useAuthContext()
   const toast = useToast()
   const { t } = useTranslation()
   const { currentLanguage } = useI18nContext()
   const isArabic = currentLanguage === 'ar'
-  
-  useEffect(() => {
-    console.log(`Current user from AuthContext to checkout page:`, user)
-  }, [user])
-  
-  // Checkout state
+
+  // Updated hooks usage
+  const { data: userProfile, isLoading: profileLoading } = useUserProfile()
+  const { addresses, addAddress } = useUserAddresses()
+  const { createOrder } = useOrders()
+
+  // Get default address from userProfile
+  const defaultAddress = userProfile?.addresses?.find(addr => addr.is_default)?.address || ''
+
+  // Initialize state with user data
   const [state, dispatch] = useReducer(checkoutReducer, {
     ...initialState,
     orderInfo: {
       ...initialState.orderInfo,
-      userId: user?.uid || '', // Updated to use uid from Firebase Auth
-      user: {
-        id: user?.uid || '',
-        email: user?.email || '',
-        displayName: user?.displayName || '',
-        phoneNumber: user?.phoneNumber || '',
-      },
+      userId: user?.id || '',
       email: user?.email || '',
-      phoneNumber: user?.phoneNumber || '',
-      deliveryAddress: userAddress?.display_name || user?.defaultAddress || '',
+      phoneNumber: userProfile?.phone_number || '',
+      fullName: userProfile?.full_name || '',
+      deliveryAddress: defaultAddress,
     },
   })
 
@@ -357,6 +357,20 @@ const CheckoutPage = () => {
   } = useDisclosure()
 
   const { isOpen: isMapOpen, onOpen: onOpenMap, onClose: onCloseMap } = useDisclosure()
+
+  // Update state when user profile loads
+  useEffect(() => {
+    if (userProfile && !profileLoading) {
+      dispatch({
+        type: 'SET_ORDER_INFO',
+        payload: {
+          phoneNumber: userProfile.phone_number || '',
+          fullName: userProfile.full_name || '',
+          deliveryAddress: userProfile.addresses?.find(addr => addr.is_default)?.address || '',
+        },
+      })
+    }
+  }, [userProfile, profileLoading])
 
   // Event handlers
   const handleOrderInfoChange = (field, value) => {
@@ -380,7 +394,7 @@ const CheckoutPage = () => {
         description: t('checkout.pleaseSelectPaymentMethod') || 'Please select a payment method',
         status: 'warning',
         duration: 3000,
-        isClosable: false,
+        isClosable: true,
       })
       return
     }
@@ -391,7 +405,7 @@ const CheckoutPage = () => {
         description: t('checkout.pleaseFillAllRequiredFields') || 'Please fill all required fields',
         status: 'warning',
         duration: 3000,
-        isClosable: false,
+        isClosable: true,
       })
       return
     }
@@ -404,78 +418,43 @@ const CheckoutPage = () => {
     onCloseConfirmation()
 
     try {
-      if (!user?.uid) throw new Error('User not authenticated')
-
-      const deliveryAddress = orderInfo.deliveryAddress || user?.defaultAddress
-
-      // Prepare order data - aligned with Order model attributes
-      const orderData = {
-        userId: user.uid,
-        user: {
-          id: user.uid,
-          displayName: user.displayName,
-          email: user.email,
-          phoneNumber: orderInfo.phoneNumber,
-        },
-        items: [], // Add actual items here
-        meals: [], // Add actual meals here
-        totalPrice: orderSummary.total,
-        subtotal: orderSummary.subtotal,
-        tax: 0,
-        discount: orderSummary.promoDiscount,
-        deliveryFee: orderSummary.deliveryFee,
-        status: 'pending',
-        isPaid: paymentMethod === 'cash-on-delivery' ? false : true,
-        paymentMethod: paymentMethod,
-        paymentId: paymentMethod === 'cash-on-delivery' ? '' : `payment_${Date.now()}`,
-        paymentDate: paymentMethod === 'cash-on-delivery' ? null : new Date().toISOString(),
-        deliveryAddress: deliveryAddress,
-        deliveryInstructions: orderInfo.deliveryInstructions || '',
-        deliveryDate: null,
-        contactPhone: orderInfo.phoneNumber,
-        notes: orderInfo.notes || '',
-        couponCode: orderInfo.couponCode || '',
+      if (!user?.id) {
+        throw new Error('User not authenticated')
       }
 
-      // Create order
-      const createdOrder = await createOrder(user.uid, orderData)
+      const deliveryAddress = orderInfo.deliveryAddress || defaultAddress
 
-      // Update user profile if needed
+      // Prepare order data - simplified to match API expectations
+      const orderData = {
+        user_id: user.id,
+        items: [],
+        meals: [],
+        subtotal: orderSummary.subtotal,
+        delivery_fee: orderSummary.deliveryFee,
+        discount_amount: orderSummary.promoDiscount,
+        total_amount: orderSummary.total,
+        status: 'pending',
+        payment_method: paymentMethod,
+        payment_status: paymentMethod === 'cash-on-delivery' ? 'pending' : 'paid',
+        delivery_address: deliveryAddress,
+        delivery_instructions: orderInfo.deliveryInstructions || '',
+        contact_phone: orderInfo.phoneNumber,
+        special_instructions: orderInfo.notes || '',
+        coupon_code: orderInfo.couponCode || '',
+      }
+
+      // Create order using the hook
+      const createdOrder = await createOrder(orderData)
+
+      // Save address if requested and not already present
       if (orderInfo.saveAddress && deliveryAddress) {
-        const userProfileUpdates = {
-          firstName: orderInfo.fullName.split(' ')[0] || '',
-          lastName: orderInfo.fullName.split(' ').slice(1).join(' ') || '',
-          phoneNumber: orderInfo.phoneNumber,
-        }
-
-        // Update addresses - handle array correctly
-        const updatedAddresses = [...(user?.addresses || [])]
-        const addressExists = updatedAddresses.some((addr) => addr.address === deliveryAddress)
-
-        if (deliveryAddress && !addressExists) {
-          updatedAddresses.push({
-            id: `addr_${Date.now()}`,
+        const addressExists = addresses.some(addr => addr.address === deliveryAddress)
+        if (!addressExists) {
+          await addAddress({
             address: deliveryAddress,
-            isDefault: true,
-            createdAt: new Date().toISOString(),
+            is_default: true,
           })
         }
-
-        const profileUpdateData = {
-          ...userProfileUpdates,
-          addresses: updatedAddresses,
-          defaultAddress: deliveryAddress,
-        }
-
-        await updateUserProfile(user.uid, profileUpdateData)
-
-        // Update local user context
-        setUser((prev) => ({
-          ...prev,
-          ...userProfileUpdates,
-          addresses: updatedAddresses,
-          defaultAddress: deliveryAddress,
-        }))
       }
 
       toast({
@@ -484,7 +463,7 @@ const CheckoutPage = () => {
           t('checkout.orderConfirmationSent') || 'Order confirmation has been sent to your email',
         status: 'success',
         duration: 5000,
-        isClosable: false,
+        isClosable: true,
       })
 
       navigate(`/order-confirmation/${createdOrder.id}`)
@@ -497,7 +476,7 @@ const CheckoutPage = () => {
         description: error.message || t('checkout.failedToPlaceOrder') || 'Failed to place order',
         status: 'error',
         duration: 5000,
-        isClosable: false,
+        isClosable: true,
       })
     }
   }
@@ -531,7 +510,7 @@ const CheckoutPage = () => {
                   placeholder={t('checkout.enterYourFullName') || 'Enter your full name'}
                   variant="ghost"
                   maxW={'85%'}
-                  value={orderInfo.displayName}
+                  value={orderInfo.fullName}
                   onChange={(e) => handleOrderInfoChange('fullName', e.target.value)}
                 />
               </FormControl>
@@ -553,13 +532,14 @@ const CheckoutPage = () => {
                   placeholder={t('checkout.enterDeliveryAddress') || 'Enter delivery address'}
                   variant="ghost"
                   maxW={'85%'}
-                  value={userAddress?.display_name || orderInfo.deliveryAddress}
+                  value={orderInfo.deliveryAddress}
                   onChange={(e) => handleOrderInfoChange('deliveryAddress', e.target.value)}
                 />
                 <Button mt={2} size="sm" variant="outline" colorScheme="brand" onClick={onOpenMap}>
                   {t('checkout.selectOnMap') || 'Select on Map'}
                 </Button>
               </FormControl>
+
               <FormControl>
                 <Input
                   placeholder={t('checkout.specialInstructions')}
@@ -579,6 +559,7 @@ const CheckoutPage = () => {
                   onChange={(e) => handleOrderInfoChange('couponCode', e.target.value)}
                 />
               </FormControl>
+
               <FormControl>
                 <Input
                   placeholder={
@@ -610,6 +591,7 @@ const CheckoutPage = () => {
                 placeholder={t('checkout.selectPaymentMethod') || 'Select payment method'}
                 focusBorderColor="warning.500"
                 bg={colorMode === 'dark' ? 'gray.800' : 'warning.100'}
+                value={paymentMethod}
                 onChange={(e) => dispatch({ type: 'SET_PAYMENT_METHOD', payload: e.target.value })}
               >
                 <option value="credit-card">{t('checkout.creditCard') || 'Credit Card'}</option>
@@ -707,4 +689,5 @@ const CheckoutPage = () => {
   )
 }
 
+// Default export instead of named export
 export default CheckoutPage

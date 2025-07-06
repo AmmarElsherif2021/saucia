@@ -20,22 +20,14 @@ import {
   Alert,
   AlertIcon,
   Image,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
   useDisclosure,
   useBreakpointValue,
-  IconButton,
 } from '@chakra-ui/react'
 import MapModal from './MapModal'
 import { useTranslation } from 'react-i18next'
 import { useI18nContext } from '../../Contexts/I18nContext'
 import { useNavigate } from 'react-router-dom'
 import { useAuthContext } from '../../Contexts/AuthContext'
-import { updateUserProfile } from '../../API/users'
 import { useElements } from '../../Contexts/ElementsContext'
 import { MealPlanCard } from './MealPlanCard'
 import ConfirmPlanModal from './ConfirmPlanModal'
@@ -46,6 +38,11 @@ import paymentIcon from '../../assets/payment.svg'
 import orderIcon from '../../assets/order.svg'
 import saladIcon from '../../assets/menu/salad.svg'
 import locationPin from '../../assets/locationPin.svg'
+
+//Hooks
+import { useUserProfile, useUserAddresses } from '../../hooks/userHooks'
+import { useUserSubscriptions } from '../../Hooks/useUserSubscriptions'
+
 //Checkout state
 const initialState = {
   isSubmitting: false,
@@ -250,12 +247,18 @@ const CheckoutPlan = () => {
   // Hooks and context
   const navigate = useNavigate()
   const { colorMode } = useColorMode()
-  const { user, userPlan, userAddress, updateUserProfile } = useAuthContext();
+  const { user} = useAuthContext();
   const { saladItems, signatureSalads } = useElements()
   const toast = useToast()
   const { t } = useTranslation()
   const { currentLanguage } = useI18nContext()
   const isArabic = currentLanguage === 'ar'
+  
+  // Fetch user profile and addresses
+  const { updateProfile } = useUserProfile();
+  const { addresses, addAddress } = useUserAddresses();
+  const { subscriptions, createSubscription } = useUserSubscriptions();
+  const defaultAddress = addresses.find(addr => addr.is_default) || addresses[0];
 
   //Checkout state
   const [state, dispatch] = useReducer(checkoutReducer, {
@@ -265,11 +268,11 @@ const CheckoutPlan = () => {
       fullName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
       email: user?.email || '',
       phoneNumber: user?.phoneNumber || '',
-      deliveryAddress: userAddress || user?.defaultAddress || '',
+      deliveryAddress: defaultAddress?.display_name || user?.defaultAddress || '',
+      deliveryAddressId: defaultAddress?.id || null,
       deliveryTime: user?.subscription?.deliveryTime || '12:00',
     },
-  })
-
+  });
   const { isSubmitting, paymentMethod, period, selectedMeals, customizedSalad, billingInfo } = state
 
   // Modal controls
@@ -315,12 +318,12 @@ const CheckoutPlan = () => {
   }
 
   // Event handlers
-  const handleBillingInfoChange = (field, value) => {
+  const handleBillingInfoChange = (field, value, id = null) => {
     dispatch({
       type: 'SET_BILLING_INFO',
-      payload: { [field]: value },
-    })
-  }
+      payload: { [field]: value, ...(id && { deliveryAddressId: id }) },
+    });
+  };
 
   const handleOpenConfirmation = () => {
     if (!paymentMethod) {
@@ -376,67 +379,72 @@ const CheckoutPlan = () => {
   const handleRemoveMeal = (index) => {
     dispatch({ type: 'REMOVE_MEAL', payload: index })
   }
+  
 
   const handleConfirmSubscription = async () => {
-    dispatch({ type: 'START_SUBMISSION' })
-    onCloseConfirmation()
+    dispatch({ type: 'START_SUBMISSION' });
+    onCloseConfirmation();
 
     try {
-      if (!user?.uid) throw new Error('User not authenticated')
+      if (!user?.id) throw new Error('User not authenticated');
 
-      const finalMeals = getCombinedMeals()
-      const deliveryAddress = billingInfo.deliveryAddress || user?.defaultAddress
+      const finalMeals = getCombinedMeals();
+      const deliveryAddressId = billingInfo.deliveryAddressId;
+      const deliveryAddress = billingInfo.deliveryAddress;
+
+      // Create address if it's new
+      let addressId = deliveryAddressId;
+      if (!addressId) {
+        const newAddress = await addAddress({
+          address_line1: deliveryAddress,
+          city: 'Riyadh', // Default city
+          country: 'SA',
+          is_default: true
+        });
+        addressId = newAddress.id;
+      }
 
       // Prepare user profile updates
       const userProfileUpdates = {
         firstName: billingInfo.fullName.split(' ')[0] || '',
         lastName: billingInfo.fullName.split(' ').slice(1).join(' ') || '',
         phoneNumber: billingInfo.phoneNumber,
-      }
+        defaultAddress: addressId
+      };
 
-      // Update addresses if new address provided
-      const updatedAddresses = [...(user?.addresses || [])]
-      if (deliveryAddress && !updatedAddresses.includes(deliveryAddress)) {
-        updatedAddresses.push(deliveryAddress)
-      }
+      // Update user profile
+      await updateProfile(userProfileUpdates);
 
-      const subscriptionData = {
-        subscription: {
-          planId: userPlan?.id || 'premium-plan',
-          planName: userPlan?.title || 'Premium Plan',
-          startDate: today.toISOString(),
-          endDate: endDate.toISOString(),
-          status: 'active',
-          paymentMethod,
-          price: totalPrice,
-          mealsCount: period,
-          consumedMeals: user?.subscription?.consumedMeals || 0, // Maintain existing consumed meals
-          meals: finalMeals,
-          deliveryAddress,
-          deliveryTime: billingInfo.deliveryTime,
-          autoRenewal: false,
-          deliveryPaused: false,
-          nextMealDate: calculateDeliveryDate(today, 0).toISOString(),
-        },
-        // Update personal information
-        ...userProfileUpdates,
-        addresses: updatedAddresses,
-        defaultAddress: deliveryAddress,
-      }
+      // Create subscription
+      await createSubscription({
+        plan_id: addresses?.id || 'premium-plan',
+        plan_name: addresses?.title || 'Premium Plan',
+        start_date: today.toISOString(),
+        end_date: endDate.toISOString(),
+        status: 'active',
+        payment_method: paymentMethod,
+        price: totalPrice,
+        meals_count: period,
+        meals: finalMeals,
+        delivery_address_id: addressId,
+        delivery_time: billingInfo.deliveryTime,
+        auto_renewal: false,
+        is_paused: false,
+        next_meal_date: calculateDeliveryDate(today, 0).toISOString(),
+      });
 
-      await updateUserProfile(user.uid, subscriptionData)
       toast({
         title: t('checkout.subscriptionSuccessful'),
         description: t('checkout.premiumPlanActive'),
         status: 'success',
         duration: 5000,
         isClosable: false,
-      })
+      });
 
-      navigate('/account?subscription=success')
+      navigate('/account?subscription=success');
     } catch (error) {
-      console.error('Error confirming subscription:', error)
-      dispatch({ type: 'END_SUBMISSION' })
+      console.error('Error confirming subscription:', error);
+      dispatch({ type: 'END_SUBMISSION' });
 
       toast({
         title: t('checkout.subscriptionFailed'),
@@ -444,10 +452,17 @@ const CheckoutPlan = () => {
         status: 'error',
         duration: 5000,
         isClosable: false,
-      })
+      });
     }
-  }
+  };
 
+  //Location
+  const handleSelectLocation = (addressData) => {
+    handleBillingInfoChange('deliveryAddress', addressData.display_name, addressData.id);
+  };
+  const handleAddressInputChange = (e) => {
+    handleBillingInfoChange('deliveryAddress', e.target.value);
+  };
   // Responsive grid columns
   const gridColumns = useBreakpointValue({ base: 1, md: 3 })
 
@@ -462,7 +477,7 @@ const CheckoutPlan = () => {
           {t('checkout.completeYourSubscription')}
         </Heading>
 
-        {!userPlan && (
+        {!subscriptions.length && (
           <Alert status="warning" borderRadius="md">
             <AlertIcon />
             {t('checkout.noPlanSelected')}
@@ -514,7 +529,7 @@ const CheckoutPlan = () => {
               </FormControl>
 
               <FormControl isRequired>
-                <FormLabel fontSize="sm">{t('checkout.deliveryAddress')}</FormLabel>
+              <FormLabel fontSize="sm">{t('checkout.deliveryAddress')}</FormLabel>
                 <Flex alignItems="center" maxW={'85%'}>
                   <Input
                     placeholder={t('checkout.enterDeliveryAddress')}
@@ -522,17 +537,18 @@ const CheckoutPlan = () => {
                     bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
                     focusBorderColor="brand.500"
                     maxW={'85%'}
-                    value={userAddress?.display_name || billingInfo?.deliveryAddress?.display_name}
-                    onChange={(e) => handleBillingInfoChange('deliveryAddress', e.target.value)}
+                    value={billingInfo.deliveryAddress}
+                    onChange={handleAddressInputChange}
                   />
                   <Button mx={2} onClick={onOpenMap}>
                     <Image src={locationPin} alt="Location Pin" boxSize="30px" />
                   </Button>
                 </Flex>
+                {/* Updated MapModal */}
                 <MapModal
                   isOpen={isMapOpen}
                   onClose={onCloseMap}
-                  onSelectLocation={() => console.log(`trying to set location`)}
+                  onSelectLocation={handleSelectLocation}
                 />
               </FormControl>
 
@@ -586,14 +602,14 @@ const CheckoutPlan = () => {
 
           {/* Subscription Summary */}
           <Section title={t('checkout.subscriptionSummary')} bgColor="warning" icon={orderIcon}>
-            {!userPlan ? (
+            {!addresses.length? (
               <Text>{t('noPlanSelected')}</Text>
             ) : (
               <Box>
                 <Flex alignItems="center" mb={2}>
                   <Image
-                    src={userPlan.image || saladIcon}
-                    alt={userPlan.title}
+                    src={addresses.image || saladIcon}
+                    alt={addresses.title}
                     boxSize="60px"
                     borderRadius="25%"
                     bg={colorMode === 'dark' ? 'gray.700' : 'warning.100'}
@@ -601,7 +617,7 @@ const CheckoutPlan = () => {
                     p={2}
                   />
                   <Box>
-                    <Heading size="xs">{isArabic ? userPlan.title_arabic : userPlan.title}</Heading>
+                    <Heading size="xs">{isArabic ? addresses.title_arabic : addresses.title}</Heading>
                   </Box>
                 </Flex>
 
@@ -612,13 +628,13 @@ const CheckoutPlan = () => {
                     <Text fontSize="sm">{t('premium.nutritionalInformation')}:</Text>
                     <Flex wrap="wrap" gap={1}>
                       <Badge fontSize="0.5em" colorScheme="green">
-                        {t('kcal')}: {userPlan.kcal}
+                        {t('kcal')}: {addresses.kcal}
                       </Badge>
                       <Badge fontSize="0.5em" colorScheme="brand">
-                        {t('carbs')}: {userPlan.carb}g
+                        {t('carbs')}: {addresses.carb}g
                       </Badge>
                       <Badge fontSize="0.5em" colorScheme="red">
-                        {t('protein')}: {userPlan.protein}g
+                        {t('protein')}: {addresses.protein}g
                       </Badge>
                     </Flex>
                   </Flex>
@@ -636,7 +652,7 @@ const CheckoutPlan = () => {
                       focusBorderColor="brand.500"
                       bg="warning.50"
                     >
-                      {userPlan.periods?.map((periodOption, index) => (
+                      {addresses.periods?.map((periodOption, index) => (
                         <option key={index} value={periodOption}>
                           <span>
                             {' '}
@@ -694,7 +710,7 @@ const CheckoutPlan = () => {
               onClick={handleOpenConfirmation}
               isLoading={isSubmitting}
               loadingText={t('checkout.processing')}
-              isDisabled={!userPlan}
+              isDisabled={!addresses}
             >
               {t('checkout.completeSubscription')}
             </Button>
@@ -723,7 +739,7 @@ const CheckoutPlan = () => {
         handleAddSignatureSalad={handleAddSignatureSalad}
         handleRemoveMeal={handleRemoveMeal}
         handleConfirmSubscription={handleConfirmSubscription}
-        userPlan={userPlan}
+        userPlan={addresses}
         customizedSalad={customizedSalad}
         selectedMeals={selectedMeals}
         signatureSalads={signatureSalads}

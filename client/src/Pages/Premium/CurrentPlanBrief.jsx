@@ -4,11 +4,11 @@ import { useTranslation } from 'react-i18next'
 import { useI18nContext } from '../../Contexts/I18nContext'
 import { useAuthContext } from '../../Contexts/AuthContext'
 import planIcon from '../../assets/premium/planIcon.svg'
-import PlanSettingsModal from './PlanSettingsModal' // Add this import
+import PlanSettingsModal from './PlanSettingsModal' 
 
 export const CurrentPlanBrief = ({ plan, loading }) => {
   const [showDetails, setShowDetails] = useState(false)
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false) // Add state for modal
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false) 
   const { t } = useTranslation()
   const { currentLanguage } = useI18nContext()
   const { user } = useAuthContext()

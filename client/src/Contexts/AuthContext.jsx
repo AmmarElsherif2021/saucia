@@ -7,6 +7,14 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   // Core auth state only (identity + session)
   const [user, setUser] = useState(null);
+  /* expected user example:
+  {id: 'e0...', 
+       email: 'a...@gmail.com', 
+       displayName: 'am...', 
+      avatarUrl: "https://l...",
+      profileCompleted: false
+      }
+  */
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [supabaseSession, setSupabaseSession] = useState(null);
@@ -37,7 +45,7 @@ export const AuthProvider = ({ children }) => {
           isAdmin: false, // Will be updated via profile query
           profileCompleted: false, // Will be updated via profile query
         });
-
+        //Debugging
         setError(null);
       } else if (event === 'SIGNED_OUT') {
         resetAuthState();
@@ -47,7 +55,7 @@ export const AuthProvider = ({ children }) => {
       setError(error.message);
     }
   }, [supabaseSession]);
-
+ 
   // Reset all auth state
   const resetAuthState = useCallback(() => {
     setSupabaseSession(null);

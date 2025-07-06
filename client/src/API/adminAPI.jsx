@@ -244,20 +244,15 @@ export const adminAPI = {
     });
   },
 
-  // Bulk update meal availability
-  async bulkUpdateMealAvailability(mealIds, isAvailable) {
-    const { error } = await supabase
-      .from('meals')
-      .update({ 
-        is_available: isAvailable,
-        updated_at: new Date().toISOString()
-      })
-      .in('id', mealIds);
 
-    if (error) throw error;
-    return { success: true, updatedCount: mealIds.length };
-  },
 
+
+
+
+
+
+
+  
   // ===== ITEM MANAGEMENT =====
 
   // Get all items
@@ -308,6 +303,8 @@ export const adminAPI = {
       updated_at: new Date().toISOString()
     });
   },
+  
+ 
 
   // ===== PLAN MANAGEMENT =====
 
@@ -542,7 +539,7 @@ export const adminAPI = {
     };
   },
 
-  // ===== BULK OPERATIONS =====
+  // ============== BULK OPERATIONS ===============
 
   // Bulk update meals
   async bulkUpdateMeals(mealIds, updateData) {
@@ -557,7 +554,19 @@ export const adminAPI = {
     if (error) throw error;
     return { success: true, updatedCount: mealIds.length };
   },
+  // Bulk update meal availability
+  async bulkUpdateMealAvailability(mealIds, isAvailable) {
+    const { error } = await supabase
+      .from('meals')
+      .update({ 
+        is_available: isAvailable,
+        updated_at: new Date().toISOString()
+      })
+      .in('id', mealIds);
 
+    if (error) throw error;
+    return { success: true, updatedCount: mealIds.length };
+  },
   // Bulk update items
   async bulkUpdateItems(itemIds, updateData) {
     const { error } = await supabase
@@ -586,7 +595,7 @@ export const adminAPI = {
     return { success: true, updatedCount: userIds.length };
   },
 
-  // ===== CONTENT MANAGEMENT =====
+  // ===== ALLERGIES AND DIETRIES MANAGEMENT =====
 
   // Get all allergies
   async getAllAllergies() {

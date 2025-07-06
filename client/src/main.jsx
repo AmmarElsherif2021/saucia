@@ -10,7 +10,7 @@ import { Navbar } from './Components/Navbar/Navbar.jsx'
 import './index.css'
 import { Spinner } from '@chakra-ui/react'
 import { CartProvider } from './Contexts/CartContext.jsx'
-
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 // Lazy-loaded pages
 const HomePage = React.lazy(() => import('./Pages/Home/HomePage.jsx'))
 const MenuPage = React.lazy(() => import('./Pages/Menu/MenuPage.jsx'))
@@ -85,7 +85,7 @@ const Layout = ({ children }) => {
     </div>
   )
 }
-
+const queryClient = new QueryClient();
 const router = createBrowserRouter([
   {
     path: '/',
@@ -239,6 +239,7 @@ ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <I18nProvider>
       <DynamicThemeProvider>
+      <QueryClientProvider client={queryClient}>
         <ElementsProvider>
           <CartProvider>
               <AuthProvider>
@@ -246,6 +247,7 @@ ReactDOM.createRoot(root).render(
               </AuthProvider>
           </CartProvider>
         </ElementsProvider>
+      </QueryClientProvider>
       </DynamicThemeProvider>
     </I18nProvider>
   </React.StrictMode>,

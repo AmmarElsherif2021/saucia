@@ -17,10 +17,10 @@ import {
   Icon,
   Tooltip,
 } from '@chakra-ui/react'
-import { useTranslation } from 'react-i18next'
+import { useUserAllergies } from '../../hooks/userHooks' 
 import { useAuthContext } from '../../Contexts/AuthContext'
 import { WarningIcon } from '@chakra-ui/icons'
-import { useAuth } from '../../hooks/useAuth'
+
 
 const CustomizableMealSelectionModal = ({
   isOpen,
@@ -33,44 +33,14 @@ const CustomizableMealSelectionModal = ({
   const [selectedItems, setSelectedItems] = useState({})
   const [groupedItems, setGroupedItems] = useState({})
   const [sectionFreeCounts, setSectionFreeCounts] = useState({})
-  const { user } = useAuthContext()
+  
+  // Use allergy hook instead of AuthContext
+  const { allergies } = useUserAllergies()
+  const userAllergies = allergies.map(allergy => allergy.name.toLowerCase())
 
   useEffect(() => {
-    if (user) {
-      console.log(
-        `User data in CustomizableMealSelectionModal: ${JSON.stringify(user.healthProfile.allergies)}`,
-      )
-    }
-  }, [user])
-
-  // Function to check if an item contains user's allergens
-  const isItemRestricted = (item) => {
-    if (!user?.healthProfile?.allergies || !item?.allergens) {
-      return false
-    }
-
-    const userAllergies = user.healthProfile.allergies.map(
-      (allergy) => typeof allergy === 'string' && allergy.toLowerCase(),
-    )
-
-    return item.allergens.some((allergen) => {
-      const allergenNameEn = allergen.en?.toLowerCase() || ''
-      const allergenNameAr = allergen.ar?.toLowerCase() || ''
-
-      // Check if any user allergy matches the allergen name (English or Arabic)
-      return userAllergies.some(
-        (userAllergy) =>
-          allergenNameEn.includes(userAllergy) ||
-          (typeof userAllergy === 'string' && userAllergy.includes(allergenNameEn)) ||
-          allergenNameAr.includes(userAllergy) ||
-          (typeof userAllergy === 'string' && userAllergy.includes(allergenNameAr)),
-      )
-    })
-  }
-
-  useEffect(() => {
+    // Group items by section
     if (saladItems && saladItems.length > 0) {
-      // Group items by section
       const grouped = {}
       const freeCounts = {}
 
@@ -78,7 +48,7 @@ const CustomizableMealSelectionModal = ({
         if (!grouped[item.section]) {
           grouped[item.section] = []
           freeCounts[item.section] = {
-            value: 1, // Allow only 1 item per section
+            value: 1,
             key_arabic: item.section_arabic || item.section,
           }
         }
@@ -90,37 +60,39 @@ const CustomizableMealSelectionModal = ({
     }
   }, [saladItems])
 
-  const handleSelectItem = (item) => {
-    // Don't allow selection of restricted items
-    if (isItemRestricted(item)) {
-      return
+  // Function to check if an item contains user's allergens
+  const isItemRestricted = (item) => {
+    if (!item?.allergens || userAllergies.length === 0) {
+      return false
     }
 
-    setSelectedItems((prev) => {
-      // Check if we already have an item from this section
-      const sectionItems = Object.keys(prev).filter((id) => {
-        const selectedItem = saladItems.find((i) => i.id === id)
-        return selectedItem?.section === item.section
-      })
+    return item.allergens.some((allergen) => {
+      const allergenNameEn = allergen.en?.toLowerCase() || ''
+      const allergenNameAr = allergen.ar?.toLowerCase() || ''
 
-      // If we already have an item from this section, replace it
-      if (sectionItems.length > 0) {
-        const newItems = { ...prev }
-        delete newItems[sectionItems[0]] // Remove the previous item from this section
-        return {
-          ...newItems,
-          [item.id]: 1, // Add the new item
-        }
-      }
-
-      // Otherwise just add the new item
-      return {
-        ...prev,
-        [item.id]: 1,
-      }
+      return userAllergies.some(userAllergy => 
+        userAllergy.includes(allergenNameEn) || 
+        userAllergy.includes(allergenNameAr)
+      )
     })
   }
 
+  const handleSelectItem = (item) => {
+    if (isItemRestricted(item)) return
+
+    setSelectedItems((prev) => {
+      // Find existing item in same section
+      const existingItemId = Object.keys(prev).find(id => {
+        const selectedItem = saladItems.find(i => i.id === id)
+        return selectedItem?.section === item.section
+      })
+
+      // Create new selection object
+      const newItems = { ...prev }
+      if (existingItemId) delete newItems[existingItemId]
+      return { ...newItems, [item.id]: 1 }
+    })
+  }
   const calculateTotal = () => {
     return Object.keys(selectedItems).reduce((total, itemId) => {
       const item = saladItems.find((i) => i.id === itemId)
@@ -156,38 +128,18 @@ const CustomizableMealSelectionModal = ({
           </Text>
           {isRestricted && (
             <Tooltip
-              label={
-                t('checkout.allergenNotice') || 'This item contains allergens you are sensitive to'
-              }
+              label={t('checkout.allergenNotice')}
               placement="top"
             >
               <Icon as={WarningIcon} color="red.500" boxSize={4} />
             </Tooltip>
           )}
         </Flex>
-        <Text fontSize="sm" color={isRestricted ? 'gray.400' : 'gray.600'}>
-          {/* You can add item description here if available */}
-        </Text>
         {isRestricted && item.allergens && (
           <Text fontSize="xs" color="red.500" mt={1}>
-            {t('contains') || 'Contains'}:{' '}
+            {t('contains')}:{' '}
             {item.allergens
-              .filter((allergen) => {
-                const userAllergies =
-                  user?.healthProfile?.allergies?.map(
-                    (a) => typeof a === 'string' && a.toLowerCase(),
-                  ) || []
-                const allergenNameEn = allergen.en?.toLowerCase() || ''
-                const allergenNameAr = allergen.ar?.toLowerCase() || ''
-                return userAllergies.some(
-                  (userAllergy) =>
-                    allergenNameEn.includes(userAllergy) ||
-                    (typeof userAllergy === 'string' && userAllergy.includes(allergenNameEn)) ||
-                    allergenNameAr.includes(userAllergy) ||
-                    (typeof userAllergy === 'string' && userAllergy.includes(allergenNameAr)),
-                )
-              })
-              .map((allergen) => (isArabic ? allergen.ar : allergen.en))
+              .map(allergen => isArabic ? allergen.ar : allergen.en)
               .join(', ')}
           </Text>
         )}

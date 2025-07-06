@@ -1,32 +1,75 @@
 /* 
 =================================================================
 
-All hooks should use the auth context for user ID and session state
+All hooks uses the auth context for user ID and session state
 =================================================================
 */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthContext } from '../Contexts/AuthContext';
 import { userAPI } from '../API/userAPI';
+
 // 1. User Profile Hook
 export const useUserProfile = () => {
   const { user } = useAuthContext();
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const profileQuery = useQuery({
     queryKey: ['userProfile', user?.id],
     queryFn: () => userAPI.getUserProfile(user.id),
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 5 // 5 minutes
   });
+
+  // Add updateUserProfile mutation
+  const updateProfile = useMutation({
+    mutationFn: (data) => userAPI.updateUserProfile(user.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['userProfile', user.id]);
+    }
+  });
+
+  // Add completeUserProfile mutation
+  const completeProfile = useMutation({
+    mutationFn: (data) => userAPI.completeUserProfile(user.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['userProfile', user.id]);
+    }
+  });
+
+  return {
+    ...profileQuery,
+    updateProfile: updateProfile.mutateAsync,
+    isUpdatingProfile: updateProfile.isPending,
+    completeProfile: completeProfile.mutateAsync,
+    isCompletingProfile: completeProfile.isPending,
+  };
 };
 
 // 2. User Health Profile Hook
 export const useHealthProfile = () => {
   const { user } = useAuthContext();
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const healthProfileQuery = useQuery({
     queryKey: ['healthProfile', user?.id],
     queryFn: () => userAPI.getUserHealthProfile(user.id),
     enabled: !!user?.id
   });
-};
+
+  // Add update mutation for healthProfile
+  const updateHealthProfile = useMutation({
+    mutationFn: (data) => userAPI.createOrUpdateHealthProfile(user.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['healthProfile', user.id]);
+    }
+  });
+
+  return {
+    ...healthProfileQuery,
+    updateHealthProfile: updateHealthProfile.mutateAsync,
+    isUpdatingHealthProfile: updateHealthProfile.isPending,
+  };
+}
 
 // 3. Address Management Hooks
 export const useUserAddresses = () => {

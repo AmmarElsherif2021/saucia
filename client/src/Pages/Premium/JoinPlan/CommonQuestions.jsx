@@ -18,17 +18,30 @@ import {
   WrapItem,
 } from '@chakra-ui/react'
 import { useAuthContext } from '../../../Contexts/AuthContext'
-import { updateUserProfile } from '../../../API/users'
+import { useUserProfile, useHealthProfile } from '../../../hooks/userHooks'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 
 const CommonQuestions = ({ onComplete }) => {
   const { t } = useTranslation()
-  const { user, updateUserProfile } = useAuthContext();
+  const { user } = useAuthContext()
   const toast = useToast()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [formError, setFormError] = useState(null)
   const navigate = useNavigate()
+  
+  // Use the custom hooks
+  const { 
+    data: userProfile, 
+    updateProfile, 
+    isUpdatingProfile 
+  } = useUserProfile()
+  
+  const { 
+    data: healthProfile, 
+    updateHealthProfile, 
+    isUpdatingHealthProfile 
+  } = useHealthProfile()
+
+  const [formError, setFormError] = useState(null)
 
   // Predefined options
   const dietaryPreferencesOptions = [
@@ -61,49 +74,50 @@ const CommonQuestions = ({ onComplete }) => {
   ]
 
   const [formData, setFormData] = useState({
+    age: '',
+    gender: '',
     healthProfile: {
-      dietaryPreferences: ['none'], // Pre-assigned default value
-      allergies: ['none'], // Pre-assigned default value
-      age: '',
+      dietaryPreferences: ['none'],
+      allergies: ['none'],
       height: '',
       weight: '',
-      gender: '',
-      activityLevel: 'moderately-active', // Pre-assigned default value
-      fitnessGoal: 'maintenance', // Pre-assigned default value
+      activityLevel: 'moderately-active',
+      fitnessGoal: 'maintenance',
     },
   })
 
-  // Safely initialize form with user data or defaults
+  // Initialize form with user data from hooks
   useEffect(() => {
-    if (user && user.healthProfile) {
+    if (userProfile || healthProfile) {
       const newFormData = {
-        age: user.age != null ? user.age.toString() : '',
-        gender: user.gender || '',
+        age: userProfile?.age != null ? userProfile.age.toString() : '',
+        gender: userProfile?.gender || '',
         healthProfile: {
           dietaryPreferences:
-            Array.isArray(user.healthProfile.dietaryPreferences) &&
-            user.healthProfile.dietaryPreferences.length > 0
-              ? user.healthProfile.dietaryPreferences
-              : ['none'], // Default to 'none' if empty
+            Array.isArray(healthProfile?.dietaryPreferences) &&
+            healthProfile.dietaryPreferences.length > 0
+              ? healthProfile.dietaryPreferences
+              : ['none'],
           allergies:
-            Array.isArray(user.healthProfile.allergies) && user.healthProfile.allergies.length > 0
-              ? user.healthProfile.allergies
-              : ['none'], // Default to 'none' if empty
-          height: user.healthProfile.height != null ? user.healthProfile.height.toString() : '',
-          weight: user.healthProfile.weight != null ? user.healthProfile.weight.toString() : '',
-          activityLevel: user.healthProfile.activityLevel || 'moderately-active',
-          fitnessGoal: user.healthProfile.fitnessGoal || 'maintenance',
+            Array.isArray(healthProfile?.allergies) && 
+            healthProfile.allergies.length > 0
+              ? healthProfile.allergies
+              : ['none'],
+          height: healthProfile?.height != null ? healthProfile.height.toString() : '',
+          weight: healthProfile?.weight != null ? healthProfile.weight.toString() : '',
+          activityLevel: healthProfile?.activityLevel || 'moderately-active',
+          fitnessGoal: healthProfile?.fitnessGoal || 'maintenance',
         },
       }
 
       setFormData(newFormData)
       console.log('Health profile initialized:', newFormData)
     }
-  }, [user])
+  }, [userProfile, healthProfile])
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    if (name === 'age' || 'gender') {
+    if (name === 'age' || name === 'gender') {
       setFormData((prev) => ({
         ...prev,
         [name]: value,
@@ -167,7 +181,6 @@ const CommonQuestions = ({ onComplete }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setIsSubmitting(true)
     setFormError(null)
 
     try {
@@ -175,44 +188,37 @@ const CommonQuestions = ({ onComplete }) => {
         throw new Error('User not authenticated')
       }
 
-      // Prepare the update data with proper structure matching the model
-      const updateData = {
+      // Prepare user profile data
+      const userProfileData = {
         age: formData.age ? parseInt(formData.age, 10) : null,
         gender: formData.gender || '',
-        healthProfile: {
-          dietaryPreferences: formData.healthProfile.dietaryPreferences || ['none'],
-          allergies: formData.healthProfile.allergies || ['none'],
-          height: formData.healthProfile.height
-            ? parseInt(formData.healthProfile.height, 10)
-            : null,
-          weight: formData.healthProfile.weight
-            ? parseInt(formData.healthProfile.weight, 10)
-            : null,
-          activityLevel: formData.healthProfile.activityLevel || 'moderately-active',
-          fitnessGoal: formData.healthProfile.fitnessGoal || 'maintenance',
-        },
       }
 
-      console.log('Updating user profile with data:', updateData)
-      await updateUserProfile(user.id, updateData)
-
-      // Only update user state if we got a response
-      if (updatedUser) {
-        // Update only the health profile portion of the user object
-        setUser((prevUser) => ({
-          ...prevUser,
-          age: updateData.age,
-          gender: updateData.gender,
-          healthProfile: {
-            ...prevUser.healthProfile,
-            ...updateData.healthProfile,
-          },
-        }))
+      // Prepare health profile data
+      const healthProfileData = {
+        dietaryPreferences: formData.healthProfile.dietaryPreferences || ['none'],
+        allergies: formData.healthProfile.allergies || ['none'],
+        height: formData.healthProfile.height
+          ? parseInt(formData.healthProfile.height, 10)
+          : null,
+        weight: formData.healthProfile.weight
+          ? parseInt(formData.healthProfile.weight, 10)
+          : null,
+        activityLevel: formData.healthProfile.activityLevel || 'moderately-active',
+        fitnessGoal: formData.healthProfile.fitnessGoal || 'maintenance',
       }
+
+      console.log('Updating user profile with data:', userProfileData)
+      console.log('Updating health profile with data:', healthProfileData)
+
+      // Update both user profile and health profile using hooks
+      await Promise.all([
+        updateProfile(userProfileData),
+        updateHealthProfile(healthProfileData)
+      ])
 
       toast({
         title: t('profile.profileUpdated'),
-        //description: t('profile.profileSavedSuccessfully'),
         status: 'success',
         duration: 5000,
         isClosable: false,
@@ -232,10 +238,11 @@ const CommonQuestions = ({ onComplete }) => {
         duration: 5000,
         isClosable: false,
       })
-    } finally {
-      setIsSubmitting(false)
     }
   }
+
+  // Check if either update is in progress
+  const isSubmitting = isUpdatingProfile || isUpdatingHealthProfile
 
   return (
     <Box
