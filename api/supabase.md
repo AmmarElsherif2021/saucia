@@ -264,7 +264,7 @@ CREATE TABLE items (
     name_arabic TEXT,
     description TEXT,
     description_arabic TEXT,
-    category TEXT NOT NULL, -- 'sauce', 'side', 'drink', 'utensil'
+    category TEXT NOT NULL, -- 'sauce', 'side', 'drink', 'utensil', protein', 'carb','fruit','vegetable','grains'
     category_arabic TEXT,
     price NUMERIC(10,2) NOT NULL DEFAULT 0 CHECK (price >= 0),
     calories INTEGER NOT NULL DEFAULT 0 CHECK (calories >= 0),

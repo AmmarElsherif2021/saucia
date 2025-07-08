@@ -62,7 +62,7 @@ export function useMeals() {
       // Extract items from meal_items junction table
       items: meal.meal_items?.map(mi => mi.items) || [],
       // Extract allergies from meal_allergies junction table
-      allergies: meal.meal_allergies?.map(ma => ma.allergies) || [],
+      allergies: meal.meal_allergies?.map(ma => ma.allergy_id) || [],
       // Extract reviews with user profiles
       reviews: meal.meal_reviews || []
     };
@@ -121,7 +121,13 @@ export function useMeals() {
     const basePrice = Number(normalizedMeal.base_price) || 0;
     const discountPercentage = Number(normalizedMeal.discount_percentage) || 0;
     const discountValidUntil = normalizedMeal.discount_valid_until;
-    
+    const items = meal.meal_items?.map(mi => mi.items) || 
+    meal.items || 
+    [];
+
+    const allergies = meal.meal_allergies?.map(ma => ma.allergies) || 
+        meal.allergies || 
+        [];
     let effectivePrice = basePrice;
     let isDiscountActive = false;
     
@@ -138,6 +144,8 @@ export function useMeals() {
       ...normalizedMeal,
       price: effectivePrice,
       is_discount_active: isDiscountActive,
+      items,
+      allergies,
       // Legacy compatibility fields
       rate: Number(normalizedMeal.rating) || 0,
       offerRatio: isDiscountActive ? (effectivePrice / basePrice) : 1,
@@ -323,12 +331,20 @@ export function useMeals() {
     }
   }, []);
 
+  // Update modifyMeal method
   const modifyMeal = useCallback(async (mealId, mealData) => {
     setLoading(true);
     setError(null);
     try {
-      const updatedMeal = await mealsAPI.updateMeal(mealId, mealData);
-      const normalizedMeal = validateMealData(updatedMeal);
+      // Extract junction data
+      const { allergies, items, ...baseData } = mealData;
+      
+      // Update base meal data
+      const updatedMeal = await mealsAPI.updateMeal(mealId, baseData);
+      
+      // Fetch updated meal with relations
+      const fullMeal = await mealsAPI.getMealById(mealId);
+      const normalizedMeal = validateMealData(fullMeal);
       
       if (normalizedMeal) {
         setMeals(prev => 
@@ -338,13 +354,13 @@ export function useMeals() {
       
       return normalizedMeal;
     } catch (err) {
-      console.error('Error updating meal:', err);
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    console.error('Error updating meal:', err);
+    setError(err);
+    throw err;
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   const removeMeal = useCallback(async (mealId) => {
     setLoading(true);
@@ -474,6 +490,35 @@ export function useMeals() {
       )
     );
   }, [meals]);
+  const fetchMealAllergies = useCallback(async (mealId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await mealsAPI.getMealAllergies(mealId);
+      return data;
+    } catch (err) {
+      console.error('Error fetching meal allergies:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchMealItems = useCallback(async (mealId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await mealsAPI.getMealItems(mealId);
+      return data;
+    } catch (err) {
+      console.error('Error fetching meal items:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   return {
     // State
@@ -512,6 +557,9 @@ export function useMeals() {
     getDairyFreeMeals,
     getMealsBySpiceLevel,
     getPremiumMeals,
-    searchMeals
+    searchMeals,
+    fetchMealAllergies,
+    fetchMealItems
   };
+
 }

@@ -1,5 +1,6 @@
 import { supabase } from "../../supabaseClient";
-
+import { userAPI } from "./userAPI";
+import { mealsAPI } from "./mealAPI";
 // Helper functions for common operations
 const fetchSingle = async (table, query) => {
   const { data, error } = await supabase
@@ -107,6 +108,7 @@ export const adminAPI = {
   },
 
   // Get user details with all related data
+  
   async getUserDetails(userId) {
     const [profile, health, addresses, subscriptions, orders] = await Promise.all([
       fetchSingle('user_profiles', { field: 'id', value: userId }),
@@ -122,10 +124,20 @@ export const adminAPI = {
         value: userId,
         orderBy: 'created_at',
         limit: 10
-      })
+      }),
+      userAPI.getUserAllergies(userId),
+      userAPI.getUserDietaryPreferences(userId)
     ]);
 
-    return { profile, health, addresses, subscriptions, orders };
+    return { 
+      profile, 
+      health, 
+      addresses, 
+      subscriptions, 
+      orders,
+      allergies,
+      dietaryPreferences
+    };
   },
 
   // Update user profile
@@ -204,7 +216,9 @@ export const adminAPI = {
         select: `*, user_profiles(id, display_name)`,
         orderBy: 'created_at',
         limit: 10
-      })
+      }),
+      mealsAPI.getMealAllergies(mealId),
+      mealsAPI.getMealItems(mealId)
     ]);
 
     return { meal, items, allergies, reviews };
@@ -289,6 +303,38 @@ export const adminAPI = {
     };
 
     return updateRecord('items', itemId, dataToUpdate);
+  },
+  // Update item-allergies relationships
+  async updateItemAllergies(itemId, allergyIds) {
+    // Delete existing relationships
+    await supabase
+      .from('item_allergies')
+      .delete()
+      .eq('item_id', itemId);
+    
+    // Insert new relationships
+    const newRelations = allergyIds.map(allergyId => ({
+      item_id: itemId,
+      allergy_id: allergyId
+    }));
+    
+    const { error } = await supabase
+      .from('item_allergies')
+      .insert(newRelations);
+    
+    if (error) throw error;
+    return { success: true };
+  },
+  
+  // Get item allergies
+  async getItemAllergies(itemId) {
+    const { data, error } = await supabase
+      .from('item_allergies')
+      .select(`allergies(*)`)
+      .eq('item_id', itemId);
+
+    if (error) throw error;
+    return data.map(item => item.allergies);
   },
 
   // Delete item
@@ -641,5 +687,126 @@ export const adminAPI = {
   // Delete dietary preference
   async deleteDietaryPreference(preferenceId) {
     return deleteRecord('dietary_preferences', preferenceId);
-  }
+  },
+
+    // ===== JUNCTION TABLE OPERATIONS =====
+  
+  // Update meal-allergies relationships
+  async updateMealAllergies(mealId, allergyIds) {
+    // Delete existing relationships
+    await supabase
+      .from('meal_allergies')
+      .delete()
+      .eq('meal_id', mealId);
+    
+    // Insert new relationships
+    const newRelations = allergyIds.map(allergyId => ({
+      meal_id: mealId,
+      allergy_id: allergyId
+    }));
+    
+    const { error } = await supabase
+      .from('meal_allergies')
+      .insert(newRelations);
+    
+    if (error) throw error;
+    return { success: true };
+  },
+
+  // Update meal-items relationships
+  async updateMealItems(mealId, itemsData) {
+    // Delete existing relationships
+    await supabase
+      .from('meal_items')
+      .delete()
+      .eq('meal_id', mealId);
+    
+    // Insert new relationships
+    const newRelations = itemsData.map(item => ({
+      meal_id: mealId,
+      item_id: item.id,
+      is_included: item.is_included,
+      max_quantity: item.max_quantity
+    }));
+    
+    const { error } = await supabase
+      .from('meal_items')
+      .insert(newRelations);
+    
+    if (error) throw error;
+    return { success: true };
+  },
+
+  // Update user-allergies relationships
+  async updateUserAllergies(userId, allergyIds) {
+    // Delete existing relationships
+    await supabase
+      .from('user_allergies')
+      .delete()
+      .eq('user_id', userId);
+    
+    // Insert new relationships
+    const newRelations = allergyIds.map(allergyId => ({
+      user_id: userId,
+      allergy_id: allergyId
+    }));
+    
+    const { error } = await supabase
+      .from('user_allergies')
+      .insert(newRelations);
+    
+    if (error) throw error;
+    return { success: true };
+  },
+
+  // Update user-dietary_preferences relationships
+  async updateUserDietaryPreferences(userId, preferenceIds) {
+    // Delete existing relationships
+    await supabase
+      .from('user_dietary_preferences')
+      .delete()
+      .eq('user_id', userId);
+    
+    // Insert new relationships
+    const newRelations = preferenceIds.map(preferenceId => ({
+      user_id: userId,
+      preference_id: preferenceId
+    }));
+    
+    const { error } = await supabase
+      .from('user_dietary_preferences')
+      .insert(newRelations);
+    
+    if (error) throw error;
+    return { success: true };
+  },
+
+  // ===== MINOR TABLES =====
+  
+  // Allergy management
+  async getAllAllergies() {
+    return fetchList('allergies', { orderBy: 'name' });
+  },
+
+  // Dietary Preferences management
+  async getAllDietaryPreferences() {
+    return fetchList('dietary_preferences', { orderBy: 'name' });
+  },
+
+  // User Favorites
+  async getUserFavoriteMeals(userId) {
+    return fetchList('user_favorite_meals', {
+      field: 'user_id',
+      value: userId,
+      select: `meal_id, meals(id, name, name_arabic)`
+    });
+  },
+
+  // Payment Methods
+  async getUserPaymentMethods(userId) {
+    return fetchList('user_payment_methods', {
+      field: 'user_id',
+      value: userId
+    });
+  },
 };

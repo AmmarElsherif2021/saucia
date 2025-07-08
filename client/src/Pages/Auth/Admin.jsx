@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* global FileReader, alert */
-import { useReducer, useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Box,
   Button,
@@ -18,15 +18,26 @@ import {
   Stack,
   TableContainer,
   Badge,
+  Select,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Input,
+  FormControl,
+  FormLabel,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  useToast,
 } from '@chakra-ui/react'
 
-import { adminAPI } from '../../API/adminAPI.jsx'
-import { itemsAPI } from '../../API/itemAPI.jsx'
-import { mealsAPI } from '../../API/mealAPI.jsx'
-import { plansAPI } from '../../API/planAPI.jsx'
-import { ordersAPI } from '../../API/orderAPI.jsx'
-// import { auth } from '../../../firebaseConfig.jsx'
-import { useAuth } from '../../Hooks/useAuth'
+import { useAuthContext } from '../../Contexts/AuthContext.jsx'
+import { useAdminFunctions } from '../../Hooks/useAdminFunctions.jsx'
 import {
   StatCard,
   LoadingSpinner,
@@ -40,412 +51,775 @@ import {
 import ItemForm from './ItemForm'
 import MealForm from './MealsForm'
 import PlanForm from './PlanForm'
+import UserForm from './UserForm'
+import OrderForm from './OrderForm'
+import SubscriptionForm from './SubscriptionForm'
+import AllergyForm from './AllergyForm'
+import DietaryPreferenceForm from './DietaryPreferenceForm'
 
-import { useI18nContext } from '../../Contexts/I18nContext'
 
-// REDUCER
-const adminReducer = (state, action) => {
-  switch (action.type) {
-    case 'FETCH_START':
-      return { ...state, loading: true, error: null }
-    case 'FETCH_SUCCESS':
-      return {
-        ...state,
-        loading: false,
-        dashboardData: action.payload.dashboardData || state.dashboardData,
-        users: action.payload.users || state.users,
-        items: action.payload.items || state.items,
-        meals: action.payload.meals || state.meals,
-        plans: action.payload.plans || state.plans,
-        orders: action.payload.orders || state.orders,
+// Entity configurations
+const ENTITY_CONFIGS = {
+  items: {
+    title: 'Items',
+    FormComponent: ItemForm,
+    searchFields: ['name', 'name_arabic', 'category', 'category_arabic', 'description'],
+    initialData: {
+      name: '',
+      name_arabic: '',
+      description: '',
+      description_arabic: '',
+      category: '',
+      category_arabic: '',
+      price: 0,
+      calories: 0,
+      protein_g: 0,
+      carbs_g: 0,
+      fat_g: 0,
+      max_free_per_meal: 0,
+      image_url: '',
+      is_available: true,
+      sort_order: 0,
+      allergy_ids: []
+    },
+    columns: [
+      { key: 'name', label: 'Name', width: '15%' },
+      { key: 'name_arabic', label: 'Name (Arabic)', width: '15%' },
+      { key: 'category', label: 'Category', width: '10%' },
+      { key: 'category_arabic', label: 'Category (Arabic)', width: '10%' },
+      { key: 'price', label: 'Price', width: '8%', format: value => `$${parseFloat(value).toFixed(2)}` },
+      { key: 'max_free_per_meal', label: 'Free Count', width: '8%' },
+      { 
+        key: 'is_available', 
+        label: 'Available', 
+        width: '8%',
+        render: value => (
+          <Badge colorScheme={value ? 'green' : 'red'}>
+            {value ? 'Yes' : 'No'}
+          </Badge>
+        )
+      },
+      
+      { key: 'image_url', label: 'Image', width: '15%', truncate: true },
+    ],
+    exportName: 'items.json',
+    hasImport: true,
+    hasExport: true,
+  },
+  meals: {
+    title: 'Meals',
+    FormComponent: MealForm,
+    searchFields: ['name', 'name_arabic', 'section', 'section_arabic'],
+    initialData: {
+      name: '',
+      name_arabic: '',
+      section: '',
+      section_arabic: '',
+      price: 0,
+      kcal: 0,
+      protein: 0,
+      carb: 0,
+      policy: '',
+      ingredients: '',
+      ingredients_arabic: '',
+      items: [],
+      image: '',
+    },
+    columns: [
+      { key: 'name', label: 'Name' },
+      { key: 'name_arabic', label: 'Name (Arabic)' },
+      { key: 'section', label: 'Section', render: (value) => value || 'N/A' },
+      { key: 'section_arabic', label: 'Section (Arabic)', render: (value) => value || 'N/A' },
+      { key: 'price', label: 'Price' },
+      { key: 'kcal', label: 'Calories' },
+      { key: 'protein', label: 'Protein' },
+      { key: 'carb', label: 'Carbohydrates' },
+      { key: 'policy', label: 'Policy' },
+      { key: 'ingredients', label: 'Ingredients' },
+      { key: 'ingredients_arabic', label: 'Ingredients (Arabic)' },
+      { 
+        key: 'items', 
+        label: 'Items',
+        render: (value) => value?.length > 0 ? value.join(', ') : 'N/A'
+      },
+      { key: 'image', label: 'Image' },
+      { 
+        key: 'allergens', 
+        label: 'Allergens',
+        render: (value) => value?.length > 0 ? value.map(a => `${a.ar} |`) : 'N/A'
+      },
+    ],
+    exportName: 'meals.json',
+    hasImport: true,
+    hasExport: true,
+  },
+  plans: {
+    title: 'Plans',
+    FormComponent: PlanForm,
+    searchFields: ['title', 'period'],
+    initialData: {
+      title: 'New Plan',
+      description: 'add description',
+      period: 30,
+      carb: 150,
+      protein: 120,
+      kcal: 2000,
+      avatar: '',
+      members: [],
+      carbMeals: [],
+      proteinMeals: [],
+      soaps: [],
+      snacks: [],
+    },
+    columns: [
+      { key: 'title', label: 'Title (EN)', render: (value) => value || 'N/A' },
+      { key: 'title_arabic', label: 'Title (AR)', render: (value) => value || 'N/A' },
+      { 
+        key: 'periods', 
+        label: 'Periods',
+        render: (value) => value?.length ? value.join(', ') : 'No periods'
+      },
+      { key: 'carb', label: 'Carbs (g)', render: (value) => value || 0 },
+      { key: 'protein', label: 'Protein (g)', render: (value) => value || 0 },
+      { key: 'kcal', label: 'Calories (kcal)', render: (value) => value || 0 },
+      { 
+        key: 'members', 
+        label: 'Members',
+        render: (value) => value?.length || 0
+      },
+      { 
+        key: 'carbMeals', 
+        label: 'Carb Meals',
+        render: (value) => value?.join(', ') || 'None'
+      },
+      { 
+        key: 'proteinMeals', 
+        label: 'Protein Meals',
+        render: (value) => value?.join(', ') || 'None'
+      },
+      { 
+        key: 'soaps', 
+        label: 'Soaps',
+        render: (value) => value?.join(', ') || 'None'
+      },
+      { 
+        key: 'snacks', 
+        label: 'Snacks',
+        render: (value) => value?.join(', ') || 'None'
+      },
+    ],
+    exportName: 'plans.json',
+    hasImport: false,
+    hasExport: true,
+  },
+  users: {
+    title: 'Users',
+    FormComponent: UserForm,
+    searchFields: ['email', 'displayName'],
+    columns: [
+      { key: 'email', label: 'Email' },
+      { key: 'displayName', label: 'Name' },
+      { 
+        key: 'isAdmin', 
+        label: 'Role',
+        render: (value) => value ? 'Admin' : 'User'
+      },
+      { 
+        key: 'accountStatus', 
+        label: 'Status',
+        render: (value) => (
+          <Badge colorScheme={value === 'active' ? 'green' : 'red'}>
+            {value}
+          </Badge>
+        )
+      },
+      { 
+        key: 'loyaltyPoints', 
+        label: 'Loyalty Points',
+        render: (value) => value || 0
+      },
+      { 
+        key: 'created_at', 
+        label: 'Created',
+        render: (value) => value ? new Date(value).toLocaleDateString() : 'N/A'
+      },
+    ],
+    exportName: 'users.json',
+    hasImport: true,
+    hasExport: true,
+  },
+  orders: {
+    title: 'Orders',
+    FormComponent: OrderForm,
+    searchFields: ['id', 'userId', 'status'],
+    columns: [
+      { key: 'id', label: 'Order ID' },
+      { key: 'userId', label: 'User ID' },
+      { key: 'totalPrice', label: 'Total Price', render: (value) => `$${parseFloat(value).toFixed(2)}` },
+      { 
+        key: 'status', 
+        label: 'Status',
+        render: (value) => (
+          <Badge
+            colorScheme={
+              value === 'completed' ? 'green' :
+              value === 'processing' ? 'blue' :
+              value === 'cancelled' ? 'red' : 'gray'
+            }
+          >
+            {value}
+          </Badge>
+        )
+      },
+      { 
+        key: 'isPaid', 
+        label: 'Payment',
+        render: (value) => (
+          <Badge colorScheme={value ? 'green' : 'orange'}>
+            {value ? 'Paid' : 'Unpaid'}
+          </Badge>
+        )
+      },
+      { 
+        key: 'created_at', 
+        label: 'Created',
+        render: (value) => value ? new Date(value).toLocaleDateString() : 'N/A'
+      },
+    ],
+    exportName: 'orders.json',
+    hasImport: false,
+    hasExport: true,
+  },
+  subscriptions: {
+    title: 'Subscriptions',
+    FormComponent: SubscriptionForm,
+    searchFields: ['id', 'userId', 'status'],
+    columns: [
+      { key: 'id', label: 'ID' },
+      { key: 'userId', label: 'User ID' },
+      { key: 'planId', label: 'Plan ID' },
+      { 
+        key: 'status', 
+        label: 'Status',
+        render: (value) => (
+          <Badge
+            colorScheme={
+              value === 'active' ? 'green' :
+              value === 'paused' ? 'yellow' :
+              value === 'cancelled' ? 'red' : 'gray'
+            }
+          >
+            {value}
+          </Badge>
+        )
+      },
+      { 
+        key: 'startDate', 
+        label: 'Start Date',
+        render: (value) => value ? new Date(value).toLocaleDateString() : 'N/A'
+      },
+      { 
+        key: 'endDate', 
+        label: 'End Date',
+        render: (value) => value ? new Date(value).toLocaleDateString() : 'N/A'
+      },
+    ],
+    exportName: 'subscriptions.json',
+    hasImport: false,
+    hasExport: true,
+  },
+  allergies: {
+    title: 'Allergies',
+    FormComponent: AllergyForm,
+    searchFields: ['name', 'name_arabic'],
+    columns: [
+      { key: 'name', label: 'Name' },
+      { key: 'name_arabic', label: 'Name (Arabic)' },
+      { key: 'description', label: 'Description' },
+      { key: 'description_arabic', label: 'Description (Arabic)' },
+    ],
+    exportName: 'allergies.json',
+    hasImport: true,
+    hasExport: true,
+  },
+  dietaryPreferences: {
+    title: 'Dietary Preferences',
+    FormComponent: DietaryPreferenceForm,
+    searchFields: ['name', 'name_arabic'],
+    columns: [
+      { key: 'name', label: 'Name' },
+      { key: 'name_arabic', label: 'Name (Arabic)' },
+      { key: 'description', label: 'Description' },
+      { key: 'description_arabic', label: 'Description (Arabic)' },
+    ],
+    exportName: 'dietary-preferences.json',
+    hasImport: true,
+    hasExport: true,
+  },
+}
+
+
+// Custom hook for entity management
+const useEntityManager = (entityType, adminFunctions) => {
+  const [selectedEntity, setSelectedEntity] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  //Sanitize data function to remove empty timestamps
+const sanitizeData = (data) => {
+  const sanitized = {...data};
+  
+  // Remove timestamp fields if they're empty
+  ['created_at', 'updated_at'].forEach(field => {
+    if (sanitized[field] === '') {
+      delete sanitized[field];
+    }
+  });
+  
+  return sanitized;
+};
+
+  const modals = {
+    add: useDisclosure(),
+    edit: useDisclosure(),
+    delete: useDisclosure(),
+  }
+
+  const config = ENTITY_CONFIGS[entityType]
+  const {
+    [`create${entityType.charAt(0).toUpperCase() + entityType.slice(1, -1)}`]: createEntity,
+    [`update${entityType.charAt(0).toUpperCase() + entityType.slice(1, -1)}`]: updateEntity,
+    [`delete${entityType.charAt(0).toUpperCase() + entityType.slice(1, -1)}`]: deleteEntity,
+  } = adminFunctions
+
+  const handleAdd = async (data) => {
+    try {
+      await createEntity(sanitizeData(data))
+      modals.add.onClose()
+    } catch (error) {
+      window.alert(`Failed to add ${entityType.slice(0, -1)}: ${error.message}`)
+    }
+  }
+
+  const handleEdit = async (id, data) => {
+    try {
+      await updateEntity({ 
+        [`${entityType.slice(0, -1)}Id`]: id, 
+        updateD_ata: sanitizeData(data) 
+      })
+      modals.edit.onClose()
+    } catch (error) {
+      window.alert(`Failed to edit ${entityType.slice(0, -1)}: ${error.message}`)
+    }
+  }
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteEntity(id)
+      modals.delete.onClose()
+    } catch (error) {
+      window.alert(`Failed to delete ${entityType.slice(0, -1)}: ${error.message}`)
+    }
+  }
+
+  const handleImport = async (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      try {
+        const entitiesData = JSON.parse(e.target.result)
+        for (const entityData of entitiesData) {
+          await createEntity(entityData)
+        }
+        window.alert(`${config.title} imported successfully!`)
+      } catch (error) {
+        window.alert(`Failed to import ${entityType}: ${error.message}`)
       }
-    case 'FETCH_ERROR':
-      return { ...state, loading: false, error: action.payload }
-    case 'ADD_ITEM':
-      return { ...state, items: [...state.items, action.payload] }
-    case 'ADD_MEAL':
-      return { ...state, meals: [...state.meals, action.payload] }
-    case 'ADD_PLAN':
-      return { ...state, plans: [...state.plans, action.payload] }
-    case 'EDIT_ITEM':
-      return {
-        ...state,
-        items: state.items.map((item) => (item.id === action.payload.id ? action.payload : item)),
-      }
-    case 'DELETE_ITEM':
-      return {
-        ...state,
-        items: state.items.filter((item) => item.id !== action.payload),
-      }
-    case 'EDIT_MEAL':
-      return {
-        ...state,
-        meals: state.meals.map((meal) => (meal.id === action.payload.id ? action.payload : meal)),
-      }
-    case 'DELETE_MEAL':
-      return {
-        ...state,
-        meals: state.meals.filter((meal) => meal.id !== action.payload),
-      }
-    case 'EDIT_PLAN':
-      return {
-        ...state,
-        plans: state?.plans?.map((plan) => (plan.id === action.payload.id ? action.payload : plan)),
-      }
-    case 'DELETE_PLAN':
-      return {
-        ...state,
-        plans: state?.plans?.filter((plan) => plan.id !== action.payload),
-      }
-    case 'SET_SELECTED_ITEM':
-      return { ...state, selectedItem: action.payload }
-    case 'SET_SELECTED_MEAL':
-      return { ...state, selectedMeal: action.payload }
-    case 'SET_SELECTED_PLAN':
-      return { ...state, selectedPlan: action.payload }
-    default:
-      return state
+    }
+    reader.readAsText(file)
+  }
+
+  const handleExport = async (data) => {
+    try {
+      const dataStr = JSON.stringify(data || [])
+      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
+      const linkElement = document.createElement('a')
+      linkElement.setAttribute('href', dataUri)
+      linkElement.setAttribute('download', config.exportName)
+      document.body.appendChild(linkElement)
+      linkElement.click()
+      document.body.removeChild(linkElement)
+    } catch (error) {
+      window.alert(`Failed to export ${entityType}: ${error.message}`)
+    }
+  }
+
+  const filterEntities = (entities) => {
+    if (!searchTerm) return entities
+    return entities?.filter((entity) => {
+      const searchString = config.searchFields
+        .map(field => entity[field] || '')
+        .join(' ')
+        .toLowerCase()
+      return searchString.includes(searchTerm.toLowerCase())
+    })
+  }
+
+  return {
+    selectedEntity,
+    setSelectedEntity,
+    searchTerm,
+    setSearchTerm,
+    modals,
+    handlers: {
+      handleAdd,
+      handleEdit,
+      handleDelete,
+      handleImport,
+      handleExport,
+    },
+    filterEntities,
+    config,
   }
 }
 
-const initialState = {
-  dashboardData: null,
-  users: [],
-  items: [],
-  meals: [],
-  plans: [],
-  orders: [],
-  loading: true,
-  error: null,
-  selectedItem: null,
-  selectedMeal: null,
-  selectedPlan: null,
+// Reusable EntitySection component
+const EntitySection = ({ 
+  entityType, 
+  data, 
+  isLoading, 
+  entityManager, 
+  isTableScrollable 
+}) => {
+  const { config, filterEntities, searchTerm, setSearchTerm, selectedEntity, setSelectedEntity, modals, handlers } = entityManager
+  const filteredData = filterEntities(data)
+
+  const renderCellContent = (item, column) => {
+    const value = item[column.key]
+    if (column.render) {
+      return column.render(value)
+    }
+    return value
+  }
+
+  return (
+    <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
+      <SectionHeading
+        title={config.title}
+        onAddClick={modals.add.onOpen}
+        buttonText="Create New"
+      />
+      
+      <Flex gap={2} mb={4}>
+        <SearchInput value={searchTerm} onChange={setSearchTerm} />
+        {config.hasImport && (
+          <Button as="label" colorScheme="brand" cursor="pointer">
+            Import {config.title}
+            <input 
+              type="file" 
+              hidden 
+              accept=".json" 
+              onChange={handlers.handleImport} 
+            />
+          </Button>
+        )}
+        {config.hasExport && (
+          <Button 
+            colorScheme="brand" 
+            cursor="pointer" 
+            onClick={() => handlers.handleExport(data)}
+          >
+            Export {config.title}
+          </Button>
+        )}
+      </Flex>
+
+      <ScrollableTableContainer>
+        <TableContainer overflowX={isTableScrollable ? 'auto' : 'visible'}>
+          <Table 
+            variant="simple" 
+            size={{ base: 'sm', md: 'md' }}
+            style={{ overflowY: 'auto', maxHeight: '70vh' }}
+          >
+            <Thead>
+              <Tr>
+                {config?.columns?.map((column) => (
+                  <Th key={column.key} w={column.width}>
+                    {column.label}
+                  </Th>
+                ))}
+                <Th>Actions</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {filteredData?.map((item) => (
+                <Tr key={item.id}>
+                  {config?.columns?.map((column) => (
+                    <Td 
+                      key={column.key} 
+                      w={column.width}
+                      isTruncated={column.truncate}
+                      maxW={column.truncate ? "150px" : undefined}
+                    >
+                      {renderCellContent(item, column)}
+                    </Td>
+                  ))}
+                  <Td>
+                    <Stack direction="row" spacing={2}>
+                      <Button
+                        size="sm"
+                        colorScheme="brand"
+                        onClick={() => {
+                          setSelectedEntity(item)
+                          modals.edit.onOpen()
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        colorScheme="red"
+                        onClick={() => {
+                          setSelectedEntity(item)
+                          modals.delete.onOpen()
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </Stack>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </TableContainer>
+      </ScrollableTableContainer>
+
+      {/* Modals */}
+      <FormModal
+        isOpen={modals.add.isOpen}
+        onClose={modals.add.onClose}
+        title={`Add New ${config?.title?.slice(0, -1)}`}
+        onSubmit={handlers.handleAdd}
+        initialData={config.initialData}
+        FormComponent={config.FormComponent}
+      />
+
+      <FormModal
+        isOpen={modals.edit.isOpen}
+        onClose={modals.edit.onClose}
+        title={`Edit ${config?.title?.slice(0, -1)}`}
+        onSubmit={(data) => handlers.handleEdit(selectedEntity?.id, data)}
+        initialData={selectedEntity}
+        FormComponent={config.FormComponent}
+        isEdit={true}
+      />
+
+      <ConfirmationModal
+        isOpen={modals.delete.isOpen}
+        onClose={modals.delete.onClose}
+        onConfirm={() => handlers.handleDelete(selectedEntity?.id)}
+        title="Confirm Delete"
+        message={`Are you sure you want to delete this ${config?.title?.slice(0, -1).toLowerCase()}?`}
+      />
+    </Box>
+  )
 }
 
 // MAIN COMPONENT
 const Admin = () => {
-  const {user}= useAuth()
-  const [state, dispatch] = useReducer(adminReducer, initialState)
-  const { dashboardData, users, items, meals, plans, orders, loading, error } = state
+  const { user } = useAuthContext()
+  const adminFunctions = useAdminFunctions()
+  const toast = useToast()
+  
+  const {
+    // Queries
+    useGetDashboardStats,
+    useGetAllUsers,
+    useGetAllItems,
+    useGetAllMeals,
+    useGetAllPlans,
+    useGetAllOrders,
+    useGetAllSubscriptions,
+    useGetRecentActivity,
+    useGetAllAllergies,
+    useGetAllDietaryPreferences,
+    
+    // Mutations
+    setAdminStatus,
+    updateAccountStatus,
+    updateLoyaltyPoints,
+    updateOrderStatus,
+    updateSubscriptionStatus,
+  } = adminFunctions
+
+  // Fetch data using React Query hooks
+  const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useGetDashboardStats()
+  const { data: users = [], isLoading: usersLoading, error: usersError, refetch: refetchUsers } = useGetAllUsers()
+  const { data: items = [], isLoading: itemsLoading, error: itemsQueryError } = useGetAllItems()
+  const { data: meals = [], isLoading: mealsLoading, error: mealsQueryError } = useGetAllMeals()
+  const { data: plans = [], isLoading: plansLoading, error: plansQueryError } = useGetAllPlans()
+  const { data: orders = [], isLoading: ordersLoading, error: ordersError } = useGetAllOrders()
+  const { data: subscriptions = [], isLoading: subsLoading, error: subsError } = useGetAllSubscriptions()
+  const { data: allergies = [], isLoading: allergiesLoading, error: allergiesError } = useGetAllAllergies()
+  const { data: dietaryPreferences = [], isLoading: dietaryLoading, error: dietaryError } = useGetAllDietaryPreferences()
+  const { data: recentActivityResponse, isLoading: activityLoading } = useGetRecentActivity()
+  const recentActivity = Array.isArray(recentActivityResponse) ? recentActivityResponse : [];
+  // Entity managers
+  const itemsManager = useEntityManager('items', adminFunctions)
+  const mealsManager = useEntityManager('meals', adminFunctions)
+  const plansManager = useEntityManager('plans', adminFunctions)
+  const usersManager = useEntityManager('users', adminFunctions)
+  const ordersManager = useEntityManager('orders', adminFunctions)
+  const subsManager = useEntityManager('subscriptions', adminFunctions)
+  const allergiesManager = useEntityManager('allergies', adminFunctions)
+  const dietaryManager = useEntityManager('dietaryPreferences', adminFunctions)
+
+  // User quick actions state
+  const [selectedUser, setSelectedUser] = useState(null)
+  const [adminAction, setAdminAction] = useState('')
+  const [loyaltyPoints, setLoyaltyPoints] = useState('')
+  const [accountStatus, setAccountStatus] = useState('')
+  
+  // Order status update state
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [orderStatus, setOrderStatus] = useState('')
+  
+  // Subscription status update state
+  const [selectedSubscription, setSelectedSubscription] = useState(null)
+  const [subStatus, setSubStatus] = useState('')
+
+  // Modals
+  const userActionModal = useDisclosure()
+  const orderStatusModal = useDisclosure()
+  const subscriptionStatusModal = useDisclosure()
+
+  // User search state
+  const [userSearch, setUserSearch] = useState('')
+  const [orderSearch, setOrderSearch] = useState('')
+  const [subSearch, setSubSearch] = useState('')
+
   // Responsive table display
   const isTableScrollable = useBreakpointValue({ base: true, lg: false })
 
-  // Modal disclosures
-  const itemModals = {
-    add: useDisclosure(),
-    edit: useDisclosure(),
-    delete: useDisclosure(),
-  }
+  // Loading and error states
+  const isLoading = dashboardLoading || usersLoading || itemsLoading || 
+                   mealsLoading || plansLoading || ordersLoading || 
+                   subsLoading || allergiesLoading || dietaryLoading || 
+                   activityLoading
+                   
+  const error = dashboardError || usersError || itemsQueryError || 
+                mealsQueryError || plansQueryError || ordersError || 
+                subsError || allergiesError || dietaryError
 
-  const mealModals = {
-    add: useDisclosure(),
-    edit: useDisclosure(),
-    delete: useDisclosure(),
-  }
+  // Filtered data
+  const filteredUsers = users?.filter((user) =>
+    `${user.email} ${user.displayName} ${user.isAdmin ? 'Admin' : 'User'}`
+      .toLowerCase()
+      .includes(userSearch.toLowerCase()),
+  )
 
-  const planModals = {
-    add: useDisclosure(),
-    edit: useDisclosure(),
-    delete: useDisclosure(),
-  }
+  const filteredOrders = orders?.filter((order) =>
+    `${order.id} ${order.userId} ${order.status}`
+      .toLowerCase()
+      .includes(orderSearch.toLowerCase()),
+  )
+  
+  const filteredSubs = subscriptions?.filter((sub) =>
+    `${sub.id} ${sub.userId} ${sub.status}`
+      .toLowerCase()
+      .includes(subSearch.toLowerCase()),
+  )
 
-  // Data fetching
-  useEffect(() => {
-    fetchAdminData()
-  }, [])
-
-  const fetchAdminData = async () => {
-    dispatch({ type: 'FETCH_START' })
+  // Handle user quick actions
+  const handleUserAction = async () => {
+    if (!selectedUser) return
+    
     try {
-      const token = user ? await user.getIdToken() : null
-      const [dashboardData, users, items, meals, plans, orders] = await Promise.all([
-        adminAPI.getDashboard(),
-        adminAPI.getAllUsers(),
-        itemsAPI.listItems(),
-        mealsAPI.getMeals(),
-        plansAPI.listPlans(),
-        ordersAPI.getAllOrders(token),
-      ])
-
-      dispatch({
-        type: 'FETCH_SUCCESS',
-        payload: {
-          dashboardData,
-          users: users || [],
-          items: items || [], // Add fallback empty array
-          meals: meals || [], // Add fallback empty array
-          plans: plans || [], // Add fallback empty array
-          orders,
-        },
+      if (adminAction === 'setAdmin') {
+        await setAdminStatus({ userId: selectedUser.id, isAdmin: true })
+        toast({ title: 'Admin status updated', status: 'success' })
+      } 
+      else if (adminAction === 'removeAdmin') {
+        await setAdminStatus({ userId: selectedUser.id, isAdmin: false })
+        toast({ title: 'Admin status updated', status: 'success' })
+      }
+      else if (adminAction === 'updateStatus') {
+        await updateAccountStatus({ 
+          userId: selectedUser.id, 
+          status: accountStatus 
+        })
+        toast({ title: 'Account status updated', status: 'success' })
+      }
+      else if (adminAction === 'updateLoyalty') {
+        await updateLoyaltyPoints({ 
+          userId: selectedUser.id, 
+          points: parseInt(loyaltyPoints) 
+        })
+        toast({ title: 'Loyalty points updated', status: 'success' })
+      }
+      
+      refetchUsers()
+      userActionModal.onClose()
+    } catch (error) {
+      toast({ 
+        title: 'Failed to update user', 
+        description: error.message, 
+        status: 'error' 
       })
+    }
+  }
+  
+  // Handle order status update
+  const handleOrderStatusUpdate = async () => {
+    if (!selectedOrder || !orderStatus) return
+    
+    try {
+      await updateOrderStatus({ 
+        orderId: selectedOrder.id, 
+        status: orderStatus 
+      })
+      
+      toast({ title: 'Order status updated', status: 'success' })
+      orderStatusModal.onClose()
     } catch (error) {
-      dispatch({
-        type: 'FETCH_ERROR',
-        payload: error.message || 'Failed to load admin data',
+      toast({ 
+        title: 'Failed to update order', 
+        description: error.message, 
+        status: 'error' 
       })
     }
   }
-  // Item handlers
-  const handleAddItem = async (itemData) => {
+  
+  // Handle subscription status update
+  const handleSubscriptionStatusUpdate = async () => {
+    if (!selectedSubscription || !subStatus) return
+    
     try {
-      const token = user ? await user.getIdToken() : null
-      const newItem = await itemsAPI.createItem(token, itemData)
-      dispatch({ type: 'ADD_ITEM', payload: newItem })
-      itemModals.add.onClose()
+      await updateSubscriptionStatus({ 
+        subscriptionId: selectedSubscription.id, 
+        status: subStatus 
+      })
+      
+      toast({ title: 'Subscription status updated', status: 'success' })
+      subscriptionStatusModal.onClose()
     } catch (error) {
-      window.alert('Failed to add item: ' + error.message)
+      toast({ 
+        title: 'Failed to update subscription', 
+        description: error.message, 
+        status: 'error' 
+      })
     }
   }
 
-  const handleEditItem = async (itemId, updatedData) => {
-    try {
-      const token = user ? await user.getIdToken() : null
-      const updatedItem = await itemsAPI.updateItem(token, itemId, updatedData)
-      dispatch({ type: 'EDIT_ITEM', payload: updatedItem })
-      itemModals.edit.onClose()
-    } catch (error) {
-      window.alert('Failed to edit item: ' + error.message)
-    }
+  // Retry function for error handling
+  const handleRetry = () => {
+    window.location.reload()
   }
 
-  const handleitems = async (itemId) => {
-    try {
-      const token = user ? await user.getIdToken() : null
-      await itemsAPI.deleteItem(token, itemId)
-      dispatch({ type: 'DELETE_ITEM', payload: itemId })
-      itemModals.delete.onClose()
-    } catch (error) {
-      window.alert('Failed to delete item: ' + error.message)
-    }
-  }
+  if (isLoading) return <LoadingSpinner />
+  if (error) return <ErrorAlert message={error?.message || 'Failed to load admin data'} retry={handleRetry} />
 
-  // Meal handlers
-  const handleAddMeal = async (mealData) => {
-    try {
-      //const token =await user.getIdToken() || null
-      //const newMeal = token=== null? await mealsAPI.createMeal(mealData): await mealsAPI.createMeal(token, mealData)
-      const newMeal = await mealsAPI.createMeal(mealData)
-      dispatch({ type: 'ADD_MEAL', payload: newMeal })
-      mealModals.add.onClose()
-    } catch (error) {
-      window.alert('Failed to add meal: ' + error.message)
-    }
-  }
-
-  const handleEditMeal = async (mealId, updatedData) => {
-    try {
-      const token = user ? await user.getIdToken() : null
-      const updatedMeal = await mealsAPI.updateMeal(token, mealId, updatedData)
-      dispatch({ type: 'EDIT_MEAL', payload: updatedMeal })
-      mealModals.edit.onClose()
-    } catch (error) {
-      window.alert('Failed to edit meal: ' + error.message)
-    }
-  }
-
-  const handlemeals = async (mealId) => {
-    try {
-      const token = user ? await user.getIdToken() : null
-      await mealsAPI.deleteMeal(token, mealId)
-      dispatch({ type: 'DELETE_MEAL', payload: mealId })
-      mealModals.delete.onClose()
-    } catch (error) {
-      window.alert('Failed to delete meal: ' + error.message)
-    }
-  }
-
-  // Plan handlers
-  const handleAddPlan = async (planData) => {
-    try {
-      const token = user ? await user.getIdToken() : null
-      const newPlan = await plansAPI.createPlan(token, planData)
-      dispatch({ type: 'ADD_PLAN', payload: newPlan })
-      planModals.add.onClose()
-    } catch (error) {
-      window.alert('Failed to add plan: ' + error.message)
-    }
-  }
-
-  const handleEditPlan = async (planId, updatedData) => {
-    try {
-      const token = user ? await user.getIdToken() : null
-      const updatedPlan = await plansAPI.updatePlan(token, planId, updatedData)
-      dispatch({ type: 'EDIT_PLAN', payload: updatedPlan })
-      planModals.edit.onClose()
-    } catch (error) {
-      window.alert('Failed to edit plan: ' + error.message)
-    }
-  }
-
-  const handleplans= async (planId) => {
-    try {
-      const token = user ? await user.getIdToken() : null
-      await plansAPI.deletePlan(token, planId)
-      dispatch({ type: 'DELETE_PLAN', payload: planId })
-      planModals.delete.onClose()
-    } catch (error) {
-      window.alert('Failed to delete plan: ' + error.message)
-    }
-  }
-
-  // Selection helpers
-  const selectItem = (item) => {
-    dispatch({ type: 'SET_SELECTED_ITEM', payload: item })
-  }
-
-  const selectMeal = (meal) => {
-    dispatch({ type: 'SET_SELECTED_MEAL', payload: meal })
-  }
-
-  const selectPlan = (plan) => {
-    dispatch({ type: 'SET_SELECTED_PLAN', payload: plan })
-  }
-  // ============== SEARCH STATES ==============
-  const [userSearch, setUserSearch] = useState('')
-  const [itemSearch, setItemSearch] = useState('')
-  const [mealSearch, setMealSearch] = useState('')
-  const [planSearch, setPlanSearch] = useState('')
-  const [orderSearch, setOrderSearch] = useState('')
-
-  // ============== FILTERED DATA ==============
-  const filteredUsers =
-    users?.length &&
-    users.filter((user) =>
-      `${user.email} ${user.displayName} ${user.isAdmin ? 'Admin' : 'User'}`
-        .toLowerCase()
-        .includes(userSearch.toLowerCase()),
-    )
-
-  const filteredItems =
-    items?.length &&
-    items.filter((item) =>
-      `${item.name} ${item.name_arabic} ${item.section} ${item.section_arabic}`
-        .toLowerCase()
-        .includes(itemSearch.toLowerCase()),
-    )
-
-  const filteredMeals =
-    meals?.length &&
-    meals.filter((meal) =>
-      `${meal.name} ${meal.name_arabic} ${meal.section} ${meal.section_arabic}`
-        .toLowerCase()
-        .includes(mealSearch.toLowerCase()),
-    )
-
-  const filteredPlans =
-    plans?.length &&
-    plans.filter((plan) =>
-      `${plan.title} ${plan.period}`.toLowerCase().includes(planSearch.toLowerCase()),
-    )
-
-  const filteredOrders =
-    orders?.length &&
-    orders.filter((order) =>
-      `${order.id} ${order.userId} ${order.status}`
-        .toLowerCase()
-        .includes(orderSearch.toLowerCase()),
-    )
-
-  //Temporary importing JSON utils
-  const handleImportItems = async (event) => {
-    const file = event.target.files[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = async (e) => {
-      try {
-        const items = JSON.parse(e.target.result)
-        const token = user ? await user.getIdToken() : null
-        for (const itemData of items) {
-          const newItem = await itemsAPI.createItem(token, itemData)
-          dispatch({ type: 'ADD_ITEM', payload: newItem })
-        }
-        alert('Items imported successfully!')
-      } catch (error) {
-        window.alert('Failed to import items: ' + error.message)
-      }
-    }
-    reader.readAsText(file)
-  }
-  //Handle export items json files
-  const handleExportItems = async () => {
-    try {
-      //const token = user ? await user.getIdToken() : null
-      const items = await itemsAPI.listItems()
-      const dataStr = JSON.stringify(items || [])
-      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
-      const exportFileDefaultName = 'items.json'
-      const linkElement = document.createElement('a')
-      linkElement.setAttribute('href', dataUri)
-      linkElement.setAttribute('download', exportFileDefaultName)
-      document.body.appendChild(linkElement)
-      linkElement.click()
-      document.body.removeChild(linkElement)
-    } catch (error) {
-      window.alert('Failed to export items: ' + error.message)
-    }
-  }
-  // Handle import meals from JSON
-  const handleImportMeals = async (event) => {
-    const file = event.target.files[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = async (e) => {
-      try {
-        const meals = JSON.parse(e.target.result)
-        const token = user ? await user.getIdToken() : null
-        for (const mealData of meals) {
-          const newMeal = await mealsAPI.createMeal(token, mealData)
-          dispatch({ type: 'ADD_MEAL', payload: newMeal })
-        }
-        window.alert('Meals imported successfully!')
-      } catch (error) {
-        window.alert('Failed to import meals: ' + error.message)
-      }
-    }
-    reader.readAsText(file)
-  }
-  if (loading) return <LoadingSpinner />
-  if (error) return <ErrorAlert message={error} retry={fetchAdminData} />
-
-  //Handle export meals json files
-  const handleExportMeals = async () => {
-    try {
-      //const token = user ? await user.getIdToken() : null
-      const meals = await mealsAPI.getMeals()
-      const dataStr = JSON.stringify(meals || [])
-      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
-      const exportFileDefaultName = 'meals.json'
-      const linkElement = document.createElement('a')
-      linkElement.setAttribute('href', dataUri)
-      linkElement.setAttribute('download', exportFileDefaultName)
-      document.body.appendChild(linkElement)
-      linkElement.click()
-      document.body.removeChild(linkElement)
-    } catch (error) {
-      window.alert('Failed to export meals: ' + error.message)
-    }
-  }
-  //Handle export plans json files
-    //Handle export items json files
-    const handleExportPlans = async () => {
-      try {
-        //const token = user ? await user.getIdToken() : null
-        const plans = await plansAPI.listPlans()
-        const dataStr = JSON.stringify(plans || [])
-        const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
-        const exportFileDefaultName = 'plans.json'
-        const linkElement = document.createElement('a')
-        linkElement.setAttribute('href', dataUri)
-        linkElement.setAttribute('download', exportFileDefaultName)
-        document.body.appendChild(linkElement)
-        linkElement.click()
-        document.body.removeChild(linkElement)
-      } catch (error) {
-        window.alert('Failed to export items: ' + error.message)
-      }
-    }
   return (
     <Box
       sx={{
@@ -473,479 +847,269 @@ const Admin = () => {
         <StatCard title="Admin Users" value={dashboardData?.totalAdmins || 0} />
         <StatCard title="Items" value={items?.length || 0} />
         <StatCard title="Plans" value={plans?.length || 0} />
+        <StatCard title="Active Orders" value={dashboardData?.activeOrders || 0} />
+        <StatCard title="Today's Revenue" value={`$${dashboardData?.dailyRevenue?.toFixed(2) || 0}`} />
+        <StatCard title="Active Subscriptions" value={dashboardData?.activeSubscriptions || 0} />
+        <StatCard title="Meals Available" value={dashboardData?.availableMeals || 0} />
       </Grid>
-
-      {/* Users Section */}
+      
+      {/* Recent Activity Section */}
       <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
-        <SectionHeading title="Users" />
-        <SearchInput value={userSearch} onChange={setUserSearch} />
-        <ScrollableTableContainer>
-          <TableContainer overflowX={isTableScrollable ? 'auto' : 'visible'}>
-            <Table variant="simple" size={{ base: 'sm', md: 'md' }}>
-              <Thead>
-                <Tr>
-                  <Th>Email</Th>
-                  <Th>Name</Th>
-                  <Th>Role</Th>
-                  <Th>Created</Th>
-                  <Th>Actions</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {filteredUsers?.length &&
-                  filteredUsers.map((user) => (
-                    <Tr key={user.uid}>
-                      <Td>{user.email}</Td>
-                      <Td>{user.displayName}</Td>
-                      <Td>{user.isAdmin ? 'Admin' : 'User'}</Td>
-                      <Td>
-                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
-                      </Td>
-                      <Td>
-                        <Button size="sm" colorScheme="brand">
-                          Edit
-                        </Button>
-                      </Td>
-                    </Tr>
-                  ))}
-              </Tbody>
-            </Table>
-          </TableContainer>
-        </ScrollableTableContainer>
-      </Box>
-
-      {/* Items Section */}
-      <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
-        <SectionHeading
-          title={'Items'}
-          onAddClick={itemModals.add.onOpen}
-          buttonText="Create New"
-        />
-        <Flex gap={2} mb={4}>
-          <SearchInput value={itemSearch} onChange={setItemSearch} />
-          <Button as="label" colorScheme="brand" cursor="pointer">
-            Import Items
-            <input type="file" hidden accept=".json" onChange={handleImportItems} />
-          </Button>
-          <Button as="label" colorScheme="brand" cursor="pointer" onClick={handleExportItems}>
-            Export Items
-          </Button>
-        </Flex>
-        <ScrollableTableContainer>
-          <TableContainer overflow="auto">
-            <Table variant="simple" size="sm" style={{ overflowY: 'auto', maxHeight: '30vh' }}>
-              <Thead>
-                <Tr>
-                  <Th w="15%">Name</Th>
-                  <Th w="15%">Name (Arabic)</Th>
-                  <Th w="10%">Section</Th>
-                  <Th w="10%">Section (Arabic)</Th>
-                  <Th w="10%">Addon Price</Th>
-                  <Th w="10%">Free Count</Th>
-                  <Th w="10%">Calories</Th>
-                  <Th w="10%">Protein</Th>
-                  <Th w="15%">Allergens</Th>
-                  <Th w="15%">Image</Th>
-                  <Th w="15%">Action</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {filteredItems.map((item) => (
-                  <Tr key={item.id}>
-                    <Td w="15%">{item.name}</Td>
-                    <Td w="15%">{item.name_arabic}</Td>
-                    <Td w="10%">{item.section}</Td>
-                    <Td w="10%">{item.section_arabic}</Td>
-                    <Td w="10%">{item.addon_price}</Td>
-                    <Td w="10%">{item.free_count}</Td>
-                    <Td w="10%">{item.item_kcal}</Td>
-                    <Td w="10%">{item.item_protein}</Td>
-                    <Td>
-                      {item?.allergens?.length > 0 ? item.allergens.map((a) => `${a.ar} |`) : 'N/A'}
-                    </Td>
-                    <Td w="15%" isTruncated maxW="150px">
-                      {item.image}
-                    </Td>
-                    <Td w="15%">
-                      <Stack direction="row" spacing={2}>
-                        <Button
-                          size="xs"
-                          colorScheme="brand"
-                          onClick={() => {
-                            selectItem(item)
-                            itemModals.edit.onOpen()
-                          }}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          size="xs"
-                          colorScheme="red"
-                          onClick={() => {
-                            selectItem(item)
-                            itemModals.delete.onOpen()
-                          }}
-                        >
-                          Delete
-                        </Button>
-                      </Stack>
-                    </Td>
+        <SectionHeading title="Recent Activity" />
+        {activityLoading ? (
+          <LoadingSpinner />
+        ) : (
+          <ScrollableTableContainer>
+            <TableContainer>
+              <Table variant="simple" size="sm">
+                <Thead>
+                  <Tr>
+                    <Th>Action</Th>
+                    <Th>User</Th>
+                    <Th>Target</Th>
+                    <Th>Time</Th>
                   </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </TableContainer>
-        </ScrollableTableContainer>
+                </Thead>
+                <Tbody>
+                  {recentActivity.length > 0 ? (
+                    recentActivity.map((activity, index) => (
+                      <Tr key={index}>
+                        <Td>{activity.action}</Td>
+                        <Td>{activity.userName || activity.userEmail || 'System'}</Td>
+                        <Td>{activity.target}</Td>
+                        <Td>{new Date(activity.timestamp).toLocaleString()}</Td>
+                      </Tr>
+                    ))
+                  ) : (
+                    <Tr>
+                      <Td colSpan={4} textAlign="center">
+                        No recent activity
+                      </Td>
+                    </Tr>
+                  )}
+                </Tbody>
+              </Table>
+            </TableContainer>
+          </ScrollableTableContainer>
+        )}
       </Box>
 
-      {/* Meals Section */}
-      <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
-        <SectionHeading
-          title={'Meals'}
-          onAddClick={mealModals.add.onOpen}
-          buttonText="Create New"
-        />
-        <Flex gap={2} mb={4}>
-          <SearchInput value={mealSearch} onChange={setMealSearch} />
-          <Button as="label" colorScheme="brand" cursor="pointer">
-            Import Meals
-            <input type="file" hidden accept=".json" onChange={handleImportMeals} />
-          </Button>
-          <Button as="label" colorScheme="brand" cursor="pointer" onClick={handleExportMeals}>
-            Export Items
-          </Button>
-        </Flex>
-        <ScrollableTableContainer>
-          <TableContainer overflowX={isTableScrollable ? 'auto' : 'visible'}>
-            <Table
-              variant="simple"
-              size={{ base: 'sm', md: 'md' }}
-              style={{ overflowY: 'auto', maxHeight: '70vh' }}
+      {/* Entity Sections */}
+      <EntitySection
+        entityType="users"
+        data={users}
+        isLoading={usersLoading}
+        entityManager={usersManager}
+        isTableScrollable={isTableScrollable}
+      />
+      
+      <EntitySection
+        entityType="items"
+        data={items}
+        isLoading={itemsLoading}
+        entityManager={itemsManager}
+        isTableScrollable={isTableScrollable}
+      />
+
+      <EntitySection
+        entityType="meals"
+        data={meals}
+        isLoading={mealsLoading}
+        entityManager={mealsManager}
+        isTableScrollable={isTableScrollable}
+      />
+
+      <EntitySection
+        entityType="plans"
+        data={plans}
+        isLoading={plansLoading}
+        entityManager={plansManager}
+        isTableScrollable={isTableScrollable}
+      />
+      
+      <EntitySection
+        entityType="orders"
+        data={orders}
+        isLoading={ordersLoading}
+        entityManager={ordersManager}
+        isTableScrollable={isTableScrollable}
+      />
+      
+      <EntitySection
+        entityType="subscriptions"
+        data={subscriptions}
+        isLoading={subsLoading}
+        entityManager={subsManager}
+        isTableScrollable={isTableScrollable}
+      />
+      
+      <EntitySection
+        entityType="allergies"
+        data={allergies}
+        isLoading={allergiesLoading}
+        entityManager={allergiesManager}
+        isTableScrollable={isTableScrollable}
+      />
+      
+      <EntitySection
+        entityType="dietaryPreferences"
+        data={dietaryPreferences}
+        isLoading={dietaryLoading}
+        entityManager={dietaryManager}
+        isTableScrollable={isTableScrollable}
+      />
+      
+      {/* User Action Modal */}
+      <Modal isOpen={userActionModal.isOpen} onClose={userActionModal.onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>User Quick Actions</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {adminAction === 'setAdmin' && (
+              <Box>
+                <Heading size="sm" mb={4}>
+                  Set Admin Status for {selectedUser?.email}
+                </Heading>
+                <Button 
+                  colorScheme="blue" 
+                  onClick={() => handleUserAction('setAdmin')}
+                >
+                  Confirm Make Admin
+                </Button>
+              </Box>
+            )}
+            
+            {adminAction === 'removeAdmin' && (
+              <Box>
+                <Heading size="sm" mb={4}>
+                  Remove Admin Status from {selectedUser?.email}
+                </Heading>
+                <Button 
+                  colorScheme="red" 
+                  onClick={() => handleUserAction('removeAdmin')}
+                >
+                  Confirm Remove Admin
+                </Button>
+              </Box>
+            )}
+            
+            {adminAction === 'updateStatus' && (
+              <FormControl>
+                <FormLabel>Account Status</FormLabel>
+                <Select 
+                  value={accountStatus} 
+                  onChange={(e) => setAccountStatus(e.target.value)}
+                >
+                  <option value="active">Active</option>
+                  <option value="suspended">Suspended</option>
+                  <option value="deleted">Deleted</option>
+                </Select>
+              </FormControl>
+            )}
+            
+            {adminAction === 'updateLoyalty' && (
+              <FormControl>
+                <FormLabel>Loyalty Points</FormLabel>
+                <Input 
+                  type="number" 
+                  value={loyaltyPoints} 
+                  onChange={(e) => setLoyaltyPoints(e.target.value)}
+                  placeholder="Enter points"
+                />
+              </FormControl>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={userActionModal.onClose}>
+              Cancel
+            </Button>
+            <Button 
+              colorScheme="blue" 
+              onClick={handleUserAction}
+              isDisabled={
+                (adminAction === 'updateStatus' && !accountStatus) ||
+                (adminAction === 'updateLoyalty' && !loyaltyPoints)
+              }
             >
-              <Thead>
-                <Tr>
-                  <Th>Name</Th>
-                  <Th>Name (Arabic)</Th>
-                  <Th>Section</Th>
-                  <Th>Section (Arabic)</Th>
-                  <Th>Price</Th>
-                  <Th>Calories</Th>
-                  <Th>Protein</Th>
-                  <Th>Carbohydrates</Th>
-                  <Th>Policy</Th>
-                  <Th>Ingredients</Th>
-                  <Th>Ingredients (Arabic)</Th>
-                  <Th>Items</Th>
-                  <Th>Image</Th>
-                  <Th>Allergens</Th>
-                  <Th>Actions</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {filteredMeals?.length &&
-                  filteredMeals.map((meal) => (
-                    <Tr key={meal.id}>
-                      <Td>{meal.name}</Td>
-                      <Td>{meal.name_arabic}</Td>
-                      <Td>{meal.section || 'N/A'}</Td>
-                      <Td>{meal.section_arabic || 'N/A'}</Td>
-                      <Td>{meal.price}</Td>
-                      <Td>{meal.kcal}</Td>
-                      <Td>{meal.protein}</Td>
-                      <Td>{meal.carb}</Td>
-                      <Td>{meal.policy}</Td>
-                      <Td>{meal.ingredients}</Td>
-                      <Td>{meal.ingredients_arabic}</Td>
-                      <Td>{meal?.items?.length > 0 ? meal.items.join(', ') : 'N/A'}</Td>
-                      <Td>{meal?.image}</Td>
-                      <Td>
-                        {meal?.allergens?.length > 0
-                          ? meal.allergens.map((a) => `${a.ar} |`)
-                          : 'N/A'}
-                      </Td>
-                      <Td>
-                        <Stack direction="row" spacing={2}>
-                          <Button
-                            size="sm"
-                            colorScheme="brand"
-                            onClick={() => {
-                              selectMeal(meal)
-                              mealModals.edit.onOpen()
-                            }}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            colorScheme="red"
-                            onClick={() => {
-                              selectMeal(meal)
-                              mealModals.delete.onOpen()
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </Stack>
-                      </Td>
-                    </Tr>
-                  ))}
-              </Tbody>
-            </Table>
-          </TableContainer>
-        </ScrollableTableContainer>
-      </Box>
-
-      {/* Plans Section */}
-      <Box gap={6} m={12} maxW="90%" bg="white" p={8}>
-        <SectionHeading
-          title={'Plans'}
-          onAddClick={planModals.add.onOpen}
-          buttonText="Create New"
-        />
-        <SearchInput value={planSearch} onChange={setPlanSearch} />
-        <Button as="label" colorScheme="brand" cursor="pointer" onClick={handleExportPlans}>
-          Export Plans
-        </Button>
-        <ScrollableTableContainer>
-          <TableContainer overflowX="auto">
-            <Table variant="simple" size="sm" style={{ overflowY: 'auto', maxHeight: '70vh' }}>
-              <Thead>
-                <Tr>
-                  <Th>Title (EN)</Th>
-                  <Th>Title (AR)</Th>
-                  <Th>Periods</Th>
-                  <Th>Carbs (g)</Th>
-                  <Th>Protein (g)</Th>
-                  <Th>Calories (kcal)</Th>
-                  <Th>Members</Th>
-                  <Th>Carb Meals</Th>
-                  <Th>Protein Meals</Th>
-                  <Th>Soaps</Th>
-                  <Th>Snacks</Th>
-                  <Th>Actions</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {filteredPlans?.length &&
-                  filteredPlans.map((plan) => (
-                    <Tr key={plan.id}>
-                      <Td>{plan.title || 'N/A'}</Td>
-                      <Td>{plan.title_arabic || 'N/A'}</Td>
-                      <Td>{plan.periods?.length ? plan.periods.join(', ') : 'No periods'}</Td>
-                      <Td>{plan.carb || 0}</Td>
-                      <Td>{plan.protein || 0}</Td>
-                      <Td>{plan.kcal || 0}</Td>
-                      <Td>{plan.members?.length || 0}</Td>
-                      <Td>{plan.carbMeals?.join(', ') || 'None'}</Td>
-                      <Td>{plan.proteinMeals?.join(', ') || 'None'}</Td>
-                      <Td>{plan.soaps?.join(', ') || 'None'}</Td>
-                      <Td>{plan.snacks?.join(', ') || 'None'}</Td>
-                      <Td>
-                        <Stack direction="row" spacing={1}>
-                          <Button
-                            size="xs"
-                            colorScheme="brand"
-                            onClick={() => {
-                              selectPlan(plan)
-                              planModals.edit.onOpen()
-                            }}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            size="xs"
-                            colorScheme="red"
-                            onClick={() => {
-                              selectPlan(plan)
-                              planModals.delete.onOpen()
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </Stack>
-                      </Td>
-                    </Tr>
-                  ))}
-              </Tbody>
-            </Table>
-          </TableContainer>
-        </ScrollableTableContainer>
-      </Box>
-      <Box>
-        <SectionHeading title="Orders" />
-        <SearchInput value={orderSearch} onChange={setOrderSearch} />
-        <ScrollableTableContainer>
-          <TableContainer overflowX={isTableScrollable ? 'auto' : 'visible'}>
-            <Table
-              variant="simple"
-              size={{ base: 'sm', md: 'md' }}
-              style={{ overflowY: 'auto', maxHeight: '70vh' }}
+              Apply Action
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      
+      {/* Order Status Modal */}
+      <Modal isOpen={orderStatusModal.isOpen} onClose={orderStatusModal.onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Update Order Status</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <FormControl>
+              <FormLabel>New Status</FormLabel>
+              <Select 
+                value={orderStatus} 
+                onChange={(e) => setOrderStatus(e.target.value)}
+              >
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="preparing">Preparing</option>
+                <option value="ready">Ready for Pickup</option>
+                <option value="in-transit">In Transit</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </Select>
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={orderStatusModal.onClose}>
+              Cancel
+            </Button>
+            <Button 
+              colorScheme="blue" 
+              onClick={handleOrderStatusUpdate}
+              isDisabled={!orderStatus}
             >
-              <Thead>
-                <Tr>
-                  <Th>Order ID</Th>
-                  <Th>User</Th>
-                  <Th>Total Price</Th>
-                  <Th>Status</Th>
-                  <Th>Payment Status</Th>
-                  <Th>Created At</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {filteredOrders?.length &&
-                  filteredOrders.map((order) => (
-                    <Tr key={order.id}>
-                      <Td>{order.id}</Td>
-                      <Td>{order.userId || order.user?.email || 'N/A'}</Td>
-                      <Td>${parseFloat(order.totalPrice).toFixed(2)}</Td>
-                      <Td>
-                        <Badge
-                          colorScheme={
-                            order.status === 'completed'
-                              ? 'green'
-                              : order.status === 'processing'
-                                ? 'brand'
-                                : order.status === 'cancelled'
-                                  ? 'red'
-                                  : 'gray'
-                          }
-                        >
-                          {order.status || 'pending'}
-                        </Badge>
-                      </Td>
-                      <Td>
-                        <Badge colorScheme={order.isPaid ? 'green' : 'orange'}>
-                          {order.isPaid ? 'Paid' : 'Unpaid'}
-                        </Badge>
-                      </Td>
-                      <Td>
-                        {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}
-                      </Td>
-                    </Tr>
-                  ))}
-              </Tbody>
-            </Table>
-          </TableContainer>
-        </ScrollableTableContainer>
-      </Box>
-
-      <FormModal
-        isOpen={itemModals.add.isOpen}
-        onClose={itemModals.add.onClose}
-        title="Add New Item"
-        onSubmit={handleAddItem}
-        initialData={{
-          name: '',
-          name_arabic: '',
-          section: '',
-          section_arabic: '',
-          addon_price: 0,
-          free_count: 0,
-          item_kcal: 0,
-          item_protein: 0,
-          image: '',
-        }}
-        FormComponent={ItemForm}
-      />
-
-      <FormModal
-        isOpen={itemModals.edit.isOpen}
-        onClose={itemModals.edit.onClose}
-        title="Edit Item"
-        onSubmit={(data) => handleEditItem(state.selectedItem?.id, data)}
-        initialData={state.selectedItem}
-        FormComponent={ItemForm}
-        isEdit={true}
-      />
-
-      <ConfirmationModal
-        isOpen={itemModals.delete.isOpen}
-        onClose={itemModals.delete.onClose}
-        onConfirm={() => state.selectedItem?.id && handleitemsAPI.DeleteItem(state.selectedItem.id)}
-        title="Confirm Delete"
-        message="Are you sure you want to delete this item?"
-      />
-
-      {/* Meal Modals */}
-      <FormModal
-        isOpen={mealModals.add.isOpen}
-        onClose={mealModals.add.onClose}
-        title="Add New Meal"
-        onSubmit={handleAddMeal}
-        initialData={{
-          name: '',
-          name_arabic: '',
-          section: '',
-          section_arabic: '',
-          price: 0,
-          kcal: 0,
-          protein: 0,
-          carb: 0,
-          policy: '',
-          ingredients: '',
-          ingredients_arabic: '',
-          items: [],
-          image: '',
-        }}
-        FormComponent={MealForm}
-      />
-
-      <FormModal
-        isOpen={mealModals.edit.isOpen}
-        onClose={mealModals.edit.onClose}
-        title="Edit Meal"
-        onSubmit={(data) => state.selectedMeal?.id && handleEditMeal(state.selectedMeal.id, data)}
-        initialData={state.selectedMeal}
-        FormComponent={MealForm}
-        isEdit={true}
-      />
-
-      <ConfirmationModal
-        isOpen={mealModals.delete.isOpen}
-        onClose={mealModals.delete.onClose}
-        onConfirm={() => state.selectedMeal?.id && handlemealsAPI.DeleteMeal(state.selectedMeal.id)}
-        title="Confirm Delete"
-        message="Are you sure you want to delete this meal?"
-      />
-      <FormModal
-        isOpen={planModals.add.isOpen}
-        onClose={planModals.add.onClose}
-        title="Add New Plan"
-        onSubmit={handleAddPlan}
-        initialData={{
-          title: 'New Plan',
-          description: 'add description',
-          period: 30,
-          carb: 150,
-          protein: 120,
-          kcal: 2000,
-          avatar: '',
-          members: [],
-          carbMeals: [],
-          proteinMeals: [],
-          soaps: [],
-          snacks: [],
-        }}
-        FormComponent={PlanForm}
-      />
-
-      <FormModal
-        isOpen={planModals.edit.isOpen}
-        onClose={planModals.edit.onClose}
-        title="Edit Plan"
-        onSubmit={(data) => state.selectedPlan?.id && handleEditPlan(state.selectedPlan.id, data)}
-        initialData={state.selectedPlan}
-        FormComponent={PlanForm}
-        isEdit={true}
-      />
-
-      <ConfirmationModal
-        isOpen={planModals.delete.isOpen}
-        onClose={planModals.delete.onClose}
-        onConfirm={() => state.selectedPlan?.id && handleplansAPI.DeletePlan(state.selectedPlan.id)}
-        title="Confirm Delete"
-        message="Are you sure you want to delete this plan?"
-      />
+              Update Status
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      
+      {/* Subscription Status Modal */}
+      <Modal isOpen={subscriptionStatusModal.isOpen} onClose={subscriptionStatusModal.onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Update Subscription Status</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <FormControl>
+              <FormLabel>New Status</FormLabel>
+              <Select 
+                value={subStatus} 
+                onChange={(e) => setSubStatus(e.target.value)}
+              >
+                <option value="active">Active</option>
+                <option value="paused">Paused</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="expired">Expired</option>
+              </Select>
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={subscriptionStatusModal.onClose}>
+              Cancel
+            </Button>
+            <Button 
+              colorScheme="blue" 
+              onClick={handleSubscriptionStatusUpdate}
+              isDisabled={!subStatus}
+            >
+              Update Status
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   )
 }

@@ -212,7 +212,7 @@ export function useItems() {
       setLoading(false);
     }
   }, []);
-
+  
   const bulkUpdateItems = useCallback(async (updates) => {
     setLoading(true);
     setError(null);

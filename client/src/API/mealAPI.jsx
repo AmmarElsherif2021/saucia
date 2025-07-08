@@ -291,7 +291,36 @@ export const mealsAPI = {
       handleSupabaseError(error)
     }
   },
-
+    // Get allergies for a specific meal
+    async getMealAllergies(mealId) {
+      try {
+        const { data, error } = await supabase
+          .from('meal_allergies')
+          .select(`allergies(*)`)
+          .eq('meal_id', mealId);
+  
+        if (error) throw error;
+        return data.map(item => item.allergies);
+      } catch (error) {
+        handleSupabaseError(error);
+      }
+    },
+  
+    // Get items for a specific meal
+    async getMealItems(mealId) {
+      try {
+        const { data, error } = await supabase
+          .from('meal_items')
+          .select(`items(*)`)
+          .eq('meal_id', mealId);
+  
+        if (error) throw error;
+        return data.map(item => item.items);
+      } catch (error) {
+        handleSupabaseError(error);
+      }
+    },
+    
   async bulkUpdateMeals(updates) {
     try {
       const { data, error } = await supabase

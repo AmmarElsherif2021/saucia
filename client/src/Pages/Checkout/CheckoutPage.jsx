@@ -689,5 +689,4 @@ const CheckoutPage = () => {
   )
 }
 
-// Default export instead of named export
 export default CheckoutPage
