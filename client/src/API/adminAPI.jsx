@@ -192,7 +192,7 @@ export const adminAPI = {
       query.filters = query.filters || [];
       query.filters.push({ field: 'is_available', value: options.available });
     }
-
+    
     return fetchList('meals', query);
   },
 
@@ -234,7 +234,54 @@ export const adminAPI = {
 
     return createRecord('meals', newMeal);
   },
-
+  async updateMealComplete(mealId, updateData) {
+    // Extract junction data
+    const { items, allergy_ids, dietary_preference_ids, ...mealData } = updateData;
+    
+    try {
+      // Update meal base data
+      const updatedMeal = await this.updateMeal(mealId, mealData);
+      
+      // Update all junction tables
+      await Promise.all([
+        this.updateMealItems(mealId, items),
+        this.updateMealAllergies(mealId, allergy_ids),
+        this.updateMealDietaryPreferences(mealId, dietary_preference_ids)
+      ]);
+      
+      return updatedMeal;
+    } catch (error) {
+      console.error('Error updating meal complete:', error);
+      throw error;
+    }
+  },
+  
+  
+  async updateMealDietaryPreferences(mealId, dietaryPreferenceIds) {
+    // Delete existing relationships
+    await supabase
+      .from('meal_dietary_preferences')
+      .delete()
+      .eq('meal_id', mealId);
+    
+    // If no preferences, exit early
+    if (!dietaryPreferenceIds || dietaryPreferenceIds.length === 0) {
+      return { success: true };
+    }
+    
+    // Create new relationships
+    const newRelations = dietaryPreferenceIds.map(prefId => ({
+      meal_id: mealId,
+      dietary_preference_id: prefId
+    }));
+    
+    const { error } = await supabase
+      .from('meal_dietary_preferences')
+      .insert(newRelations);
+    
+    if (error) throw error;
+    return { success: true };
+  },
   // Update meal
   async updateMeal(mealId, updateData) {
     const dataToUpdate = {
@@ -303,6 +350,36 @@ export const adminAPI = {
     };
 
     return updateRecord('items', itemId, dataToUpdate);
+  },
+  // Get item details with allergies
+  async updateItemComplete(itemId, updateData) {
+    // Extract allergy_ids first
+    const { allergy_ids, ...itemData } = updateData;
+    
+    // Update the item
+    const updatedItem = await this.updateItem(itemId, itemData);
+    
+    // Update allergies separately
+    if (allergy_ids) {
+      await this.updateItemAllergies(itemId, allergy_ids);
+    }
+    
+    return updatedItem;
+  },
+  
+  async createItemComplete(itemData) {
+    // Extract allergy_ids first
+    const { allergy_ids, ...createData } = itemData;
+    
+    // Create the item
+    const newItem = await this.createItem(createData);
+    
+    // Update allergies separately
+    if (allergy_ids && allergy_ids.length > 0) {
+      await this.updateItemAllergies(newItem.id, allergy_ids);
+    }
+    
+    return newItem;
   },
   // Update item-allergies relationships
   async updateItemAllergies(itemId, allergyIds) {

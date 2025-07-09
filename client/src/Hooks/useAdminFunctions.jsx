@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminAPI } from '../API/adminAPI';
 import { useAuthContext } from '../Contexts/AuthContext';
+
 export const useAdminFunctions = () => {
   const queryClient = useQueryClient();
 
@@ -24,29 +25,49 @@ export const useAdminFunctions = () => {
       staleTime: 2 * 60 * 1000, // 2 minutes
     });
   };
+  
 
-  // Update user profile
-  const updateUserProfileMutation = useMutation({
+  // Get user allergies
+  const useGetUserAllergies = (userId) => {
+    return useQuery({
+      queryKey: ['admin', 'user', userId, 'allergies'],
+      queryFn: () => adminAPI.getUserAllergies(userId),
+      enabled: !!userId
+    });
+  };
+
+  // Get user dietary preferences
+  const useGetUserDietaryPreferences = (userId) => {
+    return useQuery({
+      queryKey: ['admin', 'user', userId, 'dietary-preferences'],
+      queryFn: () => adminAPI.getUserDietaryPreferences(userId),
+      enabled: !!userId
+    });
+  };
+
+  // UNIFIED USER OPERATIONS
+  const updateUserCompleteMutation = useMutation({
     mutationFn: async ({ userId, updateData }) => {
-      const { allergies, dietaryPreferences, ...baseData } = updateData;
-      const user = await adminAPI.updateUserProfile(userId, baseData);
+      // Extract junction data
+      const { allergy_ids, dietary_preference_ids, ...profileData } = updateData;
       
-      // Handle junctions
-      if (allergies !== undefined) {
-        await adminAPI.updateUserAllergies(userId, allergies);
-      }
-      if (dietaryPreferences !== undefined) {
-        await adminAPI.updateUserDietaryPreferences(userId, dietaryPreferences);
-      }
+      // Update profile
+      const result = await adminAPI.updateUserProfile(userId, profileData);
       
-      return user;
+      // Update junctions
+      if (allergy_ids !== undefined) {
+        await adminAPI.updateUserAllergies(userId, allergy_ids);
+      }
+      if (dietary_preference_ids !== undefined) {
+        await adminAPI.updateUserDietaryPreferences(userId, dietary_preference_ids);
+      }
+      return result;
     },
     onSuccess: (_, { userId }) => {
       queryClient.invalidateQueries(['admin', 'user', userId]);
       queryClient.invalidateQueries(['admin', 'users']);
     }
   });
-
   // Set admin status
   const setAdminMutation = useMutation({
     mutationFn: ({ userId, isAdmin }) => adminAPI.setAdminStatus(userId, isAdmin),
@@ -73,24 +94,6 @@ export const useAdminFunctions = () => {
       queryClient.invalidateQueries(['admin', 'users']);
     }
   });
-  
-   // Update user allergies junction
-   const updateUserAllergiesMutation = useMutation({
-    mutationFn: ({ userId, allergyIds }) => 
-      adminAPI.updateUserAllergies(userId, allergyIds),
-    onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries(['admin', 'user', userId]);
-    }
-  });
-
-  // Update user dietary preferences junction
-  const updateUserDietaryPreferencesMutation = useMutation({
-    mutationFn: ({ userId, preferenceIds }) => 
-      adminAPI.updateUserDietaryPreferences(userId, preferenceIds),
-    onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries(['admin', 'user', userId]);
-    }
-  });
 
   // Bulk update users
   const bulkUpdateUsersMutation = useMutation({
@@ -108,6 +111,9 @@ export const useAdminFunctions = () => {
       queryKey: ['admin', 'meals', options],
       queryFn: () => adminAPI.getAllMeals(options),
       staleTime: 5 * 60 * 1000, // 5 minutes
+      onSuccess: (data) => {
+        console.log('Fetched meals from useGetAllMeals :', JSON.stringify(data, null, 2));
+      }
     });
   };
 
@@ -121,71 +127,35 @@ export const useAdminFunctions = () => {
     });
   };
 
-  // createMeal mutation
-  const createMealMutation = useMutation({
+  // UNIFIED MEAL OPERATIONS
+  // Complete meal creation with all related data
+  const createMealCompleteMutation = useMutation({
     mutationFn: async (mealData) => {
-      const { allergies, items, ...baseData } = mealData;
-      const meal = await adminAPI.createMeal(baseData);
-      
-      // Handle junctions after meal creation
-      if (allergies) {
-        await adminAPI.updateMealAllergies(meal.id, allergies);
-      }
-      if (items) {
-        await adminAPI.updateMealItems(meal.id, items);
-      }
-      
-      return { ...meal, allergies, items };
+      const result = await adminAPI.createMealComplete(mealData);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['admin', 'meals']);
     }
   });
 
-// updateMeal mutation
-const updateMealMutation = useMutation({
-  mutationFn: async ({ mealId, updateData = {} }) => {  // Add default value
-    // Provide default values for destructuring
-    const { 
-      allergies = [], 
-      items = [], 
-      ...baseData 
-    } = updateData;
-    
-    const meal = await adminAPI.updateMeal(mealId, baseData);
-    
-    // Handle junctions
-    await adminAPI.updateMealAllergies(mealId, allergies);
-    await adminAPI.updateMealItems(mealId, items);
-    
-    return { ...meal, allergies, items };
-  },
-  onSuccess: (_, { mealId }) => {
-    queryClient.invalidateQueries(['admin', 'meal', mealId]);
-    queryClient.invalidateQueries(['admin', 'meals']);
-  }
-});
-    
-  // Update meal allergies junction
-      const updateMealAllergiesMutation = useMutation({
-        mutationFn: ({ mealId, allergyIds }) => 
-          adminAPI.updateMealAllergies(mealId, allergyIds),
-        onSuccess: (_, { mealId }) => {
-          queryClient.invalidateQueries(['admin', 'meal', mealId]);
-        }
-      });
-    
-      // Update meal items junction
-    const updateMealItemsMutation = useMutation({
-      mutationFn: ({ mealId, itemsData }) => 
-        adminAPI.updateMealItems(mealId, itemsData),
-      onSuccess: (_, { mealId }) => {
-        queryClient.invalidateQueries(['admin', 'meal', mealId]);
-      }
-    });
-  // Delete meal
-  const deleteMealMutation = useMutation({
-    mutationFn: (mealId) => adminAPI.deleteMeal(mealId),
+  // Complete meal update with all related data
+  const updateMealCompleteMutation = useMutation({
+    mutationFn: async ({ mealId, updateData }) => {
+      return adminAPI.updateMealComplete(mealId, updateData);
+    },
+    onSuccess: (_, { mealId }) => {
+      queryClient.invalidateQueries(['admin', 'meal', mealId]);
+      queryClient.invalidateQueries(['admin', 'meals']);
+    }
+  });
+
+  // Complete meal deletion with all related data
+  const deleteMealCompleteMutation = useMutation({
+    mutationFn: async (mealId) => {
+      const result = await adminAPI.deleteMealComplete(mealId);
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['admin', 'meals']);
     }
@@ -216,24 +186,6 @@ const updateMealMutation = useMutation({
     }
   });
 
-    // Get user allergies
-  const useGetUserAllergies = (userId) => {
-    return useQuery({
-      queryKey: ['admin', 'user', userId, 'allergies'],
-      queryFn: () => adminAPI.getUserAllergies(userId),
-      enabled: !!userId
-    });
-  };
-
-  // Get user dietary preferences
-  const useGetUserDietaryPreferences = (userId) => {
-    return useQuery({
-      queryKey: ['admin', 'user', userId, 'dietary-preferences'],
-      queryFn: () => adminAPI.getUserDietaryPreferences(userId),
-      enabled: !!userId
-    });
-  };
- 
   // ===== ITEM MANAGEMENT =====
   
   // Get all items
@@ -245,55 +197,46 @@ const updateMealMutation = useMutation({
     });
   };
 
-  // Create item
-  const createItemMutation = useMutation({
+  // Get item details
+  const useGetItemDetails = (itemId) => {
+    return useQuery({
+      queryKey: ['admin', 'item', itemId],
+      queryFn: () => adminAPI.getItemDetails(itemId),
+      enabled: !!itemId,
+      staleTime: 2 * 60 * 1000, // 2 minutes
+    });
+  };
+
+  // UNIFIED ITEM OPERATIONS
+  // Complete item creation with all related data
+  const createItemCompleteMutation = useMutation({
     mutationFn: async (itemData) => {
-      const { allergy_ids, ...baseData } = itemData;
-      const item = await adminAPI.createItem(baseData);      
-      if (allergy_ids) {
-        await adminAPI.updateItemAllergies(item.id, allergy_ids);
-      }      
-      return item;
+      const result = await adminAPI.createItemComplete(itemData);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['admin', 'items']);
     }
   });
 
-  // Update item
-  const updateItemMutation = useMutation({
+  // Complete item update with all related data
+  const updateItemCompleteMutation = useMutation({
     mutationFn: async ({ itemId, updateData }) => {
-      try {
-        const { allergy_ids, ...baseData } = updateData;
-        const item = await adminAPI.updateItem(itemId, baseData);
-        
-        if (allergy_ids !== undefined) {
-          await adminAPI.updateItemAllergies(itemId, allergy_ids);
-        }
-        
-        return item;
-      } catch (error) {
-        console.error("Update failed:", error);
-        throw new Error(`Failed to update item: ${error.message}`);
-      }
+      const result = await adminAPI.updateItemComplete(itemId, updateData);
+      return result;
     },
     onSuccess: (_, { itemId }) => {
       queryClient.invalidateQueries(['admin', 'item', itemId]);
       queryClient.invalidateQueries(['admin', 'items']);
     }
   });
- 
-  // junction table mutations for items
-  const updateItemAllergiesMutation = useMutation({
-    mutationFn: ({ itemId, allergyIds }) => 
-      adminAPI.updateItemAllergies(itemId, allergyIds),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'items']);
-    }
-  });
-  // Delete item
-  const deleteItemMutation = useMutation({
-    mutationFn: (itemId) => adminAPI.deleteItem(itemId),
+
+  // Complete item deletion with all related data
+  const deleteItemCompleteMutation = useMutation({
+    mutationFn: async (itemId) => {
+      const result = await adminAPI.deleteItemComplete(itemId);
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['admin', 'items']);
     }
@@ -302,7 +245,8 @@ const updateMealMutation = useMutation({
   // Update item availability
   const updateItemAvailabilityMutation = useMutation({
     mutationFn: ({ itemId, isAvailable }) => adminAPI.updateItemAvailability(itemId, isAvailable),
-    onSuccess: () => {
+    onSuccess: (_, { itemId }) => {
+      queryClient.invalidateQueries(['admin', 'item', itemId]);
       queryClient.invalidateQueries(['admin', 'items']);
     }
   });
@@ -336,26 +280,35 @@ const updateMealMutation = useMutation({
     });
   };
 
-  // Create plan
-  const createPlanMutation = useMutation({
-    mutationFn: (planData) => adminAPI.createPlan(planData),
+  // UNIFIED PLAN OPERATIONS
+  // Complete plan creation with all related data
+  const createPlanCompleteMutation = useMutation({
+    mutationFn: async (planData) => {
+      const result = await adminAPI.createPlanComplete(planData);
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['admin', 'plans']);
     }
   });
 
-  // Update plan
-  const updatePlanMutation = useMutation({
-    mutationFn: ({ planId, updateData }) => adminAPI.updatePlan(planId, updateData),
+  // Complete plan update with all related data
+  const updatePlanCompleteMutation = useMutation({
+    mutationFn: async ({ planId, updateData }) => {
+      return adminAPI.updatePlan(planId, updateData);
+    },
     onSuccess: (_, { planId }) => {
       queryClient.invalidateQueries(['admin', 'plan', planId]);
       queryClient.invalidateQueries(['admin', 'plans']);
     }
   });
 
-  // Delete plan
-  const deletePlanMutation = useMutation({
-    mutationFn: (planId) => adminAPI.deletePlan(planId),
+  // Complete plan deletion with all related data
+  const deletePlanCompleteMutation = useMutation({
+    mutationFn: async (planId) => {
+      const result = await adminAPI.deletePlanComplete(planId);
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['admin', 'plans']);
     }
@@ -367,24 +320,6 @@ const updateMealMutation = useMutation({
     onSuccess: (_, { planId }) => {
       queryClient.invalidateQueries(['admin', 'plan', planId]);
       queryClient.invalidateQueries(['admin', 'plans']);
-    }
-  });
-
-  // Add meal to plan
-  const addMealToPlanMutation = useMutation({
-    mutationFn: ({ planId, mealId, weekNumber, dayOfWeek }) => 
-      adminAPI.addMealToPlan(planId, mealId, weekNumber, dayOfWeek),
-    onSuccess: (_, { planId }) => {
-      queryClient.invalidateQueries(['admin', 'plan', planId]);
-    }
-  });
-
-  // Remove meal from plan
-  const removeMealFromPlanMutation = useMutation({
-    mutationFn: ({ planId, mealId, weekNumber, dayOfWeek }) => 
-      adminAPI.removeMealFromPlan(planId, mealId, weekNumber, dayOfWeek),
-    onSuccess: (_, { planId }) => {
-      queryClient.invalidateQueries(['admin', 'plan', planId]);
     }
   });
 
@@ -475,27 +410,35 @@ const updateMealMutation = useMutation({
     });
   };
 
-  // Create allergy
-  const createAllergyMutation = useMutation({
-    mutationFn: (allergyData) => adminAPI.createAllergy(allergyData),
+  // UNIFIED ALLERGY OPERATIONS
+  // Complete allergy creation
+  const createAllergyCompleteMutation = useMutation({
+    mutationFn: async (allergyData) => {
+      const result = await adminAPI.createAllergyComplete(allergyData);
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['admin', 'allergies']);
     }
   });
 
-  // Update allergy
-  const updateAllergyMutation = useMutation({
-    mutationFn: ({ allergyId, updateData }) => adminAPI.updateAllergy(allergyId, updateData),
+  // Complete allergy update
+  const updateAllergyCompleteMutation = useMutation({
+    mutationFn: async ({ allergyId, updateData }) => {
+      return adminAPI.updateAllergy(allergyId, updateData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['admin', 'allergies']);
     }
   });
-
   
 
-  // Delete allergy
-  const deleteAllergyMutation = useMutation({
-    mutationFn: (allergyId) => adminAPI.deleteAllergy(allergyId),
+  // Complete allergy deletion
+  const deleteAllergyCompleteMutation = useMutation({
+    mutationFn: async (allergyId) => {
+      const result = await adminAPI.deleteAllergyComplete(allergyId);
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['admin', 'allergies']);
     }
@@ -510,25 +453,34 @@ const updateMealMutation = useMutation({
     });
   };
 
-  // Create dietary preference
-  const createDietaryPreferenceMutation = useMutation({
-    mutationFn: (preferenceData) => adminAPI.createDietaryPreference(preferenceData),
+  // UNIFIED DIETARY PREFERENCE OPERATIONS
+  // Complete dietary preference creation
+  const createDietaryPreferenceCompleteMutation = useMutation({
+    mutationFn: async (preferenceData) => {
+      const result = await adminAPI.createDietaryPreferenceComplete(preferenceData);
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['admin', 'dietary-preferences']);
     }
   });
 
-  // Update dietary preference
-  const updateDietaryPreferenceMutation = useMutation({
-    mutationFn: ({ preferenceId, updateData }) => adminAPI.updateDietaryPreference(preferenceId, updateData),
+  // Complete dietary preference update
+  const updateDietaryPreferenceCompleteMutation = useMutation({
+    mutationFn: async ({ preferenceId, updateData }) => {
+      return adminAPI.updateDietaryPreference(preferenceId, updateData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['admin', 'dietary-preferences']);
     }
   });
 
-  // Delete dietary preference
-  const deleteDietaryPreferenceMutation = useMutation({
-    mutationFn: (preferenceId) => adminAPI.deleteDietaryPreference(preferenceId),
+  // Complete dietary preference deletion
+  const deleteDietaryPreferenceCompleteMutation = useMutation({
+    mutationFn: async (preferenceId) => {
+      const result = await adminAPI.deleteDietaryPreferenceComplete(preferenceId);
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['admin', 'dietary-preferences']);
     }
@@ -543,6 +495,7 @@ const updateMealMutation = useMutation({
     useGetAllMeals,
     useGetMealDetails,
     useGetAllItems,
+    useGetItemDetails,
     useGetAllPlans,
     useGetPlanDetails,
     useGetAllSubscriptions,
@@ -551,43 +504,36 @@ const updateMealMutation = useMutation({
     useGetRecentActivity,
     useGetAllAllergies,
     useGetAllDietaryPreferences,
-
-    // User Management
     useGetUserAllergies,
     useGetUserDietaryPreferences,
-    updateUserAllergies: updateUserAllergiesMutation.mutateAsync,
-    updateUserDietaryPreferences: updateUserDietaryPreferencesMutation.mutateAsync,
-    updateUserProfile: updateUserProfileMutation.mutateAsync,
+
+    // UNIFIED USER OPERATIONS
+    updateUserComplete: updateUserCompleteMutation.mutateAsync,
     setAdminStatus: setAdminMutation.mutateAsync,
     updateLoyaltyPoints: updateLoyaltyMutation.mutateAsync,
     updateAccountStatus: updateAccountStatusMutation.mutateAsync,
     bulkUpdateUsers: bulkUpdateUsersMutation.mutateAsync,
 
-    // Meal Management
-    createMeal: createMealMutation.mutateAsync,
-    updateMeal: updateMealMutation.mutateAsync,
-    deleteMeal: deleteMealMutation.mutateAsync,
+    // UNIFIED MEAL OPERATIONS
+    createMealComplete: createMealCompleteMutation.mutateAsync,
+    updateMealComplete: updateMealCompleteMutation.mutateAsync,
+    deleteMealComplete: deleteMealCompleteMutation.mutateAsync,
     updateMealAvailability: updateMealAvailabilityMutation.mutateAsync,
-    updateMealAllergies: updateMealAllergiesMutation.mutateAsync,
-    updateMealItems: updateMealItemsMutation.mutateAsync,
     bulkUpdateMealAvailability: bulkUpdateMealAvailabilityMutation.mutateAsync,
     bulkUpdateMeals: bulkUpdateMealsMutation.mutateAsync,
 
-    // Item Management
-    createItem: createItemMutation.mutateAsync,
-    updateItem: updateItemMutation.mutateAsync,
-    deleteItem: deleteItemMutation.mutateAsync,
+    // UNIFIED ITEM OPERATIONS
+    createItemComplete: createItemCompleteMutation.mutateAsync,
+    updateItemComplete: updateItemCompleteMutation.mutateAsync,
+    deleteItemComplete: deleteItemCompleteMutation.mutateAsync,
     updateItemAvailability: updateItemAvailabilityMutation.mutateAsync,
-    updateItemAllergies: updateItemAllergiesMutation.mutateAsync,
     bulkUpdateItems: bulkUpdateItemsMutation.mutateAsync,
 
-    // Plan Management
-    createPlan: createPlanMutation.mutateAsync,
-    updatePlan: updatePlanMutation.mutateAsync,
-    deletePlan: deletePlanMutation.mutateAsync,
+    // UNIFIED PLAN OPERATIONS
+    createPlanComplete: createPlanCompleteMutation.mutateAsync,
+    updatePlanComplete: updatePlanCompleteMutation.mutateAsync,
+    deletePlanComplete: deletePlanCompleteMutation.mutateAsync,
     updatePlanStatus: updatePlanStatusMutation.mutateAsync,
-    addMealToPlan: addMealToPlanMutation.mutateAsync,
-    removeMealFromPlan: removeMealFromPlanMutation.mutateAsync,
 
     // Subscription Management
     updateSubscriptionStatus: updateSubscriptionStatusMutation.mutateAsync,
@@ -597,46 +543,38 @@ const updateMealMutation = useMutation({
     updateOrderStatus: updateOrderStatusMutation.mutateAsync,
     updateOrder: updateOrderMutation.mutateAsync,
 
-    // Content Management
-    createAllergy: createAllergyMutation.mutateAsync,
-    updateAllergy: updateAllergyMutation.mutateAsync,
-    deleteAllergy: deleteAllergyMutation.mutateAsync,
-    createDietaryPreference: createDietaryPreferenceMutation.mutateAsync,
-    updateDietaryPreference: updateDietaryPreferenceMutation.mutateAsync,
-    deleteDietaryPreference: deleteDietaryPreferenceMutation.mutateAsync,
+    // UNIFIED CONTENT MANAGEMENT
+    createAllergyComplete: createAllergyCompleteMutation.mutateAsync,
+    updateAllergyComplete: updateAllergyCompleteMutation.mutateAsync,
+    deleteAllergyComplete: deleteAllergyCompleteMutation.mutateAsync,
+    createDietaryPreferenceComplete: createDietaryPreferenceCompleteMutation.mutateAsync,
+    updateDietaryPreferenceComplete: updateDietaryPreferenceCompleteMutation.mutateAsync,
+    deleteDietaryPreferenceComplete: deleteDietaryPreferenceCompleteMutation.mutateAsync,
 
-    // Loading states
+    // Loading states for unified operations
+    isUpdatingUserComplete: updateUserCompleteMutation.isPending,
     isSettingAdmin: setAdminMutation.isPending,
     isUpdatingLoyalty: updateLoyaltyMutation.isPending,
-    isUpdatingUserProfile: updateUserProfileMutation.isPending,
     isUpdatingAccountStatus: updateAccountStatusMutation.isPending,
     isBulkUpdatingUsers: bulkUpdateUsersMutation.isPending,
-    isUpdatingUserAllergies: updateUserAllergiesMutation.isPending,
-    isUpdatingUserDietaryPreferences: updateUserDietaryPreferencesMutation.isPending,
-    //meals is pending
-    isCreatingMeal: createMealMutation.isPending,
-    isUpdatingMeal: updateMealMutation.isPending,
-    isDeletingMeal: deleteMealMutation.isPending,
+
+    isCreatingMealComplete: createMealCompleteMutation.isPending,
+    isUpdatingMealComplete: updateMealCompleteMutation.isPending,
+    isDeletingMealComplete: deleteMealCompleteMutation.isPending,
     isUpdatingMealAvailability: updateMealAvailabilityMutation.isPending,
     isBulkUpdatingMealAvailability: bulkUpdateMealAvailabilityMutation.isPending,
     isBulkUpdatingMeals: bulkUpdateMealsMutation.isPending,
-    isUpdatingMealAllergies: updateMealAllergiesMutation.isPending,
-    isUpdatingMealItems: updateMealItemsMutation.isPending,
-    
-    //items is pending
-    isCreatingItem: createItemMutation.isPending,
-    isUpdatingItem: updateItemMutation.isPending,
-    isDeletingItem: deleteItemMutation.isPending,
-    isUpdatingItemAllergies: updateItemAllergiesMutation.isPending,
+
+    isCreatingItemComplete: createItemCompleteMutation.isPending,
+    isUpdatingItemComplete: updateItemCompleteMutation.isPending,
+    isDeletingItemComplete: deleteItemCompleteMutation.isPending,
     isUpdatingItemAvailability: updateItemAvailabilityMutation.isPending,
     isBulkUpdatingItems: bulkUpdateItemsMutation.isPending,
 
-    isCreatingPlan: createPlanMutation.isPending,
-    isUpdatingPlan: updatePlanMutation.isPending,
-    isDeletingPlan: deletePlanMutation.isPending,
+    isCreatingPlanComplete: createPlanCompleteMutation.isPending,
+    isUpdatingPlanComplete: updatePlanCompleteMutation.isPending,
+    isDeletingPlanComplete: deletePlanCompleteMutation.isPending,
     isUpdatingPlanStatus: updatePlanStatusMutation.isPending,
-    isAddingMealToPlan: addMealToPlanMutation.isPending,
-    isRemovingMealFromPlan: removeMealFromPlanMutation.isPending,
 
     isUpdatingSubscriptionStatus: updateSubscriptionStatusMutation.isPending,
     isUpdatingSubscription: updateSubscriptionMutation.isPending,
@@ -644,20 +582,21 @@ const updateMealMutation = useMutation({
     isUpdatingOrderStatus: updateOrderStatusMutation.isPending,
     isUpdatingOrder: updateOrderMutation.isPending,
 
-    isCreatingAllergy: createAllergyMutation.isPending,
-    isUpdatingAllergy: updateAllergyMutation.isPending,
-    isDeletingAllergy: deleteAllergyMutation.isPending,
-    isCreatingDietaryPreference: createDietaryPreferenceMutation.isPending,
-    isUpdatingDietaryPreference: updateDietaryPreferenceMutation.isPending,
-    isDeletingDietaryPreference: deleteDietaryPreferenceMutation.isPending,
+    isCreatingAllergyComplete: createAllergyCompleteMutation.isPending,
+    isUpdatingAllergyComplete: updateAllergyCompleteMutation.isPending,
+    isDeletingAllergyComplete: deleteAllergyCompleteMutation.isPending,
+    isCreatingDietaryPreferenceComplete: createDietaryPreferenceCompleteMutation.isPending,
+    isUpdatingDietaryPreferenceComplete: updateDietaryPreferenceCompleteMutation.isPending,
+    isDeletingDietaryPreferenceComplete: deleteDietaryPreferenceCompleteMutation.isPending,
 
-    // Error states
-    userError: updateUserProfileMutation.error || setAdminMutation.error || updateLoyaltyMutation.error,
-    mealError: createMealMutation.error || updateMealMutation.error || deleteMealMutation.error,
-    itemError: createItemMutation.error || updateItemMutation.error || deleteItemMutation.error,
-    planError: createPlanMutation.error || updatePlanMutation.error || deletePlanMutation.error,
+    // Error states for unified operations
+    userCompleteError: updateUserCompleteMutation.error || setAdminMutation.error || updateLoyaltyMutation.error,
+    mealCompleteError: createMealCompleteMutation.error || updateMealCompleteMutation.error || deleteMealCompleteMutation.error,
+    itemCompleteError: createItemCompleteMutation.error || updateItemCompleteMutation.error || deleteItemCompleteMutation.error,
+    planCompleteError: createPlanCompleteMutation.error || updatePlanCompleteMutation.error || deletePlanCompleteMutation.error,
     subscriptionError: updateSubscriptionStatusMutation.error || updateSubscriptionMutation.error,
     orderError: updateOrderStatusMutation.error || updateOrderMutation.error,
-    contentError: createAllergyMutation.error || updateAllergyMutation.error || deleteAllergyMutation.error,
+    allergyCompleteError: createAllergyCompleteMutation.error || updateAllergyCompleteMutation.error || deleteAllergyCompleteMutation.error,
+    dietaryPreferenceCompleteError: createDietaryPreferenceCompleteMutation.error || updateDietaryPreferenceCompleteMutation.error || deleteDietaryPreferenceCompleteMutation.error,
   };
 };

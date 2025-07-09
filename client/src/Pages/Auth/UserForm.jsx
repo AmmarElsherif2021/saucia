@@ -13,14 +13,11 @@ import {
   
   const UserForm = ({ onSubmit, onCancel, initialData = {} }) => {
     const [formData, setFormData] = useState({
-      email: initialData.email || '',
-      displayName: initialData.displayName || '',
-      phoneNumber: initialData.phoneNumber || '',
-      isAdmin: initialData.isAdmin || false,
-      accountStatus: initialData.accountStatus || 'active',
-      loyaltyPoints: initialData.loyaltyPoints || 0,
-      allergies: initialData.allergies || [],
-      dietaryPreferences: initialData.dietaryPreferences || [],
+      display_name: initialData.display_name || '',
+      phone_number: initialData.phone_number || '',
+      is_admin: initialData.is_admin || false,
+      account_status: initialData.account_status || 'active',
+      loyalty_points: initialData.loyalty_points || 0,
       notes: initialData.notes || '',
     })
   
@@ -52,25 +49,23 @@ import {
         </FormControl>
         
         <FormControl mb={4}>
-          <FormLabel>Display Name</FormLabel>
-          <Input
-            type="text"
-            name="displayName"
-            value={formData.displayName}
-            onChange={handleChange}
-            required
-          />
-        </FormControl>
-        
-        <FormControl mb={4}>
-          <FormLabel>Phone Number</FormLabel>
-          <Input
-            type="tel"
-            name="phoneNumber"
-            value={formData.phoneNumber}
-            onChange={handleChange}
-          />
-        </FormControl>
+        <FormLabel>Display Name</FormLabel>
+        <Input
+          name="display_name"
+          value={formData.display_name}
+          onChange={handleChange}
+          required
+        />
+      </FormControl>
+      
+      <FormControl mb={4}>
+        <FormLabel>Phone Number</FormLabel>
+        <Input
+          name="phone_number"
+          value={formData.phone_number}
+          onChange={handleChange}
+        />
+      </FormControl>
         
         <FormControl mb={4} display="flex" alignItems="center">
           <FormLabel mb="0">Admin Status</FormLabel>

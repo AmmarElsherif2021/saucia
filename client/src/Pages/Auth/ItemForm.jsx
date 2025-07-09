@@ -19,33 +19,38 @@ import {
   Wrap,
   WrapItem,
 } from '@chakra-ui/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAdminFunctions } from '../../Hooks/useAdminFunctions';
 
 const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
   const { useGetAllAllergies } = useAdminFunctions();
-  const { data: allergies = [] } = useGetAllAllergies();
+  const { data: allergies  } = useGetAllAllergies();
   
   const [formData, setFormData] = useState({
-    name: initialData.name || '',
-    name_arabic: initialData.name_arabic || '',
-    description: initialData.description || '',
-    description_arabic: initialData.description_arabic || '',
-    category: initialData.category || '',
-    category_arabic: initialData.category_arabic || '',
-    price: initialData.price ? Number(initialData.price) : 0,
-    calories: initialData.calories ? Number(initialData.calories) : 0,
-    protein_g: initialData.protein_g ? Number(initialData.protein_g) : 0,
-    carbs_g: initialData.carbs_g ? Number(initialData.carbs_g) : 0,
-    fat_g: initialData.fat_g ? Number(initialData.fat_g) : 0,
-    max_free_per_meal: initialData.max_free_per_meal ? Number(initialData.max_free_per_meal) : 0,
-    image_url: initialData.image_url || '',
-    is_available: initialData.is_available ?? true,
-    sort_order: initialData.sort_order ? Number(initialData.sort_order) : 0,
-    // Fixed: Correctly initialize allergies array
-    allergy_ids: initialData.allergy_ids || [] 
+    name: '',
+    name_arabic: '',
+    description: '',
+    description_arabic: '',
+    category: '',
+    category_arabic: '',
+    price: 0,
+    calories: 0,
+    protein_g: 0,
+    carbs_g: 0,
+    fat_g: 0,
+    max_free_per_meal: 0,
+    image_url: '',
+    is_available: true,
+    sort_order: 0,
+    allergy_ids: [],
+    ...initialData
   });
-
+   
+  //Debug console
+  useEffect(()=>{
+    console.log("ItemForm initialData:", initialData);
+    console.log("ItemForm formData:", formData);
+  })
   const categories = [
     { en: 'protein', ar: 'بروتين' },
     { en: 'nuts', ar: 'مكسرات' },
@@ -76,15 +81,12 @@ const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // Fixed: Only pass necessary data without junction format
-    onSubmit(formData);
+    onSubmit(formData); // Submit sanitized data
   };
 
-  // Fixed: Correct toggle function
   const toggleAllergen = (allergyId) => {
     setFormData(prev => {
-      const currentIds = [...prev.allergy_ids];
+      const currentIds = [...(prev?.allergy_ids || [])];
       const index = currentIds.indexOf(allergyId);
       
       if (index > -1) {
@@ -99,10 +101,12 @@ const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
 
   // Fixed: Correct rendering function
   const renderSelectedAllergens = () => {
+    const allergyIds = formData?.allergy_ids || [];
+    
     return (
       <Wrap spacing={2} mt={2}>
-        {formData.allergy_ids.map(id => {
-          const allergy = allergies.find(a => a.id === id);
+        {allergyIds.map(id => {
+          const allergy = allergies?.find(a => a.id === id);
           if (!allergy) return null;
           
           return (
@@ -270,19 +274,22 @@ const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
           <Divider my={2} />
           
           <Flex wrap="wrap">
-            {allergies.map(allergy => (
-              <Button
-                key={allergy.id}
-                size="sm"
-                m={1}
-                // Fixed: Use allergy_ids instead of allergies
-                variant={formData.allergy_ids.includes(allergy.id) ? 'solid' : 'outline'}
-                colorScheme={formData.allergy_ids.includes(allergy.id) ? 'blue' : 'gray'}
-                onClick={() => toggleAllergen(allergy.id)}
-              >
-                {allergy.name} / {allergy.name_arabic}
-              </Button>
-            ))}
+          {allergies.map(allergy => (
+            <Button
+              key={allergy.id}
+              size="sm"
+              m={1}
+              variant={(formData?.allergy_ids || []).includes(allergy.id) 
+                ? 'solid' 
+                : 'outline'}
+              colorScheme={(formData?.allergy_ids || []).includes(allergy.id) 
+                ? 'blue' 
+                : 'gray'}
+              onClick={() => toggleAllergen(allergy.id)}
+            >
+              {allergy.name} / {allergy.name_arabic}
+            </Button>
+          ))}
           </Flex>
         </VStack>
       </FormControl>
@@ -296,17 +303,6 @@ const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
             setFormData(prev => ({ ...prev, is_available: e.target.checked }))
           }
           colorScheme="blue"
-        />
-      </FormControl>
-      
-      <FormControl mb={4}>
-        <FormLabel>Sort Order</FormLabel>
-        <Input
-          type="number"
-          name="sort_order"
-          value={formData.sort_order}
-          onChange={handleChange}
-          min={0}
         />
       </FormControl>
       

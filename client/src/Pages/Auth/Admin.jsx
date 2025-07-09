@@ -1,6 +1,7 @@
 /* eslint-disable */
 /* global FileReader, alert */
 import { useState, useEffect } from 'react'
+
 import {
   Box,
   Button,
@@ -48,440 +49,10 @@ import {
   ScrollableTableContainer,
   SearchInput,
 } from './AdminComponents.jsx'
-import ItemForm from './ItemForm'
-import MealForm from './MealsForm'
-import PlanForm from './PlanForm'
-import UserForm from './UserForm'
-import OrderForm from './OrderForm'
-import SubscriptionForm from './SubscriptionForm'
-import AllergyForm from './AllergyForm'
-import DietaryPreferenceForm from './DietaryPreferenceForm'
 
+import { ENTITY_CONFIGS } from './AdminEntityConfigs.jsx'
+import { useEntityManager } from './useEntityManager.jsx'
 
-// Entity configurations
-const ENTITY_CONFIGS = {
-  items: {
-    title: 'Items',
-    FormComponent: ItemForm,
-    searchFields: ['name', 'name_arabic', 'category', 'category_arabic', 'description'],
-    initialData: {
-      name: '',
-      name_arabic: '',
-      description: '',
-      description_arabic: '',
-      category: '',
-      category_arabic: '',
-      price: 0,
-      calories: 0,
-      protein_g: 0,
-      carbs_g: 0,
-      fat_g: 0,
-      max_free_per_meal: 0,
-      image_url: '',
-      is_available: true,
-      sort_order: 0,
-      allergy_ids: []
-    },
-    columns: [
-      { key: 'name', label: 'Name', width: '15%' },
-      { key: 'name_arabic', label: 'Name (Arabic)', width: '15%' },
-      { key: 'category', label: 'Category', width: '10%' },
-      { key: 'category_arabic', label: 'Category (Arabic)', width: '10%' },
-      { key: 'price', label: 'Price', width: '8%', format: value => `$${parseFloat(value).toFixed(2)}` },
-      { key: 'max_free_per_meal', label: 'Free Count', width: '8%' },
-      { 
-        key: 'is_available', 
-        label: 'Available', 
-        width: '8%',
-        render: value => (
-          <Badge colorScheme={value ? 'green' : 'red'}>
-            {value ? 'Yes' : 'No'}
-          </Badge>
-        )
-      },
-      
-      { key: 'image_url', label: 'Image', width: '15%', truncate: true },
-    ],
-    exportName: 'items.json',
-    hasImport: true,
-    hasExport: true,
-  },
-  meals: {
-    title: 'Meals',
-    FormComponent: MealForm,
-    searchFields: ['name', 'name_arabic', 'section', 'section_arabic'],
-    initialData: {
-      name: '',
-      name_arabic: '',
-      section: '',
-      section_arabic: '',
-      price: 0,
-      kcal: 0,
-      protein: 0,
-      carb: 0,
-      policy: '',
-      ingredients: '',
-      ingredients_arabic: '',
-      items: [],
-      image: '',
-    },
-    columns: [
-      { key: 'name', label: 'Name' },
-      { key: 'name_arabic', label: 'Name (Arabic)' },
-      { key: 'section', label: 'Section', render: (value) => value || 'N/A' },
-      { key: 'section_arabic', label: 'Section (Arabic)', render: (value) => value || 'N/A' },
-      { key: 'price', label: 'Price' },
-      { key: 'kcal', label: 'Calories' },
-      { key: 'protein', label: 'Protein' },
-      { key: 'carb', label: 'Carbohydrates' },
-      { key: 'policy', label: 'Policy' },
-      { key: 'ingredients', label: 'Ingredients' },
-      { key: 'ingredients_arabic', label: 'Ingredients (Arabic)' },
-      { 
-        key: 'items', 
-        label: 'Items',
-        render: (value) => value?.length > 0 ? value.join(', ') : 'N/A'
-      },
-      { key: 'image', label: 'Image' },
-      { 
-        key: 'allergens', 
-        label: 'Allergens',
-        render: (value) => value?.length > 0 ? value.map(a => `${a.ar} |`) : 'N/A'
-      },
-    ],
-    exportName: 'meals.json',
-    hasImport: true,
-    hasExport: true,
-  },
-  plans: {
-    title: 'Plans',
-    FormComponent: PlanForm,
-    searchFields: ['title', 'period'],
-    initialData: {
-      title: 'New Plan',
-      description: 'add description',
-      period: 30,
-      carb: 150,
-      protein: 120,
-      kcal: 2000,
-      avatar: '',
-      members: [],
-      carbMeals: [],
-      proteinMeals: [],
-      soaps: [],
-      snacks: [],
-    },
-    columns: [
-      { key: 'title', label: 'Title (EN)', render: (value) => value || 'N/A' },
-      { key: 'title_arabic', label: 'Title (AR)', render: (value) => value || 'N/A' },
-      { 
-        key: 'periods', 
-        label: 'Periods',
-        render: (value) => value?.length ? value.join(', ') : 'No periods'
-      },
-      { key: 'carb', label: 'Carbs (g)', render: (value) => value || 0 },
-      { key: 'protein', label: 'Protein (g)', render: (value) => value || 0 },
-      { key: 'kcal', label: 'Calories (kcal)', render: (value) => value || 0 },
-      { 
-        key: 'members', 
-        label: 'Members',
-        render: (value) => value?.length || 0
-      },
-      { 
-        key: 'carbMeals', 
-        label: 'Carb Meals',
-        render: (value) => value?.join(', ') || 'None'
-      },
-      { 
-        key: 'proteinMeals', 
-        label: 'Protein Meals',
-        render: (value) => value?.join(', ') || 'None'
-      },
-      { 
-        key: 'soaps', 
-        label: 'Soaps',
-        render: (value) => value?.join(', ') || 'None'
-      },
-      { 
-        key: 'snacks', 
-        label: 'Snacks',
-        render: (value) => value?.join(', ') || 'None'
-      },
-    ],
-    exportName: 'plans.json',
-    hasImport: false,
-    hasExport: true,
-  },
-  users: {
-    title: 'Users',
-    FormComponent: UserForm,
-    searchFields: ['email', 'displayName'],
-    columns: [
-      { key: 'email', label: 'Email' },
-      { key: 'displayName', label: 'Name' },
-      { 
-        key: 'isAdmin', 
-        label: 'Role',
-        render: (value) => value ? 'Admin' : 'User'
-      },
-      { 
-        key: 'accountStatus', 
-        label: 'Status',
-        render: (value) => (
-          <Badge colorScheme={value === 'active' ? 'green' : 'red'}>
-            {value}
-          </Badge>
-        )
-      },
-      { 
-        key: 'loyaltyPoints', 
-        label: 'Loyalty Points',
-        render: (value) => value || 0
-      },
-      { 
-        key: 'created_at', 
-        label: 'Created',
-        render: (value) => value ? new Date(value).toLocaleDateString() : 'N/A'
-      },
-    ],
-    exportName: 'users.json',
-    hasImport: true,
-    hasExport: true,
-  },
-  orders: {
-    title: 'Orders',
-    FormComponent: OrderForm,
-    searchFields: ['id', 'userId', 'status'],
-    columns: [
-      { key: 'id', label: 'Order ID' },
-      { key: 'userId', label: 'User ID' },
-      { key: 'totalPrice', label: 'Total Price', render: (value) => `$${parseFloat(value).toFixed(2)}` },
-      { 
-        key: 'status', 
-        label: 'Status',
-        render: (value) => (
-          <Badge
-            colorScheme={
-              value === 'completed' ? 'green' :
-              value === 'processing' ? 'blue' :
-              value === 'cancelled' ? 'red' : 'gray'
-            }
-          >
-            {value}
-          </Badge>
-        )
-      },
-      { 
-        key: 'isPaid', 
-        label: 'Payment',
-        render: (value) => (
-          <Badge colorScheme={value ? 'green' : 'orange'}>
-            {value ? 'Paid' : 'Unpaid'}
-          </Badge>
-        )
-      },
-      { 
-        key: 'created_at', 
-        label: 'Created',
-        render: (value) => value ? new Date(value).toLocaleDateString() : 'N/A'
-      },
-    ],
-    exportName: 'orders.json',
-    hasImport: false,
-    hasExport: true,
-  },
-  subscriptions: {
-    title: 'Subscriptions',
-    FormComponent: SubscriptionForm,
-    searchFields: ['id', 'userId', 'status'],
-    columns: [
-      { key: 'id', label: 'ID' },
-      { key: 'userId', label: 'User ID' },
-      { key: 'planId', label: 'Plan ID' },
-      { 
-        key: 'status', 
-        label: 'Status',
-        render: (value) => (
-          <Badge
-            colorScheme={
-              value === 'active' ? 'green' :
-              value === 'paused' ? 'yellow' :
-              value === 'cancelled' ? 'red' : 'gray'
-            }
-          >
-            {value}
-          </Badge>
-        )
-      },
-      { 
-        key: 'startDate', 
-        label: 'Start Date',
-        render: (value) => value ? new Date(value).toLocaleDateString() : 'N/A'
-      },
-      { 
-        key: 'endDate', 
-        label: 'End Date',
-        render: (value) => value ? new Date(value).toLocaleDateString() : 'N/A'
-      },
-    ],
-    exportName: 'subscriptions.json',
-    hasImport: false,
-    hasExport: true,
-  },
-  allergies: {
-    title: 'Allergies',
-    FormComponent: AllergyForm,
-    searchFields: ['name', 'name_arabic'],
-    columns: [
-      { key: 'name', label: 'Name' },
-      { key: 'name_arabic', label: 'Name (Arabic)' },
-      { key: 'description', label: 'Description' },
-      { key: 'description_arabic', label: 'Description (Arabic)' },
-    ],
-    exportName: 'allergies.json',
-    hasImport: true,
-    hasExport: true,
-  },
-  dietaryPreferences: {
-    title: 'Dietary Preferences',
-    FormComponent: DietaryPreferenceForm,
-    searchFields: ['name', 'name_arabic'],
-    columns: [
-      { key: 'name', label: 'Name' },
-      { key: 'name_arabic', label: 'Name (Arabic)' },
-      { key: 'description', label: 'Description' },
-      { key: 'description_arabic', label: 'Description (Arabic)' },
-    ],
-    exportName: 'dietary-preferences.json',
-    hasImport: true,
-    hasExport: true,
-  },
-}
-
-
-// Custom hook for entity management
-const useEntityManager = (entityType, adminFunctions) => {
-  const [selectedEntity, setSelectedEntity] = useState(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  //Sanitize data function to remove empty timestamps
-const sanitizeData = (data) => {
-  const sanitized = {...data};
-  
-  // Remove timestamp fields if they're empty
-  ['created_at', 'updated_at'].forEach(field => {
-    if (sanitized[field] === '') {
-      delete sanitized[field];
-    }
-  });
-  
-  return sanitized;
-};
-
-  const modals = {
-    add: useDisclosure(),
-    edit: useDisclosure(),
-    delete: useDisclosure(),
-  }
-
-  const config = ENTITY_CONFIGS[entityType]
-  const {
-    [`create${entityType.charAt(0).toUpperCase() + entityType.slice(1, -1)}`]: createEntity,
-    [`update${entityType.charAt(0).toUpperCase() + entityType.slice(1, -1)}`]: updateEntity,
-    [`delete${entityType.charAt(0).toUpperCase() + entityType.slice(1, -1)}`]: deleteEntity,
-  } = adminFunctions
-
-  const handleAdd = async (data) => {
-    try {
-      await createEntity(sanitizeData(data))
-      modals.add.onClose()
-    } catch (error) {
-      window.alert(`Failed to add ${entityType.slice(0, -1)}: ${error.message}`)
-    }
-  }
-
-  const handleEdit = async (id, data) => {
-    try {
-      await updateEntity({ 
-        [`${entityType.slice(0, -1)}Id`]: id, 
-        updateD_ata: sanitizeData(data) 
-      })
-      modals.edit.onClose()
-    } catch (error) {
-      window.alert(`Failed to edit ${entityType.slice(0, -1)}: ${error.message}`)
-    }
-  }
-
-  const handleDelete = async (id) => {
-    try {
-      await deleteEntity(id)
-      modals.delete.onClose()
-    } catch (error) {
-      window.alert(`Failed to delete ${entityType.slice(0, -1)}: ${error.message}`)
-    }
-  }
-
-  const handleImport = async (event) => {
-    const file = event.target.files[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = async (e) => {
-      try {
-        const entitiesData = JSON.parse(e.target.result)
-        for (const entityData of entitiesData) {
-          await createEntity(entityData)
-        }
-        window.alert(`${config.title} imported successfully!`)
-      } catch (error) {
-        window.alert(`Failed to import ${entityType}: ${error.message}`)
-      }
-    }
-    reader.readAsText(file)
-  }
-
-  const handleExport = async (data) => {
-    try {
-      const dataStr = JSON.stringify(data || [])
-      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
-      const linkElement = document.createElement('a')
-      linkElement.setAttribute('href', dataUri)
-      linkElement.setAttribute('download', config.exportName)
-      document.body.appendChild(linkElement)
-      linkElement.click()
-      document.body.removeChild(linkElement)
-    } catch (error) {
-      window.alert(`Failed to export ${entityType}: ${error.message}`)
-    }
-  }
-
-  const filterEntities = (entities) => {
-    if (!searchTerm) return entities
-    return entities?.filter((entity) => {
-      const searchString = config.searchFields
-        .map(field => entity[field] || '')
-        .join(' ')
-        .toLowerCase()
-      return searchString.includes(searchTerm.toLowerCase())
-    })
-  }
-
-  return {
-    selectedEntity,
-    setSelectedEntity,
-    searchTerm,
-    setSearchTerm,
-    modals,
-    handlers: {
-      handleAdd,
-      handleEdit,
-      handleDelete,
-      handleImport,
-      handleExport,
-    },
-    filterEntities,
-    config,
-  }
-}
 
 // Reusable EntitySection component
 const EntitySection = ({ 
@@ -603,6 +174,7 @@ const EntitySection = ({
         onSubmit={handlers.handleAdd}
         initialData={config.initialData}
         FormComponent={config.FormComponent}
+        isLoading={entityManager.isLoading}
       />
 
       <FormModal
@@ -610,9 +182,10 @@ const EntitySection = ({
         onClose={modals.edit.onClose}
         title={`Edit ${config?.title?.slice(0, -1)}`}
         onSubmit={(data) => handlers.handleEdit(selectedEntity?.id, data)}
-        initialData={selectedEntity}
+        initialData={selectedEntity} // Pass existing data to form
         FormComponent={config.FormComponent}
         isEdit={true}
+        isLoading={entityManager.isLoading}
       />
 
       <ConfirmationModal
@@ -657,7 +230,7 @@ const Admin = () => {
   const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useGetDashboardStats()
   const { data: users = [], isLoading: usersLoading, error: usersError, refetch: refetchUsers } = useGetAllUsers()
   const { data: items = [], isLoading: itemsLoading, error: itemsQueryError } = useGetAllItems()
-  const { data: meals = [], isLoading: mealsLoading, error: mealsQueryError } = useGetAllMeals()
+  const { data: meals = [], isLoading: mealsLoading,error: mealsQueryError } = useGetAllMeals();
   const { data: plans = [], isLoading: plansLoading, error: plansQueryError } = useGetAllPlans()
   const { data: orders = [], isLoading: ordersLoading, error: ordersError } = useGetAllOrders()
   const { data: subscriptions = [], isLoading: subsLoading, error: subsError } = useGetAllSubscriptions()
@@ -913,12 +486,18 @@ const Admin = () => {
 
       <EntitySection
         entityType="meals"
-        data={meals}
+        data={meals.map(meal => ({
+          ...meal,
+          image_url: meal.image_url || '', // ensure field exists
+          base_price: meal.base_price || 0,
+          calories: meal.calories || 0,
+          protein_g: meal.protein_g || 0,
+          carbs_g: meal.carbs_g || 0
+        }))}
         isLoading={mealsLoading}
         entityManager={mealsManager}
         isTableScrollable={isTableScrollable}
       />
-
       <EntitySection
         entityType="plans"
         data={plans}
