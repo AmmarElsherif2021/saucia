@@ -7,9 +7,8 @@ const DietaryPreferenceForm = ({ onSubmit, onCancel, initialData = {} }) => {
   const [formData, setFormData] = useState({
     name: initialData.name || '',
     name_arabic: initialData.name_arabic || '',
-    description: initialData.description || '',
-    category: initialData.category || 'general'
-  })
+    description: initialData.description || ''
+  });
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -50,20 +49,6 @@ const DietaryPreferenceForm = ({ onSubmit, onCancel, initialData = {} }) => {
           value={formData.description}
           onChange={handleChange}
         />
-      </FormControl>
-      
-      <FormControl mb={4}>
-        <FormLabel>Category</FormLabel>
-        <Select
-          name="category"
-          value={formData.category}
-          onChange={handleChange}
-        >
-          <option value="general">General</option>
-          <option value="religious">Religious</option>
-          <option value="health">Health</option>
-          <option value="lifestyle">Lifestyle</option>
-        </Select>
       </FormControl>
       
       <Flex justify="flex-end" gap={2}>

@@ -7,12 +7,15 @@ const AllergyForm = ({ onSubmit, onCancel, initialData = {} }) => {
   const [formData, setFormData] = useState({
     name: initialData.name || '',
     name_arabic: initialData.name_arabic || '',
-    severity_level: initialData.severity_level || 'medium'
-  })
+    severity_level: initialData.severity_level || 2 
+  });
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    const { name, value } = e.target;
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: name === 'severity_level' ? parseInt(value) : value 
+    }));
   }
 
   const handleSubmit = (e) => {
@@ -44,15 +47,11 @@ const AllergyForm = ({ onSubmit, onCancel, initialData = {} }) => {
       
       <FormControl mb={4}>
         <FormLabel>Severity Level</FormLabel>
-        <Select
-          name="severity_level"
-          value={formData.severity_level}
-          onChange={handleChange}
-        >
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-        </Select>
+        <Select name="severity_level" value={formData.severity_level} onChange={handleChange}>
+          <option value={1}>Low</option>
+          <option value={2}>Medium</option>
+          <option value={3}>High</option>
+       </Select>
       </FormControl>
       
       <Flex justify="flex-end" gap={2}>

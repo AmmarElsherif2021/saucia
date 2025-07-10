@@ -860,15 +860,6 @@ export const adminAPI = {
 
   // ===== MINOR TABLES =====
   
-  // Allergy management
-  async getAllAllergies() {
-    return fetchList('allergies', { orderBy: 'name' });
-  },
-
-  // Dietary Preferences management
-  async getAllDietaryPreferences() {
-    return fetchList('dietary_preferences', { orderBy: 'name' });
-  },
 
   // User Favorites
   async getUserFavoriteMeals(userId) {

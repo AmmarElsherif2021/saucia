@@ -12,6 +12,7 @@ import { Badge } from '@chakra-ui/react';
 export const ENTITY_CONFIGS = {
   items: {
     title: 'Items',
+    singular: 'Item',
     FormComponent: ItemForm,
     searchFields: ['name', 'name_arabic', 'category', 'category_arabic', 'description'],
     initialData: {
@@ -84,6 +85,7 @@ export const ENTITY_CONFIGS = {
 
   meals: {
     title: 'Meals',
+    singular: 'Meal',
     FormComponent: MealForm,
     searchFields: ['name', 'name_arabic', 'section', 'section_arabic'],
     initialData: {
@@ -91,25 +93,35 @@ export const ENTITY_CONFIGS = {
       name_arabic: '',
       section: '',
       section_arabic: '',
-      base_price: 0, // changed from 'price'
-      calories: 0,   // changed from 'kcal'
-      protein_g: 0,  // changed from 'protein'
-      carbs_g: 0,    // changed from 'carb'
-      // ... keep other fields ...
+      base_price: 0, 
+      calories: 0,   
+      protein_g: 0, 
+      carbs_g: 0,
+      ingredients: '',
+      ingredients_arabic: '',
+      is_available: true,
+      image_url: '' // Add this if missing
     },
     columns: [
       { key: 'name', label: 'Name' },
       { key: 'name_arabic', label: 'Name (Arabic)' },
       { key: 'section', label: 'Section', render: (value) => value || 'N/A' },
       { key: 'section_arabic', label: 'Section (Arabic)', render: (value) => value || 'N/A' },
-      // Updated fields to match schema:
-      { key: 'base_price', label: 'Price', format: value => `$${parseFloat(value).toFixed(2)}` },
-      { key: 'calories', label: 'Calories' },
-      { key: 'protein_g', label: 'Protein (g)' },
-      { key: 'carbs_g', label: 'Carbs (g)' },
+      { key: 'base_price', label: 'Price', render: value => `$${parseFloat(value || 0).toFixed(2)}` },
+      { key: 'calories', label: 'Calories', render: (value) => value || 0 },
+      { key: 'protein_g', label: 'Protein (g)', render: (value) => value || 0 },
+      { key: 'carbs_g', label: 'Carbs (g)', render: (value) => value || 0 },
       { key: 'ingredients', label: 'Ingredients', truncate: true },
-      // Removed 'items' and 'allergens' columns since they're not direct fields
-      { key: 'image_url', label: 'Image', truncate: true }, // changed from 'image'
+      { 
+        key: 'is_available', 
+        label: 'Available',
+        render: value => (
+          <Badge colorScheme={value ? 'green' : 'red'}>
+            {value ? 'Yes' : 'No'}
+          </Badge>
+        )
+      },
+      { key: 'image_url', label: 'Image', truncate: true },
     ],
     // Operations using unified API methods
     operations: {
@@ -140,6 +152,7 @@ export const ENTITY_CONFIGS = {
 
   plans: {
     title: 'Plans',
+    singular: 'Plan',
     FormComponent: PlanForm,
     searchFields: ['title', 'title_arabic', 'description'],
     initialData: {
@@ -147,14 +160,16 @@ export const ENTITY_CONFIGS = {
       title_arabic: '',
       description: '',
       description_arabic: '',
+      price_per_meal: 0,
       periods: [30], // Default period
       carb: 150,
       protein: 120,
       kcal: 2000,
       avatar_url: '',
-      members: [], // For junction table operations
+      //members: [], // For junction table operations
       soaps: [], // For junction table operations
-     // For junction table operations
+      snacks: [], // For junction table operations
+
         is_active: true
         },
         columns: [
@@ -173,21 +188,7 @@ export const ENTITY_CONFIGS = {
         { key: 'carb', label: 'Carbs (g)', render: (value) => value || 0 },
         { key: 'protein', label: 'Protein (g)', render: (value) => value || 0 },
         { key: 'kcal', label: 'Calories (kcal)', render: (value) => value || 0 },
-        // { 
-        //   key: 'members', 
-        //   label: 'Active Members',
-        //   render: (value) => value?.length || 0
-        // },
-    //   { 
-    //     key: 'carbMeals', 
-    //     label: 'Carb Meals',
-    //     render: (value) => value?.length || 0
-    //   },
-    //   { 
-    //     key: 'proteinMeals', 
-    //     label: 'Protein Meals',
-    //     render: (value) => value?.length || 0
-    //   },
+        { key: 'price_per_meal', label: 'Price/Meal', render: (value) => `$${parseFloat(value).toFixed(2)}` },
       { 
         key: 'is_active', 
         label: 'Status',
@@ -223,22 +224,23 @@ export const ENTITY_CONFIGS = {
 
   users: {
     title: 'Users',
+    singular: 'User',
     FormComponent: UserForm,
     searchFields: ['email', 'displayName', 'phone'],
     initialData: {
-      email: '',
-      displayName: '',
-      phone: '',
-      isAdmin: false,
-      accountStatus: 'active',
-      loyaltyPoints: 0,
-      allergy_ids: [], // For junction table operations
-      dietary_preference_ids: [] // For junction table operations
+      display_name: '',
+      phone_number: '',
+      is_admin: false,
+      account_status: 'active',
+      loyalty_points: 0
     },
     columns: [
       { key: 'email', label: 'Email' },
-      { key: 'displayName', label: 'Name' },
-      { key: 'phone', label: 'Phone', render: (value) => value || 'N/A' },
+      { key: 'display_name', label: 'Name' },
+      { key: 'phone_number', label: 'Phone' },
+      { key: 'is_admin', label: 'Role' },
+      { key: 'account_status', label: 'Status' },
+      { key: 'loyalty_points', label: 'Loyalty Points' },
       { 
         key: 'isAdmin', 
         label: 'Role',
@@ -307,6 +309,7 @@ export const ENTITY_CONFIGS = {
 
   orders: {
     title: 'Orders',
+    singular: 'Order',
     FormComponent: OrderForm,
     searchFields: ['id', 'userId', 'status', 'customer_email'],
     initialData: {
@@ -317,13 +320,17 @@ export const ENTITY_CONFIGS = {
       items: [], // For junction table operations
       delivery_address: '',
       delivery_date: '',
-      notes: ''
+      notes: '',
+      payment_status: 'unpaid',
+      total_amount: 0
     },
     columns: [
       { key: 'id', label: 'Order ID', width: '10%' },
       { key: 'userId', label: 'User ID', width: '10%' },
       { key: 'customer_email', label: 'Customer', width: '15%' },
       { key: 'totalPrice', label: 'Total Price', width: '10%', format: value => `$${parseFloat(value).toFixed(2)}` },
+      { key: 'payment_status', label: 'Payment' },
+      { key: 'total_amount', label: 'Total' },
       { 
         key: 'status', 
         label: 'Status',
@@ -389,14 +396,15 @@ export const ENTITY_CONFIGS = {
 
   subscriptions: {
     title: 'Subscriptions',
+    singular: 'Subscription',
     FormComponent: SubscriptionForm,
     searchFields: ['id', 'userId', 'status', 'planId'],
     initialData: {
       userId: '',
       planId: '',
+      start_date: new Date().toISOString().split('T')[0],
+      end_date: '',
       status: 'active',
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: '',
       price: 0,
       auto_renew: true
     },
@@ -422,13 +430,13 @@ export const ENTITY_CONFIGS = {
         )
       },
       { 
-        key: 'startDate', 
+        key: 'start_date', 
         label: 'Start Date',
         width: '12%',
         render: (value) => value ? new Date(value).toLocaleDateString() : 'N/A'
       },
       { 
-        key: 'endDate', 
+        key: 'end_date', 
         label: 'End Date',
         width: '12%',
         render: (value) => value ? new Date(value).toLocaleDateString() : 'N/A'
@@ -470,36 +478,27 @@ export const ENTITY_CONFIGS = {
 
   allergies: {
     title: 'Allergies',
+    singular: 'Allergy',
     FormComponent: AllergyForm,
     searchFields: ['name', 'name_arabic', 'description'],
     initialData: {
       name: '',
       name_arabic: '',
-      description: '',
-      description_arabic: '',
-      severity_level: 'medium', // low, medium, high
-      is_active: true
+      severity_level: 1 
     },
     columns: [
-      { key: 'name', label: 'Name (EN)', width: '20%' },
-      { key: 'name_arabic', label: 'Name (AR)', width: '20%' },
-      { key: 'description', label: 'Description (EN)', width: '25%', truncate: true },
-      { key: 'description_arabic', label: 'Description (AR)', width: '25%', truncate: true },
+      { key: 'name', label: 'Name (EN)', width: '30%' },
+      { key: 'name_arabic', label: 'Name (AR)', width: '30%' },
       { 
         key: 'severity_level', 
         label: 'Severity',
-        width: '10%',
-        render: (value) => (
-          <Badge
-            colorScheme={
-              value === 'high' ? 'red' :
-              value === 'medium' ? 'yellow' : 'green'
-            }
-          >
-            {value}
-          </Badge>
-        )
-      },
+        render: value => {
+          const levels = {1: 'Low', 2: 'Medium', 3: 'High'};
+          return <Badge colorScheme={value===3?'red':value===2?'yellow':'green'}>
+            {levels[value] || value}
+          </Badge>;
+        }
+      }
     ],
     // Operations using unified API methods
     operations: {
@@ -522,34 +521,18 @@ export const ENTITY_CONFIGS = {
 
   dietaryPreferences: {
     title: 'Dietary Preferences',
+    singular: 'Dietary Preference',
     FormComponent: DietaryPreferenceForm,
     searchFields: ['name', 'name_arabic', 'category'],
     initialData: {
       name: '',
       name_arabic: '',
-      description: '',
-      category: 'general'
+      description: ''
     },
     columns: [
-      { key: 'name', label: 'Name (EN)', width: '20%' },
-      { key: 'name_arabic', label: 'Name (AR)', width: '20%' },
-      { key: 'description', label: 'Description', width: '25%', truncate: true },
-      { 
-        key: 'category', 
-        label: 'Category',
-        width: '10%',
-        render: (value) => (
-          <Badge
-            colorScheme={
-              value === 'religious' ? 'purple' :
-              value === 'health' ? 'red' :
-              value === 'lifestyle' ? 'blue' : 'gray'
-            }
-          >
-            {value}
-          </Badge>
-        )
-      },
+      { key: 'name', label: 'Name (EN)', width: '35%' },
+      { key: 'name_arabic', label: 'Name (AR)', width: '35%' },
+      { key: 'description', label: 'Description', width: '30%' }
     ],
     // Operations using unified API methods
     operations: {

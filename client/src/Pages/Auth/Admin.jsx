@@ -488,11 +488,12 @@ const Admin = () => {
         entityType="meals"
         data={meals.map(meal => ({
           ...meal,
-          image_url: meal.image_url || '', // ensure field exists
+          image_url: meal.image_url || '',
           base_price: meal.base_price || 0,
           calories: meal.calories || 0,
           protein_g: meal.protein_g || 0,
-          carbs_g: meal.carbs_g || 0
+          carbs_g: meal.carbs_g || 0,
+          is_available: meal.is_available !== undefined ? meal.is_available : true 
         }))}
         isLoading={mealsLoading}
         entityManager={mealsManager}

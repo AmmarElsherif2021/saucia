@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useDisclosure } from '@chakra-ui/react';
 import {ENTITY_CONFIGS} from './AdminEntityConfigs';
+
 // Explicit entity handlers
 const ENTITY_HANDLERS = {
   items: (adminFunctions) => ({
@@ -45,6 +46,18 @@ const ENTITY_HANDLERS = {
   }),
 };
 
+// Map entity types to their singular ID field names
+const ENTITY_ID_MAPPING = {
+  items: 'itemId',
+  meals: 'mealId',
+  plans: 'planId',
+  users: 'userId',
+  orders: 'orderId',
+  subscriptions: 'subscriptionId',
+  allergies: 'allergyId',
+  dietaryPreferences: 'preferenceId', // Fixed: was 'dietaryPreferenceId'
+};
+
 // Sanitize data function remains the same
 const sanitizeData = (data) => {
     const sanitized = {...data};
@@ -83,18 +96,34 @@ export const useEntityManager = (entityType, adminFunctions) => {
 
   const handleEdit = async (id, data) => {
     try {
+      const idField = ENTITY_ID_MAPPING[entityType];
+      if (!idField) {
+        throw new Error(`No ID mapping found for entity type: ${entityType}`);
+      }
+      
+      // Ensure we have a valid ID
+      if (!id || id === 'undefined') {
+        throw new Error(`Invalid ID provided for ${entityType}: ${id}`);
+      }
+      
       await handlers.update({ 
-        [`${entityType.slice(0, -1)}Id`]: id, 
+        [idField]: id, 
         updateData: sanitizeData(data) 
       });
       modals.edit.onClose();
     } catch (error) {
-      window.alert(`Failed to edit ${entityType.slice(0, -1)}: ${error.message}`);
+      window.alert(`Failed to edit ${ENTITY_CONFIGS[entityType].singular || entityType.slice(0, -1)}: ${error.message}`);
+      return { error };
     }
   };
 
   const handleDelete = async (id) => {
     try {
+      // Ensure we have a valid ID
+      if (!id || id === 'undefined') {
+        throw new Error(`Invalid ID provided for ${entityType}: ${id}`);
+      }
+      
       await handlers.delete(id);
       modals.delete.onClose();
     } catch (error) {

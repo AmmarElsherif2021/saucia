@@ -15,7 +15,8 @@ import {
   SimpleGrid,
   Box,
   Badge,
-  useToast
+  useToast,
+  Switch
 } from '@chakra-ui/react';
 
 const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
@@ -25,13 +26,14 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
       name_arabic: '',
       section: '',
       section_arabic: '',
-      base_price: 0,    // changed from 'price'
-      calories: 0,      // changed from 'kcal'
-      protein_g: 0,     // changed from 'protein'
-      carbs_g: 0,       // changed from 'carb'
-      ingredients: '',
-      ingredients_arabic: '',
-      image_url: '',     // changed from 'image'
+      base_price: 0, 
+      calories: 0,
+      protein_g: 0, 
+      carbs_g: 0,
+      ingredients: initialData.ingredients || '',
+      ingredients_arabic: initialData.ingredients_arabic || '',
+      is_available: initialData.is_available ?? true,
+      image_url: '', 
       items: [],
       allergy_ids: [],
       dietary_preference_ids: []
@@ -105,6 +107,11 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Handle switch change
+  const handleSwitchChange = (e) => {
+    setFormData(prev => ({ ...prev, is_available: e.target.checked }));
+  };
+
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -148,6 +155,42 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
           </FormControl>
         </SimpleGrid>
 
+        {/* Ingredients Fields */}
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+          <FormControl>
+            <FormLabel>Ingredients (English)</FormLabel>
+            <Textarea
+              name="ingredients"
+              value={formData.ingredients}
+              onChange={handleChange}
+              placeholder="List ingredients in English"
+            />
+          </FormControl>
+          <FormControl>
+            <FormLabel>Ingredients (Arabic)</FormLabel>
+            <Textarea
+              name="ingredients_arabic"
+              value={formData.ingredients_arabic}
+              onChange={handleChange}
+              placeholder="List ingredients in Arabic"
+            />
+          </FormControl>
+        </SimpleGrid>
+
+        {/* Is Available Switch */}
+        <FormControl display="flex" alignItems="center">
+          <FormLabel htmlFor="is-available-switch" mb="0">
+            Is Available
+          </FormLabel>
+          <Switch
+            id="is-available-switch"
+            name="is_available"
+            isChecked={formData.is_available}
+            onChange={handleSwitchChange}
+            colorScheme="green"
+          />
+        </FormControl>
+
         {/* Nutritional Info - UPDATED FIELDS */}
         <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
           <FormControl>
@@ -155,6 +198,7 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
             <NumberInput 
               value={formData.base_price} 
               onChange={(v) => handleNumberChange('base_price', v)}
+              min={0}
             >
               <NumberInputField />
             </NumberInput>
@@ -165,6 +209,7 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
             <NumberInput 
               value={formData.calories} 
               onChange={(v) => handleNumberChange('calories', v)}
+              min={0}
             >
               <NumberInputField />
             </NumberInput>
@@ -175,61 +220,12 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
             <NumberInput 
               value={formData.protein_g} 
               onChange={(v) => handleNumberChange('protein_g', v)}
-            >
-              <NumberInputField />
-            </NumberInput>
-          </FormControl>
-
-          {/* Add Carbs field if needed */}
-          <FormControl>
-            <FormLabel>Carbs (g)</FormLabel>
-            <NumberInput 
-              value={formData.carbs_g} 
-              onChange={(v) => handleNumberChange('carbs_g', v)}
+              min={0}
             >
               <NumberInputField />
             </NumberInput>
           </FormControl>
         </SimpleGrid>
-
-        {/* Image URL - UPDATED FIELD */}
-        <FormControl>
-          <FormLabel>Image URL</FormLabel>
-          <Input
-            name="image_url"
-            value={formData.image_url}
-            onChange={handleChange}
-          />
-        </FormControl>
-        {/* Items Selection */}
-        <Box borderWidth="1px" borderRadius="lg" p={4}>
-          <FormLabel>Items in Meal</FormLabel>
-          <Stack spacing={3} mt={2}>
-            {allItems.map(item => (
-              <Box key={item.id} p={2} borderWidth="1px" borderRadius="md">
-                <Checkbox
-                  isChecked={formData?.items?.some(i => i.id === item.id)}
-                  onChange={(e) => handleItemChange(item.id, 'is_included', e.target.checked)}
-                >
-                  {item.name} ({item.category})
-                </Checkbox>
-                
-                {formData?.items?.some(i => i.id === item.id) && (
-                  <FormControl mt={2} ml={6}>
-                    <FormLabel fontSize="sm">Max Quantity</FormLabel>
-                    <NumberInput
-                      value={formData?.items?.find(i => i.id === item.id)?.max_quantity || 0}
-                      onChange={(v) => handleItemChange(item.id, 'max_quantity', v)}
-                      min={0}
-                    >
-                      <NumberInputField />
-                    </NumberInput>
-                  </FormControl>
-                )}
-              </Box>
-            ))}
-          </Stack>
-        </Box>
 
         {/* Allergies Selection */}
         <Box borderWidth="1px" borderRadius="lg" p={4}>
