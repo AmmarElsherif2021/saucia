@@ -36,7 +36,6 @@ const HomePage = () => {
   return (
     <Box textAlign="center" p={5}>
       <Hero />
-      {/*<MapBox />*/}
       <FeaturedMeals featuredMeals={featuredMeals} />
       <OffersSlide offersMeals={offersMeals} />
       <ExpertPortal />

@@ -19,23 +19,7 @@ import {
   TableContainer,
   Input,
 } from '@chakra-ui/react'
-
-export const StatCard = ({ title, value }) => (
-  <Box bg="white" p={4} borderRadius="md" shadow="md">
-    <Heading size="md" mb={2}>
-      {title}
-    </Heading>
-    <Text fontSize="2xl" fontWeight="bold">
-      {value}
-    </Text>
-  </Box>
-)
-
-export const LoadingSpinner = () => (
-  <Flex justify="center" align="center" h="100vh">
-    <Spinner size="xl" />
-  </Flex>
-)
+import { AddIcon } from '@chakra-ui/icons'
 
 export const ErrorAlert = ({ message, retry }) => (
   <Alert status="error" borderRadius="md" mb={4}>
@@ -48,23 +32,6 @@ export const ErrorAlert = ({ message, retry }) => (
       Try Again
     </Button>
   </Alert>
-)
-
-export const SectionHeading = ({ title, onAddClick, buttonText = 'Add New' }) => (
-  <Flex
-    justify="space-between"
-    align="center"
-    mb={4}
-    direction={{ base: 'column', md: 'row' }}
-    gap={2}
-  >
-    <Heading size="lg">{title}</Heading>
-    {onAddClick && (
-      <Button colorScheme="green" onClick={onAddClick}>
-        {buttonText}
-      </Button>
-    )}
-  </Flex>
 )
 
 export const ConfirmationModal = ({
@@ -127,15 +94,133 @@ export const SearchInput = ({ value, onChange }) => (
     maxW="300px"
   />
 )
+
+// Enhanced StatCard with icon and trend indicator
+export const StatCard = ({
+  title,
+  value,
+  icon,
+  trend,
+  colorScheme = 'brand', 
+}) => (
+  <Box
+    bg="white"
+    p={4}
+    borderRadius="50%"
+    width={'150px'}
+    height={'150px'}
+    shadow="none"
+    display="flex"
+    flexDirection="column"
+    justifyContent="center"
+    alignItems="center"
+    textAlign="center"
+    background={`${colorScheme}.300`}
+    transition="all 0.2s"
+    _hover={{ shadow: 'md', transform: 'translateY(-2px)' }}
+  >
+    <Flex justify="space-between" align="center">
+      <Box>
+        <Text fontSize="sm" color={`${colorScheme}.700`} mb={1}>
+          {title}
+        </Text>
+        <Text fontSize="2xl" fontWeight="bold" color={`${colorScheme}.800`}>
+          {value}
+        </Text>
+      </Box>
+      {icon && (
+        <Flex
+          align="center"
+          justify="center"
+          boxSize={12}
+          borderRadius="full"
+          bg={`${colorScheme}.50`}
+          color={`${colorScheme}.500`}
+        >
+          {icon}
+        </Flex>
+      )}
+    </Flex>
+    {trend && (
+      <Flex align="center" mt={2}>
+        <Text fontSize="sm" color={trend.value > 0 ? 'green.500' : 'red.500'}>
+          {trend.value > 0 ? '↑' : '↓'} {Math.abs(trend.value)}%
+        </Text>
+        <Text ml={1} fontSize="xs" color="gray.500">
+          {trend.label}
+        </Text>
+      </Flex>
+    )}
+  </Box>
+);
+
+// Enhanced LoadingSpinner with text
+export const LoadingSpinner = ({ text }) => (
+  <Flex
+    direction="column"
+    justify="center"
+    align="center"
+    position="fixed"
+    top={0}
+    left={0}
+    padding={"43vw"}
+    w="100vw"
+    h="100vh"
+    zIndex={9999}
+    bg="rgba(255, 255, 255, 0.7)"
+  >
+    <Spinner size="xl" thickness="3px" color="brand.500" alignContent={"center"}/>
+    {text && <Text mt={4}>{text}</Text>}
+  </Flex>
+);
+
+// Improved SectionHeading with description
+export const SectionHeading = ({ 
+  title, 
+  description, 
+  onAddClick, 
+  buttonText = 'Add New' 
+}) => (
+  <Flex
+    justify="space-between"
+    align={{ base: 'flex-start', md: 'center' }}
+    mb={4}
+    direction={{ base: 'column', md: 'row' }}
+    gap={3}
+  >
+    <Box>
+      <Heading size="lg" mb={1}>{title}</Heading>
+      {description && (
+        <Text fontSize="sm" color="gray.600">{description}</Text>
+      )}
+    </Box>
+    {onAddClick && (
+      <Button 
+        colorScheme="brand" 
+        onClick={onAddClick}
+        size="sm"
+        leftIcon={<AddIcon />}
+      >
+        {buttonText}
+      </Button>
+    )}
+  </Flex>
+);
+
+// Enhanced table with striped rows
 export const ScrollableTableContainer = ({ children }) => {
-  const isTableScrollable = useBreakpointValue({ base: true, lg: false })
+  const isTableScrollable = useBreakpointValue({ base: true, lg: false });
   return (
     <TableContainer
-      maxHeight="45vh"
+      maxHeight="55vh"
       overflowY="auto"
       overflowX={isTableScrollable ? 'auto' : 'visible'}
+      border="1px"
+      borderColor="gray.100"
+      borderRadius="md"
+      boxShadow="sm"
     >
       {children}
     </TableContainer>
-  )
-}
+  );
+};

@@ -1,7 +1,7 @@
 /* eslint-disable */
 /* global FileReader, alert */
 import { useState, useEffect } from 'react'
-
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Button,
@@ -50,9 +50,15 @@ import {
   SearchInput,
 } from './AdminComponents.jsx'
 
-import { ENTITY_CONFIGS } from './AdminEntityConfigs.jsx'
 import { useEntityManager } from './useEntityManager.jsx'
-
+import { 
+  FaEdit as EditIcon, 
+  FaTrash as DeleteIcon, 
+  FaArrowCircleDown as DownloadIcon, 
+  FaPlus as AddIcon, 
+  FaArrowCircleUp as UploadIcon, 
+  FaSearch as SearchIcon 
+} from 'react-icons/fa'
 
 // Reusable EntitySection component
 const EntitySection = ({ 
@@ -64,7 +70,7 @@ const EntitySection = ({
 }) => {
   const { config, filterEntities, searchTerm, setSearchTerm, selectedEntity, setSelectedEntity, modals, handlers } = entityManager
   const filteredData = filterEntities(data)
-
+  const { t } = useTranslation(); 
   const renderCellContent = (item, column) => {
     const value = item[column.key]
     if (column.render) {
@@ -74,18 +80,45 @@ const EntitySection = ({
   }
 
   return (
-    <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
+    <Box 
+      gap={6} 
+      m={6} 
+      maxW={'90%'} 
+      backgroundColor={'#ffffff'} 
+      p={6}
+      borderRadius="md"
+      boxShadow="sm"
+      border="1px"
+      borderColor="gray.100"
+    >
       <SectionHeading
-        title={config.title}
+        title={t(config.titleKey || `admin.entities.${entityType}.title`, { defaultValue: config.title })}
+        description={t(config.descriptionKey || `admin.entities.${entityType}.description`, { defaultValue: config.description })}
         onAddClick={modals.add.onOpen}
-        buttonText="Create New"
+        buttonText={t('admin.actions.add_entity', {
+          entity: t(config.singularKey || `admin.entities.${entityType}.singular`, { defaultValue: config.singular }),
+          defaultValue: `Add ${config.singular}`
+        })}
+        AddIcon={AddIcon}
       />
       
       <Flex gap={2} mb={4}>
-        <SearchInput value={searchTerm} onChange={setSearchTerm} />
+        <SearchInput 
+          value={searchTerm} 
+          onChange={setSearchTerm} 
+          leftElement={<SearchIcon color="gray.400" />} 
+        />
         {config.hasImport && (
-          <Button as="label" colorScheme="brand" cursor="pointer">
-            Import {config.title}
+          <Button 
+           h={"2.5rem"} 
+           w={"2.5rem"} 
+           as="label" 
+           colorScheme="orange" 
+           cursor="pointer" 
+           leftIcon={<UploadIcon />}
+           iconSpacing={0}
+           label={t('admin.actions.import', { defaultValue: "Import" })}
+           >
             <input 
               type="file" 
               hidden 
@@ -96,30 +129,40 @@ const EntitySection = ({
         )}
         {config.hasExport && (
           <Button 
-            colorScheme="brand" 
+            h={"2.5rem"} 
+            w={"2.5rem"}
+            colorScheme="teal" 
             cursor="pointer" 
             onClick={() => handlers.handleExport(data)}
-          >
-            Export {config.title}
-          </Button>
+            leftIcon={<DownloadIcon />}
+            iconSpacing={0}
+            
+          />
         )}
       </Flex>
 
       <ScrollableTableContainer>
         <TableContainer overflowX={isTableScrollable ? 'auto' : 'visible'}>
           <Table 
-            variant="simple" 
+            variant="striped"
             size={{ base: 'sm', md: 'md' }}
             style={{ overflowY: 'auto', maxHeight: '70vh' }}
           >
-            <Thead>
+            <Thead position="sticky" top={0} bg="white" zIndex="1">
               <Tr>
                 {config?.columns?.map((column) => (
-                  <Th key={column.key} w={column.width}>
+                  <Th 
+                    key={column.key} 
+                    w={column.width}
+                    color="gray.600"
+                    fontWeight="600"
+                    fontSize="sm"
+                    py={3}
+                  >
                     {column.label}
                   </Th>
                 ))}
-                <Th>Actions</Th>
+                <Th textAlign="right">Actions</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -140,23 +183,25 @@ const EntitySection = ({
                       <Button
                         size="sm"
                         colorScheme="brand"
+                        variant="ghost"
                         onClick={() => {
                           setSelectedEntity(item)
                           modals.edit.onOpen()
                         }}
-                      >
-                        Edit
-                      </Button>
+                        aria-label="Edit"
+                        leftIcon={<EditIcon />}
+                      />
                       <Button
                         size="sm"
                         colorScheme="red"
+                        variant="ghost"
                         onClick={() => {
                           setSelectedEntity(item)
                           modals.delete.onOpen()
                         }}
-                      >
-                        Delete
-                      </Button>
+                        aria-label="Delete"
+                        leftIcon={<DeleteIcon />}
+                      />
                     </Stack>
                   </Td>
                 </Tr>
@@ -170,7 +215,10 @@ const EntitySection = ({
       <FormModal
         isOpen={modals.add.isOpen}
         onClose={modals.add.onClose}
-        title={`Add New ${config?.title?.slice(0, -1)}`}
+        title={t('admin.modals.add_entity', {
+          entity: t(config.singularKey || `admin.entities.${entityType}.singular`, { defaultValue: config.singular }),
+          defaultValue: `Add New ${config.singular}`
+        })}
         onSubmit={handlers.handleAdd}
         initialData={config.initialData}
         FormComponent={config.FormComponent}
@@ -180,7 +228,10 @@ const EntitySection = ({
       <FormModal
         isOpen={modals.edit.isOpen}
         onClose={modals.edit.onClose}
-        title={`Edit ${config?.title?.slice(0, -1)}`}
+        title={t('admin.modals.edit_entity', {
+          entity: t(config.singularKey || `admin.entities.${entityType}.singular`, { defaultValue: config.singular }),
+          defaultValue: `Edit ${config.singular}`
+        })}
         onSubmit={(data) => handlers.handleEdit(selectedEntity?.id, data)}
         initialData={selectedEntity} // Pass existing data to form
         FormComponent={config.FormComponent}
@@ -191,8 +242,11 @@ const EntitySection = ({
       <ConfirmationModal
         isOpen={modals.delete.isOpen}
         onClose={modals.delete.onClose}
+        title={t('admin.modals.delete_entity', {
+          entity: t(config.singularKey || `admin.entities.${entityType}.singular`, { defaultValue: config.singular }),
+          defaultValue: `Delete ${config.singular}`
+        })}
         onConfirm={() => handlers.handleDelete(selectedEntity?.id)}
-        title="Confirm Delete"
         message={`Are you sure you want to delete this ${config?.title?.slice(0, -1).toLowerCase()}?`}
       />
     </Box>
@@ -204,7 +258,6 @@ const Admin = () => {
   const { user } = useAuthContext()
   const adminFunctions = useAdminFunctions()
   const toast = useToast()
-  
   const {
     // Queries
     useGetDashboardStats,
@@ -226,6 +279,7 @@ const Admin = () => {
     updateSubscriptionStatus,
   } = adminFunctions
 
+  const { t } = useTranslation();
   // Fetch data using React Query hooks
   const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useGetDashboardStats()
   const { data: users = [], isLoading: usersLoading, error: usersError, refetch: refetchUsers } = useGetAllUsers()
@@ -402,7 +456,7 @@ const Admin = () => {
         backgroundColor: '#f0f0f0',
       }}
     >
-      <Heading mb={6}>Admin Dashboard</Heading>
+      <Heading mb={6}>{t('admin.dashboard.title', { defaultValue: "Admin Dashboard" })}</Heading>
 
       {/* Stats Cards */}
       <Grid
@@ -416,19 +470,31 @@ const Admin = () => {
         m={12}
         maxW={'90%'}
       >
-        <StatCard title="Total Users" value={dashboardData?.totalUsers || 0} />
-        <StatCard title="Admin Users" value={dashboardData?.totalAdmins || 0} />
-        <StatCard title="Items" value={items?.length || 0} />
-        <StatCard title="Plans" value={plans?.length || 0} />
-        <StatCard title="Active Orders" value={dashboardData?.activeOrders || 0} />
-        <StatCard title="Today's Revenue" value={`$${dashboardData?.dailyRevenue?.toFixed(2) || 0}`} />
-        <StatCard title="Active Subscriptions" value={dashboardData?.activeSubscriptions || 0} />
-        <StatCard title="Meals Available" value={dashboardData?.availableMeals || 0} />
+        <StatCard title={t('admin.stats.total_users', { defaultValue: "Total Users" })} value={dashboardData?.totalUsers || 0} colorScheme={'brand'}/>
+        <StatCard title={t('admin.stats.admin_users', { defaultValue: "Admin Users" })} value={dashboardData?.totalAdmins || 0} colorScheme={'warning'}/>
+        <StatCard title={t('admin.stats.items', { defaultValue: "Items" })} value={items?.length || 0} colorScheme='orange' />
+        <StatCard title={t('admin.stats.plans', { defaultValue: "Plans" })} value={plans?.length || 0} colorScheme='error'/>
+        <StatCard title={t('admin.stats.active_orders', { defaultValue: "Active Orders" })} value={dashboardData?.activeOrders || 0} colorScheme='teal'/>
+        <StatCard 
+          title={t('admin.stats.todays_revenue', { defaultValue: "Today's Revenue" })} 
+          value={`$${dashboardData?.dailyRevenue?.toFixed(2) || 0}`} 
+          colorScheme='green'
+        />
+        <StatCard 
+          title={t('admin.stats.active_subscriptions', { defaultValue: "Active Subscriptions" })} 
+          value={dashboardData?.activeSubscriptions || 0} 
+          colorScheme='purple'
+        />
+        <StatCard 
+          title={t('admin.stats.available_meals', { defaultValue: "Available Meals" })} 
+          value={dashboardData?.availableMeals || 0} 
+          colorScheme='blue'
+        />
       </Grid>
       
       {/* Recent Activity Section */}
       <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
-        <SectionHeading title="Recent Activity" />
+        <SectionHeading title={t('admin.sections.recent_activity', { defaultValue: "Recent Activity" })} />
         {activityLoading ? (
           <LoadingSpinner />
         ) : (
@@ -437,10 +503,10 @@ const Admin = () => {
               <Table variant="simple" size="sm">
                 <Thead>
                   <Tr>
-                    <Th>Action</Th>
-                    <Th>User</Th>
-                    <Th>Target</Th>
-                    <Th>Time</Th>
+                    <Th>{t('admin.activity.action', { defaultValue: "Action" })}</Th>
+                    <Th>{t('admin.activity.user', { defaultValue: "User" })}</Th>
+                    <Th>{t('admin.activity.target', { defaultValue: "Target" })}</Th>
+                    <Th>{t('admin.activity.time', { defaultValue: "Time" })}</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
@@ -448,7 +514,7 @@ const Admin = () => {
                     recentActivity.map((activity, index) => (
                       <Tr key={index}>
                         <Td>{activity.action}</Td>
-                        <Td>{activity.userName || activity.userEmail || 'System'}</Td>
+                        <Td>{activity.userName || activity.userEmail || t('admin.activity.system', { defaultValue: "System" })}</Td>
                         <Td>{activity.target}</Td>
                         <Td>{new Date(activity.timestamp).toLocaleString()}</Td>
                       </Tr>
@@ -456,7 +522,7 @@ const Admin = () => {
                   ) : (
                     <Tr>
                       <Td colSpan={4} textAlign="center">
-                        No recent activity
+                        {t('admin.activity.no_recent', { defaultValue: "No recent activity" })}
                       </Td>
                     </Tr>
                   )}
@@ -543,19 +609,21 @@ const Admin = () => {
       <Modal isOpen={userActionModal.isOpen} onClose={userActionModal.onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>User Quick Actions</ModalHeader>
+          <ModalHeader>
+            {t('admin.modals.user_actions.title', { defaultValue: "User Quick Actions" })}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {adminAction === 'setAdmin' && (
               <Box>
                 <Heading size="sm" mb={4}>
-                  Set Admin Status for {selectedUser?.email}
+                  {t('admin.modals.set_admin_status', { 
+                    email: selectedUser?.email,
+                    defaultValue: `Set Admin Status for ${selectedUser?.email}`
+                  })}
                 </Heading>
-                <Button 
-                  colorScheme="blue" 
-                  onClick={() => handleUserAction('setAdmin')}
-                >
-                  Confirm Make Admin
+                <Button colorScheme="blue" onClick={() => handleUserAction('setAdmin')}>
+                  {t('admin.actions.confirm_make_admin', { defaultValue: "Confirm Make Admin" })}
                 </Button>
               </Box>
             )}
@@ -563,46 +631,53 @@ const Admin = () => {
             {adminAction === 'removeAdmin' && (
               <Box>
                 <Heading size="sm" mb={4}>
-                  Remove Admin Status from {selectedUser?.email}
+                  {t('admin.modals.remove_admin_status', { 
+                    email: selectedUser?.email,
+                    defaultValue: `Remove Admin Status from ${selectedUser?.email}`
+                  })}
                 </Heading>
                 <Button 
                   colorScheme="red" 
                   onClick={() => handleUserAction('removeAdmin')}
                 >
-                  Confirm Remove Admin
+                  {t('admin.actions.confirm_remove_admin', { defaultValue: "Confirm Remove Admin" })}
                 </Button>
               </Box>
             )}
             
             {adminAction === 'updateStatus' && (
               <FormControl>
-                <FormLabel>Account Status</FormLabel>
+                <FormLabel>
+                  {t('admin.fields.account_status', { defaultValue: "Account Status" })}
+                </FormLabel>
                 <Select 
                   value={accountStatus} 
                   onChange={(e) => setAccountStatus(e.target.value)}
                 >
-                  <option value="active">Active</option>
-                  <option value="suspended">Suspended</option>
-                  <option value="deleted">Deleted</option>
+                  <option value="active">{t('admin.status.active', { defaultValue: "Active" })}</option>
+                  <option value="suspended">{t('admin.status.suspended', { defaultValue: "Suspended" })}</option>
+                  <option value="deleted">{t('admin.status.deleted', { defaultValue: "Deleted" })}</option>
                 </Select>
               </FormControl>
             )}
             
             {adminAction === 'updateLoyalty' && (
               <FormControl>
-                <FormLabel>Loyalty Points</FormLabel>
+                <FormLabel>
+                  {t('admin.fields.loyalty_points', { defaultValue: "Loyalty Points" })}
+                </FormLabel>
                 <Input 
                   type="number" 
                   value={loyaltyPoints} 
                   onChange={(e) => setLoyaltyPoints(e.target.value)}
-                  placeholder="Enter points"
+                  placeholder={t('admin.placeholders.enter_points', { defaultValue: "Enter points" })}
                 />
               </FormControl>
             )}
           </ModalBody>
           <ModalFooter>
             <Button variant="ghost" mr={3} onClick={userActionModal.onClose}>
-              Cancel
+              {t('admin.actions.cancel', { defaultValue: "Cancel" })}
             </Button>
             <Button 
               colorScheme="blue" 
@@ -612,80 +687,85 @@ const Admin = () => {
                 (adminAction === 'updateLoyalty' && !loyaltyPoints)
               }
             >
-              Apply Action
+              {t('admin.actions.apply_action', { defaultValue: "Apply Action" })}
             </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
-      
-      {/* Order Status Modal */}
       <Modal isOpen={orderStatusModal.isOpen} onClose={orderStatusModal.onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Update Order Status</ModalHeader>
+          <ModalHeader>
+            {t('admin.modals.update_order_status', { defaultValue: "Update Order Status" })}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl>
-              <FormLabel>New Status</FormLabel>
+              <FormLabel>
+                {t('admin.fields.new_status', { defaultValue: "New Status" })}
+              </FormLabel>
               <Select 
                 value={orderStatus} 
                 onChange={(e) => setOrderStatus(e.target.value)}
               >
-                <option value="pending">Pending</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="preparing">Preparing</option>
-                <option value="ready">Ready for Pickup</option>
-                <option value="in-transit">In Transit</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="pending">{t('admin.order_status.pending', { defaultValue: "Pending" })}</option>
+                <option value="confirmed">{t('admin.order_status.confirmed', { defaultValue: "Confirmed" })}</option>
+                <option value="preparing">{t('admin.order_status.preparing', { defaultValue: "Preparing" })}</option>
+                <option value="ready">{t('admin.order_status.ready', { defaultValue: "Ready for Pickup" })}</option>
+                <option value="in-transit">{t('admin.order_status.in_transit', { defaultValue: "In Transit" })}</option>
+                <option value="delivered">{t('admin.order_status.delivered', { defaultValue: "Delivered" })}</option>
+                <option value="cancelled">{t('admin.order_status.cancelled', { defaultValue: "Cancelled" })}</option>
               </Select>
             </FormControl>
           </ModalBody>
           <ModalFooter>
             <Button variant="ghost" mr={3} onClick={orderStatusModal.onClose}>
-              Cancel
+              {t('admin.actions.cancel', { defaultValue: "Cancel" })}
             </Button>
             <Button 
               colorScheme="blue" 
               onClick={handleOrderStatusUpdate}
               isDisabled={!orderStatus}
             >
-              Update Status
+              {t('admin.actions.update_status', { defaultValue: "Update Status" })}
             </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
-      
       {/* Subscription Status Modal */}
       <Modal isOpen={subscriptionStatusModal.isOpen} onClose={subscriptionStatusModal.onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Update Subscription Status</ModalHeader>
+          <ModalHeader>
+            {t('admin.modals.update_subscription_status', { defaultValue: "Update Subscription Status" })}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl>
-              <FormLabel>New Status</FormLabel>
+              <FormLabel>
+                {t('admin.fields.new_status', { defaultValue: "New Status" })}
+              </FormLabel>
               <Select 
                 value={subStatus} 
                 onChange={(e) => setSubStatus(e.target.value)}
               >
-                <option value="active">Active</option>
-                <option value="paused">Paused</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="expired">Expired</option>
+                <option value="active">{t('admin.subscription_status.active', { defaultValue: "Active" })}</option>
+                <option value="paused">{t('admin.subscription_status.paused', { defaultValue: "Paused" })}</option>
+                <option value="cancelled">{t('admin.subscription_status.cancelled', { defaultValue: "Cancelled" })}</option>
+                <option value="expired">{t('admin.subscription_status.expired', { defaultValue: "Expired" })}</option>
               </Select>
             </FormControl>
           </ModalBody>
           <ModalFooter>
             <Button variant="ghost" mr={3} onClick={subscriptionStatusModal.onClose}>
-              Cancel
+              {t('admin.actions.cancel', { defaultValue: "Cancel" })}
             </Button>
             <Button 
               colorScheme="blue" 
               onClick={handleSubscriptionStatusUpdate}
               isDisabled={!subStatus}
             >
-              Update Status
+              {t('admin.actions.update_status', { defaultValue: "Update Status" })}
             </Button>
           </ModalFooter>
         </ModalContent>

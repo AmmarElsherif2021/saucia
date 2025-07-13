@@ -1,9 +1,13 @@
 import { Box, Heading, Flex, Text, Button, Image, VStack, useColorMode } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import chefImage from '../../assets/chef.svg'
+import chefImage from '../../assets/chef.png'
 import valuesImage from '../../assets/value.svg'
-import missionImage from '../../assets/mission.svg'
+import missionImage from '../../assets/experience.png'
+import customImage from '../../assets/custom.png' 
+import premiumImage from '../../assets/premium.png'
+import supportImage from '../../assets/support.png'
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -81,21 +85,33 @@ export const AboutUs = ({ contactUs }) => {
   const aboutSections = [
     {
       id: 1,
-      title: t('about.aboutUs'),
-      description: t('about.ourStory'),
+      title: t('about.mealExperienceTitle'),
+      description: t('about.mealExperienceDescription'),
       image: chefImage,
     },
     {
       id: 2,
-      title: t('about.ourValues'),
-      description: t('about.ourValuesDescription'),
-      image: valuesImage,
+      title: t('about.customizationFlowTitle'),
+      description: t('about.customizationFlowDescription'),
+      image: customImage,
     },
     {
       id: 3,
-      title: t('about.ourMission'),
-      description: t('about.ourMissionDescription'),
+      title: t('about.signatureMealsTitle'),
+      description: t('about.signatureMealsDescription'),
       image: missionImage,
+    },
+    {
+      id: 4,
+      title: t('about.premiumPlansTitle'),
+      description: t('about.premiumPlansDescription'),
+      image: premiumImage,
+    },
+    {
+      id: 5,
+      title: t('about.supportLineTitle'),
+      description: t('about.supportLineDescription'),
+      image: supportImage,
     },
   ]
 
@@ -136,13 +152,29 @@ export const AboutUs = ({ contactUs }) => {
         </Text>
 
         <VStack spacing={8} mb={10}>
-          {aboutSections.map((section) => (
-            <AboutCard
+          {aboutSections.map((section, index) => (
+            <motion.div
               key={section.id}
-              title={section.title}
-              description={section.description}
-              image={section.image}
-            />
+              initial={{
+                opacity: 0,
+                x: index % 2 === 0 ? 50 : -50,
+              }}
+              whileInView={{
+                opacity: 1,
+                x: 0,
+                transition: {
+                  duration: 1,
+                },
+              }}
+              viewport={{ amount: 0.1 }}
+              style={{ width: '100%' }}
+            >
+              <AboutCard
+                title={section.title}
+                description={section.description}
+                image={section.image}
+              />
+            </motion.div>
           ))}
         </VStack>
 

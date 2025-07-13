@@ -16,8 +16,12 @@ import {
   Box,
   Badge,
   useToast,
-  Switch
+  Switch,
+  Image,
+  Flex,
+  Text
 } from '@chakra-ui/react';
+import { uploadImage, deleteImage } from '../../API/imageUtils'; 
 
 const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
   const [formData, setFormData] = useState(() => {
@@ -30,9 +34,9 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
       calories: 0,
       protein_g: 0, 
       carbs_g: 0,
-      ingredients: initialData.ingredients || '',
-      ingredients_arabic: initialData.ingredients_arabic || '',
-      is_available: initialData.is_available ?? true,
+      ingredients: '',
+      ingredients_arabic: '',
+      is_available: true,
       image_url: '', 
       items: [],
       allergy_ids: [],
@@ -47,6 +51,9 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
   const [allItems, setAllItems] = useState([]);
   const [allAllergies, setAllAllergies] = useState([]);
   const [allDietaryPrefs, setAllDietaryPrefs] = useState([]);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   const toast = useToast();
 
   // Fetch all needed data on mount
@@ -62,17 +69,28 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
         setAllItems(itemsRes.data || []);
         setAllAllergies(allergiesRes.data || []);
         setAllDietaryPrefs(prefsRes.data || []);
+        
+        // Set initial image preview if editing
+        if (initialData?.image_url) {
+          setImagePreview(initialData.image_url);
+        }
       } catch (error) {
-        toast({
-          title: 'Failed to fetch data',
-          description: error.message,
-          status: 'error'
-        });
+        showToast('Failed to fetch data', error.message, 'error');
       }
     };
     
     fetchData();
   }, []);
+
+  const showToast = (title, description, status) => {
+    toast({
+      title,
+      description,
+      status,
+      duration: 5000,
+      isClosable: true
+    });
+  };
 
   // Handle form field changes
   const handleChange = (e) => {
@@ -88,7 +106,6 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
   // Handle item selection
   const handleItemChange = (itemId, field, value) => {
     setFormData(prev => {
-      // Ensure items array exists
       const currentItems = Array.isArray(prev.items) ? [...prev.items] : [];
       const index = currentItems.findIndex(i => i.id === itemId);
       
@@ -112,45 +129,170 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
     setFormData(prev => ({ ...prev, is_available: e.target.checked }));
   };
 
+  // Handle image upload
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      showToast('Invalid file type', 'Please upload JPEG, PNG, or WebP images', 'error');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      showToast('File too large', 'Maximum image size is 5MB', 'error');
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      setImageFile(file);
+      
+      // Create preview
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+      
+      showToast('Image ready', 'Image will be saved when you submit the form', 'success');
+    } catch (error) {
+      showToast('Image upload failed', error.message, 'error');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Transform items array to required format
-    const formattedData = {
-      ...formData,
-      items: formData.items.map(item => ({
-        id: item.id,
-        is_included: item.is_included || false,
-        max_quantity: item.max_quantity || 0
-      }))
-    };
-    
-    onSubmit(formattedData);
+    try {
+      let newImageUrl = formData.image_url;
+      const oldImageUrl = formData.image_url;
+      
+      // Upload new image if exists
+      if (imageFile) {
+        setIsUploading(true);
+        newImageUrl = await uploadImage(imageFile, 'meals');
+      }
+      
+      // Prepare form data with image URL
+      const formattedData = {
+        ...formData,
+        image_url: newImageUrl,
+        items: formData.items.map(item => ({
+          id: item.id,
+          is_included: item.is_included || false,
+          max_quantity: item.max_quantity || 0
+        }))
+      };
+      
+      // Submit form
+      await onSubmit(formattedData);
+      
+      // Delete old image after successful update
+      if (isEdit && imageFile && oldImageUrl && oldImageUrl !== newImageUrl) {
+        await deleteImage(oldImageUrl, 'meals');
+      }
+      
+      // Reset image state
+      setImageFile(null);
+    } catch (error) {
+      showToast('Form submission failed', error.message, 'error');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <Stack spacing={4}>
+        {/* Image Upload Section */}
+        <Box>
+          <FormLabel>Meal Image</FormLabel>
+          <Flex direction="column" align="center" gap={4}>
+            {imagePreview && (
+              <Image 
+                src={imagePreview} 
+                alt="Meal preview" 
+                maxW="300px"
+                maxH="200px"
+                objectFit="contain"
+                borderRadius="md"
+                border="1px solid"
+                borderColor="gray.200"
+              />
+            )}
+            
+            <Box position="relative">
+              <Button 
+                as="label"
+                colorScheme="blue"
+                cursor="pointer"
+                isLoading={isUploading}
+                loadingText="Uploading..."
+              >
+                Choose Image
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  position="absolute"
+                  top={0}
+                  left={0}
+                  opacity={0}
+                  width="100%"
+                  height="100%"
+                  cursor="pointer"
+                />
+              </Button>
+            </Box>
+            <Text fontSize="sm" color="gray.500">
+              JPEG, PNG or WebP (Max 5MB)
+            </Text>
+          </Flex>
+        </Box>
+
         {/* Basic Fields */}
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-          <FormControl>
+          <FormControl isRequired>
             <FormLabel>Name (English)</FormLabel>
             <Input
               name="name"
               value={formData.name}
               onChange={handleChange}
-              required
             />
           </FormControl>
           
-          <FormControl>
+          <FormControl isRequired>
             <FormLabel>Name (Arabic)</FormLabel>
             <Input
               name="name_arabic"
               value={formData.name_arabic}
               onChange={handleChange}
-              required
+            />
+          </FormControl>
+        </SimpleGrid>
+
+        {/* Section Fields */}
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+          <FormControl>
+            <FormLabel>Section (English)</FormLabel>
+            <Input
+              name="section"
+              value={formData.section}
+              onChange={handleChange}
+            />
+          </FormControl>
+          
+          <FormControl>
+            <FormLabel>Section (Arabic)</FormLabel>
+            <Input
+              name="section_arabic"
+              value={formData.section_arabic}
+              onChange={handleChange}
             />
           </FormControl>
         </SimpleGrid>
@@ -164,8 +306,10 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
               value={formData.ingredients}
               onChange={handleChange}
               placeholder="List ingredients in English"
+              rows={3}
             />
           </FormControl>
+          
           <FormControl>
             <FormLabel>Ingredients (Arabic)</FormLabel>
             <Textarea
@@ -173,6 +317,7 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
               value={formData.ingredients_arabic}
               onChange={handleChange}
               placeholder="List ingredients in Arabic"
+              rows={3}
             />
           </FormControl>
         </SimpleGrid>
@@ -191,7 +336,7 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
           />
         </FormControl>
 
-        {/* Nutritional Info - UPDATED FIELDS */}
+        {/* Nutritional Info */}
         <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
           <FormControl>
             <FormLabel>Base Price (SAR)</FormLabel>
@@ -199,6 +344,7 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
               value={formData.base_price} 
               onChange={(v) => handleNumberChange('base_price', v)}
               min={0}
+              precision={2}
             >
               <NumberInputField />
             </NumberInput>
@@ -273,8 +419,8 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
         <Button
           type="submit"
           colorScheme="blue"
-          isLoading={isLoading}
-          loadingText={isEdit ? "Updating..." : "Creating..."}
+          isLoading={isLoading || isUploading}
+          loadingText={isEdit ? "Saving..." : "Creating..."}
         >
           {isEdit ? "Update Meal" : "Create Meal"}
         </Button>

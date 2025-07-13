@@ -1,6 +1,201 @@
-{
+{  
   "en": {
     "translation": {
+      "admin":{
+        "Items": "Items",
+        "Item": "Item",
+        "Name": "Name",
+        "Name (Arabic)": "Name (Arabic)",
+        "Category": "Category",
+        "Category (Arabic)": "Category (Arabic)",
+        "Price": "Price",
+        "Free Count": "Free Count",
+        "Available": "Available",
+        "Yes": "Yes",
+        "No": "No",
+        "None": "None",
+        "Image": "Image",
+        "Meals": "Meals",
+        "Meal": "Meal",
+        "Section": "Section",
+        "Section (Arabic)": "Section (Arabic)",
+        "N/A": "N/A",
+        "Calories": "Calories",
+        "Protein (g)": "Protein (g)",
+        "Carbs (g)": "Carbs (g)",
+        "Ingredients": "Ingredients",
+        "Plans": "Plans",
+        "Plan": "Plan",
+        "Title (EN)": "Title (EN)",
+        "Title (AR)": "Title (AR)",
+        "Short Term Meals": "Short Term Meals",
+        "Medium Term Meals": "Medium Term Meals",
+        "Protein": "Protein",
+        "Calories (kcal)": "Calories (kcal)",
+        "Price/Meal": "Price/Meal",
+        "Status": "Status",
+        "Active": "Active",
+        "Inactive": "Inactive",
+        "Users": "Users",
+        "Email": "Email",
+        "Phone": "Phone",
+        "Role": "Role",
+        "Loyalty Points": "Loyalty Points",
+        "Admin": "Admin",
+        "User": "User",
+        "account_status": "Account Status",
+        "loyalty_points": "Loyalty Points",
+        "allergies": "allergies",
+        "preferences": "preferences",
+        "Created": "Created",
+        "Order ID": "Order ID",
+        "User ID": "User ID",
+        "Customer": "Customer",
+        "Total Price": "Total Price",
+        "Payment": "Payment",
+        "Total": "Total",
+        "Paid": "Paid",
+        "Unpaid": "Unpaid",
+        "Delivery Date": "Delivery Date",
+        "items": "items",
+        "Orders": "Orders",
+        "Order": "Order",
+        "Plan ID": "Plan ID",
+        "Plan Name": "Plan Name",
+        "Start Date": "Start Date",
+        "End Date": "End Date",
+        "Auto Renew": "Auto Renew",
+        "Subscriptions": "Subscriptions",
+        "Subscription": "Subscription",
+        "ID": "ID",
+        "Allergy": "Allergy",
+        "Allergies": "Allergies",
+        "Name (EN)": "Name (EN)",
+        "Name (AR)": "Name (AR)",
+        "Severity": "Severity",
+        "Low": "Low",
+        "Medium": "Medium",
+        "High": "High",
+        "Dietary Preferences": "Dietary Preferences",
+        "Dietary Preference": "Dietary Preference",
+        "Description": "Description",
+        "Dashboard": "Dashboard",
+        "Invalid entity type": "Invalid entity type",
+        "{{key}} is required": "{{key}} is required",
+        "dashboard": {
+          "title": "Admin Dashboard"
+        },
+        "stats": {
+          "total_users": "Total Users",
+          "admin_users": "Admin Users",
+          "items": "Items",
+          "plans": "Plans",
+          "active_orders": "Active Orders",
+          "todays_revenue": "Today's Revenue",
+          "active_subscriptions": "Active Subscriptions",
+          "available_meals": "Available Meals"
+        },
+        "entities": {
+          "users": {
+            "title": "Users",
+            "description": "Manage all users",
+            "singular": "User"
+          },
+          "items": {
+            "title": "Items",
+            "description": "Manage all items",
+            "singular": "Item"
+          },
+          "meals": {
+            "title": "Meals",
+            "description": "Manage all meals",
+            "singular": "Meal"
+          },
+          "plans": {
+            "title": "Plans",
+            "description": "Manage all plans",
+            "singular": "Plan"
+          },
+          "orders": {
+            "title": "Orders",
+            "description": "Manage all orders",
+            "singular": "Order"
+          },
+          "subscriptions": {
+            "title": "Subscriptions",
+            "description": "Manage all subscriptions",
+            "singular": "Subscription"
+          },
+          "allergies": {
+            "title": "Allergies",
+            "description": "Manage all allergies",
+            "singular": "Allergy"
+          },
+          "dietaryPreferences": {
+            "title": "Dietary Preferences",
+            "description": "Manage all dietary preferences",
+            "singular": "Dietary Preference"
+          }
+        },
+        "actions": {
+          "add_entity": "Add {{entity}}",
+          "import_entity": "Import {{entity}}",
+          "export_entity": "Export {{entity}}",
+          "confirm_make_admin": "Confirm Make Admin",
+          "confirm_remove_admin": "Confirm Remove Admin",
+          "apply_action": "Apply Action",
+          "cancel": "Cancel",
+          "update_status": "Update Status"
+        },
+        "modals": {
+          "add_entity": "Add New {{entity}}",
+          "edit_entity": "Edit {{entity}}",
+          "delete_entity": "Delete {{entity}}",
+          "user_actions": {
+            "title": "User Quick Actions"
+          },
+          "set_admin_status": "Set Admin Status for {{email}}",
+          "remove_admin_status": "Remove Admin Status from {{email}}",
+          "update_order_status": "Update Order Status",
+          "update_subscription_status": "Update Subscription Status"
+        },
+        "fields": {
+          "account_status": "Account Status",
+          "loyalty_points": "Loyalty Points",
+          "new_status": "New Status"
+        },
+        "status": {
+          "active": "Active",
+          "suspended": "Suspended",
+          "deleted": "Deleted"
+        },
+        "order_status": {
+          "pending": "Pending",
+          "confirmed": "Confirmed",
+          "preparing": "Preparing",
+          "ready": "Ready for Pickup",
+          "in_transit": "In Transit",
+          "delivered": "Delivered",
+          "cancelled": "Cancelled"
+        },
+        "subscription_status": {
+          "active": "Active",
+          "paused": "Paused",
+          "cancelled": "Cancelled",
+          "expired": "Expired"
+        },
+        "activity": {
+          "action": "Action",
+          "user": "User",
+          "target": "Target",
+          "time": "Time",
+          "system": "System",
+          "no_recent": "No recent activity"
+        },
+        "sections": {
+          "recent_activity": "Recent Activity"
+        }
+      },
       "modal": {
         "close": "Close",
         "addToCart": "Add to Cart"
@@ -24,18 +219,24 @@
         "makeYourOwnSalad": "Make Your Own Salad",
         "makeYourOwnFruitSalad": "Make Your Own Fruit Salad"
       },
-      "about": {
-        "aboutUs": "About Us",
-        "ourMission": "Our Mission",
-        "whyChooseUs": "Why Choose Us?",
-        "ourStory": "SauciaSalad was founded in 2022 with a simple mission: to make healthy eating delicious and accessible to everyone.",
-        "ourValues": "Our Values",
-        "ourValuesDescription": "At SauciaSalad, we're committed to quality, sustainability, and community.",
-        "ourMissionDescription": "We're on a mission to revolutionize the way people think about healthy eating.",
-        "intro": "Discover the story behind SauciaSalad, where nutrition meets flavor in perfect harmony.",
-        "contactPrompt": "Have questions or want to learn more about our journey? We'd love to hear from you!",
-        "contactUs": "Contact Our Team"
-      },
+      
+        "about": {
+          "mealExperienceTitle": "Meal Experience",
+          "mealExperienceDescription": "Our platform empowers users with a dynamic menu of fresh, healthy salads crafted for taste and wellness. Each meal is designed to meet modern dietary needs and support an active lifestyle, using only high-quality ingredients and fresh produce.",
+          
+          "customizationFlowTitle": "Customization Flow",
+          "customizationFlowDescription": "Agents and end-users can easily tailor their salads to their exact preferences—whether it's swapping proteins, adding nutrient-packed toppings, or adjusting portion sizes. We make it simple to create personalized meals that satisfy both flavor and health goals.",
+          
+          "signatureMealsTitle": "Signature Meals",
+          "signatureMealsDescription": "Dive into our exclusive creations curated by Salad Saucia, where expert chefs blend gourmet ingredients into balanced, energizing bowls. These signature offerings deliver consistency, elegance, and restaurant-quality taste—every single time.",
+          
+          "premiumPlansTitle": "Premium Plans",
+          "premiumPlansDescription": "Whether you're looking for daily nutrition tracking, a weekly refresh of flavors, or curated recommendations, our premium subscription plans adapt to what your clients crave most. It’s not just food—it’s a personalized lifestyle upgrade.",
+          
+          "supportLineTitle": "Support Line",
+          "supportLineDescription": "We’ve got your back. Our dedicated customer service team is always ready to assist—whether it’s managing your subscription, handling preferences, or navigating your salad journey. Fast, friendly, and focused on your satisfaction."
+        }
+      ,
       "common": {
         "unitPrice": "Unit Price",
         "welcome": "Welcome to our app!",
@@ -679,6 +880,204 @@
   },
   "ar": {
     "translation": {
+      "admin": {
+        "Items": "العناصر",
+        "Item": "عنصر",
+        "Name": "الاسم",
+        "Name (Arabic)": "الاسم (بالعربية)",
+        "Category": "الفئة",
+        "Category (Arabic)": "الفئة (بالعربية)",
+        "Price": "السعر",
+        "Free Count": "العدد المجاني",
+        "Available": "متوفر",
+        "Yes": "نعم",
+        "No": "لا",
+        "Allergies": "الحساسيات",
+        "None": "لا يوجد",
+        "Image": "الصورة",
+        "Meals": "الوجبات",
+        "Meal": "وجبة",
+        "Section": "القسم",
+        "Section (Arabic)": "القسم (بالعربية)",
+        "N/A": "غير متوفر",
+        "Calories": "السعرات الحرارية",
+        "Protein (g)": "البروتين (جم)",
+        "Carbs (g)": "الكربوهيدرات (جم)",
+        "Ingredients": "المكونات",
+        "Plans": "الخطط",
+        "Plan": "خطة",
+        "Title (EN)": "العنوان (إنجليزي)",
+        "Title (AR)": "العنوان (عربي)",
+        "Short Term Meals": "وجبات قصيرة المدى",
+        "Medium Term Meals": "وجبات متوسطة المدى",
+        "Protein": "البروتين",
+        "Calories (kcal)": "السعرات الحرارية (كيلو كالوري)",
+        "Price/Meal": "السعر/وجبة",
+        "Status": "الحالة",
+        "Active": "نشط",
+        "Inactive": "غير نشط",
+        "Users": "المستخدمون",
+        "User": "مستخدم",
+        "Email": "البريد الإلكتروني",
+        "Phone": "الهاتف",
+        "Role": "الدور",
+        "Loyalty Points": "نقاط الولاء",
+        "Admin": "مشرف",
+        "account_status": "حالة الحساب",
+        "loyalty_points": "نقاط الولاء",
+        "allergies": "الحساسيات",
+        "preferences": "تفضيلات",
+        "Created": "تاريخ الإنشاء",
+        "Order ID": "رقم الطلب",
+        "User ID": "معرف المستخدم",
+        "Customer": "العميل",
+        "Total Price": "إجمالي السعر",
+        "Payment": "الدفع",
+        "Total": "الإجمالي",
+        "Paid": "مدفوع",
+        "Unpaid": "غير مدفوع",
+        "Delivery Date": "تاريخ التوصيل",
+        "items": "العناصر",
+        "Orders": "الطلبات",
+        "Order": "طلب",
+        "Plan ID": "معرف الخطة",
+        "Plan Name": "اسم الخطة",
+        "Start Date": "تاريخ البدء",
+        "End Date": "تاريخ الانتهاء",
+        "Auto Renew": "تجديد تلقائي",
+        "Subscriptions": "الاشتراكات",
+        "Subscription": "اشتراك",
+        "ID": "المعرف",
+        "Allergy": "حساسية",
+        "Name (EN)": "الاسم (إنجليزي)",
+        "Name (AR)": "الاسم (عربي)",
+        "Severity": "الحدة",
+        "Low": "منخفض",
+        "Medium": "متوسط",
+        "High": "مرتفع",
+        "Dietary Preferences": "تفضيلات النظام الغذائي",
+        "Dietary Preference": "تفضيل غذائي",
+        "Description": "الوصف",
+        "Dashboard": "لوحة التحكم",
+        "Invalid entity type": "نوع الكيان غير صالح",
+        "{{key}} is required": "حقل {{key}} مطلوب",
+        "dashboard": {
+          "title": "لوحة تحكم المشرف"
+        },
+        "stats": {
+          "total_users": "إجمالي المستخدمين",
+          "admin_users": "المشرفون",
+          "items": "العناصر",
+          "plans": "الخطط",
+          "active_orders": "الطلبات النشطة",
+          "todays_revenue": "إيرادات اليوم",
+          "active_subscriptions": "الاشتراكات النشطة",
+          "available_meals": "الوجبات المتاحة"
+        },
+        "entities": {
+          "users": {
+            "title": "المستخدمون",
+            "description": "إدارة جميع المستخدمين",
+            "singular": "مستخدم"
+          },
+          "items": {
+            "title": "العناصر",
+            "description": "إدارة جميع العناصر",
+            "singular": "عنصر"
+          },
+          "meals": {
+            "title": "الوجبات",
+            "description": "إدارة جميع الوجبات",
+            "singular": "وجبة"
+          },
+          "plans": {
+            "title": "الخطط",
+            "description": "إدارة جميع الخطط",
+            "singular": "خطة"
+          },
+          "orders": {
+            "title": "الطلبات",
+            "description": "إدارة جميع الطلبات",
+            "singular": "طلب"
+          },
+          "subscriptions": {
+            "title": "الاشتراكات",
+            "description": "إدارة جميع الاشتراكات",
+            "singular": "اشتراك"
+          },
+          "allergies": {
+            "title": "الحساسيات",
+            "description": "إدارة جميع الحساسيات",
+            "singular": "حساسية"
+          },
+          "dietaryPreferences": {
+            "title": "تفضيلات النظام الغذائي",
+            "description": "إدارة جميع تفضيلات النظام الغذائي",
+            "singular": "تفضيل غذائي"
+          }
+        },
+        "actions": {
+          "add_entity": "إضافة {{entity}}",
+          "import_entity": "استيراد {{entity}}",
+          "export_entity": "تصدير {{entity}}",
+          "confirm_make_admin": "تأكيد تعيين كمشرف",
+          "confirm_remove_admin": "تأكيد إزالة المشرف",
+          "apply_action": "تطبيق الإجراء",
+          "cancel": "إلغاء",
+          "update_status": "تحديث الحالة"
+        },
+        "modals": {
+          "add_entity": "إضافة {{entity}} جديد",
+          "edit_entity": "تعديل {{entity}}",
+          "delete_entity": "حذف {{entity}}",
+          "user_actions": {
+            "title": "إجراءات سريعة للمستخدم"
+          },
+          "set_admin_status": "تعيين حالة المشرف لـ {{email}}",
+          "remove_admin_status": "إزالة حالة المشرف من {{email}}",
+          "update_order_status": "تحديث حالة الطلب",
+          "update_subscription_status": "تحديث حالة الاشتراك"
+        },
+        "fields": {
+          "account_status": "حالة الحساب",
+          "loyalty_points": "نقاط الولاء",
+          "new_status": "الحالة الجديدة"
+        },
+        "status": {
+          "active": "نشط",
+          "suspended": "معلق",
+          "deleted": "محذوف"
+        },
+        "order_status": {
+          "pending": "قيد الانتظار",
+          "confirmed": "تم التأكيد",
+          "preparing": "قيد التحضير",
+          "ready": "جاهز للاستلام",
+          "in_transit": "قيد التوصيل",
+          "delivered": "تم التوصيل",
+          "cancelled": "ملغي"
+        },
+        "subscription_status": {
+          "active": "نشط",
+          "paused": "موقوف مؤقتًا",
+          "cancelled": "ملغي",
+          "expired": "منتهي"
+        },
+        "activity": {
+          "action": "الإجراء",
+          "user": "المستخدم",
+          "target": "الهدف",
+          "time": "الوقت",
+          "system": "النظام",
+          "no_recent": "لا يوجد نشاط حديث"
+        },
+        "sections": {
+          "recent_activity": "النشاط الحديث"
+        },
+        "placeholders": {
+          "enter_points": "أدخل النقاط"
+        }
+      },
       "modal": {
         "close": "إغلاق",
         "addToCart": "أضف إلى السلة"
@@ -1346,17 +1745,21 @@
         "customizePolicy": "باستخدام هذه الميزة، أنت توافق على أن سلطتك المخصصة قد تحتوي على مكونات إضافية أو بدائل بناءً على تفضيلاتك. يرجى مراجعة المكونات بعناية قبل تأكيد الطلب."
       },
       "about": {
-        "aboutUs": "من نحن",
-        "ourMission": "مهمتنا",
-        "whyChooseUs": "لماذا تختارنا؟",
-        "ourStory": "تم تأسيس سوسيا سلطة في عام 2022 بهدف بسيط: جعل الأكل الصحي لذيذًا ومتاحًا للجميع.",
-        "ourValues": "قيمنا",
-        "ourValuesDescription": "في سوسيا سلطة، نحن ملتزمون بالجودة، الاستدامة، والمجتمع.",
-        "ourMissionDescription": "نحن في مهمة لتغيير الطريقة التي يفكر بها الناس حول الأكل الصحي.",
-        "intro": "اكتشف قصة سوسيا سلطة، حيث يلتقي التغذية بالنكهة في تناغم مثالي.",
-        "contactPrompt": "هل لديك أسئلة أو ترغب في معرفة المزيد عن رحلتنا؟ يسعدنا سماعك!",
-        "contactUs": "اتصل بنا"
-      },
+    "mealExperienceTitle": "تجربة الوجبات",
+    "mealExperienceDescription": "منصتنا تقدم لك سلطة صحية فاخرة، معمولة بأجود أنواع الخضار والمكونات الطازجة. كل وجبة مصممة عشان تدعم نمط حياة نشيط وصحي، وتضمن لك طعم لا يُقاوم مع قيمة غذائية عالية.",
+    
+    "customizationFlowTitle": "تخصيص الطلب",
+    "customizationFlowDescription": "تقدر تضبط سلطتك على مزاجك، تغيّر البروتين، تضيف إضافات تغذّي الجسم وتناسب ذوقك. وكل هذا يتم بكل سهولة وسلاسة داخل النظام—خدمة تناسب كل عميل حسب احتياجه.",
+    
+    "signatureMealsTitle": "السلطات المميزة",
+    "signatureMealsDescription": "اكتشف أطباق \"سلاد سوشيا\" الخاصة، اللي تجمع بين الذوق الراقي والمكونات المتوازنة. كل طبق يشع فخامة ويناسب الأذواق الراقية، ويعكس جودة المطاعم لكن بأبسط طريقة.",
+    
+    "premiumPlansTitle": "الباقات المميزة",
+    "premiumPlansDescription": "عندنا خطط اشتراك ممتازة تناسب طموحات عملائك. سواء يبغون تغيير أسبوعي أو متابعة غذائية دقيقة، خططنا تتكيّف مع طلباتهم وتقدم لهم تجربة أكل تُحسّن نمط حياتهم.",
+    
+    "supportLineTitle": "خدمة العملاء",
+    "supportLineDescription": "أي استفسار أو مشكلة؟ فريق الدعم معنا موجود دائماً لخدمتك. سريع، متعاون، ويهمه رضاك الكامل—نخدمك بكل ود واهتمام."
+  },
       "expertPortal": {
         "title": "اسأل خبير التغذية",
         "description": "احصل على توصيات وجبات مخصصة تناسب تفضيلاتك واحتياجاتك الغذائية. خبراؤنا هنا لمساعدتك على اتخاذ خيارات صحية!",

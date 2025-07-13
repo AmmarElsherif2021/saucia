@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDisclosure } from '@chakra-ui/react';
-import {ENTITY_CONFIGS} from './AdminEntityConfigs';
+import {useEntityConfigs} from './AdminEntityConfigs';
 
 // Explicit entity handlers
 const ENTITY_HANDLERS = {
@@ -76,6 +76,7 @@ const sanitizeData = (data) => {
 export const useEntityManager = (entityType, adminFunctions) => {
   const [selectedEntity, setSelectedEntity] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const { ENTITY_CONFIGS } = useEntityConfigs();
   const modals = {
     add: useDisclosure(),
     edit: useDisclosure(),

@@ -1,3 +1,4 @@
+import { motion, stagger } from 'framer-motion'
 import { FaShoppingCart } from 'react-icons/fa'
 import {
   Box,
@@ -45,6 +46,30 @@ export const Navbar = () => {
     { path: '/menu', section: 'Make Your Own Fruit Salad', label: 'makeYourOwnFruitSalad' },
     { path: '/premium', section: '', label: 'premium' },
   ]
+  const mobileMenuVariants = {
+    hidden: { opacity: 0, height: 0 },
+    visible: {
+      opacity: 1,
+      height: "auto",
+      transition: {
+        duration: 0.4,
+        staggerChildren: 0.1,
+        delayChildren: 0.1
+      }
+    }
+  }
+
+  const mobileMenuItemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        duration: 0.2,
+        ease: "easeOut"
+      }
+    }
+  }
 
   const toggleLanguage = () => {
     const newLanguage = currentLanguage === 'en' ? 'ar' : 'en'
@@ -240,23 +265,34 @@ export const Navbar = () => {
       </Container>
 
       {/* Mobile Menu Dropdown */}
-      {isOpen && (
-        <Box
-          display={{ base: 'block', md: 'block', lg: 'none' }}
-          bg={bgColor}
-          mt={0}
-          w={'100vw'}
-          position="fixed"
-          top="3.5rem"
-          borderColor={borderColor}
-          backdropFilter="blur(10px)"
-          _dark={{
-            bg: 'rgba(26, 32, 44, 0.98)',
-          }}
-        >
-          <Container maxW="1400px" px={{ base: 4, sm: 6 }}>
-            <VStack spacing={2} py={4} align="stretch">
-              {/* Home Link */}
+    {isOpen && (
+      <Box
+        as={motion.div}
+        initial="hidden"
+        animate="visible"
+        variants={mobileMenuVariants}
+        display={{ base: 'block', md: 'block', lg: 'none' }}
+        bg={bgColor}
+        mt={0}
+        w={'100vw'}
+        position="fixed"
+        top="3.5rem"
+        borderColor={borderColor}
+        backdropFilter="blur(10px)"
+        _dark={{
+          bg: 'rgba(26, 32, 44, 0.98)',
+        }}
+        overflow="hidden"
+      >
+        <Container maxW="1400px" px={{ base: 4, sm: 6 }}>
+          <VStack 
+            spacing={2} 
+            py={4} 
+            align="stretch"
+            as={motion.div}
+          >
+            {/* Home Link */}
+            <motion.div variants={mobileMenuItemVariants}>
               <Link to="/" onClick={onClose}>
                 <Button
                   variant="ghost"
@@ -270,11 +306,12 @@ export const Navbar = () => {
                   {t('navbar.home')}
                 </Button>
               </Link>
+            </motion.div>
 
-              {/* Menu Section Links */}
-              {menuSections.map((item) => (
+            {/* Menu Section Links */}
+            {menuSections.map((item) => (
+              <motion.div key={item.label} variants={mobileMenuItemVariants}>
                 <Link
-                  key={item.label}
                   to={item.path}
                   state={item.section ? handleSectionNavigation(item.section) : undefined}
                   onClick={onClose}
@@ -291,9 +328,11 @@ export const Navbar = () => {
                     {t(`navbar.${item.label}`)}
                   </Button>
                 </Link>
-              ))}
+              </motion.div>
+            ))}
 
-              {/* Mobile Profile Button */}
+            {/* Mobile Profile Button */}
+            <motion.div variants={mobileMenuItemVariants}>
               <Button
                 w="full"
                 onClick={onProfileModalOpen}
@@ -306,8 +345,10 @@ export const Navbar = () => {
               >
                 {t('navbar.profile')}
               </Button>
+            </motion.div>
 
-              {/* Mobile Language Toggle */}
+            {/* Mobile Language Toggle */}
+            <motion.div variants={mobileMenuItemVariants}>
               <Button
                 w="full"
                 onClick={toggleLanguage}
@@ -320,10 +361,11 @@ export const Navbar = () => {
               >
                 {currentLanguage.toUpperCase()}
               </Button>
-            </VStack>
-          </Container>
-        </Box>
-      )}
+            </motion.div>
+          </VStack>
+        </Container>
+      </Box>
+    )}
 
       {/* Mobile Profile Modal */}
       {isProfileModalOpen && (
