@@ -434,8 +434,8 @@ export const ACC = ({ sections = [], expandedIndex, onToggle }) => {
           <h2>
             <AccordionButton
               _expanded={{border: '4px solid brand.500', bg: 'brand.500' }}
-              _hover={{ bg: 'brand.100' }}
-              sx={{ borderColor: 'brand.500', bg: 'brand.500', color: 'brand.900' }}
+              _hover={{ bg: 'secondary.500' }}
+              sx={{ borderColor: 'brand.500', bg: 'brand.500', color: 'brand.900',my:-0.5 }}
             >
               <Box flex="1" textAlign="left" textStyle="heading">
                 <Flex align="center" gap={2}>
@@ -453,7 +453,7 @@ export const ACC = ({ sections = [], expandedIndex, onToggle }) => {
               <AccordionIcon />
             </AccordionButton>
           </h2>
-          <AccordionPanel pb={4} style={{ overflowY: 'auto', maxHeight: '50vh' }}>
+          <AccordionPanel my={4} style={{ overflowY: 'auto', maxHeight: '50vh' }}>
             {section.content}
           </AccordionPanel>
         </AccordionItem>

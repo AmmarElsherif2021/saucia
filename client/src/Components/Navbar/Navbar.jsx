@@ -12,6 +12,7 @@ import {
   Img,
   HStack,
   Container,
+  Badge
 } from '@chakra-ui/react'
 import { HamburgerIcon, CloseIcon, MoonIcon, SunIcon } from '@chakra-ui/icons'
 import { Link } from 'react-router-dom'
@@ -20,6 +21,8 @@ import { ProfileDD } from './ProfileDD.jsx'
 import { ProfileModal } from './ProfileModal'
 import { useI18nContext } from '../../Contexts/I18nContext.jsx'
 import { useTranslation } from 'react-i18next'
+import { useCart } from '../../Contexts/CartContext.jsx'
+import { useEffect, useState } from 'react'
 
 export const Navbar = () => {
   const { colorMode, toggleColorMode } = useColorMode()
@@ -46,6 +49,14 @@ export const Navbar = () => {
     { path: '/menu', section: 'Make Your Own Fruit Salad', label: 'makeYourOwnFruitSalad' },
     { path: '/premium', section: '', label: 'premium' },
   ]
+
+  // cart count
+  const {cart,setCart}=useCart()
+  const [cartCount, setCartCount] = useState(0);
+  useEffect(() => {
+    setCartCount(cart.length);
+  }, [cart,setCart]);
+  //variants
   const mobileMenuVariants = {
     hidden: { opacity: 0, height: 0 },
     visible: {
@@ -160,20 +171,27 @@ export const Navbar = () => {
             flexShrink={0}
           >
             {/* Cart Button */}
-            <Link to="/cart">
-              <IconButton
-                aria-label={t('navbar.cart')}
-                icon={<FaShoppingCart />}
-                variant="ghost"
-                size={{ md: 'sm', lg: 'md' }}
-                _hover={{
-                  bg: useColorModeValue('brand.50', 'brand.800'),
-                  color: useColorModeValue('brand.700', 'brand.200'),
-                  transform: 'scale(1.1)',
-                }}
-                transition="all 0.2s"
-              />
-            </Link>
+            <Box position="relative" display="inline-block">
+            <IconButton
+              aria-label={t('navbar.cart')}
+              icon={<FaShoppingCart />}
+              variant="ghost"
+              size="sm"
+            />
+            {cartCount > 0 && (
+              <Badge
+            bg={"red.300"}
+            borderRadius="full"
+            position="absolute"
+            top="-1"
+            right="-1"
+            fontSize="0.7em"
+            px={1}
+          >
+            {cartCount}
+          </Badge>
+        )}
+      </Box>
 
             {/* Profile Dropdown - Desktop Only */}
             <Box display={{ base: 'none', md: 'block', lg: 'block' }}>
@@ -231,13 +249,28 @@ export const Navbar = () => {
           <HStack spacing={1} display={{ base: 'flex', md: 'none' }}>
             {/* Mobile Cart */}
             <Link to="/cart">
-              <IconButton
-                aria-label={t('navbar.cart')}
-                icon={<FaShoppingCart />}
-                variant="ghost"
-                size="sm"
-              />
-            </Link>
+          <Box position="relative" display="inline-block">
+            <IconButton
+              aria-label={t('navbar.cart')}
+              icon={<FaShoppingCart />}
+              variant="ghost"
+              size="sm"
+            />
+            {cartCount > 0 && (
+              <Badge
+            colorScheme="red"
+            borderRadius="full"
+            position="absolute"
+            top="-1"
+            right="-1"
+            fontSize="0.7em"
+            px={2}
+          >
+            {cartCount}
+          </Badge>
+        )}
+      </Box>
+    </Link>
 
             {/* Mobile Theme Toggle */}
             <IconButton

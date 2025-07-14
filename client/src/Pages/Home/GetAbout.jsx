@@ -1,4 +1,4 @@
-import { Box, Heading, Flex, Text, Button, Image, VStack, useColorMode } from '@chakra-ui/react'
+import { Box, Heading, Flex, Text, Button, Image, VStack, useColorMode, Input, InputGroup, InputRightElement } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import chefImage from '../../assets/chef.png'
@@ -7,6 +7,7 @@ import missionImage from '../../assets/experience.png'
 import customImage from '../../assets/custom.png' 
 import premiumImage from '../../assets/premium.png'
 import supportImage from '../../assets/support.png'
+import { useState } from 'react'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -32,14 +33,14 @@ const itemVariants = {
   },
 }
 
-const AboutCard = ({ title, description, image }) => {
+const AboutCard = ({ title, description, image, inputComponent, cardBg }) => {
   const { colorMode } = useColorMode()
   const MotionBox = motion(Box)
 
   return (
     <MotionBox
       variants={itemVariants}
-      bg={colorMode === 'dark' ? 'gray.700' : 'white'}
+      bg={colorMode === 'dark' ? 'gray.700' : cardBg}
       p={6}
       borderRadius="lg"
       display="flex"
@@ -66,14 +67,57 @@ const AboutCard = ({ title, description, image }) => {
         spacing={3}
         textAlign="left"
       >
-        <Heading as="h3" size="lg" color="brand.500">
+        <Heading as="h3" size="lg" color="brand.700">
           {title}
         </Heading>
         <Text fontSize="md" color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}>
           {description}
         </Text>
+        {/* Input component area */}
+        {inputComponent && (
+          <Box width="100%" mt={3}>
+            {inputComponent}
+          </Box>
+        )}
       </VStack>
     </MotionBox>
+  )
+}
+
+// Support Form Component
+const SupportForm = () => {
+  const { t } = useTranslation()
+  const [message, setMessage] = useState('')
+  
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    console.log('Support message submitted:', message)
+    // Here you would typically send the message to your backend
+    setMessage('')
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <InputGroup size="md">
+        <Input
+          pr="4.5rem"
+          placeholder={t('about.supportPlaceholder')}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          variant={"filled"}
+        />
+        <InputRightElement width="4.5rem">
+          <Button 
+            h="1.75rem" 
+            size="sm" 
+            colorScheme="brand"
+            type="submit"
+          >
+            {t('about.send')}
+          </Button>
+        </InputRightElement>
+      </InputGroup>
+    </form>
   )
 }
 
@@ -88,39 +132,82 @@ export const AboutUs = ({ contactUs }) => {
       title: t('about.mealExperienceTitle'),
       description: t('about.mealExperienceDescription'),
       image: chefImage,
+      inputComponent: (
+        <Button 
+          colorScheme="brand" 
+          size="sm"
+          onClick={() => window.location.href = '/menu'}
+        >
+          {t('about.browseMenu')}
+        </Button>
+      ),
+      cardBg:'teal.200'
     },
     {
       id: 2,
       title: t('about.customizationFlowTitle'),
       description: t('about.customizationFlowDescription'),
       image: customImage,
+      inputComponent: (
+        <Button 
+          colorScheme="teal" 
+          size="sm"
+          onClick={() => window.location.href = '/customize'}
+        >
+          {t('about.createYourOwn')}
+        </Button>
+      ),
+      cardBg: 'orange.200'
     },
     {
       id: 3,
       title: t('about.signatureMealsTitle'),
       description: t('about.signatureMealsDescription'),
       image: missionImage,
+      inputComponent: (
+        <Button 
+          colorScheme="secondary" 
+          size="sm"
+          onClick={() => window.location.href = '/signature'}
+        >
+          {t('about.viewSignatureMeals')}
+        </Button>
+      ),
+      cardBg: 'brand.200'
     },
     {
       id: 4,
       title: t('about.premiumPlansTitle'),
       description: t('about.premiumPlansDescription'),
       image: premiumImage,
+      inputComponent: (
+        <Button 
+          colorScheme="brand" 
+          size="sm"
+          onClick={() => window.location.href = '/premium'}
+        >
+          {t('about.explorePlans')}
+        </Button>
+      ),
+      cardBg: 'tertiary.400'
     },
     {
       id: 5,
       title: t('about.supportLineTitle'),
       description: t('about.supportLineDescription'),
       image: supportImage,
+      inputComponent: <SupportForm/>,
+      cardBg: 'warning.200'
     },
   ]
+  
 
   return (
     <Box
       py={12}
       my={6}
       px={{ base: 4, md: 8 }}
-      bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
+      bg={colorMode === 'dark' ? 'gray.800' : 'brand.600'}
       borderRadius={'10px'}
     >
       <MotionBox
@@ -135,7 +222,7 @@ export const AboutUs = ({ contactUs }) => {
           size="xl"
           mb={8}
           textAlign="center"
-          color={colorMode === 'dark' ? 'white' : 'brand.700'}
+          color={colorMode === 'dark' ? 'white' : 'brand.800'}
         >
           {t('about.aboutUs')}
         </Heading>
@@ -146,7 +233,7 @@ export const AboutUs = ({ contactUs }) => {
           textAlign="center"
           maxW="800px"
           mx="auto"
-          color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}
+          color={colorMode === 'dark' ? 'gray.300' : 'tertiary.600'}
         >
           {t('about.intro')}
         </Text>
@@ -173,25 +260,13 @@ export const AboutUs = ({ contactUs }) => {
                 title={section.title}
                 description={section.description}
                 image={section.image}
+                inputComponent={section.inputComponent}
+                cardBg={section.cardBg}
               />
             </motion.div>
           ))}
         </VStack>
 
-        <Box textAlign="center" mt={8}>
-          <Text fontSize="lg" mb={4} color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}>
-            {t('about.contactPrompt')}
-          </Text>
-          <Button
-            colorScheme="brand"
-            size="lg"
-            onClick={contactUs}
-            _hover={{ transform: 'translateY(-2px)' }}
-            transition="all 0.3s"
-          >
-            {t('about.contactUs')}
-          </Button>
-        </Box>
       </MotionBox>
     </Box>
   )

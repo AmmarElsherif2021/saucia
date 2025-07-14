@@ -82,7 +82,7 @@
             └── UserAccountPage.jsx
             └── UserDashboard.jsx
         └── 📁Home
-            └── ExpertPortal.jsx
+            └── SupportPortal.jsx
             └── FeaturedSlide.jsx
             └── Footer.jsx
             └── GetAbout.jsx

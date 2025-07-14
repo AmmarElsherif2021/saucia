@@ -10,9 +10,9 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import { ItemsCarousel } from '../../Components/ItemsCarousel'
-import heroA from '../../assets/hero/heroA.JPG'
+import heroA from '../../assets/hero/heroA.PNG'
 import heroB from '../../assets/hero/heroB.JPG'
-import heroC from '../../assets/hero/heroC.JPG'
+import heroC from '../../assets/hero/heroC.PNG'
 import heroD from '../../assets/hero/heroD.JPG'
 import heroE from '../../assets/hero/heroE.JPG'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'

@@ -221,6 +221,14 @@
       },
       
         "about": {
+          "aboutUs":"About Saucia Salad",
+          "intro":"Welcome to Saucía Salad—where crunch meets cool! We don’t just toss greens… we create salad experiences that dance with flavor, freshness, and fun. Whether you’re in for a protein power-up or just vibing with veggies, we’ve got the perfect bowl to match your mood. Healthy never tasted this joyful!",
+          "browseMenu": "Browse Menu",
+          "createYourOwn": "Create Your Own",
+          "viewSignatureMeals": "View Signature Meals",
+          "explorePlans": "Explore Plans",
+          "supportPlaceholder": "Type your message here...",
+          "send": "Send",
           "mealExperienceTitle": "Meal Experience",
           "mealExperienceDescription": "Our platform empowers users with a dynamic menu of fresh, healthy salads crafted for taste and wellness. Each meal is designed to meet modern dietary needs and support an active lifestyle, using only high-quality ingredients and fresh produce.",
           
@@ -554,7 +562,7 @@
         "lunch": "Lunch",
         "dinner": "Dinner",
         "appetizer": "Appetizer",
-        "soup": "Soup",
+        "soups": "Soup",
         "beverage": "Beverage",
         "smoothie": "Smoothie",
         "juice": "Juice",
@@ -565,9 +573,11 @@
         "bakery": "Bakery",
         "grains": "Grains",
         "pasta": "Pasta",
-        "seafood": "Seafood"
+        "seafood": "Seafood",
+        "our signature salad": "Our Signature Salad"
       },
       "dietaryTags": {
+        "vegetarian": "Vegetarian",
         "vegan": "Vegan",
         "glutenFree": "Gluten-Free",
         "lowCarb": "Low-Carb",
@@ -870,7 +880,7 @@
         "customizeYourSalad": "Customize Your Salad",
         "customizePolicy": " You can customize your salad by selecting base ingredients from the following sections. You can choose only 1 item from each section"
       },
-      "expertPortal": {
+      "supportPortal": {
         "title": "Ask a Nutrition Expert",
         "description": "Get personalized meal recommendations tailored to your preferences and dietary needs. Our experts are here to help you make healthier choices!",
         "textareaPlaceholder": "Describe your meal preferences or dietary needs...",
@@ -1393,6 +1403,7 @@
       },
 
       "foodCategories": {
+        "our signature salad":"سلطاتنا المميزة",
         "juices": "عصائر",
         "dessert": "الحلويات",
         "healthy": "صحي",
@@ -1402,7 +1413,7 @@
         "lunch": "الغداء",
         "dinner": "العشاء",
         "appetizer": "المقبلات",
-        "soup": "الشوربة",
+        "soups": "الشوربة",
         "beverage": "المشروبات",
         "smoothie": "سموذي",
         "juice": "عصير",
@@ -1416,6 +1427,7 @@
         "seafood": "مأكولات بحرية"
       },
       "dietaryTags": {
+        "vegetarian": "نباتي صرف",
         "vegan": "نباتي",
         "glutenFree": "خالي من الجلوتين",
         "lowCarb": "قليل الكربوهيدرات",
@@ -1745,6 +1757,14 @@
         "customizePolicy": "باستخدام هذه الميزة، أنت توافق على أن سلطتك المخصصة قد تحتوي على مكونات إضافية أو بدائل بناءً على تفضيلاتك. يرجى مراجعة المكونات بعناية قبل تأكيد الطلب."
       },
       "about": {
+    "aboutUs":"من نحن",
+    "intro":"هنا القرمشة فخامة! ما نخلط خضار وبس… إحنا نجهز لك تجربة سلطات تحبها قلبك قبل معدتك! تبغى طاقة بالبروتين؟ أو مودك خفيف وخضاري؟ سلطتنا جاهزة تسعدك! الصحة عمرها ما كانت بهالطعم الحلو!",
+    "browseMenu": "تصفح القائمة",
+    "createYourOwn": "اصنع سلطتك الخاصة",
+    "viewSignatureMeals": "شاهد السلطات المميزة",
+    "explorePlans": "اكتشف الباقات",
+    "supportPlaceholder": "اكتب رسالتك هنا...",
+    "send": "إرسال",
     "mealExperienceTitle": "تجربة الوجبات",
     "mealExperienceDescription": "منصتنا تقدم لك سلطة صحية فاخرة، معمولة بأجود أنواع الخضار والمكونات الطازجة. كل وجبة مصممة عشان تدعم نمط حياة نشيط وصحي، وتضمن لك طعم لا يُقاوم مع قيمة غذائية عالية.",
     
@@ -1760,7 +1780,7 @@
     "supportLineTitle": "خدمة العملاء",
     "supportLineDescription": "أي استفسار أو مشكلة؟ فريق الدعم معنا موجود دائماً لخدمتك. سريع، متعاون، ويهمه رضاك الكامل—نخدمك بكل ود واهتمام."
   },
-      "expertPortal": {
+      "supportPortal": {
         "title": "اسأل خبير التغذية",
         "description": "احصل على توصيات وجبات مخصصة تناسب تفضيلاتك واحتياجاتك الغذائية. خبراؤنا هنا لمساعدتك على اتخاذ خيارات صحية!",
         "textareaPlaceholder": "صف تفضيلات وجباتك أو احتياجاتك الغذائية...",

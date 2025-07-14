@@ -9,7 +9,7 @@ import { useI18nContext } from '../../Contexts/I18nContext'
 import { useElements } from '../../Contexts/ElementsContext'
 
 // Import icons
-import makeSaladIcon from '../../assets/menu/ingredient.svg'
+import makeSaladIcon from '../../assets/menu/fruit-salad.svg'
 import proteinIcon from '../../assets/menu/protein.svg'
 import cheeseIcon from '../../assets/menu/cheese.svg'
 import extrasIcon from '../../assets/menu/extras.svg'

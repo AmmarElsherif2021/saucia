@@ -1,6 +1,6 @@
-import { border, extendTheme, Input, position, Toast } from '@chakra-ui/react'
+import { border, extendTheme, Input, position, textDecoration, Toast } from '@chakra-ui/react'
 import './index.css'
-import { color, px } from 'framer-motion'
+import { cancelFrame, color, px } from 'framer-motion'
 
 const createTheme = (config) => {
   const isArabic = config?.language === 'ar'
@@ -321,9 +321,9 @@ const createTheme = (config) => {
           field: {
             borderRadius: 'md',
             borderWidth: '2px',
-            borderColor: 'brand.600',
+            borderColor: 'brand.200',
             _focus: {
-              borderColor: 'brand.800',
+              borderColor: 'brand.400',
               borderWidth: '3px',
             },
           },
@@ -342,9 +342,9 @@ const createTheme = (config) => {
           filled: {
             field: {
               bg: 'brand.100',
-              borderColor: 'brand.500',
+              borderColor: 'brand.200',
               _hover: {
-                bg: 'gray.200',
+                bg: 'brand.200',
               },
               _focus: {
                 bg: 'white',
@@ -354,7 +354,7 @@ const createTheme = (config) => {
           },
         },
         defaultProps: {
-          variant: 'outline',
+          variant: 'filled',
         },
       },
 
@@ -416,6 +416,7 @@ const createTheme = (config) => {
           padding: 0,
           color: props.colorMode === 'dark' ? 'gray.100' : 'gray.800',
           fontFamily: isArabic ? "'Lalezar', sans-serif" : "'Outfit', sans-serif",
+          textAlign: isArabic?"right":"left"
         }),
         variants: {
           muted: (props) => ({
@@ -627,13 +628,19 @@ const createTheme = (config) => {
             boxShadow: props.colorMode === 'dark' ? 'dark-lg' : 'none',
             padding: '5rem',
           },
+          cancelFrame: {
+            bg: props.colorMode === 'dark' ? 'gray.700' : 'white',
+            borderRadius: 'md',
+            boxShadow: props.colorMode === 'dark' ? 'dark-lg' : 'none',
+          },
+          
         }),
       },
       CloseButton: {
         baseStyle: (props) => ({
           color: props.colorMode === 'dark' ? 'error.200' : 'error.600',
           bg: 'transparent',
-          border: '2px solid',
+          border: 'none',
           borderColor: props.colorMode === 'dark' ? 'error.200' : 'error.600',
           borderRadius: 'md',
           width: '1.5rem',

@@ -36,6 +36,7 @@ import unknownDefaultImage from '../assets//menu/unknownMeal.JPG'
 import { useI18nContext } from '../Contexts/I18nContext'
 import { useTranslation } from 'react-i18next'
 import { useCart } from '../Contexts/CartContext'
+import { motion } from 'framer-motion'
 
 
 export const AddToCartModal = ({
@@ -76,7 +77,7 @@ export const AddToCartModal = ({
       </ModalHeader>
       <ModalBody>
         <Flex direction="column" gap={4}>
-          <Text fontSize="lg" fontWeight="medium">
+          <Text color={colorMode== "dark"?"brand.300":"brand.600" } fontSize="lg" fontWeight="medium">
             {t('cart.howManyWouldYouLike')}
           </Text>
           <Flex align="center" justify="space-between">
@@ -120,6 +121,7 @@ export const AddToCartModal = ({
 )
 
 // Basic Food Card - Simple design with image, title, price
+// Basic Food Card - Simple design with image, title, price
 export const MealCard = ({ meal }) => {
   const { colorMode } = useColorMode();
   const { t } = useTranslation();
@@ -132,15 +134,15 @@ export const MealCard = ({ meal }) => {
   const displayName = isArabic && meal.name_arabic ? meal.name_arabic : meal.name;
   const displayDescription = isArabic && meal.description_arabic ? meal.description_arabic : meal.description;
   
-  // Extract values from meal object
+  // Extract values from meal object (corrected field mappings)
   const {
     id,
     image_url,
-    price,
-    offerRatio,
-    rate,
+    price, // This is the calculated effective price from useMeals
+    base_price,
+    rating, // Changed from 'rate' to 'rating'
     type = 'ready',
-    is_discount_active: hasOffer,
+    is_discount_active, // Changed from 'hasOffer'
     discount_percentage,
     is_vegetarian,
     is_vegan,
@@ -148,6 +150,9 @@ export const MealCard = ({ meal }) => {
     is_dairy_free,
     spice_level,
     section,
+    is_available = true,
+    prep_time_minutes,
+    rating_count
   } = meal;
 
   const handleConfirm = () => {
@@ -160,6 +165,11 @@ export const MealCard = ({ meal }) => {
     });
     setIsModalOpen(false);
   };
+
+  // Don't render if meal is not available
+  if (!is_available) {
+    return null;
+  }
 
   return (
     <>
@@ -174,7 +184,7 @@ export const MealCard = ({ meal }) => {
         position="relative"
       >
         {/* Offer badge */}
-        {hasOffer && (
+        {is_discount_active && discount_percentage > 0 && (
           <Badge
             position="absolute"
             top="10px"
@@ -202,6 +212,11 @@ export const MealCard = ({ meal }) => {
             <Heading size="md" color="brand.700" textAlign="left">
               {displayName}
             </Heading>
+            {prep_time_minutes && (
+              <Text fontSize="xs" color="gray.500">
+                {prep_time_minutes} {t('common.minutes')}
+              </Text>
+            )}
           </Flex>
           
           <Text color={colorMode === 'dark' ? 'gray.300' : 'gray.600'} fontSize="sm" mb="2">
@@ -209,37 +224,51 @@ export const MealCard = ({ meal }) => {
           </Text>
           
           <Flex justify="space-between" align="center" mb="2">
-            <Text fontWeight="bold" fontSize="md" color="gray.800">
-              ${typeof price === 'number' ? price.toFixed(2) : 'N/A'}
-            </Text>
+            <Box>
+              <Text fontWeight="bold" fontSize="md" color="gray.800">
+                ${typeof price === 'number' ? price.toFixed(2) : 'N/A'}
+              </Text>
+              {/* Show original price if discounted */}
+              {is_discount_active && base_price && base_price !== price && (
+                <Text
+                  fontSize="sm"
+                  color="gray.500"
+                  textDecoration="line-through"
+                >
+                  ${base_price.toFixed(2)}
+                </Text>
+              )}
+            </Box>
             
-            <Flex wrap="wrap" gap="1">
+            <Flex wrap="wrap" gap="1" justify="flex-end">
               {is_vegetarian && (
-                <Badge colorScheme="green" variant="subtle">
-                  {t('dietary.vegetarian')}
+                <Badge colorScheme="green" variant="subtle" size="sm">
+                  {t('dietaryTags.vegetarian')}
                 </Badge>
               )}
               {is_vegan && (
-                <Badge colorScheme="teal" variant="subtle">
-                  {t('dietary.vegan')}
+                <Badge colorScheme="teal" variant="subtle" size="sm">
+                  {t('dietaryTags.vegan')}
                 </Badge>
               )}
               {is_gluten_free && (
-                <Badge colorScheme="orange" variant="subtle">
-                  {t('dietary.glutenFree')}
+                <Badge colorScheme="orange" variant="subtle" size="sm">
+                  {t('dietaryTags.glutenFree')}
                 </Badge>
               )}
               {is_dairy_free && (
-                <Badge colorScheme="purple" variant="subtle">
-                  {t('dietary.dairyFree')}
+                <Badge colorScheme="purple" variant="subtle" size="sm">
+                  {t('dietaryTags.dairyFree')}
                 </Badge>
               )}
             </Flex>
           </Flex>
           
-          <Text fontSize="sm" mb="2">
-            {t('common.spiceLevel')}: {spice_level}/5
-          </Text>
+          {spice_level > 0 && (
+            <Text fontSize="sm" mb="2" color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}>
+              {t('common.spiceLevel')}: {spice_level}/5
+            </Text>
+          )}
 
           <Flex align="center" mb="2">
             {Array(5)
@@ -247,19 +276,24 @@ export const MealCard = ({ meal }) => {
               .map((_, i) => (
                 <StarIcon
                   key={i}
-                  color={i < (rate || 0) ? 'brand.500' : 'gray.300'}
+                  color={i < (rating || 0) ? 'brand.500' : 'gray.300'}
                   boxSize="3"
                   mr="1"
                 />
               ))}
             <Text ml="1" fontSize="sm" color={colorMode === 'dark' ? 'gray.400' : 'gray.500'}>
-              {rate?.toFixed?.(1) || '0.0'}
+              {rating?.toFixed?.(1) || '0.0'}
+              {rating_count > 0 && (
+                <Text as="span" ml="1">
+                  ({rating_count})
+                </Text>
+              )}
             </Text>
           </Flex>
 
           <Flex justify="space-between" align="center" mb="2">
             <Badge colorScheme="brand" variant="subtle" borderRadius="full">
-              {t(`foodCategories.${section?.toLowerCase?.()}`)}
+              {section ? t(`foodCategories.${section?.toLowerCase?.()}`) : t('common.uncategorized')}
             </Badge>
             <Badge colorScheme={type === 'custom' ? 'purple' : 'blue'} borderRadius="full">
               {type === 'custom' ? t('common.custom') : t('common.ready')}
@@ -271,6 +305,7 @@ export const MealCard = ({ meal }) => {
             size="sm" 
             width="full" 
             onClick={() => setIsModalOpen(true)}
+            isDisabled={!is_available}
           >
             {t('buttons.addToCart')}
           </Button>
@@ -287,7 +322,7 @@ export const MealCard = ({ meal }) => {
           setQuantity={setQuantity}
           onConfirm={handleConfirm}
           t={t}
-          hasOffer={hasOffer}
+          hasOffer={is_discount_active}
           discountPercentage={discount_percentage}
           colorMode={colorMode}
         />
@@ -295,7 +330,6 @@ export const MealCard = ({ meal }) => {
     </>
   );
 };
-
 // Premium Food Card - More detailed with rating, tag, and action buttons
 export const PremiumMealCard = ({ meal }) => {
   const { colorMode } = useColorMode();
@@ -590,18 +624,48 @@ export const MinimalistMealCard = ({ meal }) => {
 
 // Food Cards Demo Component
 
-export const FeaturedMealCard = ({ item }) => { // Changed from 'meal' to 'item'
+export const FeaturedMealCard = ({ item,index = 0 }) => { 
   const { colorMode } = useColorMode()
   const { t, i18n } = useTranslation()
   const { addToCart } = useCart()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const isArabic = i18n.language === 'ar'
-
+  const cardVariants = {
+    hidden: {
+      opacity: 0.7,
+      x: 50,     
+    },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut",
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  }
+  const elementVariants = {
+    hidden: {
+      opacity: 0,
+      y: 20
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.4,
+        ease: "easeOut"
+      }
+    }
+  }
   // Extract properties from item object (changed from 'meal' to 'item')
   const {
     id,
     name,
+    name_arabic,
     description,
     base_price: originalPrice = 0,
     price: effectivePrice = 0,
@@ -611,8 +675,13 @@ export const FeaturedMealCard = ({ item }) => { // Changed from 'meal' to 'item'
     image_url: image,
     is_featured,
     is_discount_active: hasOffer
-  } = item // Changed from 'meal' to 'item'
-
+  } = item 
+  // Motion components
+  const MotionBox = motion(Box)
+  const MotionFlex = motion(Flex)
+  const MotionHeading = motion(Heading)
+  const MotionText = motion(Text)
+  const MotionButton = motion(Button)
   // Pricing calculations
   const discountPercentage = hasOffer ? (100 - offerRatio * 100).toFixed(0) : 0
 
@@ -629,8 +698,8 @@ export const FeaturedMealCard = ({ item }) => { // Changed from 'meal' to 'item'
 
   return (
     <>
-      {/* Card Container */}
-      <Box
+      {/* Card Container with Motion */}
+      <MotionBox
         maxW={['62vw', '54vw', '28vw']}
         minW={['50vw', '48vw', '20vw']}
         w="full"
@@ -646,9 +715,21 @@ export const FeaturedMealCard = ({ item }) => { // Changed from 'meal' to 'item'
         my={2}
         mx="auto"
         cursor="pointer"
+        variants={cardVariants}
+        initial="hidden"
+        animate="visible"
+        custom={index} // Pass index for custom staggering
+        style={{
+          animationDelay: `${index * 0.1}s` // Additional stagger delay
+        }}
       >
         {/* Image Section */}
-        <Box position="relative" height={'45%'} width="100%">
+        <Box 
+          position="relative" 
+          height={'45%'} 
+          width="100%"
+          variants={elementVariants}
+        >
           <Image
             src={image || unknownDefaultImage}
             alt={name}
@@ -659,108 +740,140 @@ export const FeaturedMealCard = ({ item }) => { // Changed from 'meal' to 'item'
           />
 
           {/* Badges */}
-          <Flex
+          <MotionFlex
             position="absolute"
             top="0"
             left="0"
             right="0"
             px={2}
             justifyContent="space-between"
-            bg="linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%)"
+            variants={elementVariants}
           >
             <Flex gap={2} m={2}>
               {is_featured && (
-                <Badge colorScheme="yellow" variant="solid" borderRadius="md" p={0}>
-                  {t('common.featured')}
-                </Badge>
+                <motion.div variants={elementVariants}>
+                  <Badge colorScheme="yellow" variant="solid" borderRadius="md" p={0}>
+                    {t('common.featured')}
+                  </Badge>
+                </motion.div>
               )}
               {hasOffer && (
-                <Badge colorScheme="green" variant="solid" borderRadius="md" p={0}>
-                  {t('common.offer')} {discountPercentage}% OFF
-                </Badge>
+                <motion.div variants={elementVariants}>
+                  <Badge colorScheme="green" variant="solid" borderRadius="md" p={0}>
+                    {t('common.offer')} {discountPercentage}% OFF
+                  </Badge>
+                </motion.div>
               )}
             </Flex>
 
-            <Badge bg="brand.600" color="white" borderRadius="md" p={0} m={2} fontSize="xs">
-              {t(`foodCategories.${section?.toLowerCase?.()}`)}
-            </Badge>
-          </Flex>
+            <motion.div variants={elementVariants}>
+              <Badge bg="brand.600" color="white" borderRadius="md" p={0} m={2} fontSize="xs">
+                {t(`foodCategories.${section?.toLowerCase?.()}`)}
+              </Badge>
+            </motion.div>
+          </MotionFlex>
         </Box>
 
         {/* Content Section */}
-        <Box p={2} bg={colorMode === 'dark' ? 'gray.700' : 'white'} height={'30%'}>
-          <Flex direction="column" gap={2}>
-            <Heading
+        <MotionBox 
+          p={2} 
+          bg={colorMode === 'dark' ? 'gray.700' : 'white'} 
+          height={'30%'}
+          variants={elementVariants}
+        >
+          <MotionFlex direction="column" gap={2} variants={elementVariants}>
+            <MotionHeading
               fontSize={'1.3em'}
-              color={colorMode === 'dark' ? 'white' : 'gray.800'}
+              color={colorMode === 'dark' ? 'white' : 'brand.700'}
               noOfLines={1}
+              variants={elementVariants}
             >
-              {name}
-            </Heading>
+              {isArabic? name_arabic || name : name}
+            </MotionHeading>
 
-            <Text fontSize="sm" color="gray.500" minH="2vw" noOfLines={1}>
+            <MotionText 
+              fontSize="sm" 
+              color="gray.500" 
+              minH="2vw" 
+              noOfLines={1}
+              variants={elementVariants}
+            >
               {description}
-            </Text>
+            </MotionText>
 
             {/* Price and Rating */}
-            <Flex justify="space-between" align="center" mt={0}>
+            <MotionFlex 
+              justify="space-between" 
+              align="center" 
+              mt={0}
+              variants={elementVariants}
+            >
               <Flex direction="column">
                 {hasOffer && (
-                  <Text fontSize="0.7em" color="gray.500" textDecoration="line-through">
-                    SAR {originalPrice.toFixed(2)}
-                  </Text>
+                  <motion.div variants={elementVariants}>
+                    <Text fontSize="0.7em" color="gray.500" textDecoration="line-through">
+                     {t("common.currency")}{originalPrice.toFixed(2)}
+                    </Text>
+                  </motion.div>
                 )}
-                <Text
-                  fontWeight="bold"
-                  fontSize={['md', 'lg']}
-                  color={hasOffer ? 'green.500' : 'brand.700'}
-                >
-                  SAR {effectivePrice.toFixed(2)}
-                </Text>
+                <motion.div variants={elementVariants}>
+                  <Text
+                    fontWeight="bold"
+                    fontSize={['md', 'lg']}
+                    color={hasOffer ? 'green.500' : 'brand.700'}
+                  >
+                   {effectivePrice.toFixed(2)}{t("common.currency")}
+                  </Text>
+                </motion.div>
               </Flex>
 
-              <Flex align="center">
-                {Array(5)
-                  .fill('')
-                  .map((_, i) => (
-                    <StarIcon
-                      key={i}
-                      color={i < rate ? 'warning.300' : 'gray.300'}
-                      boxSize="1.2em"
-                    />
-                  ))}
-                <Text mx={2} fontSize="sm">
-                  ({rate?.toFixed?.(1) || '0.0'})
-                </Text>
-              </Flex>
-            </Flex>
+              <motion.div variants={elementVariants}>
+                <Flex align="center">
+                  {Array(5)
+                    .fill('')
+                    .map((_, i) => (
+                      <StarIcon
+                        key={i}
+                        color={i < rate ? 'warning.300' : 'gray.300'}
+                        boxSize="1.2em"
+                      />
+                    ))}
+                  <Text mx={2} fontSize="sm">
+                    ({rate?.toFixed?.(1) || '0.0'})
+                  </Text>
+                </Flex>
+              </motion.div>
+            </MotionFlex>
 
-            <Button
+            <MotionButton
               colorScheme="brand"
               size="md"
               mt={2}
               width="full"
               onClick={() => setIsModalOpen(true)}
+              variants={elementVariants}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               {t('buttons.addToCart')} {<Image src={cartIcon} alt="Cart" boxSize="1.7em" m={1} /> || null}
-            </Button>
-          </Flex>
-        </Box>
-      </Box>
+            </MotionButton>
+          </MotionFlex>
+        </MotionBox>
+      </MotionBox>
 
       {/* Add to Cart Modal */}
       {isModalOpen && (
         <AddToCartModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          name={name} // Fixed: was using undefined 'displayName'
-          price={effectivePrice} // Fixed: was using undefined 'price'
+          name={name}
+          price={effectivePrice}
           quantity={quantity}
           setQuantity={setQuantity}
           onConfirm={handleConfirm}
           t={t}
           hasOffer={hasOffer}
-          discountPercentage={discountPercentage} // Fixed: was using undefined 'discount_percentage'
+          discountPercentage={discountPercentage}
           colorMode={colorMode}
         />
       )}
@@ -871,7 +984,7 @@ export const OfferMealCard = ({ meal }) => {
               {name}
             </Heading>
             <Text fontWeight="bold" fontSize="xl" color="brand.700">
-              SAR {effectivePrice.toFixed(2)}
+             {t("common.currency")}{effectivePrice.toFixed(2)}
             </Text>
           </Flex>
 
