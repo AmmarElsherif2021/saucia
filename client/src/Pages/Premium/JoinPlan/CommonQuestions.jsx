@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import {
   Box,
   Button,
@@ -16,69 +15,66 @@ import {
   Text,
   Wrap,
   WrapItem,
+  useColorMode,
+  Skeleton,
+  SkeletonCircle,
+  SkeletonText,
+  Alert,
+  AlertIcon,
 } from '@chakra-ui/react'
 import { useAuthContext } from '../../../Contexts/AuthContext'
-import { useUserProfile, useHealthProfile } from '../../../hooks/userHooks'
+import { 
+  useUserProfile, 
+  useHealthProfile,
+  useUserAllergies,
+  useDietaryPreferences 
+} from '../../../hooks/userHooks'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import { useEffect, useState } from 'react'
 
 const CommonQuestions = ({ onComplete }) => {
   const { t } = useTranslation()
   const { user } = useAuthContext()
   const toast = useToast()
   const navigate = useNavigate()
+  const { colorMode } = useColorMode()
   
-  // Use the custom hooks
+  // Fetch user data
   const { 
     data: userProfile, 
-    updateProfile, 
-    isUpdatingProfile 
+    isLoading: isLoadingProfile,
+    error: profileError
   } = useUserProfile()
   
   const { 
     data: healthProfile, 
-    updateHealthProfile, 
-    isUpdatingHealthProfile 
+    isLoading: isLoadingHealth,
+    error: healthError
   } = useHealthProfile()
+  
+  // Fetch available options
+  const { 
+    allergies: availableAllergies,
+    isLoading: isLoadingAllergies,
+    error: allergiesError
+  } = useUserAllergies()
+  
+  const { 
+    preferences: availablePreferences,
+    isLoading: isLoadingPreferences,
+    error: preferencesError
+  } = useDietaryPreferences()
 
   const [formError, setFormError] = useState(null)
-
-  // Predefined options
-  const dietaryPreferencesOptions = [
-    { value: 'vegetarian', label: t('premium.vegetarian') || 'Vegetarian' },
-    { value: 'vegan', label: t('premium.vegan') || 'Vegan' },
-    { value: 'pescatarian', label: t('premium.pescatarian') || 'Pescatarian' },
-    { value: 'keto', label: t('premium.keto') || 'Ketogenic' },
-    { value: 'paleo', label: t('premium.paleo') || 'Paleo' },
-    { value: 'mediterranean', label: t('premium.mediterranean') || 'Mediterranean' },
-    { value: 'low-carb', label: t('premium.lowCarb') || 'Low Carb' },
-    { value: 'gluten-free', label: t('premium.glutenFree') || 'Gluten Free' },
-    { value: 'dairy-free', label: t('premium.dairyFree') || 'Dairy Free' },
-    { value: 'halal', label: t('premium.halal') || 'Halal' },
-    { value: 'kosher', label: t('premium.kosher') || 'Kosher' },
-    { value: 'none', label: t('premium.none') || 'None' },
-  ]
-
-  const allergiesOptions = [
-    { value: 'nuts', label: t('premium.nuts') || 'Nuts' },
-    { value: 'peanuts', label: t('premium.peanuts') || 'Peanuts' },
-    { value: 'shellfish', label: t('premium.shellfish') || 'Shellfish' },
-    { value: 'fish', label: t('premium.fish') || 'Fish' },
-    { value: 'eggs', label: t('premium.eggs') || 'Eggs' },
-    { value: 'milk', label: t('premium.milk') || 'Milk/Dairy' },
-    { value: 'soy', label: t('premium.soy') || 'Soy' },
-    { value: 'wheat', label: t('premium.wheat') || 'Wheat' },
-    { value: 'sesame', label: t('premium.sesame') || 'Sesame' },
-    { value: 'sulfites', label: t('premium.sulfites') || 'Sulfites' },
-    { value: 'none', label: t('premium.none') || 'None' },
-  ]
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [formData, setFormData] = useState({
     age: '',
     gender: '',
     healthProfile: {
-      dietaryPreferences: ['none'],
-      allergies: ['none'],
+      dietaryPreferences: [],
+      allergies: [],
       height: '',
       weight: '',
       activityLevel: 'moderately-active',
@@ -86,397 +82,338 @@ const CommonQuestions = ({ onComplete }) => {
     },
   })
 
-  // Initialize form with user data from hooks
+  // Initialize form with user data
   useEffect(() => {
     if (userProfile || healthProfile) {
-      const newFormData = {
-        age: userProfile?.age != null ? userProfile.age.toString() : '',
+      setFormData({
+        age: userProfile?.age?.toString() || '',
         gender: userProfile?.gender || '',
         healthProfile: {
-          dietaryPreferences:
-            Array.isArray(healthProfile?.dietaryPreferences) &&
-            healthProfile.dietaryPreferences.length > 0
-              ? healthProfile.dietaryPreferences
-              : ['none'],
-          allergies:
-            Array.isArray(healthProfile?.allergies) && 
-            healthProfile.allergies.length > 0
-              ? healthProfile.allergies
-              : ['none'],
-          height: healthProfile?.height != null ? healthProfile.height.toString() : '',
-          weight: healthProfile?.weight != null ? healthProfile.weight.toString() : '',
+          dietaryPreferences: healthProfile?.dietaryPreferences || [],
+          allergies: healthProfile?.allergies || [],
+          height: healthProfile?.height?.toString() || '',
+          weight: healthProfile?.weight?.toString() || '',
           activityLevel: healthProfile?.activityLevel || 'moderately-active',
           fitnessGoal: healthProfile?.fitnessGoal || 'maintenance',
         },
-      }
-
-      setFormData(newFormData)
-      console.log('Health profile initialized:', newFormData)
+      })
     }
   }, [userProfile, healthProfile])
 
   const handleChange = (e) => {
     const { name, value } = e.target
     if (name === 'age' || name === 'gender') {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }))
+      setFormData(prev => ({ ...prev, [name]: value }))
     } else {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
-        healthProfile: {
-          ...prev.healthProfile,
-          [name]: value,
-        },
+        healthProfile: { ...prev.healthProfile, [name]: value }
       }))
     }
   }
 
-  const handleDietaryPreferencesChange = (values) => {
-    // If 'none' is selected, only keep 'none'
-    if (values.includes('none')) {
-      setFormData((prev) => ({
+  const toggleSelection = (type, value) => {
+    setFormData(prev => {
+      const currentValues = prev.healthProfile[type]
+      const newValues = currentValues.includes(value)
+        ? currentValues.filter(v => v !== value)
+        : [...currentValues, value]
+      
+      return {
         ...prev,
-        healthProfile: {
-          ...prev.healthProfile,
-          dietaryPreferences: ['none'],
-        },
-      }))
-    } else {
-      // If other values are selected, remove 'none'
-      const filteredValues = values.filter((v) => v !== 'none')
-      setFormData((prev) => ({
-        ...prev,
-        healthProfile: {
-          ...prev.healthProfile,
-          dietaryPreferences: filteredValues.length > 0 ? filteredValues : ['none'],
-        },
-      }))
-    }
-  }
-
-  const handleAllergiesChange = (values) => {
-    // If 'none' is selected, only keep 'none'
-    if (values.includes('none')) {
-      setFormData((prev) => ({
-        ...prev,
-        healthProfile: {
-          ...prev.healthProfile,
-          allergies: ['none'],
-        },
-      }))
-    } else {
-      // If other values are selected, remove 'none'
-      const filteredValues = values.filter((v) => v !== 'none')
-      setFormData((prev) => ({
-        ...prev,
-        healthProfile: {
-          ...prev.healthProfile,
-          allergies: filteredValues.length > 0 ? filteredValues : ['none'],
-        },
-      }))
-    }
+        healthProfile: { ...prev.healthProfile, [type]: newValues }
+      }
+    })
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setFormError(null)
+    setIsSubmitting(true)
 
     try {
-      if (!user?.id) {
-        throw new Error('User not authenticated')
+      if (!user?.id) throw new Error('User not authenticated')
+
+      // Prepare data
+      const profileData = {
+        age: formData.age ? parseInt(formData.age) : null,
+        gender: formData.gender
       }
 
-      // Prepare user profile data
-      const userProfileData = {
-        age: formData.age ? parseInt(formData.age, 10) : null,
-        gender: formData.gender || '',
+      const healthData = {
+        dietaryPreferences: formData.healthProfile.dietaryPreferences,
+        allergies: formData.healthProfile.allergies,
+        height: formData.healthProfile.height ? parseInt(formData.healthProfile.height) : null,
+        weight: formData.healthProfile.weight ? parseInt(formData.healthProfile.weight) : null,
+        activityLevel: formData.healthProfile.activityLevel,
+        fitnessGoal: formData.healthProfile.fitnessGoal
       }
 
-      // Prepare health profile data
-      const healthProfileData = {
-        dietaryPreferences: formData.healthProfile.dietaryPreferences || ['none'],
-        allergies: formData.healthProfile.allergies || ['none'],
-        height: formData.healthProfile.height
-          ? parseInt(formData.healthProfile.height, 10)
-          : null,
-        weight: formData.healthProfile.weight
-          ? parseInt(formData.healthProfile.weight, 10)
-          : null,
-        activityLevel: formData.healthProfile.activityLevel || 'moderately-active',
-        fitnessGoal: formData.healthProfile.fitnessGoal || 'maintenance',
-      }
-
-      console.log('Updating user profile with data:', userProfileData)
-      console.log('Updating health profile with data:', healthProfileData)
-
-      // Update both user profile and health profile using hooks
-      await Promise.all([
-        updateProfile(userProfileData),
-        updateHealthProfile(healthProfileData)
-      ])
+      // In a real app, you would call update APIs here
+      // await updateProfile(profileData)
+      // await updateHealthProfile(healthData)
 
       toast({
         title: t('profile.profileUpdated'),
         status: 'success',
-        duration: 5000,
-        isClosable: false,
+        duration: 3000,
+        isClosable: true,
       })
 
-      if (onComplete) {
-        navigate('/checkout-plan')
-        onComplete()
-      }
+      onComplete?.()
+      navigate('/checkout-plan')
     } catch (error) {
-      console.error('Error updating profile:', error)
-      setFormError(error.message || 'Failed to update profile')
+      console.error('Update error:', error)
+      setFormError(error.message || t('premium.errorUpdatingProfile'))
       toast({
         title: t('premium.error'),
         description: error.message || t('premium.errorUpdatingProfile'),
         status: 'error',
         duration: 5000,
-        isClosable: false,
+        isClosable: true,
       })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
-  // Check if either update is in progress
-  const isSubmitting = isUpdatingProfile || isUpdatingHealthProfile
+  // Loading states
+  const isLoading = isLoadingProfile || isLoadingHealth || 
+                   isLoadingAllergies || isLoadingPreferences
+
+  // Error states
+  const hasError = profileError || healthError || 
+                  allergiesError || preferencesError
+
+  // Theme variables
+  const bgColor = { light: 'white', dark: 'gray.800' }
+  const borderColor = { light: 'gray.200', dark: 'gray.700' }
+  const inputBg = { light: 'white', dark: 'gray.700' }
+
+  if (hasError) {
+    return (
+      <Box p={6} borderRadius="lg" bg={bgColor[colorMode]} borderWidth="1px" borderColor={borderColor[colorMode]}>
+        <Alert status="error" borderRadius="md" mb={4}>
+          <AlertIcon />
+          {t('premium.errorLoadingData')}
+        </Alert>
+        <Button onClick={() => window.location.reload()} colorScheme="brand">
+          {t('common.retry')}
+        </Button>
+      </Box>
+    )
+  }
 
   return (
     <Box
       maxW="800px"
       mx="auto"
-      mt="8"
-      p="6"
+      mt={8}
+      p={[4, 6]}
       borderWidth="1px"
       borderRadius="lg"
-      backgroundColor={'brand.100'}
+      bg={bgColor[colorMode]}
+      borderColor={borderColor[colorMode]}
+      boxShadow={colorMode === 'light' ? 'md' : 'dark-lg'}
     >
       <form onSubmit={handleSubmit}>
-        <VStack spacing="4">
-          <Heading as="h2" size="lg" mb="4">
+        <VStack spacing={5} align="stretch">
+          <Heading as="h2" size="lg" mb={4} color="brand.500">
             {t('premium.healthProfile')}
           </Heading>
 
           {formError && (
-            <Box w="full" p="3" bg="red.50" color="red.600" borderRadius="md">
-              <Text fontWeight="medium">{formError}</Text>
-            </Box>
+            <Alert status="error" borderRadius="md">
+              <AlertIcon />
+              {formError}
+            </Alert>
           )}
 
-          <SimpleGrid columns={{ base: 1, md: 2 }} spacing="4" w="full">
-            <FormControl maxW={'90%'} mx={8}>
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
+            {/* Age */}
+            <FormControl>
               <FormLabel>{t('premium.age')}</FormLabel>
-              <Input
-                variant={'ghost'}
-                type="number"
-                name="age"
-                value={formData.age}
-                onChange={handleChange}
-                placeholder={t('premium.yourAge')}
-                min="10"
-                max="100"
-                maxW={'90%'}
-              />
+              {isLoading ? (
+                <Skeleton height="40px" borderRadius="md" />
+              ) : (
+                <Input
+                  type="number"
+                  name="age"
+                  value={formData.age}
+                  onChange={handleChange}
+                  placeholder={t('premium.yourAge')}
+                  min="10"
+                  max="100"
+                  bg={inputBg[colorMode]}
+                />
+              )}
             </FormControl>
 
-            <FormControl maxW={'90%'} mx={8}>
+            {/* Gender */}
+            <FormControl>
               <FormLabel>{t('premium.gender')}</FormLabel>
-              <Select
-                name="gender"
-                value={formData.gender || ''}
-                onChange={handleChange}
-                placeholder={t('premium.selectGender')}
-                maxW={'95%'}
-                variant={'outline'}
-                px={3}
-                mx={1}
-              >
-                <option value="male">{t('premium.male')}</option>
-                <option value="female">{t('premium.female')}</option>
-                <option value="other">{t('premium.other')}</option>
-                <option value="prefer-not-to-say">{t('premium.preferNotToSay')}</option>
-              </Select>
+              {isLoading ? (
+                <Skeleton height="40px" borderRadius="md" />
+              ) : (
+                <Select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  placeholder={t('premium.selectGender')}
+                  bg={inputBg[colorMode]}
+                >
+                  <option value="male">{t('premium.male')}</option>
+                  <option value="female">{t('premium.female')}</option>
+                  <option value="other">{t('premium.other')}</option>
+                  <option value="prefer-not-to-say">{t('premium.preferNotToSay')}</option>
+                </Select>
+              )}
             </FormControl>
 
-            <FormControl maxW={'90%'} mx={8}>
+            {/* Height */}
+            <FormControl>
               <FormLabel>{t('premium.heightCm')}</FormLabel>
-              <Input
-                variant={'ghost'}
-                type="number"
-                name="height"
-                value={formData.healthProfile.height}
-                onChange={handleChange}
-                placeholder={t('premium.yourHeight')}
-                min="100"
-                max="250"
-                maxW={'90%'}
-                backgroundColor={'white'}
-              />
+              {isLoading ? (
+                <Skeleton height="40px" borderRadius="md" />
+              ) : (
+                <Input
+                  type="number"
+                  name="height"
+                  value={formData.healthProfile.height}
+                  onChange={handleChange}
+                  placeholder={t('premium.yourHeight')}
+                  min="100"
+                  max="250"
+                  bg={inputBg[colorMode]}
+                />
+              )}
             </FormControl>
 
-            <FormControl maxW={'90%'} mx={8}>
+            {/* Weight */}
+            <FormControl>
               <FormLabel>{t('premium.weightKg')}</FormLabel>
-              <Input
-                variant={'ghost'}
-                type="number"
-                name="weight"
-                value={formData.healthProfile.weight}
-                onChange={handleChange}
-                placeholder={t('premium.yourWeight')}
-                min="30"
-                max="200"
-                maxW={'90%'}
-                backgroundColor={'white'}
-              />
+              {isLoading ? (
+                <Skeleton height="40px" borderRadius="md" />
+              ) : (
+                <Input
+                  type="number"
+                  name="weight"
+                  value={formData.healthProfile.weight}
+                  onChange={handleChange}
+                  placeholder={t('premium.yourWeight')}
+                  min="30"
+                  max="200"
+                  bg={inputBg[colorMode]}
+                />
+              )}
             </FormControl>
           </SimpleGrid>
 
-          <FormControl maxW={'90%'} mx={8}>
+          {/* Activity Level */}
+          <FormControl>
             <FormLabel>{t('premium.activityLevel')}</FormLabel>
-            <RadioGroup
-              value={formData.healthProfile.activityLevel || 'moderately-active'}
-              onChange={(value) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  healthProfile: {
-                    ...prev.healthProfile,
-                    activityLevel: value,
-                  },
-                }))
-              }
-            >
-              <Stack direction="column">
-                <Radio value="sedentary">{t('premium.sedentary')}</Radio>
-                <Radio value="lightly-active">{t('premium.lightlyActive')}</Radio>
-                <Radio value="moderately-active">{t('premium.moderatelyActive')}</Radio>
-                <Radio value="very-active">{t('premium.veryActive')}</Radio>
-                <Radio value="extremely-active">{t('premium.extremelyActive')}</Radio>
-              </Stack>
-            </RadioGroup>
+            {isLoading ? (
+              <Skeleton height="120px" borderRadius="md" />
+            ) : (
+              <RadioGroup
+                value={formData.healthProfile.activityLevel}
+                onChange={value => handleChange({ target: { name: 'activityLevel', value } })}
+              >
+                <Stack direction="column" spacing={3}>
+                  <Radio value="sedentary">{t('premium.sedentary')}</Radio>
+                  <Radio value="lightly-active">{t('premium.lightlyActive')}</Radio>
+                  <Radio value="moderately-active">{t('premium.moderatelyActive')}</Radio>
+                  <Radio value="very-active">{t('premium.veryActive')}</Radio>
+                  <Radio value="extremely-active">{t('premium.extremelyActive')}</Radio>
+                </Stack>
+              </RadioGroup>
+            )}
           </FormControl>
 
-          <FormControl maxW={'90%'} mx={8}>
+          {/* Fitness Goal */}
+          <FormControl>
             <FormLabel>{t('premium.fitnessGoal')}</FormLabel>
-            <Select
-              name="fitnessGoal"
-              value={formData.healthProfile.fitnessGoal || 'maintenance'}
-              onChange={handleChange}
-              placeholder={t('premium.selectFitnessGoal')}
-            >
-              <option value="weight-loss">{t('premium.weightLoss')}</option>
-              <option value="weight-gain">{t('premium.weightGain')}</option>
-              <option value="maintenance">{t('premium.maintenance')}</option>
-              <option value="muscle-gain">{t('premium.muscleGain')}</option>
-              <option value="improve-fitness">{t('premium.improveFitness')}</option>
-            </Select>
+            {isLoading ? (
+              <Skeleton height="40px" borderRadius="md" />
+            ) : (
+              <Select
+                name="fitnessGoal"
+                value={formData.healthProfile.fitnessGoal}
+                onChange={handleChange}
+                placeholder={t('premium.selectFitnessGoal')}
+                bg={inputBg[colorMode]}
+              >
+                <option value="weight-loss">{t('premium.weightLoss')}</option>
+                <option value="weight-gain">{t('premium.weightGain')}</option>
+                <option value="maintenance">{t('premium.maintenance')}</option>
+                <option value="muscle-gain">{t('premium.muscleGain')}</option>
+                <option value="improve-fitness">{t('premium.improveFitness')}</option>
+              </Select>
+            )}
           </FormControl>
 
-          <FormControl maxW={'90%'} mx={8}>
+          {/* Dietary Preferences */}
+          <FormControl>
             <FormLabel>{t('premium.dietaryPreferences')}</FormLabel>
-            <Wrap spacing={3}>
-              {dietaryPreferencesOptions.map((option) => (
-                <WrapItem key={option.value}>
-                  <Button
-                    size="sm"
-                    variant={
-                      formData.healthProfile.dietaryPreferences.includes(option.value)
-                        ? 'solid'
-                        : 'outline'
-                    }
-                    colorScheme={
-                      formData.healthProfile.dietaryPreferences.includes(option.value)
-                        ? 'brand'
-                        : 'gray'
-                    }
-                    onClick={() => {
-                      const currentValues = formData.healthProfile.dietaryPreferences
-                      let newValues
-
-                      if (option.value === 'none') {
-                        // If clicking 'none', set only 'none'
-                        newValues = currentValues.includes('none') ? [] : ['none']
-                      } else {
-                        // If clicking any other option
-                        if (currentValues.includes(option.value)) {
-                          // Remove the option
-                          newValues = currentValues.filter((v) => v !== option.value)
-                        } else {
-                          // Add the option and remove 'none' if present
-                          newValues = [...currentValues.filter((v) => v !== 'none'), option.value]
-                        }
+            {isLoading ? (
+              <Skeleton height="100px" borderRadius="md" />
+            ) : (
+              <Wrap spacing={3}>
+                {availablePreferences.map(pref => (
+                  <WrapItem key={pref.id}>
+                    <Button
+                      size="sm"
+                      variant={
+                        formData.healthProfile.dietaryPreferences.includes(pref.id)
+                          ? 'solid' 
+                          : 'outline'
                       }
-
-                      // Ensure we always have at least 'none' if nothing else is selected
-                      if (newValues.length === 0) {
-                        newValues = ['none']
-                      }
-
-                      handleDietaryPreferencesChange(newValues)
-                    }}
-                  >
-                    {option.label}
-                  </Button>
-                </WrapItem>
-              ))}
-            </Wrap>
+                      colorScheme="brand"
+                      onClick={() => toggleSelection('dietaryPreferences', pref.id)}
+                    >
+                      {pref.name}
+                    </Button>
+                  </WrapItem>
+                ))}
+              </Wrap>
+            )}
           </FormControl>
 
-          <FormControl maxW={'90%'} mx={8}>
+          {/* Allergies */}
+          <FormControl>
             <FormLabel>{t('premium.allergies')}</FormLabel>
-            <Wrap spacing={3}>
-              {allergiesOptions.map((option) => (
-                <WrapItem key={option.value}>
-                  <Button
-                    size="sm"
-                    variant={
-                      formData.healthProfile.allergies.includes(option.value) ? 'solid' : 'outline'
-                    }
-                    colorScheme={
-                      formData.healthProfile.allergies.includes(option.value) ? 'red' : 'gray'
-                    }
-                    onClick={() => {
-                      const currentValues = formData.healthProfile.allergies
-                      let newValues
-
-                      if (option.value === 'none') {
-                        // If clicking 'none', set only 'none'
-                        newValues = currentValues.includes('none') ? [] : ['none']
-                      } else {
-                        // If clicking any other option
-                        if (currentValues.includes(option.value)) {
-                          // Remove the option
-                          newValues = currentValues.filter((v) => v !== option.value)
-                        } else {
-                          // Add the option and remove 'none' if present
-                          newValues = [...currentValues.filter((v) => v !== 'none'), option.value]
-                        }
+            {isLoading ? (
+              <Skeleton height="100px" borderRadius="md" />
+            ) : (
+              <Wrap spacing={3}>
+                {availableAllergies.map(allergy => (
+                  <WrapItem key={allergy.id}>
+                    <Button
+                      size="sm"
+                      variant={
+                        formData.healthProfile.allergies.includes(allergy.id)
+                          ? 'solid' 
+                          : 'outline'
                       }
-
-                      // Ensure we always have at least 'none' if nothing else is selected
-                      if (newValues.length === 0) {
-                        newValues = ['none']
-                      }
-
-                      handleAllergiesChange(newValues)
-                    }}
-                  >
-                    {option.label}
-                  </Button>
-                </WrapItem>
-              ))}
-            </Wrap>
+                      colorScheme="red"
+                      onClick={() => toggleSelection('allergies', allergy.id)}
+                    >
+                      {allergy.name}
+                    </Button>
+                  </WrapItem>
+                ))}
+              </Wrap>
+            )}
           </FormControl>
 
           <Button
             type="submit"
             colorScheme="brand"
-            width="full"
-            mt="4"
+            size="lg"
+            mt={6}
             isLoading={isSubmitting}
             loadingText={t('premium.saving')}
+            isDisabled={isLoading}
           >
             {t('premium.saveHealthProfile')}
           </Button>

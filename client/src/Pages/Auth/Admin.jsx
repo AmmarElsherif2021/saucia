@@ -36,6 +36,16 @@ import {
   ModalCloseButton,
   useToast,
 } from '@chakra-ui/react'
+import { 
+  FaUsers, 
+  FaUserShield, 
+  FaBox, 
+  FaClipboardList, 
+  FaShoppingCart, 
+  FaDollarSign, 
+  FaSync, 
+  FaUtensils 
+} from 'react-icons/fa';
 
 import { useAuthContext } from '../../Contexts/AuthContext.jsx'
 import { useAdminFunctions } from '../../Hooks/useAdminFunctions.jsx'
@@ -470,25 +480,60 @@ const Admin = () => {
         m={12}
         maxW={'90%'}
       >
-        <StatCard title={t('admin.stats.total_users', { defaultValue: "Total Users" })} value={dashboardData?.totalUsers || 0} colorScheme={'brand'}/>
-        <StatCard title={t('admin.stats.admin_users', { defaultValue: "Admin Users" })} value={dashboardData?.totalAdmins || 0} colorScheme={'warning'}/>
-        <StatCard title={t('admin.stats.items', { defaultValue: "Items" })} value={items?.length || 0} colorScheme='orange' />
-        <StatCard title={t('admin.stats.plans', { defaultValue: "Plans" })} value={plans?.length || 0} colorScheme='error'/>
-        <StatCard title={t('admin.stats.active_orders', { defaultValue: "Active Orders" })} value={dashboardData?.activeOrders || 0} colorScheme='teal'/>
+        <StatCard 
+          title={t('admin.stats.total_users', { defaultValue: "Total Users" })} 
+          value={dashboardData?.totalUsers || 0} 
+          colorScheme={'brand'}
+          icon={<FaUsers size={20} />}
+        />
+
+        <StatCard 
+          title={t('admin.stats.admin_users', { defaultValue: "Admin Users" })} 
+          value={dashboardData?.totalAdmins || 0} 
+          colorScheme={'warning'}
+          icon={<FaUserShield size={20} />}
+        />
+
+        <StatCard 
+          title={t('admin.stats.items', { defaultValue: "Items" })} 
+          value={items?.length || 0} 
+          colorScheme='orange'
+          icon={<FaBox size={20} />}
+        />
+
+        <StatCard 
+          title={t('admin.stats.plans', { defaultValue: "Plans" })} 
+          value={plans?.length || 0} 
+          colorScheme='error'
+          icon={<FaClipboardList size={20} />}
+        />
+
+        <StatCard 
+          title={t('admin.stats.active_orders', { defaultValue: "Active Orders" })} 
+          value={dashboardData?.activeOrders || 0} 
+          colorScheme='teal'
+          icon={<FaShoppingCart size={20} />}
+        />
+
         <StatCard 
           title={t('admin.stats.todays_revenue', { defaultValue: "Today's Revenue" })} 
           value={`$${dashboardData?.dailyRevenue?.toFixed(2) || 0}`} 
           colorScheme='green'
+          icon={<FaDollarSign size={20} />}
         />
+
         <StatCard 
           title={t('admin.stats.active_subscriptions', { defaultValue: "Active Subscriptions" })} 
           value={dashboardData?.activeSubscriptions || 0} 
           colorScheme='purple'
+          icon={<FaSync size={20} />}
         />
+
         <StatCard 
           title={t('admin.stats.available_meals', { defaultValue: "Available Meals" })} 
           value={dashboardData?.availableMeals || 0} 
           colorScheme='blue'
+          icon={<FaUtensils size={20} />}
         />
       </Grid>
       

@@ -54,7 +54,7 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
   // Add the image to the plan object for easier access
   const planWithImage = {
     ...plan,
-    image: planImages[plan.title] || dailyMealPlanImage,
+    image: plan.avatar_url || planImages[plan.title] || dailyMealPlanImage,
   }
 
   return (

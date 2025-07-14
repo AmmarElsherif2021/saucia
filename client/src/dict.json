@@ -246,6 +246,7 @@
         }
       ,
       "common": {
+        "ready":"Ready for Pickup",
         "unitPrice": "Unit Price",
         "welcome": "Welcome to our app!",
         "hello": "Hello",
@@ -554,7 +555,7 @@
       },
       "foodCategories": {
         "juices": "Juices",
-        "dessert": "Dessert",
+        "desserts": "Dessert",
         "healthy": "Healthy",
         "salad": "Salad",
         "mainCourse": "Main Course",
@@ -1112,6 +1113,7 @@
         "makeYourOwnFruitSalad": "اصنع سلطة فواكه خاصة بك"
       },
       "common": {
+        "ready": "جاهز",
         "unitPrice": "سعر الوحدة",
         "welcome": "مرحبا بكم في تطبيقنا!",
         "hello": "مرحبا",
@@ -1405,7 +1407,7 @@
       "foodCategories": {
         "our signature salad":"سلطاتنا المميزة",
         "juices": "عصائر",
-        "dessert": "الحلويات",
+        "desserts": "الحلويات",
         "healthy": "صحي",
         "salad": "سلطة",
         "mainCourse": "الطبق الرئيسي",

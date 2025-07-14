@@ -104,56 +104,115 @@ export const StatCard = ({
   colorScheme = 'brand', 
 }) => (
   <Box
-    bg="white"
-    p={4}
-    borderRadius="50%"
-    width={'150px'}
-    height={'150px'}
-    shadow="none"
+    bg={`${colorScheme}.100`}
+    p={6}
+    borderRadius="xl"
+    minWidth="180px"
+    height="auto"
+    borderColor={`${colorScheme}.300`}
+    borderWidth={'3px'}
     display="flex"
     flexDirection="column"
-    justifyContent="center"
-    alignItems="center"
-    textAlign="center"
-    background={`${colorScheme}.300`}
-    transition="all 0.2s"
-    _hover={{ shadow: 'md', transform: 'translateY(-2px)' }}
+    gap={4}
+    position="relative"
+    overflow="hidden"
+    transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+    _hover={{ 
+      transform: 'translateY(-4px)',
+      borderColor: `${colorScheme}.700`
+    }}
+    _before={{
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: `linear-gradient(90deg, ${colorScheme}.400, ${colorScheme}.600)`,
+    }}
   >
-    <Flex justify="space-between" align="center">
-      <Box>
-        <Text fontSize="sm" color={`${colorScheme}.700`} mb={1}>
+    {/* Header Section */}
+    <Flex justify="space-between" align="flex-start">
+      <Box flex={1}>
+        <Text 
+          fontSize="sm" 
+          fontWeight="medium"
+          color="gray.600" 
+          mb={2}
+          letterSpacing="wide"
+          textTransform="uppercase"
+        >
           {title}
         </Text>
-        <Text fontSize="2xl" fontWeight="bold" color={`${colorScheme}.800`}>
+        <Text 
+          fontSize="3xl" 
+          fontWeight="bold" 
+          color="gray.800"
+          lineHeight="shorter"
+        >
           {value}
         </Text>
       </Box>
+      
       {icon && (
         <Flex
           align="center"
           justify="center"
           boxSize={12}
-          borderRadius="full"
+          borderRadius="lg"
           bg={`${colorScheme}.50`}
           color={`${colorScheme}.500`}
+          flexShrink={0}
+          ml={4}
         >
           {icon}
         </Flex>
       )}
     </Flex>
+
+    {/* Trend Section */}
     {trend && (
-      <Flex align="center" mt={2}>
-        <Text fontSize="sm" color={trend.value > 0 ? 'green.500' : 'red.500'}>
-          {trend.value > 0 ? '↑' : '↓'} {Math.abs(trend.value)}%
-        </Text>
-        <Text ml={1} fontSize="xs" color="gray.500">
-          {trend.label}
-        </Text>
+      <Flex align="center" justify="space-between" mt={2}>
+        <Flex align="center">
+          <Box
+            display="inline-flex"
+            alignItems="center"
+            px={2}
+            py={1}
+            borderRadius="md"
+            bg={trend.value > 0 ? 'green.50' : 'red.50'}
+            color={trend.value > 0 ? 'green.600' : 'red.600'}
+            fontSize="sm"
+            fontWeight="medium"
+          >
+            <Text mr={1}>
+              {trend.value > 0 ? '↗' : '↘'}
+            </Text>
+            <Text>
+              {Math.abs(trend.value)}%
+            </Text>
+          </Box>
+          <Text ml={2} fontSize="sm" color="gray.500">
+            {trend.label}
+          </Text>
+        </Flex>
       </Flex>
     )}
+
+    {/* Optional background decoration */}
+    <Box
+      position="absolute"
+      top={-2}
+      right={-2}
+      width="80px"
+      height="80px"
+      borderRadius="full"
+      bg={`${colorScheme}.25`}
+      opacity={0.3}
+      zIndex={0}
+    />
   </Box>
 );
-
 // Enhanced LoadingSpinner with text
 export const LoadingSpinner = ({ text }) => (
   <Flex

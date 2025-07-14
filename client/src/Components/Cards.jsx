@@ -175,10 +175,11 @@ export const MealCard = ({ meal }) => {
     <>
       <Box
         maxW="300px"
+        h="400px"
         borderWidth="1px"
         borderRadius="lg"
         overflow="hidden"
-        bg={colorMode === 'dark' ? 'gray.700' : 'secondary.300'}
+        bg={colorMode === 'dark' ? 'gray.700' : 'secondary.500'}
         transition="transform 0.3s"
         _hover={{ transform: 'translateY(-5px)' }}
         position="relative"
@@ -257,7 +258,7 @@ export const MealCard = ({ meal }) => {
                 </Badge>
               )}
               {is_dairy_free && (
-                <Badge colorScheme="purple" variant="subtle" size="sm">
+                <Badge colorScheme="teal" variant="subtle" size="sm">
                   {t('dietaryTags.dairyFree')}
                 </Badge>
               )}
@@ -276,12 +277,12 @@ export const MealCard = ({ meal }) => {
               .map((_, i) => (
                 <StarIcon
                   key={i}
-                  color={i < (rating || 0) ? 'brand.500' : 'gray.300'}
+                  color={i < (rating || 0) ? 'warning.500' : 'orange.300'}
                   boxSize="3"
                   mr="1"
                 />
               ))}
-            <Text ml="1" fontSize="sm" color={colorMode === 'dark' ? 'gray.400' : 'gray.500'}>
+            <Text mx="1" bg={"tertiary.100"} fontSize="sm" color={colorMode === 'dark' ? 'error.400' : 'gray.500'}>
               {rating?.toFixed?.(1) || '0.0'}
               {rating_count > 0 && (
                 <Text as="span" ml="1">

@@ -1,4 +1,4 @@
-import { Box, VStack } from '@chakra-ui/react'
+import { Box, useColorMode, VStack } from '@chakra-ui/react'
 import { Hero } from './Hero'
 import { FeaturedMeals } from './FeaturedSlide'
 import { OffersSlide } from './OffersSlide'
@@ -21,20 +21,21 @@ const HomePage = () => {
     offersMeals,
     //elementsLoading
   } = useElements()
-  useEffect(() => {
-    //console.log(`From home user is ${user?.displayName}`)
-    // console.log(
-    //   'From elements context',
-    //    items,
-    // meals,
-    // plans,
-    // featuredMeals,
-    // offersMeals,
-    // elementsLoading
-    // )
-  }, [])
+  const {colorMode}= useColorMode();
+  // useEffect(() => {
+  //   //console.log(`From home user is ${user?.displayName}`)
+  //   // console.log(
+  //   //   'From elements context',
+  //   //    items,
+  //   // meals,
+  //   // plans,
+  //   // featuredMeals,
+  //   // offersMeals,
+  //   // elementsLoading
+  //   // )
+  // }, [])
   return (
-    <Box textAlign="center" p={5}>
+    <Box textAlign="center" p={5} bg={colorMode === "dark" ? "teal.800":"none"}>
       <Hero />
       <FeaturedMeals featuredMeals={featuredMeals} />
       <OffersSlide offersMeals={offersMeals} />

@@ -58,7 +58,7 @@ const Layout = ({ children }) => {
   return (
     <div
       style={{
-        backgroundColor: 'white',
+        backgroundColor: 'none',
         width: '100%',
         minWidth: '320px',
         height: 'fit-content',

@@ -1,4 +1,4 @@
-import { Heading, Box, Button, VStack } from '@chakra-ui/react'
+import { Heading, Box, Button, VStack, useColorMode } from '@chakra-ui/react'
 import { useState } from 'react'
 import CommonQuestions from './CommonQuestions'
 import { useNavigate } from 'react-router-dom'
@@ -8,7 +8,7 @@ const JoinPlanPage = () => {
   const navigate = useNavigate()
   const { userPlan } = useAuthContext()
   const [currentStep, setCurrentStep] = useState(0)
-
+  const {colorMode} = useColorMode();
   const handleCompleteQuestions = () => {
     setCurrentStep(1)
   }
@@ -18,7 +18,7 @@ const JoinPlanPage = () => {
   }
 
   return (
-    <Box p={{ base: 4, md: 8 }} minH="100vh">
+    <Box p={{ base: 4, md: 8 }} minH="100vh" bg={colorMode === "dark"?"brand.900":"white"}>
       <VStack spacing={8} align="stretch">
         {currentStep === 0 ? (
           <CommonQuestions onComplete={handleCompleteQuestions} />
