@@ -37,6 +37,7 @@ export const useUserProfile = () => {
   });
 
   return {
+    data: profileQuery.data,
     ...profileQuery,
     updateProfile: updateProfile.mutateAsync,
     isUpdatingProfile: updateProfile.isPending,

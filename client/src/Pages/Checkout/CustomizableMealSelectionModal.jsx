@@ -36,7 +36,7 @@ const CustomizableMealSelectionModal = ({
   
   // Use allergy hook instead of AuthContext
   const { allergies } = useUserAllergies()
-  const userAllergies = allergies.map(allergy => allergy.name.toLowerCase())
+  const userAllergies = allergies?.map(allergy => allergy?.name?.toLowerCase())
 
   useEffect(() => {
     // Group items by section

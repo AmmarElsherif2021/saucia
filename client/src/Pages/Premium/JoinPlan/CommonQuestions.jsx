@@ -12,23 +12,20 @@ import {
   Select,
   Heading,
   SimpleGrid,
-  Text,
   Wrap,
   WrapItem,
   useColorMode,
   Skeleton,
-  SkeletonCircle,
-  SkeletonText,
   Alert,
   AlertIcon,
 } from '@chakra-ui/react'
 import { useAuthContext } from '../../../Contexts/AuthContext'
 import { 
   useUserProfile, 
-  useHealthProfile,
-  useUserAllergies,
-  useDietaryPreferences 
+  useHealthProfile
 } from '../../../hooks/userHooks'
+import { useUserAllergies } from '../../../hooks/useUserAllergies' // Use custom hook
+import { useUserDietaryPreferences } from '../../../hooks/useUserDietaryPreferences' // Use custom hook
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useState } from 'react'
@@ -40,32 +37,40 @@ const CommonQuestions = ({ onComplete }) => {
   const navigate = useNavigate()
   const { colorMode } = useColorMode()
   
-  // Fetch user data
+  // Fetch user data  
   const { 
     data: userProfile, 
     isLoading: isLoadingProfile,
-    error: profileError
+    error: profileError,
+    updateProfile
   } = useUserProfile()
   
   const { 
     data: healthProfile, 
     isLoading: isLoadingHealth,
-    error: healthError
+    error: healthError,
+    updateHealthProfile
   } = useHealthProfile()
   
-  // Fetch available options
+  // Fetch dietary preferences and allergies
   const { 
+    addPreference,
+    bulkUpdatePreferences,
+    dietaryPreferences: availablePreferences,
+    userDietaryPreferences,
+    isLoading: isLoadingPreferences,
+    error: preferencesError
+  } = useUserDietaryPreferences()
+  
+  const { 
+    addAllergy,
+    bulkUpdateAllergies,
     allergies: availableAllergies,
+    userAllergies,
     isLoading: isLoadingAllergies,
     error: allergiesError
   } = useUserAllergies()
   
-  const { 
-    preferences: availablePreferences,
-    isLoading: isLoadingPreferences,
-    error: preferencesError
-  } = useDietaryPreferences()
-
   const [formError, setFormError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -82,23 +87,31 @@ const CommonQuestions = ({ onComplete }) => {
     },
   })
 
-  // Initialize form with user data
+   // Initialize form with user data
   useEffect(() => {
-    if (userProfile || healthProfile) {
+    console.log('Initializing form with user data...');
+    console.log('User Profile:', userProfile);
+    console.log('Health Profile:', healthProfile);
+    console.log('User Dietary Preferences:', userDietaryPreferences);
+    console.log('User Allergies:', userAllergies);
+    
+    if (userProfile || healthProfile || userDietaryPreferences || userAllergies) {
       setFormData({
         age: userProfile?.age?.toString() || '',
         gender: userProfile?.gender || '',
         healthProfile: {
-          dietaryPreferences: healthProfile?.dietaryPreferences || [],
-          allergies: healthProfile?.allergies || [],
-          height: healthProfile?.height?.toString() || '',
-          weight: healthProfile?.weight?.toString() || '',
-          activityLevel: healthProfile?.activityLevel || 'moderately-active',
-          fitnessGoal: healthProfile?.fitnessGoal || 'maintenance',
+          // Map userDietaryPreferences to IDs
+          dietaryPreferences: userDietaryPreferences?.map(p => p.preference_id) || [],
+          // Map userAllergies to IDs
+          allergies: userAllergies?.map(a => a.allergy_id) || [],
+          height: healthProfile?.height_cm?.toString() || '',
+          weight: healthProfile?.weight_kg?.toString() || '',
+          activityLevel: healthProfile?.activity_level || 'moderately-active',
+          fitnessGoal: healthProfile?.fitness_goal || 'maintenance',
         },
       })
     }
-  }, [userProfile, healthProfile])
+  }, [userProfile, healthProfile, userDietaryPreferences, userAllergies])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -130,6 +143,7 @@ const CommonQuestions = ({ onComplete }) => {
     e.preventDefault()
     setFormError(null)
     setIsSubmitting(true)
+    console.log('Submitting form data:', formData);
 
     try {
       if (!user?.id) throw new Error('User not authenticated')
@@ -141,17 +155,37 @@ const CommonQuestions = ({ onComplete }) => {
       }
 
       const healthData = {
-        dietaryPreferences: formData.healthProfile.dietaryPreferences,
-        allergies: formData.healthProfile.allergies,
-        height: formData.healthProfile.height ? parseInt(formData.healthProfile.height) : null,
-        weight: formData.healthProfile.weight ? parseInt(formData.healthProfile.weight) : null,
-        activityLevel: formData.healthProfile.activityLevel,
-        fitnessGoal: formData.healthProfile.fitnessGoal
+        height_cm: formData.healthProfile.height ? parseInt(formData.healthProfile.height) : null,
+        weight_kg: formData.healthProfile.weight ? parseInt(formData.healthProfile.weight) : null,
+        activity_level: formData.healthProfile.activityLevel,
+        fitness_goal: formData.healthProfile.fitnessGoal
       }
 
-      // In a real app, you would call update APIs here
-      // await updateProfile(profileData)
-      // await updateHealthProfile(healthData)
+      console.log('Preparing to update:');
+      console.log('Profile Data:', profileData);
+      console.log('Health Data:', healthData);
+      console.log('Dietary Preferences:', formData.healthProfile.dietaryPreferences);
+      console.log('Allergies:', formData.healthProfile.allergies);
+
+      // Prepare bulk data for allergies and preferences
+      const allergiesData = formData.healthProfile.allergies.map(allergyId => ({
+        allergy_id: allergyId,
+        severity_override: 1
+      }));
+
+      const preferencesData = formData.healthProfile.dietaryPreferences.map(prefId => ({
+        preference_id: prefId
+      }));
+
+      // Update profile and health data, and bulk update allergies and preferences
+      await Promise.all([
+        updateProfile(profileData),
+        updateHealthProfile(healthData),
+        bulkUpdateAllergies(allergiesData),
+        bulkUpdatePreferences(preferencesData)
+      ]);
+
+      console.log('Profile updated successfully');
 
       toast({
         title: t('profile.profileUpdated'),
@@ -178,7 +212,7 @@ const CommonQuestions = ({ onComplete }) => {
   }
 
   // Loading states
-  const isLoading = isLoadingProfile || isLoadingHealth || 
+    const isLoading = isLoadingProfile || isLoadingHealth || 
                    isLoadingAllergies || isLoadingPreferences
 
   // Error states
@@ -186,13 +220,13 @@ const CommonQuestions = ({ onComplete }) => {
                   allergiesError || preferencesError
 
   // Theme variables
-  const bgColor = { light: 'white', dark: 'gray.800' }
-  const borderColor = { light: 'gray.200', dark: 'gray.700' }
+  const bgColor = { light: 'secondary.400', dark: 'gray.800' }
+  const borderColor = { light: 'brand.200', dark: 'gray.700' }
   const inputBg = { light: 'white', dark: 'gray.700' }
 
   if (hasError) {
     return (
-      <Box p={6} borderRadius="lg" bg={bgColor[colorMode]} borderWidth="1px" borderColor={borderColor[colorMode]}>
+      <Box p={6} borderRadius="lg" bg={bgColor[colorMode]} borderWidth="2px" borderColor={borderColor[colorMode]}>
         <Alert status="error" borderRadius="md" mb={4}>
           <AlertIcon />
           {t('premium.errorLoadingData')}
@@ -210,15 +244,14 @@ const CommonQuestions = ({ onComplete }) => {
       mx="auto"
       mt={8}
       p={[4, 6]}
-      borderWidth="1px"
+      borderWidth="2px"
       borderRadius="lg"
       bg={bgColor[colorMode]}
       borderColor={borderColor[colorMode]}
-      boxShadow={colorMode === 'light' ? 'md' : 'dark-lg'}
     >
       <form onSubmit={handleSubmit}>
         <VStack spacing={5} align="stretch">
-          <Heading as="h2" size="lg" mb={4} color="brand.500">
+          <Heading as="h2" size="lg" mb={4} color="brand.700">
             {t('premium.healthProfile')}
           </Heading>
 
@@ -321,10 +354,10 @@ const CommonQuestions = ({ onComplete }) => {
               >
                 <Stack direction="column" spacing={3}>
                   <Radio value="sedentary">{t('premium.sedentary')}</Radio>
-                  <Radio value="lightly-active">{t('premium.lightlyActive')}</Radio>
-                  <Radio value="moderately-active">{t('premium.moderatelyActive')}</Radio>
-                  <Radio value="very-active">{t('premium.veryActive')}</Radio>
-                  <Radio value="extremely-active">{t('premium.extremelyActive')}</Radio>
+                  <Radio value="lightly_active">{t('premium.lightlyActive')}</Radio>
+                  <Radio value="moderately_active">{t('premium.moderatelyActive')}</Radio>
+                  <Radio value="very_active">{t('premium.veryActive')}</Radio>
+                  <Radio value="extremely_active">{t('premium.extremelyActive')}</Radio>
                 </Stack>
               </RadioGroup>
             )}
@@ -355,7 +388,7 @@ const CommonQuestions = ({ onComplete }) => {
           {/* Dietary Preferences */}
           <FormControl>
             <FormLabel>{t('premium.dietaryPreferences')}</FormLabel>
-            {isLoading ? (
+            {isLoading || availablePreferences.length === 0 ? (
               <Skeleton height="100px" borderRadius="md" />
             ) : (
               <Wrap spacing={3}>
@@ -382,7 +415,7 @@ const CommonQuestions = ({ onComplete }) => {
           {/* Allergies */}
           <FormControl>
             <FormLabel>{t('premium.allergies')}</FormLabel>
-            {isLoading ? (
+            {isLoading || availableAllergies.length === 0 ? (
               <Skeleton height="100px" borderRadius="md" />
             ) : (
               <Wrap spacing={3}>

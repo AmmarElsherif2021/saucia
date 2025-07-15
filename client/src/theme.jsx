@@ -167,7 +167,7 @@ const createTheme = (config) => {
         }),
         variants: {
           solid: (props) => ({
-            bg: props.colorMode === 'dark' ? 'gray.700' : 'white',
+            //bg: props.colorMode === 'dark' ? 'gray.700' : 'white',
             p: 4,
             borderRadius: 'lg',
           }),

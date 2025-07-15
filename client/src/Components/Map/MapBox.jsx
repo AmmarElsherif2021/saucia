@@ -11,7 +11,8 @@ import Feature from 'ol/Feature.js'
 import { Vector as VectorSource } from 'ol/source.js'
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer.js'
 import Point from 'ol/geom/Point.js'
-import { useAuthContext } from '../../Contexts/AuthContext' // <-- Use AuthContext
+import { useAuthContext } from '../../Contexts/AuthContext' 
+import { useUserProfile, useUserAddresses} from '../../hooks/userHooks'
 const markerIconSvg = `
   <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
     <g id="iconCarrier">
@@ -26,9 +27,11 @@ const MapBox = () => {
   const popupRef = useRef()
   const mapInstanceRef = useRef()
   const overlayRef = useRef()
+   const { addresses, addAddress, isLoading: isLoadingAddresses } = useUserAddresses();
+   //Edit from here
   const [currentLocationMarker, setCurrentLocationMarker] = useState(null)
   const [confirmedAddress, setConfirmedAddress] = useState(null)
-  const { userAddress, setUserAddress } = useAuthContext() // <-- Use AuthContext
+  
   // Default coordinates [longitude, latitude] for [26.4367824, 50.1039991]
   const defaultCoordinates = [50.1039991, 26.4367824]
 

@@ -159,37 +159,22 @@ export const useMapLocation = (initialCenter = [26.386145, 50.075073], showUserL
    * @param {Array} coordinates - [latitude, longitude] array
    * @returns {Promise<string>} Human-readable address
    */
-  const getAddressFromCoordinates = useCallback(async (coordinates) => {
-    if (!coordinates || coordinates.length !== 2) {
-      throw new Error('Invalid coordinates provided')
-    }
-
-    setIsGeocodingAddress(true)
-
-    try {
-      const [lat, lng] = coordinates
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-      )
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch address')
-      }
-
-      const data = await response.json()
-
-      if (!data?.display_name) {
-        throw new Error('No address found for these coordinates')
-      }
-
-      return data.display_name
-    } catch (error) {
-      console.error('Address geocoding error:', error)
-      throw error
-    } finally {
-      setIsGeocodingAddress(false)
-    }
-  }, [])
+  const getAddressFromCoordinates = async (coordinates) => {
+  try {
+    const [lat, lng] = coordinates;
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+    );
+    
+    if (!response.ok) throw new Error('Failed to fetch address');
+    
+    const data = await response.json();
+    return data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+  } catch (error) {
+    console.error('Geocoding error:', error);
+    return `${coordinates[0].toFixed(6)}, ${coordinates[1].toFixed(6)}`;
+  }
+};
 
   /**
    * Convert human-readable address to coordinates using forward geocoding

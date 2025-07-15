@@ -1,4 +1,4 @@
-import { useState, useReducer } from 'react'
+import { useState, useReducer, useEffect } from 'react'
 import {
   Box,
   Heading,
@@ -255,10 +255,14 @@ const CheckoutPlan = () => {
   const isArabic = currentLanguage === 'ar'
   
   // Fetch user profile and addresses
-  const { updateProfile } = useUserProfile();
-  const { addresses, addAddress } = useUserAddresses();
-  const { subscriptions, createSubscription } = useUserSubscriptions();
-  const defaultAddress = addresses.find(addr => addr.is_default) || addresses[0];
+  const { updateProfile, subscriptions, createSubscription } = useUserSubscriptions();
+  const { data: profile } = useUserProfile();
+  const { 
+    addresses: userAddresses, 
+    addAddress, 
+    isLoading: isLoadingAddresses 
+  } = useUserAddresses();;
+  const defaultAddress = userAddresses.find(addr => addr.is_default) || userAddresses[0];
 
   //Checkout state
   const [state, dispatch] = useReducer(checkoutReducer, {
@@ -306,7 +310,8 @@ const CheckoutPlan = () => {
   const subscriptionPrice = 49.99
   const discount = 10.0
   const totalPrice = subscriptionPrice - discount
-
+  //Prepare user data
+  
   // Helper function to combine meals
   const getCombinedMeals = () => {
     const meals = [...selectedMeals]
@@ -458,14 +463,41 @@ const CheckoutPlan = () => {
 
   //Location
   const handleSelectLocation = (addressData) => {
-    handleBillingInfoChange('deliveryAddress', addressData.display_name, addressData.id);
+    dispatch({
+      type: 'SET_BILLING_INFO',
+      payload: { 
+        deliveryAddress: addressData.display_name,
+        deliveryAddressId: addressData.id || null
+      }
+    });
   };
   const handleAddressInputChange = (e) => {
     handleBillingInfoChange('deliveryAddress', e.target.value);
   };
   // Responsive grid columns
   const gridColumns = useBreakpointValue({ base: 1, md: 3 })
+  // PREPARE USER DATA
+  // Initialize billing info with user data
+    useEffect(() => {
+    if (profile && userAddresses) {
+      const defaultAddress = userAddresses.find(addr => addr.is_default) || userAddresses[0];
+      
+      const newBillingInfo = {
+        fullName: profile.display_name || '',
+        email: user?.email || '',
+        phoneNumber: profile.phone_number || '',
+        deliveryAddress: defaultAddress ? 
+          (defaultAddress.display_name || `${defaultAddress.address_line1}, ${defaultAddress.city}`) : '',
+        deliveryAddressId: defaultAddress?.id || null,
+        deliveryTime: user?.subscription?.deliveryTime || '12:00',
+      };
 
+      dispatch({
+        type: 'SET_BILLING_INFO',
+        payload: newBillingInfo
+      });
+    }
+  }, [profile, userAddresses, user]);
   return (
     <Box
       p={{ base: 4, md: 6 }}
@@ -545,11 +577,11 @@ const CheckoutPlan = () => {
                   </Button>
                 </Flex>
                 {/* Updated MapModal */}
-                <MapModal
-                  isOpen={isMapOpen}
-                  onClose={onCloseMap}
-                  onSelectLocation={handleSelectLocation}
-                />
+               <MapModal
+                isOpen={isMapOpen}
+                onClose={onCloseMap}
+                onSelectLocation={handleSelectLocation}
+              />
               </FormControl>
 
               <FormControl>
@@ -602,14 +634,14 @@ const CheckoutPlan = () => {
 
           {/* Subscription Summary */}
           <Section title={t('checkout.subscriptionSummary')} bgColor="warning" icon={orderIcon}>
-            {!addresses.length? (
+            {!userAddresses.length? (
               <Text>{t('noPlanSelected')}</Text>
             ) : (
               <Box>
                 <Flex alignItems="center" mb={2}>
                   <Image
-                    src={addresses.image || saladIcon}
-                    alt={addresses.title}
+                    src={userAddresses.image || saladIcon}
+                    alt={userAddresses.title}
                     boxSize="60px"
                     borderRadius="25%"
                     bg={colorMode === 'dark' ? 'gray.700' : 'warning.100'}
@@ -617,7 +649,7 @@ const CheckoutPlan = () => {
                     p={2}
                   />
                   <Box>
-                    <Heading size="xs">{isArabic ? addresses.title_arabic : addresses.title}</Heading>
+                    <Heading size="xs">{isArabic ? userAddresses.title_arabic : userAddresses.title}</Heading>
                   </Box>
                 </Flex>
 
@@ -628,13 +660,13 @@ const CheckoutPlan = () => {
                     <Text fontSize="sm">{t('premium.nutritionalInformation')}:</Text>
                     <Flex wrap="wrap" gap={1}>
                       <Badge fontSize="0.5em" colorScheme="green">
-                        {t('kcal')}: {addresses.kcal}
+                        {t('kcal')}: {userAddresses.kcal}
                       </Badge>
                       <Badge fontSize="0.5em" colorScheme="brand">
-                        {t('carbs')}: {addresses.carb}g
+                        {t('carbs')}: {userAddresses.carb}g
                       </Badge>
                       <Badge fontSize="0.5em" colorScheme="red">
-                        {t('protein')}: {addresses.protein}g
+                        {t('protein')}: {userAddresses.protein}g
                       </Badge>
                     </Flex>
                   </Flex>
@@ -652,7 +684,7 @@ const CheckoutPlan = () => {
                       focusBorderColor="brand.500"
                       bg="warning.50"
                     >
-                      {addresses.periods?.map((periodOption, index) => (
+                      {userAddresses.periods?.map((periodOption, index) => (
                         <option key={index} value={periodOption}>
                           <span>
                             {' '}
@@ -710,7 +742,7 @@ const CheckoutPlan = () => {
               onClick={handleOpenConfirmation}
               isLoading={isSubmitting}
               loadingText={t('checkout.processing')}
-              isDisabled={!addresses}
+              isDisabled={!userAddresses}
             >
               {t('checkout.completeSubscription')}
             </Button>
@@ -739,7 +771,7 @@ const CheckoutPlan = () => {
         handleAddSignatureSalad={handleAddSignatureSalad}
         handleRemoveMeal={handleRemoveMeal}
         handleConfirmSubscription={handleConfirmSubscription}
-        userPlan={addresses}
+        userPlan={userAddresses}
         customizedSalad={customizedSalad}
         selectedMeals={selectedMeals}
         signatureSalads={signatureSalads}
