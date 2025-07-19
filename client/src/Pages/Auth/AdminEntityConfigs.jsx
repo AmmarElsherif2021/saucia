@@ -105,7 +105,8 @@ export const useEntityConfigs = () => {
         ingredients: '',
         ingredients_arabic: '',
         is_available: true,
-        image_url: ''
+        image_url: '',
+        allergy_ids: []
       },
       columns: [
         { key: 'name', label: t('admin.Name') },
@@ -125,6 +126,14 @@ export const useEntityConfigs = () => {
               {value ? t('admin.Yes') : t('admin.No')}
             </Badge>
           )
+        },
+        {
+          key: 'meal_allergies', 
+          label: t('admin.Allergies'),
+          width: '15%',
+          render: value => value?.length > 0 
+            ? value.map(ma => ma.allergies.name).join(', ') 
+            : t('admin.None')
         },
         { key: 'image_url', label: t('admin.Image'), truncate: true },
       ],

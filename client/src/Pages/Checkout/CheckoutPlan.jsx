@@ -42,12 +42,13 @@ import locationPin from '../../assets/locationPin.svg'
 //Hooks
 import { useUserProfile, useUserAddresses } from '../../hooks/userHooks'
 import { useUserSubscriptions } from '../../Hooks/useUserSubscriptions'
+import { useChosenPlanContext } from '../../Contexts/ChosenPlanContext'
+import SubscriptionSummary from './SubscriptionSummarySection'
 
 //Checkout state
 const initialState = {
   isSubmitting: false,
   paymentMethod: '',
-  period: 12,
   selectedMeals: [],
   customizedSalad: null,
   billingInfo: {
@@ -64,8 +65,6 @@ function checkoutReducer(state, action) {
   switch (action.type) {
     case 'SET_PAYMENT_METHOD':
       return { ...state, paymentMethod: action.payload }
-    case 'SET_PERIOD':
-      return { ...state, period: action.payload }
     case 'SET_SELECTED_MEALS':
       return { ...state, selectedMeals: action.payload }
     case 'SET_CUSTOMIZED_SALAD':
@@ -108,7 +107,7 @@ const Section = ({ title, children, bgColor, titleColor, icon }) => {
       position="relative"
       overflow="hidden"
       height="100%"
-      maxHeight="95vh"
+      maxHeight="235vh"
       minHeight="85vh"
       my={20}
     >
@@ -243,41 +242,46 @@ const calculateEndDate = (startDate, daysToAdd) => {
   return result
 }
 
+
 const CheckoutPlan = () => {
   // Hooks and context
+  const {
+    subscriptionData,
+    updateSubscriptionData,
+    addMeal,
+    removeMeal,
+    getSubscriptionPayload,
+    isSubscriptionValid,
+  } = useChosenPlanContext();
+  
   const navigate = useNavigate()
   const { colorMode } = useColorMode()
-  const { user} = useAuthContext();
-  const { saladItems, signatureSalads } = useElements()
+  const { user } = useAuthContext();
+  const { signatureSalads } = useElements()
   const toast = useToast()
   const { t } = useTranslation()
   const { currentLanguage } = useI18nContext()
   const isArabic = currentLanguage === 'ar'
   
   // Fetch user profile and addresses
-  const { updateProfile, subscriptions, createSubscription } = useUserSubscriptions();
+  const { createSubscription } = useUserSubscriptions();
   const { data: profile } = useUserProfile();
   const { 
     addresses: userAddresses, 
-    addAddress, 
     isLoading: isLoadingAddresses 
-  } = useUserAddresses();;
+  } = useUserAddresses();
   const defaultAddress = userAddresses.find(addr => addr.is_default) || userAddresses[0];
 
-  //Checkout state
-  const [state, dispatch] = useReducer(checkoutReducer, {
-    ...initialState,
-    billingInfo: {
-      ...initialState.billingInfo,
-      fullName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
-      email: user?.email || '',
-      phoneNumber: user?.phoneNumber || '',
-      deliveryAddress: defaultAddress?.display_name || user?.defaultAddress || '',
-      deliveryAddressId: defaultAddress?.id || null,
-      deliveryTime: user?.subscription?.deliveryTime || '12:00',
-    },
+  // Local state for billing info (non-subscription related)
+  const [billingInfo, setBillingInfo] = useState({
+    fullName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+    email: user?.email || '',
+    phoneNumber: user?.phoneNumber || '',
+    deliveryAddress: defaultAddress?.display_name || user?.defaultAddress || '',
   });
-  const { isSubmitting, paymentMethod, period, selectedMeals, customizedSalad, billingInfo } = state
+
+  const [paymentMethod, setPaymentMethod] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Modal controls
   const {
@@ -286,48 +290,26 @@ const CheckoutPlan = () => {
     onClose: onCloseConfirmation,
   } = useDisclosure()
 
-  const {
-    isOpen: isMealSelectionOpen,
-    onOpen: onOpenMealSelection,
-    onClose: onCloseMealSelection,
-  } = useDisclosure()
   const { isOpen: isMapOpen, onOpen: onOpenMap, onClose: onCloseMap } = useDisclosure()
+  
   // Constants
   const today = new Date()
-  const startDate = today.toLocaleDateString('en-US', {
+  const startDate = subscriptionData.start_date || today.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   })
 
-  const endDate = calculateEndDate(today, period)
+  const endDate = subscriptionData.end_date ? new Date(subscriptionData.end_date) : calculateEndDate(today, subscriptionData.total_meals || 12)
   const formattedEndDate = endDate.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   })
 
-  const subscriptionPrice = 49.99
-  const discount = 10.0
-  const totalPrice = subscriptionPrice - discount
-  //Prepare user data
-  
-  // Helper function to combine meals
-  const getCombinedMeals = () => {
-    const meals = [...selectedMeals]
-    if (customizedSalad) {
-      meals.push(customizedSalad)
-    }
-    // If no meals selected, use default signature salads
-    return meals.length > 0 ? meals : signatureSalads.slice(0, period)
-  }
-
   // Event handlers
-  const handleBillingInfoChange = (field, value, id = null) => {
-    dispatch({
-      type: 'SET_BILLING_INFO',
-      payload: { [field]: value, ...(id && { deliveryAddressId: id }) },
-    });
+  const handleBillingInfoChange = (field, value) => {
+    setBillingInfo(prev => ({ ...prev, [field]: value }));
   };
 
   const handleOpenConfirmation = () => {
@@ -356,87 +338,42 @@ const CheckoutPlan = () => {
     onOpenConfirmation()
   }
 
-  const handleSelectMeals = () => onOpenMealSelection()
+  // helper function to get selected meal objects
+  const getSelectedMealObjects = () => {
+    return subscriptionData.meals
+      .map(id => signatureSalads.find(meal => meal.id === id))
+      .filter(Boolean);
+  };
 
-  const handleConfirmCustomizedSalad = (selectedItems) => {
-    const selectedItemIds = Object.keys(selectedItems)
-    const items = saladItems.filter((item) => selectedItemIds.includes(item.id))
+  // handleAddSignatureSalad accept ID
+  const handleAddSignatureSalad = (mealId) => {
+    addMeal(mealId);
+  };
 
-    dispatch({
-      type: 'SET_CUSTOMIZED_SALAD',
-      payload: {
-        id: 'custom-salad-' + Date.now(),
-        name: t('checkout.customSalad'),
-        name_arabic: t('checkout.customSalad', { lng: 'ar' }),
-        calories: items.reduce((sum, item) => sum + (item.calories || 0), 0),
-        price: items.reduce((sum, item) => sum + (item.price || 0), 0),
-        items,
-        isCustom: true,
-      },
-    })
-    onCloseMealSelection()
-  }
-
-  const handleAddSignatureSalad = (meal) => {
-    dispatch({ type: 'ADD_SIGNATURE_SALAD', payload: meal })
-  }
-
-  const handleRemoveMeal = (index) => {
-    dispatch({ type: 'REMOVE_MEAL', payload: index })
-  }
-  
+  const handleRemoveMeal = (mealId) => {
+    removeMeal(mealId);
+  };
 
   const handleConfirmSubscription = async () => {
-    dispatch({ type: 'START_SUBMISSION' });
+    setIsSubmitting(true);
     onCloseConfirmation();
 
     try {
       if (!user?.id) throw new Error('User not authenticated');
 
-      const finalMeals = getCombinedMeals();
-      const deliveryAddressId = billingInfo.deliveryAddressId;
-      const deliveryAddress = billingInfo.deliveryAddress;
-
-      // Create address if it's new
-      let addressId = deliveryAddressId;
-      if (!addressId) {
-        const newAddress = await addAddress({
-          address_line1: deliveryAddress,
-          city: 'Riyadh', // Default city
-          country: 'SA',
-          is_default: true
-        });
-        addressId = newAddress.id;
-      }
-
-      // Prepare user profile updates
-      const userProfileUpdates = {
-        firstName: billingInfo.fullName.split(' ')[0] || '',
-        lastName: billingInfo.fullName.split(' ').slice(1).join(' ') || '',
-        phoneNumber: billingInfo.phoneNumber,
-        defaultAddress: addressId
-      };
-
-      // Update user profile
-      await updateProfile(userProfileUpdates);
-
-      // Create subscription
-      await createSubscription({
-        plan_id: addresses?.id || 'premium-plan',
-        plan_name: addresses?.title || 'Premium Plan',
-        start_date: today.toISOString(),
-        end_date: endDate.toISOString(),
-        status: 'active',
-        payment_method: paymentMethod,
-        price: totalPrice,
-        meals_count: period,
-        meals: finalMeals,
-        delivery_address_id: addressId,
-        delivery_time: billingInfo.deliveryTime,
-        auto_renewal: false,
-        is_paused: false,
-        next_meal_date: calculateDeliveryDate(today, 0).toISOString(),
+      // Update subscription data with final details
+      updateSubscriptionData({
+        delivery_address_id: subscriptionData.delivery_address_id,
+        preferred_delivery_time: subscriptionData.preferred_delivery_time,
+        payment_method_id: paymentMethod,
+        status: 'active'
       });
+
+      // Get final payload from context
+      const subscriptionPayload = getSubscriptionPayload(user.id);
+
+      // Create subscription with the payload
+      await createSubscription(subscriptionPayload);
 
       toast({
         title: t('checkout.subscriptionSuccessful'),
@@ -449,7 +386,7 @@ const CheckoutPlan = () => {
       navigate('/account?subscription=success');
     } catch (error) {
       console.error('Error confirming subscription:', error);
-      dispatch({ type: 'END_SUBMISSION' });
+      setIsSubmitting(false);
 
       toast({
         title: t('checkout.subscriptionFailed'),
@@ -463,22 +400,24 @@ const CheckoutPlan = () => {
 
   //Location
   const handleSelectLocation = (addressData) => {
-    dispatch({
-      type: 'SET_BILLING_INFO',
-      payload: { 
-        deliveryAddress: addressData.display_name,
-        deliveryAddressId: addressData.id || null
-      }
+    setBillingInfo(prev => ({ 
+      ...prev, 
+      deliveryAddress: addressData.display_name 
+    }));
+    updateSubscriptionData({
+      delivery_address_id: addressData.id
     });
   };
+  
   const handleAddressInputChange = (e) => {
     handleBillingInfoChange('deliveryAddress', e.target.value);
   };
+  
   // Responsive grid columns
   const gridColumns = useBreakpointValue({ base: 1, md: 3 })
-  // PREPARE USER DATA
+  
   // Initialize billing info with user data
-    useEffect(() => {
+  useEffect(() => {
     if (profile && userAddresses) {
       const defaultAddress = userAddresses.find(addr => addr.is_default) || userAddresses[0];
       
@@ -488,37 +427,23 @@ const CheckoutPlan = () => {
         phoneNumber: profile.phone_number || '',
         deliveryAddress: defaultAddress ? 
           (defaultAddress.display_name || `${defaultAddress.address_line1}, ${defaultAddress.city}`) : '',
-        deliveryAddressId: defaultAddress?.id || null,
-        deliveryTime: user?.subscription?.deliveryTime || '12:00',
       };
 
-      dispatch({
-        type: 'SET_BILLING_INFO',
-        payload: newBillingInfo
-      });
+      setBillingInfo(newBillingInfo);
     }
   }, [profile, userAddresses, user]);
+
   return (
     <Box
       p={{ base: 4, md: 6 }}
       bg={colorMode === 'dark' ? 'gray.800' : 'gray.50'}
       minHeight="100vh"
     >
-      <VStack spacing={2} align="stretch">
-        <Heading as="h1" size="xl" textAlign="center" color="brand.800">
-          {t('checkout.completeYourSubscription')}
-        </Heading>
+      {/* ... existing UI components ... */}
 
-        {!subscriptions.length && (
-          <Alert status="warning" borderRadius="md">
-            <AlertIcon />
-            {t('checkout.noPlanSelected')}
-          </Alert>
-        )}
-
-        <SimpleGrid columns={gridColumns} spacing={4}>
-          {/* Billing Information */}
-          <Section title={t('checkout.billingInformation')} bgColor="teal" icon={saladIcon}>
+      <SimpleGrid columns={gridColumns} spacing={4}>
+        {/* Billing Information */}
+        <Section title={t('checkout.billingInformation')} bgColor="teal" icon={saladIcon}>
             <Stack spacing={2}>
               <FormControl isRequired>
                 <FormLabel fontSize="sm">{t('checkout.fullName')}</FormLabel>
@@ -580,7 +505,7 @@ const CheckoutPlan = () => {
                <MapModal
                 isOpen={isMapOpen}
                 onClose={onCloseMap}
-                onSelectLocation={handleSelectLocation}
+                onSelectLocation={handleSelectLocation} 
               />
               </FormControl>
 
@@ -612,168 +537,52 @@ const CheckoutPlan = () => {
             </Stack>
           </Section>
 
-          {/* Payment Details */}
-          <Section title={t('checkout.paymentDetails')} bgColor="secondary" icon={paymentIcon}>
-            <FormControl mb={4}>
-              <FormLabel fontSize="sm">{t('checkout.paymentMethod')}</FormLabel>
-              <Select
-                placeholder={t('checkout.selectPaymentMethod')}
-                focusBorderColor="secondary.500"
-                bg={colorMode === 'dark' ? 'gray.800' : 'secondary.100'}
-                onChange={(e) => dispatch({ type: 'SET_PAYMENT_METHOD', payload: e.target.value })}
-              >
-                <option value="credit-card">Credit Card</option>
-                <option value="paypal">PayPal</option>
-                <option value="apple-pay">Apple Pay</option>
-                <option value="google-pay">Google Pay</option>
-              </Select>
-            </FormControl>
-
-            <PaymentMethodInputs paymentMethod={paymentMethod} t={t} colorMode={colorMode} />
-          </Section>
-
-          {/* Subscription Summary */}
-          <Section title={t('checkout.subscriptionSummary')} bgColor="warning" icon={orderIcon}>
-            {!userAddresses.length? (
-              <Text>{t('noPlanSelected')}</Text>
-            ) : (
-              <Box>
-                <Flex alignItems="center" mb={2}>
-                  <Image
-                    src={userAddresses.image || saladIcon}
-                    alt={userAddresses.title}
-                    boxSize="60px"
-                    borderRadius="25%"
-                    bg={colorMode === 'dark' ? 'gray.700' : 'warning.100'}
-                    mx={4}
-                    p={2}
-                  />
-                  <Box>
-                    <Heading size="xs">{isArabic ? userAddresses.title_arabic : userAddresses.title}</Heading>
-                  </Box>
-                </Flex>
-
-                <Divider mb={1} />
-
-                <Stack spacing={2}>
-                  <Flex justify="space-between" align="center">
-                    <Text fontSize="sm">{t('premium.nutritionalInformation')}:</Text>
-                    <Flex wrap="wrap" gap={1}>
-                      <Badge fontSize="0.5em" colorScheme="green">
-                        {t('kcal')}: {userAddresses.kcal}
-                      </Badge>
-                      <Badge fontSize="0.5em" colorScheme="brand">
-                        {t('carbs')}: {userAddresses.carb}g
-                      </Badge>
-                      <Badge fontSize="0.5em" colorScheme="red">
-                        {t('protein')}: {userAddresses.protein}g
-                      </Badge>
-                    </Flex>
-                  </Flex>
-
-                  <Flex justify="space-between" align="center">
-                    <Text fontSize="sm">{t('checkout.subscriptionPeriod')}:</Text>
-                    <Select
-                      px={3}
-                      mx={4}
-                      w="auto"
-                      value={period}
-                      onChange={(e) =>
-                        dispatch({ type: 'SET_PERIOD', payload: Number(e.target.value) })
-                      }
-                      focusBorderColor="brand.500"
-                      bg="warning.50"
-                    >
-                      {userAddresses.periods?.map((periodOption, index) => (
-                        <option key={index} value={periodOption}>
-                          <span>
-                            {' '}
-                            {periodOption} {t('days')}{' '}
-                          </span>
-                        </option>
-                      ))}
-                    </Select>
-                  </Flex>
-
-                  <Flex justify="space-between" align="center">
-                    <Text fontSize="sm">{t('checkout.selectedMeals')}:</Text>
-                    <Text fontSize="sm" color="brand.900">
-                      {' '}
-                      {getCombinedMeals().length}
-                    </Text>
-                  </Flex>
-                </Stack>
-              </Box>
-            )}
-
-            <Divider mb={2} />
-
-            <Flex justify="space-between" mb={2}>
-              <Text fontSize="sm">{t('checkout.monthlySubscription')}</Text>
-              <Text fontSize="sm">${subscriptionPrice.toFixed(2)}</Text>
-            </Flex>
-
-            <Flex justify="space-between" mb={2}>
-              <Text fontSize="sm">{t('checkout.newSubscriberDiscount')}</Text>
-              <Text fontSize="sm" fontWeight="bold" color="green.500">
-                -${discount.toFixed(2)}
-              </Text>
-            </Flex>
-
-            <Divider my={1} />
-
-            <Flex justify="space-between" mb={4}>
-              <Text fontSize="sm" fontWeight="bold">
-                {t('checkout.totalToday')}
-              </Text>
-              <Text fontSize="sm" fontWeight="bold" color="brand.800">
-                ${totalPrice.toFixed(2)}
-              </Text>
-            </Flex>
-
-            <Text fontSize="xs" color="gray.600" mb={4}>
-              {t('checkout.subscriptionTerms')}
-            </Text>
-
-            <Button
-              colorScheme="brand"
-              size="sm"
-              width="full"
-              onClick={handleOpenConfirmation}
-              isLoading={isSubmitting}
-              loadingText={t('checkout.processing')}
-              isDisabled={!userAddresses}
+        {/* Payment Details */}
+        <Section title={t('checkout.paymentDetails')} bgColor="secondary" icon={paymentIcon}>
+          <FormControl mb={4}>
+            <FormLabel fontSize="sm">{t('checkout.paymentMethod')}</FormLabel>
+            <Select
+              placeholder={t('checkout.selectPaymentMethod')}
+              focusBorderColor="secondary.500"
+              bg={colorMode === 'dark' ? 'gray.800' : 'secondary.100'}
+              onChange={(e) => setPaymentMethod(e.target.value)}
             >
-              {t('checkout.completeSubscription')}
-            </Button>
+              <option value="credit-card">Credit Card</option>
+              <option value="paypal">PayPal</option>
+              <option value="apple-pay">Apple Pay</option>
+              <option value="google-pay">Google Pay</option>
+            </Select>
+          </FormControl>
 
-            <Button mt={2} variant="ghost" width="full" onClick={() => navigate('/premium')}>
-              {t('checkout.backToPlans')}
-            </Button>
-          </Section>
-        </SimpleGrid>
-      </VStack>
+          <PaymentMethodInputs paymentMethod={paymentMethod} t={t} colorMode={colorMode} />
+        </Section>
 
-      {/* Modals */}
-      <CustomizableMealSelectionModal
-        isOpen={isMealSelectionOpen}
-        onClose={onCloseMealSelection}
-        onConfirm={handleConfirmCustomizedSalad}
-        saladItems={saladItems}
-        t={t}
-        isArabic={isArabic}
-      />
+        {/* Subscription Summary */}
+        <Section title={t('checkout.subscriptionSummary')} bgColor="warning" icon={orderIcon}>
+          <SubscriptionSummary/>
+        <Button
+          colorScheme="brand"
+          size="sm"
+          width="full"
+          onClick={handleOpenConfirmation}
+          isLoading={isSubmitting}
+          loadingText={t('checkout.processing')}
+          isDisabled={!userAddresses || !isSubscriptionValid}
+        >
+          {t('checkout.completeSubscription')}
+        </Button>
+        </Section>
+      </SimpleGrid>
 
+      {/* ConfirmPlanModal */}
       <ConfirmPlanModal
         isOpen={isConfirmationOpen}
         onClose={onCloseConfirmation}
-        handleSelectMeals={handleSelectMeals}
-        handleAddSignatureSalad={handleAddSignatureSalad}
+        selectedMeals={getSelectedMealObjects()}  
+        handleAddSignatureSalad={handleAddSignatureSalad} 
         handleRemoveMeal={handleRemoveMeal}
         handleConfirmSubscription={handleConfirmSubscription}
         userPlan={userAddresses}
-        customizedSalad={customizedSalad}
-        selectedMeals={selectedMeals}
         signatureSalads={signatureSalads}
         startDate={startDate}
         formattedEndDate={formattedEndDate}

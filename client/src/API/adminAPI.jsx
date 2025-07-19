@@ -181,7 +181,8 @@ export const adminAPI = {
     const query = {
       orderBy: options.orderBy || 'created_at',
       ascending: options.ascending || false,
-      limit: options.limit || 50
+      limit: options.limit || 50,
+      select: `*, meal_allergies(allergies(id, name))`, 
     };
 
     if (options.section) {
@@ -221,7 +222,7 @@ export const adminAPI = {
       mealsAPI.getMealItems(mealId)
     ]);
 
-    return { meal, items, allergies, reviews };
+    return { ...meal, items, allergies, reviews };
   },
 
   // Create new meal
@@ -234,20 +235,19 @@ export const adminAPI = {
 
     return createRecord('meals', newMeal);
   },
+
   async updateMealComplete(mealId, updateData) {
-    // Extract junction data
-    const { items, allergy_ids, dietary_preference_ids, ...mealData } = updateData;
+    // Extract allergy_ids
+    const { allergy_ids, ...mealData } = updateData;
     
     try {
       // Update meal base data
       const updatedMeal = await this.updateMeal(mealId, mealData);
       
-      // Update all junction tables
-      await Promise.all([
-        this.updateMealItems(mealId, items),
-        this.updateMealAllergies(mealId, allergy_ids),
-        this.updateMealDietaryPreferences(mealId, dietary_preference_ids)
-      ]);
+      // Update allergies junction table
+      if (allergy_ids !== undefined) {
+        await this.updateMealAllergies(mealId, allergy_ids);
+      }
       
       return updatedMeal;
     } catch (error) {

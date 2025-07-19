@@ -140,14 +140,14 @@ export const dietaryPreferencesAPI = {
         .from('user_allergies')
         .select('allergy_id')
         .eq('user_id', userId),
-      supabase
-        .from('user_dietary_preferences')
-        .select('preference_id')
-        .eq('user_id', userId)
+      // supabase
+      //   .from('user_dietary_preferences')
+      //   .select('preference_id')
+      //   .eq('user_id', userId)
     ]);
 
     if (userAllergies.error) throw userAllergies.error;
-    if (userPreferences.error) throw userPreferences.error;
+    //if (userPreferences.error) throw userPreferences.error;
 
     // Get unsafe meals (containing user's allergies)
     let unsafeMealIds = [];

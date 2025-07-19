@@ -1,4 +1,5 @@
-// ConfirmPlanModal.jsx
+import { useUserMenuFiltering } from '../../Hooks/setUserMenuFiltering'
+import { useEffect, useState, useMemo } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -19,25 +20,18 @@ import {
   useToast,
   Icon,
   Tooltip,
+  Badge,
 } from '@chakra-ui/react'
-import { WarningIcon } from '@chakra-ui/icons'
+import { WarningIcon, CheckIcon } from '@chakra-ui/icons'
 import { useI18nContext } from '../../Contexts/I18nContext'
-import { useEffect, useState } from 'react'
 import { useAuthContext } from '../../Contexts/AuthContext'
+import { useChosenPlanContext } from '../../Contexts/ChosenPlanContext'
 
 const ConfirmPlanModal = ({
   isOpen,
   onClose,
   handleSelectMeals,
-  handleAddSignatureSalad,
-  handleRemoveMeal,
-  handleConfirmSubscription,
-  userPlan,
-  customizedSalad,
-  selectedMeals,
   signatureSalads,
-  startDate,
-  formattedEndDate,
   isSubmitting,
   t,
   MealPlanCard,
@@ -45,68 +39,117 @@ const ConfirmPlanModal = ({
   calculateDeliveryDate,
 }) => {
   const { currentLanguage } = useI18nContext()
-  const isArabic = currentLanguage === 'ar'
+  const { user } = useAuthContext()
+  const {
+    subscriptionData,
+    addMeal,
+    removeMeal,
+    chosenPlan: userPlan,
+  } = useChosenPlanContext() 
+  
+  // Use the filtering hook
+  const { 
+    isMealSafe, 
+    getMealAllergens, // Use the corrected function from the hook
+    userAllergies, 
+    isLoadingAllergies,
+    unsafeMeals 
+  } = useUserMenuFiltering()
+  
   const toast = useToast()
-  const [endDateObj, setEndDateObj] = useState(null)
-  const { user } = useAuthContext();
+  
+  const isArabic = currentLanguage === 'ar'
+  const selectedMeals = subscriptionData.meals || []
 
-  // Convert formattedEndDate to Date object when component mounts or formattedEndDate changes
-  useEffect(() => {
-    console.log(` from confirmation modal of plan ${JSON.stringify(userPlan)}`)
-    if (formattedEndDate) {
-      setEndDateObj(new Date(formattedEndDate))
+  // Format dates from context
+  const formattedStartDate = useMemo(() => {
+    return userPlan?.start_date 
+      ? new Date(userPlan.start_date).toLocaleDateString(currentLanguage, {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      : ''
+  }, [userPlan?.start_date, currentLanguage])
+
+  const formattedEndDate = useMemo(() => {
+    return userPlan?.end_date 
+      ? new Date(userPlan.end_date).toLocaleDateString(currentLanguage, {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      : ''
+  }, [userPlan?.end_date, currentLanguage])
+
+  // Separate meals into safe and unsafe categories
+  const { safeMeals, unsafeMealsFiltered } = useMemo(() => {
+    if (!signatureSalads?.length) {
+      return { safeMeals: [], unsafeMealsFiltered: [] }
     }
-  }, [formattedEndDate])
 
-  // Function to check if a meal contains user's allergens
-  const isMealRestricted = (item) => {
-    if (!user?.healthProfile?.allergies || !item?.allergens) {
-      return false
-    }
+    console.log('🍽️ Filtering meals for safety...');
+    const safe = []
+    const unsafe = []
 
-    const userAllergies = user?.healthProfile?.allergies?.map(
-      (allergy) => typeof allergy === 'string' && allergy.toLowerCase(),
-    )
-
-    return item.allergens.some((allergen) => {
-      const allergenNameEn = allergen.en?.toLowerCase() || ''
-      const allergenNameAr = allergen.ar?.toLowerCase() || ''
-
-      // Check if any user allergy matches the allergen name (English or Arabic)
-      return userAllergies.some(
-        (userAllergy) =>
-          allergenNameEn.includes(userAllergy) ||
-          (typeof userAllergy === 'string' && userAllergy.includes(allergenNameEn)) ||
-          allergenNameAr.includes(userAllergy) ||
-          (typeof userAllergy === 'string' && userAllergy.includes(allergenNameAr)),
-      )
+    signatureSalads.forEach(meal => {
+      if (isMealSafe(meal)) {
+        safe.push(meal)
+      } else {
+        unsafe.push(meal)
+      }
     })
-  }
 
-  // Enhanced MealPlanCard wrapper component to handle allergen display
+    console.log(`✅ Safe meals: ${safe.length}, ❌ Unsafe meals: ${unsafe.length}`);
+    return { safeMeals: safe, unsafeMealsFiltered: unsafe }
+  }, [signatureSalads, isMealSafe])
+
+  // Enhanced MealPlanCard wrapper with allergen awareness
   const AllergenAwareMealPlanCard = ({
     meal,
     index,
     onChoose,
-    onRemove,
-    isArabic,
-    t,
     showDeliveryDate = false,
     deliveryDate = null,
+    showAllergenBadge = false,
   }) => {
-    const isRestricted = isMealRestricted(meal)
+    const isUnsafe = !isMealSafe(meal)
+    const mealAllergens = getMealAllergens(meal) // Use the hook's function
+
+    console.log(`🔍 Rendering meal card: "${meal?.name || meal?.name_arabic || 'Unknown'}", Safe: ${!isUnsafe}, Allergens: ${mealAllergens.length}`);
 
     return (
       <Box position="relative">
-        {/* Overlay for restricted meals */}
-        {isRestricted && (
+        {/* Safety Badge */}
+        {showAllergenBadge && (
+          <Badge
+            position="absolute"
+            top={2}
+            right={2}
+            zIndex={2}
+            colorScheme={isUnsafe ? "red" : "green"}
+            variant="solid"
+            borderRadius="full"
+            px={2}
+            py={1}
+            fontSize="xs"
+          >
+            <Flex align="center" gap={1}>
+              <Icon as={isUnsafe ? WarningIcon : CheckIcon} boxSize={3} />
+              {isUnsafe ? (t('checkout.unsafe') || 'Unsafe') : (t('checkout.safe') || 'Safe')}
+            </Flex>
+          </Badge>
+        )}
+
+        {/* Allergen Warning Overlay for unsafe meals */}
+        {isUnsafe && (
           <Box
             position="absolute"
             top={0}
             left={0}
             right={0}
             bottom={0}
-            bg="rgba(0, 0, 0, 0.1)"
+            bg="rgba(255, 0, 0, 0.1)"
             borderRadius="md"
             zIndex={1}
             display="flex"
@@ -114,70 +157,80 @@ const ConfirmPlanModal = ({
             justifyContent="center"
           >
             <Tooltip
-              label={
-                t('checkout.allergenNotice') || 'This meal contains allergens you are sensitive to'
-              }
+              label={t('checkout.allergenNotice') || 'This meal contains allergens you are sensitive to'}
               placement="top"
+              hasArrow
             >
-              <Flex bg="red.500" color="white" p={2} borderRadius="full" align="center" gap={1}>
+              <Flex 
+                bg="red.500" 
+                color="white" 
+                p={2} 
+                borderRadius="full" 
+                align="center" 
+                gap={1}
+                cursor="help"
+              >
                 <Icon as={WarningIcon} boxSize={4} />
                 <Text fontSize="xs" fontWeight="bold">
-                  {t('checkout.allergenNotice') || 'Allergen Alert'}
+                  {t('checkout.allergenAlert') || 'Allergen Alert'}
                 </Text>
               </Flex>
             </Tooltip>
           </Box>
         )}
 
-        {/* Original MealPlanCard with modified props */}
+        {/* Meal Card */}
         <Box
-          opacity={isRestricted ? 0.6 : 1}
-          filter={isRestricted ? 'grayscale(50%)' : 'none'}
-          pointerEvents={isRestricted ? 'none' : 'auto'}
+          opacity={isUnsafe ? 0.6 : 1}
+          filter={isUnsafe ? 'grayscale(50%)' : 'none'}
+          pointerEvents={isUnsafe ? 'none' : 'auto'}
+          transition="all 0.2s"
+          border={isUnsafe ? "2px solid" : "1px solid"}
+          borderColor={isUnsafe ? "red.300" : "gray.200"}
+          borderRadius="md"
         >
           <MealPlanCard
             key={index}
             meal={meal}
             index={index}
-            onChoose={isRestricted ? undefined : onChoose}
-            onRemove={onRemove}
+            onChoose={isUnsafe ? undefined : onChoose}
+            onRemove={() => removeMeal(meal.id)}
             isArabic={isArabic}
             t={t}
           />
         </Box>
 
-        {/* Show allergen details for restricted meals */}
-        {isRestricted && meal.allergens && (
-          <Box mt={2} p={2} bg="red.50" borderRadius="md" border="1px solid" borderColor="red.200">
-            <Text fontSize="xs" color="red.600" fontWeight="bold">
-              {t('checkout.contains') || 'Contains'}:
+        {/* Allergen Details for unsafe meals */}
+        {isUnsafe && mealAllergens.length > 0 && (
+          <Box 
+            mt={2} 
+            p={3} 
+            bg="red.50" 
+            borderRadius="md" 
+            border="1px solid" 
+            borderColor="red.200"
+          >
+            <Text fontSize="sm" color="red.700" fontWeight="bold" mb={1}>
+              {t('checkout.containsAllergens') || 'Contains allergens'}:
             </Text>
-            <Text fontSize="xs" color="red.500">
-              {meal.allergens
-                .filter((allergen) => {
-                  const userAllergies =
-                    user?.healthProfile?.allergies?.map(
-                      (a) => typeof a === 'string' && a.toLowerCase(),
-                    ) || []
-                  const allergenNameEn = allergen.en?.toLowerCase() || ''
-                  const allergenNameAr = allergen.ar?.toLowerCase() || ''
-                  return userAllergies.some(
-                    (userAllergy) =>
-                      allergenNameEn.includes(userAllergy) ||
-                      (typeof userAllergy === 'string' && userAllergy.includes(allergenNameEn)) ||
-                      allergenNameAr.includes(userAllergy) ||
-                      (typeof userAllergy === 'string' && userAllergy.includes(allergenNameAr)),
-                  )
-                })
-                .map((allergen) => (isArabic ? allergen.ar : allergen.en))
-                .join(', ')}
-            </Text>
+            <Flex wrap="wrap" gap={1}>
+              {mealAllergens.map((allergen, idx) => (
+                <Badge 
+                  key={idx}
+                  colorScheme="red" 
+                  variant="outline"
+                  fontSize="xs"
+                >
+                  {isArabic ? allergen.ar : allergen.en}
+                </Badge>
+              ))}
+            </Flex>
           </Box>
         )}
 
-        {/* Delivery date display */}
+        {/* Delivery Date */}
         {showDeliveryDate && deliveryDate && (
-          <Text fontSize="xs" textAlign="center" mt={1} color="gray.500">
+          <Text fontSize="xs" textAlign="center" mt={2} color="gray.500">
             {deliveryDate.toLocaleDateString('en-US', {
               weekday: 'short',
               month: 'short',
@@ -189,228 +242,304 @@ const ConfirmPlanModal = ({
     )
   }
 
-  // handleMealSelection function with enhanced allergen checking:
+  // Handle meal selection with validation
   const handleMealSelection = (meal) => {
-    // Check if meal contains user's allergens
-    if (isMealRestricted(meal)) {
+    console.log(`🎯 Attempting to select meal: "${meal?.name || meal?.name_arabic || 'Unknown'}"`);
+    
+    // Check allergen restrictions using the hook
+    if (!isMealSafe(meal)) {
+      console.log('❌ Meal selection blocked due to allergens');
       toast({
         title: t('checkout.allergenNotice') || 'Allergen Warning',
-        description:
-          t('checkout.allergenMealWarning') ||
+        description: t('checkout.allergenMealWarning') || 
           'This meal contains allergens you are sensitive to and cannot be selected.',
         status: 'error',
         duration: 5000,
-        isClosable: false,
+        isClosable: true,
       })
       return
     }
 
-    // Check if user has remaining meals in their plan
-    if (user.subscription.mealsCount && selectedMeals.length >= user.subscription.mealsCount) {
+    // Check meal count limit
+    const mealsCount = userPlan?.total_meals
+    if (mealsCount && selectedMeals.length >= mealsCount) {
+      console.log('❌ Meal selection blocked - plan limit reached');
       toast({
-        title: t('checkout.planLimitReachedTitle'),
-        description: t('', {
-          mealsCount: userPlan.mealsCount,
-        }),
+        title: t('checkout.planLimitReachedTitle') || 'Plan Limit Reached',
+        description: t('checkout.planLimitReachedDescription') || 
+          `You have reached the maximum of ${mealsCount} meals for your plan.`,
         status: 'error',
         duration: 5000,
-        //isClosable: false,
+        isClosable: true,
       })
       return
     }
 
-    // Check if the calculated delivery date is before the plan end date
-    const nextDeliveryIndex = selectedMeals.length
-    const deliveryDate = calculateDeliveryDate(today, nextDeliveryIndex)
+    // Calculate delivery date
+    const deliveryDate = calculateDeliveryDate(today, selectedMeals.length)
+    const remainingMeals = mealsCount - selectedMeals.length - 1
 
-    // if (endDateObj && deliveryDate > endDateObj) {
-    //   toast({
-    //     title: t('checkout.planExpiredTitle'),
-    //     description: t('checkout.planExpiredDescription', { endDate: formattedEndDate }),
-    //     status: 'error',
-    //     duration: 5000,
-    //     isClosable: false,
-    //   })
-    //   return
-    // }
-
-    // Show success toast when meal is selected
+    console.log('✅ Meal selection successful');
+    
+    // Show success message
     toast({
-      title: t('checkout.mealAddedTitle'),
-      description: t('', {
-        mealName: isArabic ? meal.name_arabic : meal.name,
-        deliveryDate: deliveryDate.toLocaleDateString('en-US', {
+      title: t('checkout.mealAddedTitle') || 'Meal Added',
+      description: t('checkout.mealAddedDescription') || 
+        `${isArabic ? meal.name_arabic : meal.name} added for ${deliveryDate.toLocaleDateString('en-US', {
           weekday: 'short',
           month: 'short',
           day: 'numeric',
-        }),
-        remainingMeals: userPlan.mealsCount - selectedMeals.length - 1,
-      }),
+        })}. ${remainingMeals} meals remaining.`,
       status: 'success',
       duration: 3000,
-      //isClosable: false,
+      isClosable: true,
     })
 
-    // Proceed with adding the meal
-    handleAddSignatureSalad(meal)
+    // Add meal to selection using context
+    console.log('📝 Selected meals before addition:', selectedMeals);
+    addMeal(meal.id)
   }
 
-  // Count restricted meals for display
-  const getRestrictedMealsCount = (meals) => {
-    return meals?.filter((meal) => isMealRestricted(meal)).length || 0
+  // Plan details section
+  const PlanDetailsSection = () => (
+    <Box>
+      <Heading size="lg" mb={4}>
+        {t('checkout.planDetails') || 'Plan Details'}
+      </Heading>
+      
+      <VStack spacing={3} align="stretch">
+        <Flex justify="space-between">
+          <Text color="gray.600">{t('checkout.plan') || 'Plan'}</Text>
+          <Text fontWeight="bold">{userPlan?.title || t('checkout.premiumPlan')}</Text>
+        </Flex>
+        
+        <Flex justify="space-between">
+          <Text color="gray.600">{t('checkout.startDate') || 'Start Date'}</Text>
+          <Text fontWeight="bold">{formattedStartDate}</Text>
+        </Flex>
+        
+        <Flex justify="space-between">
+          <Text color="gray.600">{t('checkout.endDate') || 'End Date'}</Text>
+          <Text fontWeight="bold">{formattedEndDate}</Text>
+        </Flex>
+        
+        {userPlan?.total_meals && (
+          <Flex justify="space-between">
+            <Text color="gray.600">{t('checkout.remainingMeals') || 'Remaining Meals'}</Text>
+            <Text fontWeight="bold" color="brand.500">
+              {userPlan.total_meals - selectedMeals.length} / {userPlan.total_meals}
+            </Text>
+          </Flex>
+        )}
+
+        {/* Allergen Summary */}
+        {userAllergies.length > 0 && (
+          <Box mt={4} p={3} bg="blue.50" borderRadius="md">
+            <Text fontSize="sm" fontWeight="bold" color="blue.700" mb={2}>
+              {t('checkout.yourAllergies') || 'Your Allergies'}:
+            </Text>
+            <Flex wrap="wrap" gap={2}>
+              {userAllergies.map((allergy, idx) => (
+                <Badge key={idx} colorScheme="blue" variant="outline">
+                  {allergy}
+                </Badge>
+              ))}
+            </Flex>
+          </Box>
+        )}
+      </VStack>
+    </Box>
+  )
+
+  // Safe meals section
+  const SafeMealsSection = () => (
+    <Box>
+      <Flex justify="space-between" align="center" mb={4}>
+        <Heading size="lg" color="green.600">
+          {t('checkout.safeMeals') || 'Safe Meals'} ({safeMeals.length})
+        </Heading>
+        <Button
+          size="sm"
+          variant="outline"
+          colorScheme="brand"
+          onClick={handleSelectMeals}
+          px={6}
+        >
+          {t('checkout.browseAll') || 'Browse All'}
+        </Button>
+      </Flex>
+
+      {safeMeals.length > 0 ? (
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+          {safeMeals.map((meal, index) => (
+            <AllergenAwareMealPlanCard
+              key={meal.id || index}
+              meal={meal}
+              index={meal.id || index}
+              onChoose={handleMealSelection}
+              showAllergenBadge={true}
+            />
+          ))}
+        </SimpleGrid>
+      ) : (
+        <Alert status="warning" borderRadius="md">
+          <AlertIcon />
+          <Box>
+            <Text fontWeight="bold">{t('checkout.noSafeMeals') || 'No Safe Meals Available'}</Text>
+            <Text fontSize="sm">
+              {t('checkout.noSafeMealsDescription') || 'All available meals contain allergens you are sensitive to. Please contact support.'}
+            </Text>
+          </Box>
+        </Alert>
+      )}
+    </Box>
+  )
+
+  // Unsafe meals section (for reference/display only)
+  const UnsafeMealsSection = () => (
+    unsafeMealsFiltered.length > 0 && (
+      <Box mt={6}>
+        <Flex justify="space-between" align="center" mb={4}>
+          <Heading size="lg" color="red.500">
+            {t('checkout.restrictedMeals') || 'Restricted Meals'} ({unsafeMealsFiltered.length})
+          </Heading>
+          <Text fontSize="sm" color="red.600">
+            {t('checkout.restrictedMealsNote') || 'Contains your allergens'}
+          </Text>
+        </Flex>
+
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+          {unsafeMealsFiltered.map((meal, index) => (
+            <AllergenAwareMealPlanCard
+              key={`unsafe-${meal.id || index}`}
+              meal={meal}
+              index={meal.id || index}
+              showAllergenBadge={true}
+            />
+          ))}
+        </SimpleGrid>
+      </Box>
+    )
+  )
+
+  // Available meals section (organized by safety)
+  const AvailableMealsSection = () => (
+    <Box mt={6} mb={8} h={'60vh'} bg={'secondary.400'} overflowY="auto" overflowX="hidden" p={4}>
+      <SafeMealsSection />
+      <UnsafeMealsSection />
+    </Box>
+  )
+
+  // Selected meals section
+  const SelectedMealsSection = () => (
+    selectedMeals.length > 0 && (
+      <Box>
+        <Heading size="lg" mb={4}>
+          {t('checkout.selectedMeals') || 'Selected Meals'}
+        </Heading>
+        
+        <SimpleGrid columns={{ base: 2, md: 3, lg: 4 }} spacing={1}>
+          {selectedMeals.map((mealId, index) => {
+            const matchingMeals = signatureSalads.filter(m => m.id === mealId)
+            const meal = matchingMeals.length > 0 ? matchingMeals[0] : null
+
+            if (!meal) return null
+
+            const deliveryDate = calculateDeliveryDate(today, index)
+            return (
+              <AllergenAwareMealPlanCard
+                key={`${mealId}+${index}`}
+                meal={meal}
+                index={index}
+                showDeliveryDate={true}
+                deliveryDate={deliveryDate}
+                showAllergenBadge={true}
+              />
+            )
+          })}
+        </SimpleGrid>
+      </Box>
+    )
+  )
+
+  // Check if user can proceed with subscription
+  const canConfirmSubscription = useMemo(() => {
+    const requiredMeals = userPlan?.total_meals || 0
+    return selectedMeals.length >= requiredMeals
+  }, [selectedMeals.length, userPlan?.total_meals])
+
+  if (isLoadingAllergies) {
+    return (
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalBody py={8}>
+            <Text textAlign="center">{t('checkout.loadingAllergies') || 'Loading allergen information...'}</Text>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    )
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} scrollBehavior="inside">
       <ModalOverlay />
-      <ModalContent sx={{ minWidth: '50vw', maxWidth: '90vw', margin: '5vw', padding: '1vw' }}>
-        <ModalHeader>{t('checkout.confirmSubscription')}</ModalHeader>
-        <ModalBody
-          sx={{ maxHeight: '60vh', minWidth: '50vw', overflowY: 'auto', overflowX: 'hidden' }}
-        >
-          <VStack spacing={6} align="stretch">
-            <Box>
-              <Heading size="xl" mb={2}>
-                {t('checkout.planDetails')}
-              </Heading>
-              <Flex justify="space-between" mb={1}>
-                <Text>{t('checkout.plan')}</Text>
-                <Text fontWeight="bold">{userPlan?.title || t('checkout.premiumPlan')}</Text>
-              </Flex>
-              <Flex justify="space-between" mb={1}>
-                <Text>{t('checkout.startDate')}</Text>
-                <Text fontWeight="bold">{startDate}</Text>
-              </Flex>
-              <Flex justify="space-between" mb={1}>
-                <Text>{t('checkout.endDate')}</Text>
-                <Text fontWeight="bold">{formattedEndDate}</Text>
-              </Flex>
-              {userPlan?.mealsCount && (
-                <Flex justify="space-between">
-                  <Text>{t('checkout.remainingMeals')}</Text>
-                  <Text fontWeight="bold">
-                    {userPlan.mealsCount - selectedMeals.length} / {userPlan.mealsCount}
-                  </Text>
-                </Flex>
-              )}
-            </Box>
-
+      <ModalContent maxW="90vw" maxH="90vh" py={1} px={1}>
+        <ModalHeader borderBottom="1px" borderColor="gray.200">
+          <Heading size="md">{t('checkout.confirmSubscription') || 'Confirm Your Subscription'}</Heading>
+        </ModalHeader>
+        
+        <ModalBody py={6}>
+          <PlanDetailsSection />
+          <VStack spacing={8} align="stretch">
             <Divider />
-
-            {/* Show allergen alert if there are restricted meals */}
-            {(getRestrictedMealsCount(signatureSalads) > 0 ||
-              (customizedSalad && isMealRestricted(customizedSalad))) && (
+            
+            {/* Allergen Summary Warning */}
+            {unsafeMealsFiltered.length > 0 && (
               <Alert status="warning" borderRadius="md">
                 <AlertIcon />
                 <Box>
-                  <Text fontWeight="bold">{t('checkout.allergenNotice') || 'Allergen Notice'}</Text>
+                  <Text fontWeight="bold">
+                    {t('checkout.allergenNotice') || 'Allergen Notice'}
+                  </Text>
                   <Text fontSize="sm">
-                    {t('checkout.allergenNoticeDescription') ||
-                      'Some meals are not available due to your allergen preferences. These meals are grayed out and cannot be selected.'}
+                    {t('checkout.allergenNoticeDescription') || 
+                      `${unsafeMealsFiltered.length} meal(s) contain your allergens and are shown for reference only. Only safe meals can be selected.`}
                   </Text>
                 </Box>
               </Alert>
             )}
-
-            <Box>
-              <Flex justify="space-between" align="center" mb={4}>
-                <Heading size="lg">{t('checkout.yourMealPlan')}</Heading>
-                <Box
-                  size="xl"
-                  w="100px"
-                  h="100px"
-                  px={4}
-                  colorScheme="brand"
-                  as={Button}
-                  variant="outline"
-                  onClick={handleSelectMeals}
-                  fontSize={'xs'}
-                >
-                  {t('checkout.selectedMeal')}
-                </Box>
-              </Flex>
-
-              {customizedSalad && signatureSalads.length > 0 ? (
-                <Box>
-                  <Text mb={2}>{t('checkout.selectedMeals')}:</Text>
-                  <SimpleGrid p={10} columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={5}>
-                    {[...signatureSalads, customizedSalad].map((meal, index) => (
-                      <AllergenAwareMealPlanCard
-                        key={index}
-                        meal={meal}
-                        index={index}
-                        onChoose={handleMealSelection}
-                        isArabic={isArabic}
-                        t={t}
-                      />
-                    ))}
-                  </SimpleGrid>
-                </Box>
-              ) : signatureSalads?.length > 0 ? (
-                <Box>
-                  <Text mb={2}>{t('checkout.defaultSignatureSalads')}:</Text>
-                  <SimpleGrid p={5} columns={{ base: 1, md: 2, lg: 3, xl: 3 }} spacing={1}>
-                    {signatureSalads?.map((meal, index) => (
-                      <Box key={index}>
-                        <AllergenAwareMealPlanCard
-                          index={meal.id}
-                          onChoose={handleMealSelection}
-                          meal={meal}
-                          isArabic={isArabic}
-                          t={t}
-                        />
-                      </Box>
-                    ))}
-                  </SimpleGrid>
-                </Box>
-              ) : (
-                <>
-                  <Heading>Sorry!</Heading>
-                  <Text>There are no salads to choose, we are working on it</Text>
-                </>
-              )}
-            </Box>
-
-            <Box>
-              <SimpleGrid p={10} columns={{ base: 1, md: 2, lg: 3, xl: 3 }} spacing={3}>
-                {selectedMeals.length > 0 &&
-                  selectedMeals.map((meal, index) => {
-                    const deliveryDate = calculateDeliveryDate(today, index)
-                    return (
-                      <Flex key={index} direction="column">
-                        <AllergenAwareMealPlanCard
-                          meal={meal}
-                          index={index}
-                          onRemove={handleRemoveMeal}
-                          isArabic={isArabic}
-                          t={t}
-                          showDeliveryDate={true}
-                          deliveryDate={deliveryDate}
-                        />
-                      </Flex>
-                    )
-                  })}
-              </SimpleGrid>
-            </Box>
-
+            
+            {/* Available Meals (Safe and Unsafe) */}
+            <AvailableMealsSection />
+            
+            {/* Selected Meals */}
+            <SelectedMealsSection />
+            
+            {/* Subscription Info */}
             <Alert status="info" borderRadius="md">
               <AlertIcon />
-              {t('checkout.subscriptionRenewal')}
+              <Text fontSize="sm">
+                {t('checkout.subscriptionRenewal') || 
+                  'Your subscription will automatically renew unless cancelled before the end date.'}
+              </Text>
             </Alert>
           </VStack>
         </ModalBody>
-        <ModalFooter>
-          <Button variant="outline" mx={5} onClick={onClose}>
-            {t('checkout.back')}
+        
+        <ModalFooter borderTop="1px" borderColor="gray.200" gap={3}>
+          <Button variant="outline" onClick={onClose}>
+            {t('checkout.back') || 'Back'}
           </Button>
+          
           <Button
-            mx={5}
             colorScheme="brand"
-            disabled={selectedMeals.length < user?.subscription?.mealsCount}
-            onClick={handleConfirmSubscription}
+            onClick={onClose}
             isLoading={isSubmitting}
+            isDisabled={!canConfirmSubscription}
+            loadingText={t('checkout.processing') || 'Processing...'}
           >
-            {t('checkout.confirmAndPay')}
+            {t('checkout.confirmAndPay') || 'Confirm & Pay'}
           </Button>
         </ModalFooter>
       </ModalContent>

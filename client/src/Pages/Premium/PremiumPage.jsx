@@ -19,21 +19,22 @@ import {
   AlertIcon,
 } from '@chakra-ui/react'
 
-import { useElements } from '../../Contexts/ElementsContext'
-import { useAuthContext } from '../../Contexts/AuthContext'
-
-import { CurrentPlanBrief } from './CurrentPlanBrief'
-import { Link } from 'react-router-dom'
-// Import plan images - you can maintain this mapping or handle it differently
+import { useElements } from '../../Contexts/ElementsContext';
+import { useAuthContext } from '../../Contexts/AuthContext';
+import { useChosenPlanContext } from '../../Contexts/ChosenPlanContext';
+import { CurrentPlanBrief } from './CurrentPlanBrief';
+import { Link } from 'react-router-dom';
+import { JoinPremiumTeaser } from './JoinPremiumTeaser';
+import { useTranslation } from 'react-i18next';
+import { useI18nContext } from '../../Contexts/I18nContext';
+import { useUserSubscriptions } from '../../Hooks/useUserSubscriptions';
+// Import plan images 
 import gainWeightPlanImage from '../../assets/premium/gainWeight.png'
 import keepWeightPlanImage from '../../assets/premium/keepWeight.png'
 import loseWeightPlanImage from '../../assets/premium/loseWeight.png'
 import dailyMealPlanImage from '../../assets/premium/dailymealplan.png'
 import saladsPlanImage from '../../assets/premium/proteinsaladplan.png'
 import nonProteinsaladsPlanImage from '../../assets/premium/nonproteinsaladplan.png'
-import { JoinPremiumTeaser } from './JoinPremiumTeaser'
-import { useTranslation } from 'react-i18next'
-import { useI18nContext } from '../../Contexts/I18nContext'
 
 // Map plan titles to images
 const planImages = {
@@ -51,6 +52,7 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
   const { t } = useTranslation()
   const { currentLanguage } = useI18nContext()
   const isArabic = currentLanguage === 'ar'
+  
   // Add the image to the plan object for easier access
   const planWithImage = {
     ...plan,
@@ -122,10 +124,12 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
   )
 }
 
+
 const PlanDetails = ({ plan }) => {
   const { t } = useTranslation()
-  const currentLanguage = useI18nContext()
+  const { currentLanguage } = useI18nContext()
   const isArabic = currentLanguage === 'ar'
+  
   return (
     <Box>
       <Heading as="h3" size="sm" mb={2}>
@@ -151,76 +155,141 @@ const PlanDetails = ({ plan }) => {
         {t('checkout.subscriptionPeriod')}
       </Heading>
 
-      {plan.periods && plan.periods.length > 0 ? (
-        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={2}>
-          {plan.periods.map((period, index) => (
-            <Box key={index} p={2} bg="gray.50" borderRadius="md">
-              <Text>
-                {period} {t('premium.daysSubscription')}
-              </Text>
-            </Box>
-          ))}
-        </SimpleGrid>
-      ) : (
-        <Text>{t('premium.noSubscriptionPeriodsAvailable')}</Text>
-      )}
+      <VStack align="stretch" spacing={3}>
+        {/* Short Term */}
+        <Box p={3} bg="gray.50" borderRadius="md">
+          <Heading as="h5" size="xs" mb={1}>
+            {t('premium.shortTerm')}
+          </Heading>
+          <Text fontSize="sm">
+            {plan.short_term_meals} {t('premium.mealsOver')} {plan.duration_days} {t('premium.days')}
+          </Text>
+          <Text fontSize="sm" fontWeight="bold">
+            {t('premium.pricePerMeal')}: ${plan.price_per_meal}
+          </Text>
+        </Box>
+
+        {/* Medium Term */}
+        <Box p={3} bg="gray.50" borderRadius="md">
+          <Heading as="h5" size="xs" mb={1}>
+            {t('premium.mediumTerm')}
+          </Heading>
+          <Text fontSize="sm">
+            {plan.medium_term_meals} {t('premium.mealsOver')} {plan.duration_days * 2} {t('premium.days')}
+          </Text>
+          <Text fontSize="sm" fontWeight="bold">
+            {t('premium.pricePerMeal')}: ${(plan.price_per_meal * 0.9).toFixed(2)} <Badge colorScheme="green">10% off</Badge>
+          </Text>
+        </Box>
+      </VStack>
     </Box>
   )
 }
 
 export const PremiumPage = () => {
-  const { plans, elementsLoading } = useElements()
+  const { plans, elementsLoading } = useElements();
+  const { user } = useAuthContext();
   const { 
-    user, 
-    userPlan, 
-    updateUserSubscription,
-    planLoading 
-  } = useAuthContext();
-  const [explorePlans, setExplorePlans] = useState(false)
-  const [selectedPlan, setSelectedPlan] = useState(null)
-  const [subscribing, setSubscribing] = useState(false)
-  const { t } = useTranslation()
-  const toast = useToast()
-  //scrolling down
-  const plansSectionRef = useRef(null)
-  const detailsSectionRef = useRef(null)
-  const plansContainerRef = useRef(null)
-   //test effect
+    subscriptions, 
+    createSubscription, 
+    updateSubscription,
+    isLoading: isSubscriptionsLoading 
+  } = useUserSubscriptions();
+  
+  // Use the context properly
+  const { 
+    chosenPlan, 
+    setSelectedPlan, 
+    subscriptionData,
+    updateSubscriptionData,
+    resetSubscriptionData
+  } = useChosenPlanContext();
+  
+  const [explorePlans, setExplorePlans] = useState(false);
+  const [subscribing, setSubscribing] = useState(false);
+  const { t } = useTranslation();
+  const toast = useToast();
+  const detailsSectionRef = useRef(null);
+  const plansContainerRef = useRef(null);
+
+  // Find user's active subscription
+  const activeSubscription = subscriptions.find(sub => 
+    sub.status === 'active' || sub.status === 'paused'
+  );
+  
+  // Find the plan associated with active subscription
+  const userPlan = activeSubscription 
+    ? plans.find(plan => plan.id === activeSubscription.plan_id)
+    : null;
+
+  // Initialize context with user's current plan
   useEffect(() => {
-    console.log('PremiumPage mounted')
-    console.log('USER HERE IS',JSON.stringify(user))},[]);
-  // Set the selected plan to match the user's plan when loaded
-  useEffect(() => {
-    if (userPlan && !selectedPlan) {
-      setSelectedPlan(userPlan)
+    if (userPlan && activeSubscription) {
+      // Initialize the context with existing subscription data
+      updateSubscriptionData({
+        plan: userPlan,
+        plan_id: userPlan.id,
+        status: activeSubscription.status,
+        start_date: activeSubscription.start_date,
+        end_date: activeSubscription.end_date,
+        price_per_meal: activeSubscription.price_per_meal,
+        total_meals: activeSubscription.total_meals,
+        consumed_meals: activeSubscription.consumed_meals || 0,
+        delivery_address_id: activeSubscription.delivery_address_id,
+        preferred_delivery_time: activeSubscription.preferred_delivery_time,
+        payment_method_id: activeSubscription.payment_method_id,
+        auto_renewal: activeSubscription.auto_renewal,
+        is_paused: activeSubscription.is_paused,
+        meals: activeSubscription.meals || [],
+        // Determine term based on total meals
+        selected_term: activeSubscription.total_meals === userPlan.short_term_meals ? 'short' : 'medium'
+      });
+    } else if (!userPlan) {
+      // Reset if no active subscription
+      resetSubscriptionData();
     }
-  }, [userPlan, selectedPlan])
+  }, [userPlan, activeSubscription, updateSubscriptionData, resetSubscriptionData]);
 
   const handlePlanSelect = (plan) => {
-    setSelectedPlan(plan)
-    // Scroll to details section after a small delay
+    // Set the selected plan in context
+    setSelectedPlan(plan);
+    
+    // If this is a new plan selection (not the user's current plan), reset other data
+    if (!userPlan || plan.id !== userPlan.id) {
+      updateSubscriptionData({
+        plan: plan,
+        plan_id: plan.id,
+        status: 'pending',
+        start_date: new Date().toISOString().split('T')[0],
+        selected_term: null,
+        consumed_meals: 0,
+        meals: [],
+        is_paused: false,
+        auto_renewal: false
+      });
+    }
+    
     setTimeout(() => {
       detailsSectionRef.current?.scrollIntoView({
         behavior: 'smooth',
         block: 'end',
-      })
-    }, 50)
-  }
+      });
+    }, 50);
+  };
 
   const toggleExplorePlans = () => {
-    const newState = !explorePlans
-    setExplorePlans(newState)
+    const newState = !explorePlans;
+    setExplorePlans(newState);
 
     if (newState) {
       setTimeout(() => {
-        // Scroll to the bottom of the plans container
         plansContainerRef.current?.scrollIntoView({
           behavior: 'smooth',
           block: 'end',
-        })
-      }, 50)
+        });
+      }, 50);
     }
-  }
+  };
 
   const handleSubscribe = async () => {
     if (!user) {
@@ -230,30 +299,58 @@ export const PremiumPage = () => {
         status: 'warning',
         duration: 5000,
         isClosable: false,
-      })
-      return
+      });
+      return;
     }
 
-    if (!selectedPlan) return
+    if (!chosenPlan) {
+      toast({
+        title: t('premium.noPlanSelected'),
+        description: t('premium.pleaseSelectAPlan'),
+        status: 'warning',
+        duration: 3000,
+        isClosable: false,
+      });
+      return;
+    }
 
     try {
-      setSubscribing(true)
-      // Updated subscription call
-      await updateUserSubscription({
-        planId: selectedPlan.id,
-        planName: selectedPlan.title,
-        startDate: new Date().toISOString(),
-        status: 'active'
-      })
+      setSubscribing(true);
+      
+      if (activeSubscription) {
+        // Update existing subscription
+        await updateSubscription({
+          subscriptionId: activeSubscription.id,
+          subscriptionData: { 
+            plan_id: chosenPlan.id,
+            price_per_meal: subscriptionData.price_per_meal,
+            total_meals: subscriptionData.total_meals,
+            end_date: subscriptionData.end_date
+          }
+        });
+      } else {
+        // Create new subscription - redirect to checkout
+        // The context already has the plan data, so we can navigate to checkout
+        toast({
+          title: t('premium.planSelected'),
+          description: t('premium.proceedToCheckout'),
+          status: 'info',
+          duration: 3000,
+          isClosable: false,
+        });
+        // Navigation will be handled by the Link component
+        return;
+      }
+
       toast({
         title: t('premium.planUpdated'),
-        description: t('premium.nowSubscribedToPlan', { planTitle: selectedPlan.title }),
+        description: t('premium.nowSubscribedToPlan', { planTitle: chosenPlan.title }),
         status: 'success',
         duration: 5000,
         isClosable: false,
-      })
+      });
 
-      setExplorePlans(false)
+      setExplorePlans(false);
     } catch (error) {
       toast({
         title: t('premium.subscriptionFailed'),
@@ -261,20 +358,22 @@ export const PremiumPage = () => {
         status: 'error',
         duration: 5000,
         isClosable: false,
-      })
+      });
     } finally {
-      setSubscribing(false)
+      setSubscribing(false);
     }
-  }
+  };
 
-  if (elementsLoading) {
+  const isLoading = elementsLoading || isSubscriptionsLoading;
+
+  if (isLoading) {
     return (
       <Center h="100vh">
         <VStack spacing={4}>
           <Spinner size="xl" color="brand.500" />
         </VStack>
       </Center>
-    )
+    );
   }
 
   return (
@@ -293,7 +392,7 @@ export const PremiumPage = () => {
           {userPlan && (
             <CurrentPlanBrief
               plan={userPlan}
-              loading={planLoading}
+              subscription={activeSubscription}
             />
           )}
 
@@ -303,14 +402,14 @@ export const PremiumPage = () => {
             </Button>
           )}
 
-          {!userPlan && !planLoading && (
+          {!userPlan && (
             <Button mt={4} colorScheme="brand" onClick={toggleExplorePlans}>
               {t('premium.browseAvailablePlans')}
             </Button>
           )}
         </Box>
-        {/* Available Plans Section */}
 
+        {/* Available Plans Section */}
         {explorePlans && (
           <Fade in={explorePlans}>
             <Box bg="warning.100" p={6} borderRadius="xl" ref={plansContainerRef}>
@@ -318,14 +417,14 @@ export const PremiumPage = () => {
                 {t('premium.availablePremiumPlans')}
               </Heading>
 
-              {plans && plans.length > 0 ? (
+              {plans.length > 0 ? (
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
                   {plans.map((plan) => (
                     <PlanCard
                       key={plan.id}
                       plan={{
                         ...plan,
-                        image: planImages[plan.title] || dailyMealPlanImage,
+                        image: plan.avatar_url || planImages[plan.title] || dailyMealPlanImage,
                       }}
                       isUserPlan={userPlan?.id === plan.id}
                       onSelect={handlePlanSelect}
@@ -342,20 +441,22 @@ export const PremiumPage = () => {
         )}
 
         {/* Selected Plan Details Section */}
-        {selectedPlan && explorePlans && (
+        {chosenPlan && explorePlans && (
           <Box bg="secondary.200" borderRadius={'xl'} p={6} ref={detailsSectionRef}>
             <Heading as="h2" size="md" mb={4}>
               {t('premium.planDetails')}
             </Heading>
 
-            <PlanDetails plan={selectedPlan} />
+            <PlanDetails plan={chosenPlan} />
 
             <Divider my={4} />
 
-            {userPlan?.id !== selectedPlan.id && (
+           
+
+            {userPlan?.id !== chosenPlan.id && (
               <Link
                 to="/premium/join"
-                state={{ planId: selectedPlan.id }}
+                state={{ planId: chosenPlan.id }}
                 style={{ textDecoration: 'none' }}
               >
                 <Button
@@ -371,10 +472,25 @@ export const PremiumPage = () => {
                 </Button>
               </Link>
             )}
+
+            {userPlan?.id === chosenPlan.id && (
+              <Button
+                mt={4}
+                colorScheme="brand"
+                size="lg"
+                width="full"
+                onClick={handleSubscribe}
+                isLoading={subscribing}
+                loadingText={t('premium.updatingSubscription')}
+              >
+                {t('premium.updateSubscription')}
+              </Button>
+            )}
           </Box>
         )}
       </VStack>
     </Box>
-  )
-}
-export default PremiumPage
+  );
+};
+
+export default PremiumPage;

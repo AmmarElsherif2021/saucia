@@ -6,6 +6,7 @@ import DynamicThemeProvider from './Contexts/ThemeProvider.jsx'
 import { I18nProvider } from './Contexts/I18nContext.jsx'
 import { AuthProvider, useAuthContext } from './Contexts/AuthContext.jsx'
 import { ElementsProvider } from './Contexts/ElementsContext.jsx'
+import { ChosenPlanProvider } from './Contexts/ChosenPlanContext.jsx'
 import { Navbar } from './Components/Navbar/Navbar.jsx'
 import './index.css'
 import { Spinner } from '@chakra-ui/react'
@@ -243,7 +244,9 @@ ReactDOM.createRoot(root).render(
         <ElementsProvider>
           <CartProvider>
               <AuthProvider>
+                <ChosenPlanProvider>
                 <RouterProvider router={router} />
+                </ChosenPlanProvider>
               </AuthProvider>
           </CartProvider>
         </ElementsProvider>

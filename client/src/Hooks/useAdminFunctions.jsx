@@ -58,9 +58,9 @@ export const useAdminFunctions = () => {
       if (allergy_ids !== undefined) {
         await adminAPI.updateUserAllergies(userId, allergy_ids);
       }
-      if (dietary_preference_ids !== undefined) {
-        await adminAPI.updateUserDietaryPreferences(userId, dietary_preference_ids);
-      }
+      // if (dietary_preference_ids !== undefined) {
+      //   await adminAPI.updateUserDietaryPreferences(userId, dietary_preference_ids);
+      // }
       return result;
     },
     onSuccess: (_, { userId }) => {
@@ -140,15 +140,26 @@ export const useAdminFunctions = () => {
   });
 
   // Complete meal update with all related data
-  const updateMealCompleteMutation = useMutation({
-    mutationFn: async ({ mealId, updateData }) => {
-      return adminAPI.updateMealComplete(mealId, updateData);
-    },
-    onSuccess: (_, { mealId }) => {
-      queryClient.invalidateQueries(['admin', 'meal', mealId]);
-      queryClient.invalidateQueries(['admin', 'meals']);
-    }
-  });
+const updateMealCompleteMutation = useMutation({
+  mutationFn: async ({ mealId, updateData }) => {
+    // Make sure allergy_ids is passed correctly
+    const { allergy_ids, ...baseData } = updateData;
+    
+    // Filter out null/undefined values
+    const filteredAllergyIds = (allergy_ids || []).filter(id => id != null);
+    
+    const result = await adminAPI.updateMeal(mealId, baseData);
+    
+    // Always update allergies (empty array if none)
+    await adminAPI.updateMealAllergies(mealId, filteredAllergyIds);
+    
+    return result;
+  },
+  onSuccess: (_, { mealId }) => {
+    queryClient.invalidateQueries(['admin', 'meal', mealId]);
+    queryClient.invalidateQueries(['admin', 'meals']);
+  }
+});
 
   // Complete meal deletion with all related data
   const deleteMealCompleteMutation = useMutation({

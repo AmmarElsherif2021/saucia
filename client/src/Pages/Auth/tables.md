@@ -169,7 +169,7 @@ title_arabic: text	text
 description: text	text		
 description_arabic: text	text		
 price_per_meal: numeric	numeric		
-short_term_meals: integer	int4		
+short_term_meals: integer	int4 // user should either choose short_term or medium term subscription		
 medium_term_meals: integer	int4		
 kcal: integer	int4		
 protein: integer	int4		
@@ -280,10 +280,9 @@ plan_id: integer	int4
 status: USER-DEFINED	subscription_status_enum		
 start_date: date	date		
 end_date: date	date		
-price_per_meal: numeric	numeric		
-meals_per_week: integer	int4		
-total_meals: integer	int4		
-consumed_meals: integer	int4		
+price_per_meal: numeric	numeric			
+total_meals: integer	int4 //number of meals should be consumed		
+consumed_meals: integer	int4 //number of consumed meals		
 delivery_address_id: uuid	uuid		
 preferred_delivery_time: time without time zone	time		
 delivery_days: ARRAY	_int4		
@@ -293,6 +292,7 @@ is_paused: boolean	bool
 paused_at: timestamp with time zone	timestamptz		
 pause_reason: text	text		
 resume_date: date	date		
-next_delivery_date: date	date		
+next_delivery_date: date	date
+meals: [int4] 'foreign key'	// refers to meals IDs chosen by user
 created_at: timestamp with time zone	timestamptz		
 updated_at: timestamp with time zone	timestamptz

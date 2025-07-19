@@ -38,15 +38,25 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
       ingredients_arabic: '',
       is_available: true,
       image_url: '', 
-      items: [],
+      //items: [],
       allergy_ids: [],
-      dietary_preference_ids: []
+      //dietary_preference_ids: []
     };
-    
-    return initialData 
-      ? { ...defaultData, ...initialData } 
-      : defaultData;
+      if (initialData) {
+    // Extract allergy IDs from initial data
+    const allergy_ids = initialData.meal_allergies 
+      ? initialData?.meal_allergies.map(ma => ma.allergy_id)
+      : initialData.allergy_ids || [];
+
+    return { 
+      ...defaultData, 
+      ...initialData,
+      allergy_ids 
+    };
+  }
+    return defaultData;
   });
+
 
   const [allItems, setAllItems] = useState([]);
   const [allAllergies, setAllAllergies] = useState([]);
@@ -102,7 +112,7 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
   const handleNumberChange = (name, value) => {
     setFormData(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
   };
-
+  
   // Handle item selection
   const handleItemChange = (itemId, field, value) => {
     setFormData(prev => {
@@ -177,20 +187,14 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
         setIsUploading(true);
         newImageUrl = await uploadImage(imageFile, 'meals');
       }
-      
-      // Prepare form data with image URL
+      const { meal_allergies, ...submitData } = formData;
       const formattedData = {
-        ...formData,
+        ...submitData,
         image_url: newImageUrl,
-        items: formData.items.map(item => ({
-          id: item.id,
-          is_included: item.is_included || false,
-          max_quantity: item.max_quantity || 0
-        }))
       };
       
-      // Submit form
       await onSubmit(formattedData);
+    
       
       // Delete old image after successful update
       if (isEdit && imageFile && oldImageUrl && oldImageUrl !== newImageUrl) {
@@ -379,13 +383,12 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
           <Stack spacing={2} mt={2}>
             {allAllergies?.map(allergy => (
               <Checkbox
-                key={allergy.id}
-                isChecked={formData?.allergy_ids?.includes(allergy.id)}
+                isChecked={formData.allergy_ids.includes(allergy.id)}
                 onChange={(e) => {
                   const newIds = e.target.checked
                     ? [...formData.allergy_ids, allergy.id]
                     : formData.allergy_ids.filter(id => id !== allergy.id);
-                  handleMultiSelect('allergy_ids', newIds);
+                  setFormData(prev => ({...prev, allergy_ids: newIds}));
                 }}
               >
                 {allergy.name}
@@ -394,26 +397,7 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
           </Stack>
         </Box>
 
-        {/* Dietary Preferences Selection */}
-        <Box borderWidth="1px" borderRadius="lg" p={4}>
-          <FormLabel>Dietary Preferences</FormLabel>
-          <Stack spacing={2} mt={2}>
-            {allDietaryPrefs.map(pref => (
-              <Checkbox
-                key={pref.id}
-                isChecked={formData?.dietary_preference_ids?.includes(pref.id)}
-                onChange={(e) => {
-                  const newIds = e.target.checked
-                    ? [...formData?.dietary_preference_ids, pref.id]
-                    : formData?.dietary_preference_ids?.filter(id => id !== pref.id);
-                  handleMultiSelect('dietary_preference_ids', newIds);
-                }}
-              >
-                {pref.name}
-              </Checkbox>
-            ))}
-          </Stack>
-        </Box>
+        
 
         {/* Submit Button */}
         <Button
@@ -430,3 +414,4 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
 };
 
 export default MealsForm;
+// .map
