@@ -52,7 +52,7 @@ export const MealPlanCard = ({ meal, index, onRemove, onChoose, isArabic, t }) =
           right={2}
           onClick={(e) => {
             e.stopPropagation()
-            onRemove(index)
+            onRemove() 
           }}
           zIndex="2"
         />
@@ -88,16 +88,17 @@ export const MealPlanCard = ({ meal, index, onRemove, onChoose, isArabic, t }) =
         <Tooltip
           label={isArabic ? meal.ingredients_arabic || meal.ingredients : meal.ingredients}
           placement="top"
+          w={"85%"}
+          bg={"secondary.500"}
         >
           <Text
-            fontSize="sm"
+            fontSize="lg"
             color="whiteAlpha.800"
             noOfLines={2}
             textShadow="0 1px 2px rgba(0,0,0,0.5)"
+            align={"center"}
           >
-            {isArabic
-              ? (meal?.ingredients_arabic || meal?.ingredients)?.split(',').slice(0, 3).join(', ')
-              : meal?.ingredients?.split(',').slice(0, 3).join(', ')}
+            ...
           </Text>
         </Tooltip>
 

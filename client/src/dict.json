@@ -33,7 +33,7 @@
         "Protein": "Protein",
         "Calories (kcal)": "Calories (kcal)",
         "Price/Meal": "Price/Meal",
-        "Status": "Status",
+        "status": "status",
         "Active": "Active",
         "Inactive": "Inactive",
         "Users": "Users",
@@ -43,7 +43,7 @@
         "Loyalty Points": "Loyalty Points",
         "Admin": "Admin",
         "User": "User",
-        "account_status": "Account Status",
+        "account_status": "Account status",
         "loyalty_points": "Loyalty Points",
         "allergies": "allergies",
         "preferences": "preferences",
@@ -145,7 +145,7 @@
           "confirm_remove_admin": "Confirm Remove Admin",
           "apply_action": "Apply Action",
           "cancel": "Cancel",
-          "update_status": "Update Status"
+          "update_status": "Update status"
         },
         "modals": {
           "add_entity": "Add New {{entity}}",
@@ -154,17 +154,18 @@
           "user_actions": {
             "title": "User Quick Actions"
           },
-          "set_admin_status": "Set Admin Status for {{email}}",
-          "remove_admin_status": "Remove Admin Status from {{email}}",
-          "update_order_status": "Update Order Status",
-          "update_subscription_status": "Update Subscription Status"
+          "set_admin_status": "Set Admin status for {{email}}",
+          "remove_admin_status": "Remove Admin status from {{email}}",
+          "update_order_status": "Update Order status",
+          "update_subscription_status": "Update Subscription status"
         },
         "fields": {
-          "account_status": "Account Status",
+          "account_status": "Account status",
           "loyalty_points": "Loyalty Points",
-          "new_status": "New Status"
+          "new_status": "New status"
         },
         "status": {
+          "pending":"Pending",
           "active": "Active",
           "suspended": "Suspended",
           "deleted": "Deleted"
@@ -339,7 +340,7 @@
         "date": "Date",
         "items": "Items",
         "total": "Total",
-        "status": "Status",
+        "status": "status",
         "noOrdersFound": "No orders found",
         "renewsOn": "Renews on",
         "subscriptionInfo": "Subscription Info",
@@ -381,7 +382,17 @@
         "errorUpdatingProfile": "Error updating profile"
       },
       "premium": {
+        "selectTermToSeeDetails":"Select term to see details",
+        "meals":"meals",
+        "subscriptionTerm":"Subscription Term",
+        "selectPlanToSeeDetails":"Select plan to see details",
+        "shortTerm":"12 Days plan",
+        "mediumTerm":"20 Days plan",
+        "pricePerMeal":"Price per meal",
+        "overallPrice":"overall price",
+        "mealsOver":"meal over",
         "selectDeliveryTime": "Select Delivery Time",
+        "deliveryTimeInstructions":"Choose your preferred delivery time window. This will apply to all delivery days.",
         "vegetarian": "Vegetarian",
         "vegan": "Vegan",
         "pescatarian": "Pescatarian",
@@ -411,7 +422,7 @@
         "totalMeals": "Total Meals",
         "consumedMeals": "Consumed Meals",
         "remainingMeals": "Remaining Meals",
-        "planStatus": "Plan Status",
+        "planstatus": "Plan status",
         "planControl": "Plan Control",
         "pausePlan": "Pause Plan",
         "resumePlan": "Resume Plan",
@@ -441,7 +452,7 @@
         "success": "Success",
         "planPausedSuccessfully": "Plan paused successfully",
         "planResumedSuccessfully": "Plan resumed successfully",
-        "failedToUpdatePlanStatus": "Failed to update plan status",
+        "failedToUpdatePlanstatus": "Failed to update plan status",
         "deliverySettingsUpdated": "Delivery settings updated",
         "failedToUpdateDeliverySettings": "Failed to update delivery settings",
         "premium": "Premium",
@@ -620,7 +631,7 @@
         "favoriteSaved": "Added to favorites",
         "favoriteRemoved": "Removed from favorites"
       },
-      "orderStatus": {
+      "orderstatus": {
         "ordered": "Ordered",
         "confirmed": "Confirmed",
         "preparing": "Preparing",
@@ -795,6 +806,12 @@
         "minimumOrder": "Minimum Order Required"
       },
       "checkout": {
+        "allergenAlert":"allergen alert",
+        "unsafe":"unsafe",
+        "restrictedMeals":"restricted meals",
+        "safe":"safe",
+        "safeMeals":"Safe Meals",
+        "yourAllergies":"Your Allergies",
         "planLimitReachedTitle": "Plan Limit Reached",
         "pleaseFillAllRequiredFields":"Please complete required fields",
         "requiredFieldsMissing":"Required fields are missing!",
@@ -924,7 +941,7 @@
         "Protein": "البروتين",
         "Calories (kcal)": "السعرات الحرارية (كيلو كالوري)",
         "Price/Meal": "السعر/وجبة",
-        "Status": "الحالة",
+        "status": "الحالة",
         "Active": "نشط",
         "Inactive": "غير نشط",
         "Users": "المستخدمون",
@@ -1055,6 +1072,7 @@
           "new_status": "الحالة الجديدة"
         },
         "status": {
+          "pending":"قيد الانتظار",
           "active": "نشط",
           "suspended": "معلق",
           "deleted": "محذوف"
@@ -1247,7 +1265,17 @@
         "errorUpdatingProfile": "خطأ في تحديث الملف الشخصي"
       },
       "premium": {
+        "selectTermToSeeDetails":"اختر مدة الاستراك لمعرفة التفاصيل",
+        "meals":"وجبة",
+        "subscriptionTerm":"فترة الاشتراك",
+        "selectPlanToSeeDetails":"اختر باقة لمعرفة التفاصيل",
+        "shortTerm":"باقة ال12يوم",
+        "mediumTerm":"باقة ال20يوم",
+        "overallPrice": "سعر الاشتراك",
+        "pricePerMeal":"سعر الوجبة",
+        "mealsOver":"مدة اشتراك لمدة",
         "selectDeliveryTime": "اختر وقت التوصيل",
+        "deliveryTimeInstructions":"اختر وقت التوصيل المناسب لك, سيتم اعتماد هذا التوقيت طوال وقت الاشتراك",
         "vegetarian": "نباتي",
         "vegan": "نباتي صرف",
         "pescatarian": "يعتمد على الأسماك",
@@ -1277,7 +1305,7 @@
         "totalMeals": "إجمالي الوجبات",
         "consumedMeals": "الوجبات المستهلكة",
         "remainingMeals": "الوجبات المتبقية",
-        "planStatus": "حالة الخطة",
+        "planstatus": "حالة الخطة",
         "planControl": "تحكم في الخطة",
         "pausePlan": "إيقاف الخطة مؤقتاً",
         "resumePlan": "استئناف الخطة",
@@ -1307,7 +1335,7 @@
         "success": "نجاح",
         "planPausedSuccessfully": "تم إيقاف الخطة بنجاح",
         "planResumedSuccessfully": "تم استئناف الخطة بنجاح",
-        "failedToUpdatePlanStatus": "فشل تحديث حالة الخطة",
+        "failedToUpdatePlanstatus": "فشل تحديث حالة الخطة",
         "deliverySettingsUpdated": "تم تحديث إعدادات التوصيل",
         "failedToUpdateDeliverySettings": "فشل تحديث إعدادات التوصيل",
         "premium": "مميز",
@@ -1499,7 +1527,7 @@
         "selectTime": "اختر الوقت",
         "placeOrder": "تقديم الطلب"
       },
-      "orderStatus": {
+      "orderstatus": {
         "ordered": "تم الطلب",
         "confirmed": "تم التأكيد",
         "preparing": "قيد التحضير",
@@ -1672,6 +1700,12 @@
         "minimumOrder": "الحد الأدنى المطلوب للطلب"
       },
       "checkout": {
+        "allergenAlert":"مسبب للحساسية",
+        "unsafe":"غير امن",
+        "restrictedMeals":"وجبات يوجد بها حساسية",
+        "safe":"آمن",
+        "safeMeals":"وجبات خالية من مسببات الحساسية",
+        "yourAllergies":"مسببات الحساسية",
         "planLimitReachedTitle": "تم الوصول إلى حد الخطة",
         "pleaseFillAllRequiredFields":"من فضلك اكمل البيانات المطلوبة",
         "requiredFieldsMissing":"بيانات مطلوبة غير مكتملة",

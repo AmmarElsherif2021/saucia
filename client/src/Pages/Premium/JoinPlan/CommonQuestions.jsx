@@ -24,13 +24,15 @@ import {
   useUserProfile, 
   useHealthProfile
 } from '../../../hooks/userHooks'
-import { useUserAllergies } from '../../../hooks/useUserAllergies' // Use custom hook
+import { useUserAllergies } from '../../../hooks/useUserAllergies' 
 import { useUserDietaryPreferences } from '../../../hooks/useUserDietaryPreferences' // Use custom hook
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useState } from 'react'
-
+import { useI18nContext } from '../../../Contexts/I18nContext'
 const CommonQuestions = ({ onComplete }) => {
+  const {currentLanguage}=useI18nContext();
+  const isArabic = currentLanguage === 'ar';
   const { t } = useTranslation()
   const { user } = useAuthContext()
   const toast = useToast()
@@ -404,7 +406,7 @@ const CommonQuestions = ({ onComplete }) => {
                       colorScheme="brand"
                       onClick={() => toggleSelection('dietaryPreferences', pref.id)}
                     >
-                      {pref.name}
+                      {isArabic?pref.name_arabic:pref.name}
                     </Button>
                   </WrapItem>
                 ))}
@@ -431,7 +433,7 @@ const CommonQuestions = ({ onComplete }) => {
                       colorScheme="red"
                       onClick={() => toggleSelection('allergies', allergy.id)}
                     >
-                      {allergy.name}
+                      {isArabic?allergy.name_arabic:allergy.name}
                     </Button>
                   </WrapItem>
                 ))}
@@ -447,6 +449,7 @@ const CommonQuestions = ({ onComplete }) => {
             isLoading={isSubmitting}
             loadingText={t('premium.saving')}
             isDisabled={isLoading}
+
           >
             {t('premium.saveHealthProfile')}
           </Button>

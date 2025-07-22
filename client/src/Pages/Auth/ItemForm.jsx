@@ -12,44 +12,53 @@ import {
   Select,
   Switch,
   Textarea,
-  Badge,
-  Tag,
-  TagLabel,
-  TagCloseButton,
-  Wrap,
-  WrapItem,
+  Stack,
+  Checkbox,
+  useToast,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { useAdminFunctions } from '../../Hooks/useAdminFunctions';
 
 const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
   const { useGetAllAllergies } = useAdminFunctions();
-  const { data: allergies  } = useGetAllAllergies();
+  const { data: allAllergies = [] } = useGetAllAllergies();
+  const toast = useToast();
   
-  const [formData, setFormData] = useState({
-    name: '',
-    name_arabic: '',
-    description: '',
-    description_arabic: '',
-    category: '',
-    category_arabic: '',
-    price: 0,
-    calories: 0,
-    protein_g: 0,
-    carbs_g: 0,
-    fat_g: 0,
-    max_free_per_meal: 0,
-    image_url: '',
-    is_available: true,
-    sort_order: 0,
-    allergy_ids: [],
-    ...initialData
-  });
-   
-  //Debug console
-  useEffect(()=>{
-    console.log("ItemForm initialData:", initialData);
-    console.log("ItemForm formData:", formData);
+  // Initialize form data with proper allergy handling
+  const [formData, setFormData] = useState(() => {
+    const defaultData = {
+      name: '',
+      name_arabic: '',
+      description: '',
+      description_arabic: '',
+      category: '',
+      category_arabic: '',
+      price: 0,
+      calories: 0,
+      protein_g: 0,
+      carbs_g: 0,
+      fat_g: 0,
+      max_free_per_meal: 0,
+      image_url: '',
+      is_available: true,
+      sort_order: 0,
+      allergy_ids: [],
+    };
+    if (initialData.id) {
+      console.log(`From ItemForm ${JSON.stringify(initialData)}`);
+      
+      // Extract allergy IDs from initialData.item_allergies
+      const allergyIds = initialData.item_allergies 
+        ? initialData.item_allergies.map(ia => ia.allergies.id) 
+        : initialData.allergy_ids || [];
+
+      return { 
+        ...defaultData, 
+        ...initialData,
+        allergy_ids: allergyIds 
+      };
+    }
+    return defaultData;
   })
   const categories = [
     { en: 'protein', ar: 'بروتين' },
@@ -80,13 +89,19 @@ const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(formData); // Submit sanitized data
-  };
+  e.preventDefault();
+  
+  // Clean up form data - remove nested relations
+  const cleanFormData = {...formData};
+  delete cleanFormData.item_allergies; 
+  delete cleanFormData.allergies; 
+  
+  onSubmit(cleanFormData);
+};
 
   const toggleAllergen = (allergyId) => {
     setFormData(prev => {
-      const currentIds = [...(prev?.allergy_ids || [])];
+      const currentIds = [...(prev.allergy_ids || [])];
       const index = currentIds.indexOf(allergyId);
       
       if (index > -1) {
@@ -99,27 +114,14 @@ const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
     });
   };
 
-  // Fixed: Correct rendering function
-  const renderSelectedAllergens = () => {
-    const allergyIds = formData?.allergy_ids || [];
-    
-    return (
-      <Wrap spacing={2} mt={2}>
-        {allergyIds.map(id => {
-          const allergy = allergies?.find(a => a.id === id);
-          if (!allergy) return null;
-          
-          return (
-            <WrapItem key={id}>
-              <Tag colorScheme="blue" borderRadius="full">
-                <TagLabel>{allergy.name} / {allergy.name_arabic}</TagLabel>
-                <TagCloseButton onClick={() => toggleAllergen(id)} />
-              </Tag>
-            </WrapItem>
-          );
-        })}
-      </Wrap>
-    );
+  const showToast = (title, description, status) => {
+    toast({
+      title,
+      description,
+      status,
+      duration: 5000,
+      isClosable: true
+    });
   };
 
   return (
@@ -262,37 +264,35 @@ const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
         </FormControl>
       </HStack>
 
-      <FormControl mb={4}>
-        <FormLabel>Allergens</FormLabel>
-        <VStack align="stretch" spacing={2}>
-          <Text fontSize="sm" color="gray.600">
-            Select applicable allergens:
-          </Text>
-          
-          {renderSelectedAllergens()}
-          
-          <Divider my={2} />
-          
-          <Flex wrap="wrap">
-          {allergies.map(allergy => (
-            <Button
-              key={allergy.id}
-              size="sm"
-              m={1}
-              variant={(formData?.allergy_ids || []).includes(allergy.id) 
-                ? 'solid' 
-                : 'outline'}
-              colorScheme={(formData?.allergy_ids || []).includes(allergy.id) 
-                ? 'blue' 
-                : 'gray'}
-              onClick={() => toggleAllergen(allergy.id)}
-            >
-              {allergy.name} / {allergy.name_arabic}
-            </Button>
-          ))}
-          </Flex>
-        </VStack>
-      </FormControl>
+      {/* Allergens Section */}
+      <Box borderWidth="1px" borderRadius="lg" p={4} mb={4}>
+        <FormLabel fontSize="lg" fontWeight="bold" mb={3}>
+          Associated Allergies
+        </FormLabel>
+        
+        <Stack spacing={3}>
+          {allAllergies.length > 0 ? (
+            allAllergies.map(allergy => (
+              <Checkbox
+                key={allergy.id}
+                isChecked={formData.allergy_ids.includes(allergy.id)}
+                onChange={() => toggleAllergen(allergy.id)}
+                colorScheme="blue"
+                size="lg"
+              >
+                <Box ml={2}>
+                  <Text fontWeight="medium">{allergy.name}</Text>
+                  <Text fontSize="sm" color="gray.600">{allergy.name_arabic}</Text>
+                </Box>
+              </Checkbox>
+            ))
+          ) : (
+            <Text color="gray.500" fontStyle="italic">
+              No allergies available
+            </Text>
+          )}
+        </Stack>
+      </Box>
 
       <FormControl mb={4} display="flex" alignItems="center">
         <FormLabel mb="0">Available</FormLabel>

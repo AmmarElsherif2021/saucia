@@ -232,15 +232,23 @@ const updateMealCompleteMutation = useMutation({
 
   // Complete item update with all related data
   const updateItemCompleteMutation = useMutation({
-    mutationFn: async ({ itemId, updateData }) => {
-      const result = await adminAPI.updateItemComplete(itemId, updateData);
-      return result;
-    },
-    onSuccess: (_, { itemId }) => {
-      queryClient.invalidateQueries(['admin', 'item', itemId]);
-      queryClient.invalidateQueries(['admin', 'items']);
-    }
-  });
+  mutationFn: async ({ itemId, updateData }) => {
+    // Extract allergy_ids and base data
+    const { allergy_ids, ...baseData } = updateData;
+    
+    // Update base item data
+    const result = await adminAPI.updateItem(itemId, baseData);
+    
+    // Update allergies separately
+    await adminAPI.updateItemAllergies(itemId, allergy_ids || []);
+    
+    return result;
+  },
+  onSuccess: (_, { itemId }) => {
+    queryClient.invalidateQueries(['admin', 'item', itemId]);
+    queryClient.invalidateQueries(['admin', 'items']);
+  }
+});
 
   // Complete item deletion with all related data
   const deleteItemCompleteMutation = useMutation({

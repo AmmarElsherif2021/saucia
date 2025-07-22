@@ -59,28 +59,29 @@ const ConfirmPlanModal = ({
   const toast = useToast()
   
   const isArabic = currentLanguage === 'ar'
-  const selectedMeals = subscriptionData.meals || []
+  const selectedMeals = subscriptionData.meals || [];
+
 
   // Format dates from context
   const formattedStartDate = useMemo(() => {
-    return userPlan?.start_date 
-      ? new Date(userPlan.start_date).toLocaleDateString(currentLanguage, {
+    return subscriptionData?.start_date 
+      ? new Date(subscriptionData.start_date).toLocaleDateString(currentLanguage, {
           year: 'numeric',
           month: 'long',
           day: 'numeric'
         })
       : ''
-  }, [userPlan?.start_date, currentLanguage])
+  }, [subscriptionData?.start_date, currentLanguage])
 
   const formattedEndDate = useMemo(() => {
-    return userPlan?.end_date 
-      ? new Date(userPlan.end_date).toLocaleDateString(currentLanguage, {
+    return subscriptionData?.end_date 
+      ? new Date(subscriptionData.end_date).toLocaleDateString(currentLanguage, {
           year: 'numeric',
           month: 'long',
           day: 'numeric'
         })
       : ''
-  }, [userPlan?.end_date, currentLanguage])
+  }, [subscriptionData?.end_date, currentLanguage])
 
   // Separate meals into safe and unsafe categories
   const { safeMeals, unsafeMealsFiltered } = useMemo(() => {
@@ -88,7 +89,7 @@ const ConfirmPlanModal = ({
       return { safeMeals: [], unsafeMealsFiltered: [] }
     }
 
-    console.log('🍽️ Filtering meals for safety...');
+    //console.log('🍽️ Filtering meals for safety...');
     const safe = []
     const unsafe = []
 
@@ -100,7 +101,7 @@ const ConfirmPlanModal = ({
       }
     })
 
-    console.log(`✅ Safe meals: ${safe.length}, ❌ Unsafe meals: ${unsafe.length}`);
+    //console.log(`✅ Safe meals: ${safe.length}, ❌ Unsafe meals: ${unsafe.length}`);
     return { safeMeals: safe, unsafeMealsFiltered: unsafe }
   }, [signatureSalads, isMealSafe])
 
@@ -109,6 +110,7 @@ const ConfirmPlanModal = ({
     meal,
     index,
     onChoose,
+    onRemove,
     showDeliveryDate = false,
     deliveryDate = null,
     showAllergenBadge = false,
@@ -116,7 +118,7 @@ const ConfirmPlanModal = ({
     const isUnsafe = !isMealSafe(meal)
     const mealAllergens = getMealAllergens(meal) // Use the hook's function
 
-    console.log(`🔍 Rendering meal card: "${meal?.name || meal?.name_arabic || 'Unknown'}", Safe: ${!isUnsafe}, Allergens: ${mealAllergens.length}`);
+    //console.log(`🔍 Rendering meal card: "${meal?.name || meal?.name_arabic || 'Unknown'}", Safe: ${!isUnsafe}, Allergens: ${mealAllergens.length}`);
 
     return (
       <Box position="relative">
@@ -125,7 +127,7 @@ const ConfirmPlanModal = ({
           <Badge
             position="absolute"
             top={2}
-            right={2}
+            left={2}
             zIndex={2}
             colorScheme={isUnsafe ? "red" : "green"}
             variant="solid"
@@ -190,13 +192,13 @@ const ConfirmPlanModal = ({
           borderRadius="md"
         >
           <MealPlanCard
-            key={index}
-            meal={meal}
-            index={index}
-            onChoose={isUnsafe ? undefined : onChoose}
-            onRemove={() => removeMeal(meal.id)}
-            isArabic={isArabic}
-            t={t}
+          key={index}
+          meal={meal}
+          index={index}
+          onChoose={isUnsafe ? undefined : onChoose}
+          onRemove={onRemove}
+          isArabic={isArabic}
+          t={t}
           />
         </Box>
 
@@ -241,64 +243,57 @@ const ConfirmPlanModal = ({
       </Box>
     )
   }
+  // set threshold
+  const maxSelectable = subscriptionData?.total_meals || 0
+// Handle meal selection with validation
+const handleMealSelection = (meal) => {
+  // Check allergen restrictions using the hook
+  if (!isMealSafe(meal)) {
+    toast({
+      title: t('checkout.allergenNotice') || 'Allergen Warning',
+      description: t('checkout.allergenMealWarning') || 
+        'This meal contains allergens you are sensitive to and cannot be selected.',
+      status: 'error',
+      duration: 5000,
+      isClosable: true,
+    });
+    return;
+  }
 
-  // Handle meal selection with validation
-  const handleMealSelection = (meal) => {
-    console.log(`🎯 Attempting to select meal: "${meal?.name || meal?.name_arabic || 'Unknown'}"`);
-    
-    // Check allergen restrictions using the hook
-    if (!isMealSafe(meal)) {
-      console.log('❌ Meal selection blocked due to allergens');
-      toast({
-        title: t('checkout.allergenNotice') || 'Allergen Warning',
-        description: t('checkout.allergenMealWarning') || 
-          'This meal contains allergens you are sensitive to and cannot be selected.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-      return
-    }
-
-    // Check meal count limit
-    const mealsCount = userPlan?.total_meals
-    if (mealsCount && selectedMeals.length >= mealsCount) {
-      console.log('❌ Meal selection blocked - plan limit reached');
+  // Check meal count limit 
+  if (selectedMeals.length >= maxSelectable) {
       toast({
         title: t('checkout.planLimitReachedTitle') || 'Plan Limit Reached',
         description: t('checkout.planLimitReachedDescription') || 
-          `You have reached the maximum of ${mealsCount} meals for your plan.`,
+          `You can select up to ${maxSelectable} meals for your plan period.`,
         status: 'error',
         duration: 5000,
         isClosable: true,
-      })
-      return
+      });
+      return;
     }
 
-    // Calculate delivery date
-    const deliveryDate = calculateDeliveryDate(today, selectedMeals.length)
-    const remainingMeals = mealsCount - selectedMeals.length - 1
+  // Calculate delivery date (using the next available slot)
+  const deliveryDate = calculateDeliveryDate(today, selectedMeals.length);
+  const remainingAfterAdd = maxSelectable - selectedMeals.length - 1;
 
-    console.log('✅ Meal selection successful');
-    
-    // Show success message
-    toast({
-      title: t('checkout.mealAddedTitle') || 'Meal Added',
-      description: t('checkout.mealAddedDescription') || 
-        `${isArabic ? meal.name_arabic : meal.name} added for ${deliveryDate.toLocaleDateString('en-US', {
-          weekday: 'short',
-          month: 'short',
-          day: 'numeric',
-        })}. ${remainingMeals} meals remaining.`,
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    })
+  // Show success message
+  toast({
+    title: t('checkout.mealAddedTitle') || 'Meal Added',
+    description: 
+      `${isArabic ? meal.name_arabic : meal.name}-${deliveryDate.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+      })}.${isArabic?'الوجبات المتبقية':'meals remaining'} ${remainingAfterAdd}.`,
+    status: 'success',
+    duration: 3000,
+    isClosable: true,
+  });
 
-    // Add meal to selection using context
-    console.log('📝 Selected meals before addition:', selectedMeals);
-    addMeal(meal.id)
-  }
+  // Add meal to selection
+  addMeal(meal.id);
+};
 
   // Plan details section
   const PlanDetailsSection = () => (
@@ -324,13 +319,13 @@ const ConfirmPlanModal = ({
         </Flex>
         
         {userPlan?.total_meals && (
-          <Flex justify="space-between">
-            <Text color="gray.600">{t('checkout.remainingMeals') || 'Remaining Meals'}</Text>
-            <Text fontWeight="bold" color="brand.500">
-              {userPlan.total_meals - selectedMeals.length} / {userPlan.total_meals}
-            </Text>
-          </Flex>
-        )}
+        <Flex justify="space-between">
+          <Text color="gray.600">{t('checkout.remainingMeals') || 'Remaining Meals'}</Text>
+          <Text fontWeight="bold" color="brand.500">
+            {maxSelectable - selectedMeals.length} / {maxSelectable}
+          </Text>
+        </Flex>
+      )}
 
         {/* Allergen Summary */}
         {userAllergies.length > 0 && (
@@ -358,24 +353,16 @@ const ConfirmPlanModal = ({
         <Heading size="lg" color="green.600">
           {t('checkout.safeMeals') || 'Safe Meals'} ({safeMeals.length})
         </Heading>
-        <Button
-          size="sm"
-          variant="outline"
-          colorScheme="brand"
-          onClick={handleSelectMeals}
-          px={6}
-        >
-          {t('checkout.browseAll') || 'Browse All'}
-        </Button>
       </Flex>
 
       {safeMeals.length > 0 ? (
-        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+        <SimpleGrid columns={{ base: 2, md: 3, lg: 3 }} spacing={4}>
           {safeMeals.map((meal, index) => (
             <AllergenAwareMealPlanCard
               key={meal.id || index}
               meal={meal}
               index={meal.id || index}
+              onRemove= {false}
               onChoose={handleMealSelection}
               showAllergenBadge={true}
             />
@@ -403,18 +390,16 @@ const ConfirmPlanModal = ({
           <Heading size="lg" color="red.500">
             {t('checkout.restrictedMeals') || 'Restricted Meals'} ({unsafeMealsFiltered.length})
           </Heading>
-          <Text fontSize="sm" color="red.600">
-            {t('checkout.restrictedMealsNote') || 'Contains your allergens'}
-          </Text>
         </Flex>
 
-        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+        <SimpleGrid columns={{ base: 2, md: 3, lg: 3 }} spacing={2}>
           {unsafeMealsFiltered.map((meal, index) => (
             <AllergenAwareMealPlanCard
               key={`unsafe-${meal.id || index}`}
               meal={meal}
               index={meal.id || index}
               showAllergenBadge={true}
+              onRemove={false}
             />
           ))}
         </SimpleGrid>
@@ -424,7 +409,7 @@ const ConfirmPlanModal = ({
 
   // Available meals section (organized by safety)
   const AvailableMealsSection = () => (
-    <Box mt={6} mb={8} h={'60vh'} bg={'secondary.400'} overflowY="auto" overflowX="hidden" p={4}>
+    <Box mt={1} mb={1} h={'60vh'} bg={'secondary.400'} overflowY="auto" overflowX="hidden" p={4}>
       <SafeMealsSection />
       <UnsafeMealsSection />
     </Box>
@@ -454,6 +439,7 @@ const ConfirmPlanModal = ({
                 showDeliveryDate={true}
                 deliveryDate={deliveryDate}
                 showAllergenBadge={true}
+                onRemove={() => removeMeal(index)}
               />
             )
           })}
@@ -464,9 +450,9 @@ const ConfirmPlanModal = ({
 
   // Check if user can proceed with subscription
   const canConfirmSubscription = useMemo(() => {
-    const requiredMeals = userPlan?.total_meals || 0
-    return selectedMeals.length >= requiredMeals
-  }, [selectedMeals.length, userPlan?.total_meals])
+    return selectedMeals.length === maxSelectable;
+  }, [selectedMeals.length, maxSelectable]);
+
 
   if (isLoadingAllergies) {
     return (
@@ -484,7 +470,7 @@ const ConfirmPlanModal = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} scrollBehavior="inside">
       <ModalOverlay />
-      <ModalContent maxW="90vw" maxH="90vh" py={1} px={1}>
+      <ModalContent maxW="90vw" maxH="96vh" py={1} px={1} mt={2}>
         <ModalHeader borderBottom="1px" borderColor="gray.200">
           <Heading size="md">{t('checkout.confirmSubscription') || 'Confirm Your Subscription'}</Heading>
         </ModalHeader>

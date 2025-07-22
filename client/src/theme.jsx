@@ -397,6 +397,7 @@ const createTheme = (config) => {
           fontWeight: 'bold',
           lineHeight: 'shorter',
           color: props.colorMode === 'dark' ? 'white' : 'brand.800',
+          textAlign: isArabic?'right':'left'
         }),
         sizes: {
           xl: { fontSize: '4xl' },

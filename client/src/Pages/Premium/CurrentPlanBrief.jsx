@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useI18nContext } from '../../Contexts/I18nContext'
 import { useAuthContext } from '../../Contexts/AuthContext'
-import planIcon from '../../assets/premium/planIcon.svg'
+import { CircularPlanAvatar } from './PlanAvatar'
 import PlanSettingsModal from './PlanSettingsModal' 
 
 export const CurrentPlanBrief = ({ plan, loading }) => {
@@ -27,8 +27,6 @@ export const CurrentPlanBrief = ({ plan, loading }) => {
     return <Text>{t('notSubscribedToAnyPlan')}.</Text>
   }
 
-  const planImage = plan.image || planIcon
-
   return (
     <Box borderRadius={'35px'} bg="brand.100" p={6} mb={6}>
       <Text>
@@ -37,36 +35,14 @@ export const CurrentPlanBrief = ({ plan, loading }) => {
       </Text>
 
       <Flex mt={4} alignItems="center" flexWrap={{ base: 'wrap', md: 'nowrap' }} gap={4}>
-        <Box
-          w="85px"
-          h="85px"
-          mb={{ base: 2, md: 0 }}
-          alignItems={'center'}
-          justifyContent={'center'}
-          display="flex"
-        >
-          <img
-            src={planImage}
-            alt={plan.title}
-            style={{
-              width: '80px',
-              height: '80px',
-              borderRadius: '50%',
-              backgroundColor: '#FCEA80',
-              padding: '5px',
-            }}
-            onError={(e) => {
-              e.target.src = '/assets/premium/dailyMealPlan.png'
-            }}
-          />
-        </Box>
+        <CircularPlanAvatar 
+          plan={plan}
+          size="85px"
+        />
 
         <Box flex="1">
           <Text fontSize="lg" color="gray.600">
-            {/*
-            plan.description ||
-              `${t('premium.thisPlanIsDesignedToHelpYouWithYour')} ${plan.description.toLowerCase()} ${t('goals')}.`
-              */}
+            {/* Plan description */}
           </Text>
 
           <Flex mt={2} gap={2} flexWrap="wrap">
@@ -142,14 +118,13 @@ export const CurrentPlanBrief = ({ plan, loading }) => {
             mt={4}
             size="sm"
             colorScheme="brand"
-            onClick={() => setIsSettingsModalOpen(true)} // Add click handler
+            onClick={() => setIsSettingsModalOpen(true)}
           >
             {t('premium.managePlanSettings')}
           </Button>
         </Box>
       </Collapse>
 
-      {/* Add the modal component */}
       <PlanSettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}

@@ -96,27 +96,30 @@ export const useEntityManager = (entityType, adminFunctions) => {
   };
 
   const handleEdit = async (id, data) => {
-    try {
-      const idField = ENTITY_ID_MAPPING[entityType];
-      if (!idField) {
-        throw new Error(`No ID mapping found for entity type: ${entityType}`);
-      }
-      
-      // Ensure we have a valid ID
-      if (!id || id === 'undefined') {
-        throw new Error(`Invalid ID provided for ${entityType}: ${id}`);
-      }
-      
-      await handlers.update({ 
-        [idField]: id, 
-        updateData: sanitizeData(data) 
-      });
-      modals.edit.onClose();
-    } catch (error) {
-      window.alert(`Failed to edit ${ENTITY_CONFIGS[entityType].singular || entityType.slice(0, -1)}: ${error.message}`);
-      return { error };
+  try {
+    const idField = ENTITY_ID_MAPPING[entityType];
+    if (!idField) {
+      throw new Error(`No ID mapping found for entity type: ${entityType}`);
     }
-  };
+    
+    if (!id || id === 'undefined') {
+      throw new Error(`Invalid ID provided for ${entityType}: ${id}`);
+    }
+    //for items
+    let updatePayload = sanitizeData(data);
+    
+    // Pass the full data object including avatar_url
+    await handlers.update({ 
+     [idField]: id, 
+      updateData: updatePayload 
+    });
+    
+    modals.edit.onClose();
+  } catch (error) {
+    window.alert(`Failed to edit ${ENTITY_CONFIGS[entityType].singular || entityType.slice(0, -1)}: ${error.message}`);
+    return { error };
+  }
+};
 
   const handleDelete = async (id) => {
     try {

@@ -319,6 +319,7 @@ export const adminAPI = {
   // Get all items
   async getAllItems(options = {}) {
     const query = {
+      select: `*, item_allergies:item_allergies(allergies(*))`, // Add allergies
       orderBy: options.orderBy || 'sort_order',
       ascending: options.ascending || true,
       limit: options.limit || 100
@@ -329,6 +330,16 @@ export const adminAPI = {
     }
 
     return fetchList('items', query);
+  },
+
+  // Get item details with allergies
+  async getItemDetails(itemId) {
+    const [item, allergies] = await Promise.all([
+      fetchSingle('items', { field: 'id', value: itemId }),
+      this.getItemAllergies(itemId) // Get allergies separately
+    ]);
+
+    return { ...item, allergies };
   },
 
   // Create new item
@@ -353,19 +364,29 @@ export const adminAPI = {
   },
   // Get item details with allergies
   async updateItemComplete(itemId, updateData) {
-    // Extract allergy_ids first
-    const { allergy_ids, ...itemData } = updateData;
-    
-    // Update the item
+  // Clean up updateData before processing
+  const cleanUpdateData = {...updateData};
+  delete cleanUpdateData.item_allergies;
+  delete cleanUpdateData.allergies;
+
+  // Extract allergy_ids from cleaned data
+  const { allergy_ids, ...itemData } = cleanUpdateData;
+  
+  try {
+    // Update base item data
     const updatedItem = await this.updateItem(itemId, itemData);
     
-    // Update allergies separately
-    if (allergy_ids) {
+    // Update allergies junction table
+    if (allergy_ids !== undefined) {
       await this.updateItemAllergies(itemId, allergy_ids);
     }
     
     return updatedItem;
-  },
+  } catch (error) {
+    console.error('Error updating item complete:', error);
+    throw error;
+  }
+},
   
   async createItemComplete(itemData) {
     // Extract allergy_ids first

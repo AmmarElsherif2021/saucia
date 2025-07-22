@@ -1,32 +1,16 @@
 import { Box, Heading, Flex, Text, Button, VStack } from '@chakra-ui/react'
 import { ItemsCarousel } from '../../Components/ItemsCarousel'
 import { PlanCard } from '../../Components/Cards'
-import dailyMealPlanImage from '../../assets/premium/dailymealplan.png'
-import saladsPlanImage from '../../assets/premium/proteinsaladplan.png'
-import nonProteinSaladsPlanImage from '../../assets/premium/nonproteinsaladplan.png'
-import gainWeightPlanImage from '../../assets/premium/gainWeight.png'
-import keepWeightPlanImage from '../../assets/premium/keepWeight.png'
-import loseWeightPlanImage from '../../assets/premium/loseWeight.png'
 import { useTranslation } from 'react-i18next'
 import { useElements } from '../../Contexts/ElementsContext'
+import { enrichPlansWithImages } from './planImageUtils'
 
 export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
-  // Get plans directly from ElementsContext
   const { plans, elementsLoading } = useElements()
   const { t } = useTranslation()
-  const getPlanImage = (title) => {
-    if (title?.includes('Gain Weight')) return gainWeightPlanImage
-    if (title?.includes('Keep Weight')) return keepWeightPlanImage
-    if (title?.includes('Lose Weight')) return loseWeightPlanImage
-    if (title?.includes('Non')) return nonProteinSaladsPlanImage
-    return saladsPlanImage
-  }
 
-  const processedPlans =
-    plans?.map((plan) => ({
-      ...plan,
-      image: getPlanImage(plan.title), // This now provides actual image imports
-    })) || []
+  // Enrich plans with proper image URLs
+  const processedPlans = enrichPlansWithImages(plans)
 
   // Render a single PlanCard if no carousel is needed
   const renderSinglePlan = () => {

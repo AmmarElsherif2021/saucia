@@ -1,3 +1,4 @@
+import DeliveryTimeSelector from './DeliveryTimeSelector';
 import { useMemo } from 'react';
 import { 
   Box, 
@@ -10,27 +11,28 @@ import {
   Flex,
   Alert,
   AlertIcon,
-  Button
+  Button,
+  useColorMode
 } from '@chakra-ui/react';
 import { useChosenPlanContext } from '../../Contexts/ChosenPlanContext';
 import { useTranslation } from 'react-i18next';
 import { useI18nContext } from '../../Contexts/I18nContext';
 
-// Term Selection Button Component
+// Enhanced Term Button Component with responsive sizing
 const TermButton = ({ term, pricing, isSelected, isDisabled, onClick, t }) => {
   return (
     <Button
       onClick={() => onClick(term)}
       isDisabled={isDisabled}
       variant={isSelected ? "solid" : "outline"}
-      colorScheme={isSelected ? "teal" : "gray"}
-      size="lg"
-      minW="160px"
+      colorScheme={isSelected ? "brand" : "gray"}
+      size={{ base: 'md', md: 'lg', lg:'md' }}
+      minW={{ base: '100%', sm: '110px', md: '120px' }}
       h="auto"
-      py={4}
-      px={6}
+      py={{ base: 8, md: 6}}
+      px={{ base: 1, md: 2 }}
       flexDirection="column"
-      gap={2}
+      gap={1}
       _hover={{
         transform: isDisabled ? 'none' : 'translateY(-2px)',
         boxShadow: isDisabled ? 'none' : 'lg'
@@ -41,13 +43,10 @@ const TermButton = ({ term, pricing, isSelected, isDisabled, onClick, t }) => {
       transition="all 0.2s"
       opacity={isDisabled ? 0.5 : 1}
     >
-      <Text fontSize="md" fontWeight="bold">
+      <Text fontSize={{ base: 'sm', md: 'md' }} fontWeight="bold">
         {term === 'short' ? (t('premium.shortTerm') || 'Short Term') : (t('premium.mediumTerm') || 'Medium Term')}
       </Text>
-      <Text fontSize="sm" color={isSelected ? "white" : "gray.600"}>
-        {pricing.meals} {t('premium.meals') || 'meals'}
-      </Text>
-      <Text fontSize="sm" fontWeight="medium" color={isSelected ? "white" : "teal.600"}>
+      <Text fontSize={{ base: 'xs', md: 'sm' }} fontWeight="medium" color={isSelected ? "white" : "teal.600"}>
         {`${pricing.totalPrice.toFixed(2)} ${t('common.currency') || 'SAR'}`}
       </Text>
     </Button>
@@ -63,6 +62,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
 
   const { t } = useTranslation();
   const { currentLanguage } = useI18nContext();
+  const {colorMode}=useColorMode();
   const isArabic = currentLanguage === 'ar';
 
   // Calculate pricing options based on chosen plan
@@ -104,13 +104,13 @@ const SubscriptionSummary = ({ onDataChange }) => {
   if (!chosenPlan) {
     return (
       <Box 
-        p={6} 
+        p={{ base: 4, md: 6 }} 
         borderWidth="1px" 
         borderRadius="lg" 
-        bg="gray.50"
+        bg="warning.50"
         textAlign="center"
       >
-        <Text color="gray.600" fontSize="lg">
+        <Text color="gray.600" fontSize={{ base: 'md', md: 'lg' }}>
           {t('premium.selectPlanToSeeDetails') || 'Select a plan to see details'}
         </Text>
       </Box>
@@ -125,7 +125,6 @@ const SubscriptionSummary = ({ onDataChange }) => {
   const formatDate = (dateString) => {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString(
-      isArabic ? 'ar-SA' : 'en-US',
       {
         year: 'numeric',
         month: 'short',
@@ -175,23 +174,20 @@ const SubscriptionSummary = ({ onDataChange }) => {
 
   return (
     <Box 
-      p={6} 
-      borderWidth="1px" 
+      p={{ base: 1, md: 2, lg: 3 }} 
+      borderWidth="2px"
+      borderColor={'warning.500'}
+      bg={colorMode=='dark' ? 'gray.700':'warning.50'} 
       borderRadius="lg" 
-      bg="white" 
-      boxShadow="md"
     >  
-      <VStack spacing={6} align="stretch">
+      <VStack spacing={{ base: 4, md: 5, lg: 6 }} align="stretch">
         {/* Plan Header */}
         <Box>
-          <Heading size="lg" mb={2} color="brand.600">
-            {t('premium.subscriptionSummary') || 'Subscription Summary'}
-          </Heading>
-          <Text fontWeight="bold" fontSize="xl" color="teal.600">
+          <Text fontWeight="bold" fontSize={{ base: 'lg', md: 'xl' }} color="teal.600">
             {isArabic ? chosenPlan.title_arabic : chosenPlan.title}
           </Text>
           {chosenPlan.description && (
-            <Text fontSize="md" color="gray.600" mt={2}>
+            <Text fontSize={{ base: 'sm', md: 'md' }} color="gray.600" mt={2}>
               {isArabic ? chosenPlan.description_arabic : chosenPlan.description}
             </Text>
           )}
@@ -199,21 +195,45 @@ const SubscriptionSummary = ({ onDataChange }) => {
 
         {/* Nutritional Information */}
         <Box>
-          <Text fontWeight="semibold" mb={3} fontSize="md">
+          <Text fontWeight="semibold" mb={2} fontSize={{ base: 'sm', md: 'md' }}>
             {t('premium.nutritionalInformation') || 'Nutritional Information'}
           </Text>
-          <Flex gap={3} flexWrap="wrap">
-            <Badge colorScheme="green" variant="solid" fontSize="sm" px={3} py={1}>
+          <Flex gap={2} flexWrap="wrap">
+            <Badge 
+              colorScheme="green" 
+              variant="solid" 
+              fontSize={{ base: 'xs', sm: 'sm' }} 
+              px={2} 
+              py={1}
+            >
               {chosenPlan.kcal} {t('premium.kcal') || 'kcal'}
             </Badge>
-            <Badge colorScheme="blue" variant="solid" fontSize="sm" px={3} py={1}>
+            <Badge 
+              colorScheme="warning" 
+              variant="solid" 
+              fontSize={{ base: 'xs', sm: 'sm' }} 
+              px={2} 
+              py={1}
+            >
               {chosenPlan.protein}g {t('premium.protein') || 'protein'}
             </Badge>
-            <Badge colorScheme="orange" variant="solid" fontSize="sm" px={3} py={1}>
+            <Badge 
+              colorScheme="orange" 
+              variant="solid" 
+              fontSize={{ base: 'xs', sm: 'sm' }} 
+              px={2} 
+              py={1}
+            >
               {chosenPlan.carb}g {t('premium.carbs') || 'carbs'}
             </Badge>
             {chosenPlan.fat && (
-              <Badge colorScheme="purple" variant="solid" fontSize="sm" px={3} py={1}>
+              <Badge 
+                colorScheme="purple" 
+                variant="solid" 
+                fontSize={{ base: 'xs', sm: 'sm' }} 
+                px={2} 
+                py={1}
+              >
                 {chosenPlan.fat}g {t('premium.fat') || 'fat'}
               </Badge>
             )}
@@ -222,10 +242,14 @@ const SubscriptionSummary = ({ onDataChange }) => {
         
         {/* Subscription Term Selection */}
         <Box>
-          <Text fontWeight="semibold" mb={4} fontSize="md">
+          <Text fontWeight="semibold" mb={3} fontSize={{ base: 'sm', md: 'md' }}>
             {t('premium.subscriptionTerm') || 'Subscription Term'}
           </Text>
-          <HStack spacing={4} justify="center">
+          <Flex 
+            direction={{ base: 'column', sm: 'row' }} 
+            gap={{ base: 2, sm: 3, md: 4 }}
+            justify={{ sm: 'center' }}
+          >
             <TermButton
               term="short"
               pricing={pricingOptions.short}
@@ -242,7 +266,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
               onClick={handleTermChange}
               t={t}
             />
-          </HStack>
+          </Flex>
         </Box>
 
         {/* Only show details if term is selected */}
@@ -250,35 +274,16 @@ const SubscriptionSummary = ({ onDataChange }) => {
           <>
             {/* Subscription Details */}
             <Box>
-              <Text fontWeight="semibold" mb={3} fontSize="md">
-                {t('premium.subscriptionDetails') || 'Subscription Details'}
-              </Text>
-              <VStack spacing={3} align="stretch">
-                <Flex justify="space-between" align="center">
-                  <Text fontSize="md">{t('premium.pricePerMeal') || 'Price per meal'}:</Text>
-                  <Text fontSize="md" fontWeight="bold" color="teal.600">
-                    {formatCurrency(selectedTermPricing.pricePerMeal)}
-                  </Text>
-                </Flex>
+              <VStack spacing={{ base: 2, md: 3 }} align="stretch">
                 
                 <Flex justify="space-between" align="center">
-                  <Text fontSize="md">{t('premium.totalMeals') || 'Total meals'}:</Text>
-                  <Text fontSize="md" fontWeight="bold">
-                    {selectedTermPricing.meals} {t('premium.meals') || 'meals'}
-                  </Text>
-                </Flex>
-
-                <Flex justify="space-between" align="center">
-                  <Text fontSize="md">{t('premium.totalPrice') || 'Total price'}:</Text>
-                  <Text fontWeight="bold" fontSize="2xl" color="teal.600">
-                    {formatCurrency(selectedTermPricing.totalPrice)}
-                  </Text>
+                  <DeliveryTimeSelector />
                 </Flex>
                 
                 {subscriptionData.consumed_meals > 0 && (
                   <Flex justify="space-between" align="center">
-                    <Text fontSize="md">{t('premium.consumedMeals') || 'Consumed meals'}:</Text>
-                    <Text fontSize="md" fontWeight="medium" color="orange.600">
+                    <Text fontSize={{ base: 'sm', md: 'md' }}>{t('premium.consumedMeals') || 'Consumed meals'}:</Text>
+                    <Text fontSize={{ base: 'sm', md: 'md' }} fontWeight="medium" color="orange.600">
                       {subscriptionData.consumed_meals} {t('premium.meals') || 'meals'}
                     </Text>
                   </Flex>
@@ -286,8 +291,8 @@ const SubscriptionSummary = ({ onDataChange }) => {
                 
                 {remainingMeals > 0 && (
                   <Flex justify="space-between" align="center">
-                    <Text fontSize="md">{t('premium.remainingMeals') || 'Remaining meals'}:</Text>
-                    <Text fontSize="md" fontWeight="bold" color="green.600">
+                    <Text fontSize={{ base: 'sm', md: 'md' }}>{t('premium.remainingMeals') || 'Remaining meals'}:</Text>
+                    <Text fontSize={{ base: 'sm', md: 'md' }} fontWeight="bold" color="green.600">
                       {remainingMeals} {t('premium.meals') || 'meals'}
                     </Text>
                   </Flex>
@@ -295,8 +300,8 @@ const SubscriptionSummary = ({ onDataChange }) => {
                 
                 {subscriptionData.start_date && (
                   <Flex justify="space-between" align="center">
-                    <Text fontSize="md">{t('premium.startDate') || 'Start date'}:</Text>
-                    <Text fontSize="md" fontWeight="medium">
+                    <Text fontSize={{ base: 'sm', md: 'md' }}>{t('premium.startDate') || 'Start date'}:</Text>
+                    <Text fontSize={{ base: 'sm', md: 'md' }} fontWeight="medium">
                       {formatDate(subscriptionData.start_date)}
                     </Text>
                   </Flex>
@@ -304,8 +309,8 @@ const SubscriptionSummary = ({ onDataChange }) => {
                 
                 {subscriptionData.end_date && (
                   <Flex justify="space-between" align="center">
-                    <Text fontSize="md">{t('premium.endDate') || 'End date'}:</Text>
-                    <Text fontSize="md" fontWeight="medium">
+                    <Text fontSize={{ base: 'sm', md: 'md' }}>{t('premium.endDate') || 'End date'}:</Text>
+                    <Text fontSize={{ base: 'sm', md: 'md' }} fontWeight="medium">
                       {formatDate(subscriptionData.end_date)}
                     </Text>
                   </Flex>
@@ -316,45 +321,56 @@ const SubscriptionSummary = ({ onDataChange }) => {
             <Divider />
             
             {/* Total Price Highlight */}
-            <Box bg="teal.50" p={5} borderRadius="lg" border="2px solid" borderColor="teal.200">
-              <HStack justify="space-between" w="full">
-                <Text fontWeight="bold" fontSize="xl">
-                  {t('premium.totalPrice') || 'Total Price'}:
-                </Text>
-                <Text fontWeight="bold" fontSize="2xl" color="teal.600">
+            <Box 
+              bg="brand.300" 
+              p={{ base: 3, md: 4, lg: 5 }} 
+              borderRadius="lg" 
+              border="2px solid" 
+              borderColor="brand.400"
+            >
+              <Flex 
+                justify="space-between" 
+                direction={{ base: 'column', sm: 'row' }}
+                gap={2}
+              >
+                <Text fontWeight="bold" fontSize={{ base: 'md', md: 'lg', lg: 'xl' }}>
+                  {t('menuPage.totalPrice') || 'Total Price'}: {''}
                   {formatCurrency(selectedTermPricing.totalPrice)}
                 </Text>
-              </HStack>
+                <Text 
+                  fontWeight="bold" 
+                  fontSize={{ base: 'lg', md: 'xl', lg: '2xl' }} 
+                  color="teal.600"
+                >
+                  
+                </Text>
+              </Flex>
             </Box>
           </>
         )}
 
         {/* Status and Additional Info */}
-        {subscriptionData.status && (
-          <HStack justify="space-between" align="center">
-            <Text fontSize="md" color="gray.600">
-              {t('premium.status') || 'Status'}:
-            </Text>
+        {subscriptionData.status && (     
             <Badge 
               colorScheme={getStatusColorScheme(subscriptionData.status)}
               variant="solid"
-              fontSize="sm"
+              fontSize={{ base: 'xs', sm: 'sm' }}
+              alignSelf="flex-start"
             >
-              {t(`premium.status.${subscriptionData.status}`) || subscriptionData.status}
+              {t(`admin.status.${subscriptionData.status}`) || subscriptionData.status}
             </Badge>
-          </HStack>
         )}
 
         {/* Pause Information */}
         {subscriptionData.is_paused && (
-          <Alert status="warning" borderRadius="md">
-            <AlertIcon />
+          <Alert status="warning" borderRadius="md" fontSize={{ base: 'xs', sm: 'sm' }}>
+            <AlertIcon boxSize={{ base: '14px', sm: '16px' }} />
             <Box>
-              <Text fontSize="sm" fontWeight="medium">
+              <Text fontSize={{ base: 'xs', sm: 'sm' }} fontWeight="medium">
                 {t('premium.subscriptionPaused') || 'Subscription is paused'}
               </Text>
               {subscriptionData.resume_date && (
-                <Text fontSize="xs" mt={1}>
+                <Text fontSize={{ base: '2xs', sm: 'xs' }} mt={1}>
                   {t('premium.resumeDate') || 'Resume date'}: {formatDate(subscriptionData.resume_date)}
                 </Text>
               )}
@@ -364,9 +380,9 @@ const SubscriptionSummary = ({ onDataChange }) => {
 
         {/* Validation Alert */}
         {!subscriptionData.selected_term && (
-          <Alert status="info" borderRadius="md">
-            <AlertIcon />
-            <Text fontSize="sm">
+          <Alert status="info" borderRadius="md" fontSize={{ base: 'xs', sm: 'sm' }}>
+            <AlertIcon boxSize={{ base: '14px', sm: '16px' }} />
+            <Text>
               {t('premium.selectTermToSeeDetails') || 'Select a subscription term to see details'}
             </Text>
           </Alert>

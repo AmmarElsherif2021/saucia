@@ -58,11 +58,13 @@ export const useEntityConfigs = () => {
             </Badge>
           )
         },
-        {
-          key: 'allergies',
+          {
+          key: 'item_allergies', // Change from 'allergies' to 'item_allergies'
           label: t('admin.Allergies'),
           width: '15%',
-          render: value => value?.length > 0 ? value.map(a => a.name).join(', ') : t('admin.None')
+          render: value => value?.length > 0 
+            ? value.map(ia => ia.allergies.name).join(', ') 
+            : t('admin.None')
         },
         { key: 'image_url', label: t('admin.Image'), width: '11%', truncate: true },
       ],

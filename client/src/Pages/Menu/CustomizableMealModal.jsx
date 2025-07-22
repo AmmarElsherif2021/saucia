@@ -16,7 +16,7 @@ import {
   Heading,
 } from '@chakra-ui/react'
 import { useState, useEffect, useMemo } from 'react'
-
+import { WarningIcon } from '@chakra-ui/icons'
 /**
  * CustomizableMealModal
  * Modal for selecting and customizing meal items with section-based free allowances and extra charges.
@@ -30,6 +30,9 @@ import { useState, useEffect, useMemo } from 'react'
  * - t: function - Translation function
  * - sectionFreeCounts: { [section: string]: { value: number, key_arabic?: string } }
  * - onConfirm: function(selectedItems, totalPrice) - Confirm handler
+ * - unsafeItemIds: array of item IDs that contain user allergens
+  - userAllergies: array of user's allergy names
+  - isItemSafe: function to check if an item is safe
  */
 export const CustomizableMealModal = ({
   isOpen,
@@ -40,6 +43,9 @@ export const CustomizableMealModal = ({
   t,
   sectionFreeCounts,
   onConfirm,
+  unsafeItemIds = [],
+  userAllergies = [],
+  isItemSafe = () => true, 
 }) => {
   // State: selected items only - total price will be calculated
   const [selectedItems, setSelectedItems] = useState({})
@@ -201,25 +207,7 @@ export const CustomizableMealModal = ({
 
     return chargedAmount
   }
-
-  /**
-   * Get display info for an item
-   */
-  const getItemDisplayInfo = (item) => {
-    const itemName = isArabic ? (item.name_arabic || item.name) : item.name
-    const itemDescription = isArabic ? (item.description_arabic || item.description) : item.description
-    const itemPrice = item.price || 0
-    const itemCalories = item.calories || 0
-    
-    return {
-      name: itemName,
-      description: itemDescription,
-      price: itemPrice,
-      calories: itemCalories,
-      isAvailable: item.is_available !== false
-    }
-  }
-
+  
   /**
    * Get section display name
    */
@@ -230,6 +218,59 @@ export const CustomizableMealModal = ({
     }
     return section
   }
+    /**
+    Check if an item contains allergens
+   */
+  const itemHasAllergens = (item) => {
+    return unsafeItemIds.includes(item.id);
+  };
+
+    /**
+   * Get allergens text for display
+   */
+  const getAllergenText = (item) => {
+    if (!item.allergens || !userAllergies.length) return '';
+    
+    // Convert item allergens to names in current language
+    const itemAllergens = (item.allergens || []).map(a => 
+      isArabic ? (a.name_arabic || a.name) : a.name
+    );
+    
+    // Filter only user's allergies
+    const matching = itemAllergens.filter(allergenName => 
+      userAllergies.some(userAllergy => 
+        allergenName.toLowerCase().includes(userAllergy.toLowerCase())
+      )
+    );
+    
+    return matching.length 
+      ? `${t('menuPage.contains')} ${matching.join(', ')}`
+      : '';
+  };
+
+  /**
+   * Get display info for an item
+   */
+  const getItemDisplayInfo = (item) => {
+    const itemName = isArabic ? (item.name_arabic || item.name) : item.name
+    const itemDescription = isArabic ? (item.description_arabic || item.description) : item.description
+    const itemPrice = item.price || 0
+    const itemCalories = item.calories || 0
+    const isSafe = isItemSafe(item);
+    const allergenText = getAllergenText(item);
+    
+    return {
+      name: itemName,
+      description: itemDescription,
+      price: itemPrice,
+      calories: itemCalories,
+      isAvailable: item.is_available !== false,
+      isSafe,     
+      allergenText,        
+      hasAllergens: !isSafe 
+    }
+  };
+
 
   // Meal display name
   const mealName = isArabic ? (meal?.name_arabic || meal?.name) : meal?.name
@@ -241,6 +282,7 @@ export const CustomizableMealModal = ({
   const handleConfirm = () => {
     onConfirm(selectedItems, totalPrice)
   }
+
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
@@ -320,10 +362,15 @@ export const CustomizableMealModal = ({
                   )}
 
                   {/* Items in section */}
-                  {availableItems.map((item) => {
-                    const isSelected = (selectedItems[item.id] || 0) > 0
-                    const quantity = selectedItems[item.id] || 0
+                  {availableItems
+                    .filter(item => {
+                      const displayInfo = getItemDisplayInfo(item);
+                      return displayInfo.isAvailable && displayInfo.isSafe;
+                    })
+                    .map((item) => {
                     const displayInfo = getItemDisplayInfo(item)
+                    const isDisabled = !displayInfo.isAvailable || !displayInfo.isSafe
+                    const isSelected = (selectedItems[item.id] || 0) > 0
                     
                     return (
                       <Flex
@@ -333,25 +380,57 @@ export const CustomizableMealModal = ({
                         borderRadius="md"
                         align="center"
                         justify="space-between"
-                        bg={isSelected ? 'blue.50' : 'white'}
-                        onClick={() => handleSelectItem(item)}
-                        cursor="pointer"
+                        bg={isSelected ? 'blue.50' : isDisabled ? 'gray.100' : 'white'}
+                        onClick={isDisabled ? undefined : () => handleSelectItem(item)}
+                        cursor={isDisabled ? 'not-allowed' : 'pointer'}
                         mb={2}
-                        opacity={displayInfo.isAvailable ? 1 : 0.6}
+                        opacity={isDisabled ? 0.7 : 1}
+                        position="relative"
                       >
+                        {/* Allergen warning badge */}
+                        {displayInfo.hasAllergens && (
+                          <Badge 
+                            colorScheme="red" 
+                            position="absolute"
+                            top={1}
+                            right={1}
+                            fontSize="xs"
+                            display="flex"
+                            alignItems="center"
+                          >
+                            <WarningIcon mr={1} />
+                            {t('menuPage.unsafe')}
+                          </Badge>
+                        )}
+
                         <Box flex="1">
-                          <Text fontWeight="bold">
+                          <Text 
+                            fontWeight="bold"
+                            color={displayInfo.hasAllergens ? 'red.600' : 'inherit'}
+                          >
                             {displayInfo.name}
                           </Text>
+                          
+                          {/* Allergen text */}
+                          {displayInfo.allergenText && (
+                            <Text fontSize="xs" color="red.500" fontStyle="italic">
+                              {displayInfo.allergenText}
+                            </Text>
+                          )}
+                          
                           <Text fontSize="sm" color="gray.600">
-                            {displayInfo.price > 0 ? `+${displayInfo.price.toFixed(2)} ${t('common.currency')}/item` : 'Free'}
+                            {displayInfo.price > 0 
+                              ? `+${displayInfo.price.toFixed(2)} ${t('common.currency')}/item` 
+                              : t('menuPage.free')}
                             {usage && usage.selected >= usage.free && ' (if over limit)'}
                           </Text>
+                          
                           {displayInfo.description && (
                             <Text fontSize="xs" color="gray.500" mt={1}>
                               {displayInfo.description}
                             </Text>
                           )}
+                          
                           {displayInfo.calories > 0 && (
                             <Text fontSize="xs" color="gray.500">
                               {displayInfo.calories} cal
@@ -360,7 +439,7 @@ export const CustomizableMealModal = ({
                         </Box>
 
                         {/* Quantity controls */}
-                        {isSelected && (
+                        {isSelected && !isDisabled && (
                           <Flex
                             direction={['column', 'column', 'row']}
                             align="center"
@@ -376,7 +455,7 @@ export const CustomizableMealModal = ({
                               +
                             </Button>
                             <Text minW="30px" textAlign="center" fontWeight="bold">
-                              {quantity}
+                              {selectedItems[item.id]}
                             </Text>
                             <Button
                               size="xs"

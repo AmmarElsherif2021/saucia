@@ -28,6 +28,7 @@ import { JoinPremiumTeaser } from './JoinPremiumTeaser';
 import { useTranslation } from 'react-i18next';
 import { useI18nContext } from '../../Contexts/I18nContext';
 import { useUserSubscriptions } from '../../Hooks/useUserSubscriptions';
+import { CardPlanAvatar } from './PlanAvatar'
 // Import plan images 
 import gainWeightPlanImage from '../../assets/premium/gainWeight.png'
 import keepWeightPlanImage from '../../assets/premium/keepWeight.png'
@@ -53,12 +54,6 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
   const { currentLanguage } = useI18nContext()
   const isArabic = currentLanguage === 'ar'
   
-  // Add the image to the plan object for easier access
-  const planWithImage = {
-    ...plan,
-    image: plan.avatar_url || planImages[plan.title] || dailyMealPlanImage,
-  }
-
   return (
     <Box
       borderWidth={isUserPlan ? '2px' : 'none'}
@@ -79,13 +74,8 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
         </Badge>
       )}
 
-      <Image
-        src={planWithImage.image}
-        alt={plan.title}
-        borderRadius="md"
-        height="150px"
-        width="100%"
-        objectFit="cover"
+      <CardPlanAvatar 
+        plan={plan}
         mb={4}
         bg={useColorModeValue('gray.50', 'gray.600')}
       />
@@ -115,7 +105,7 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
         <Button
           size="sm"
           colorScheme={isUserPlan ? 'error' : 'brand'}
-          onClick={() => onSelect(planWithImage)}
+          onClick={() => onSelect(plan)}
         >
           {isUserPlan ? t('premium.viewDetails') : t('premium.select')}
         </Button>
@@ -123,8 +113,6 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
     </Box>
   )
 }
-
-
 const PlanDetails = ({ plan }) => {
   const { t } = useTranslation()
   const { currentLanguage } = useI18nContext()
@@ -162,10 +150,10 @@ const PlanDetails = ({ plan }) => {
             {t('premium.shortTerm')}
           </Heading>
           <Text fontSize="sm">
-            {plan.short_term_meals} {t('premium.mealsOver')} {plan.duration_days} {t('premium.days')}
+            {t('premium.mealsOver')} {plan.short_term_meals} {t('premium.days')}
           </Text>
           <Text fontSize="sm" fontWeight="bold">
-            {t('premium.pricePerMeal')}: ${plan.price_per_meal}
+            {t('premium.overallPrice')}: ${plan.price_per_meal* plan.short_term_meals }
           </Text>
         </Box>
 
@@ -175,10 +163,10 @@ const PlanDetails = ({ plan }) => {
             {t('premium.mediumTerm')}
           </Heading>
           <Text fontSize="sm">
-            {plan.medium_term_meals} {t('premium.mealsOver')} {plan.duration_days * 2} {t('premium.days')}
+            {t('premium.mealsOver')} {plan.medium_term_meals} {t('premium.days')}
           </Text>
           <Text fontSize="sm" fontWeight="bold">
-            {t('premium.pricePerMeal')}: ${(plan.price_per_meal * 0.9).toFixed(2)} <Badge colorScheme="green">10% off</Badge>
+            {t('premium.overallPrice')}: ${plan.price_per_meal*plan.medium_term_meals} <Badge colorScheme="green">10% off</Badge>
           </Text>
         </Box>
       </VStack>

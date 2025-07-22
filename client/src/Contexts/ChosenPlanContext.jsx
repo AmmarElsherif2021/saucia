@@ -2,6 +2,39 @@ import { createContext, useContext, useState, useCallback, useMemo } from 'react
 
 const ChosenPlanContext = createContext();
 
+// Date calculation utilities - moved outside component for better performance
+const calculateDeliveryDate = (startDate, mealIndex) => {
+  const date = new Date(startDate);
+  let validDays = 0;
+  
+  // Check if start date is a valid delivery day
+  const startDayOfWeek = date.getDay();
+  if (startDayOfWeek !== 5 && startDayOfWeek !== 6) {
+    validDays = 1; // Start date counts as the first valid day
+  }
+  
+  while (validDays <= mealIndex) {
+    date.setDate(date.getDate() + 1);
+    const dayOfWeek = date.getDay();
+    
+    // Skip Fridays (5) and Saturdays (6)
+    if (dayOfWeek !== 5 && dayOfWeek !== 6) {
+      validDays++;
+    }
+  }
+  return date;
+};
+
+// Calculate end date based on total meals and delivery constraints
+const calculateSubscriptionEndDate = (startDate, totalMeals) => {
+  if (!startDate || !totalMeals || totalMeals <= 0) return null;
+  
+  // The last meal will be delivered on the date calculated for (totalMeals - 1) index
+  // since we're using 0-based indexing
+  const endDate = calculateDeliveryDate(startDate, totalMeals - 1);
+  return endDate.toISOString().split('T')[0];
+};
+
 export const ChosenPlanProvider = ({ children }) => {
   const [subscriptionData, setSubscriptionData] = useState({
     // Core subscription info
@@ -62,19 +95,16 @@ export const ChosenPlanProvider = ({ children }) => {
 
     // Calculate dates if not already set
     const startDate = currentData.start_date || new Date().toISOString().split('T')[0];
-    const durationDays = selectedTerm === 'short' 
-      ? (plan.duration_days || 30)
-      : (plan.duration_days || 30) * 2;
     
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + durationDays);
+    // Calculate end date based on delivery schedule (excluding Fridays and Saturdays)
+    const endDate = calculateSubscriptionEndDate(startDate, totalMeals);
 
     return {
       plan_id: plan.id,
       total_meals: totalMeals,
       price_per_meal: pricePerMeal,
       start_date: startDate,
-      end_date: endDate.toISOString().split('T')[0],
+      end_date: endDate,
     };
   }, []);
 
@@ -101,6 +131,14 @@ export const ChosenPlanProvider = ({ children }) => {
           const derivedValues = calculateDerivedValues(plan, selectedTerm, merged);
           console.log('Derived values:', derivedValues); // Debug log
           return { ...merged, ...derivedValues };
+        }
+      }
+      
+      // If start_date or total_meals changed independently, recalculate end_date
+      if ((updates.start_date || updates.total_meals) && merged.total_meals) {
+        const newEndDate = calculateSubscriptionEndDate(merged.start_date, merged.total_meals);
+        if (newEndDate) {
+          merged.end_date = newEndDate;
         }
       }
       
@@ -137,17 +175,23 @@ export const ChosenPlanProvider = ({ children }) => {
   }, [updateSubscriptionData]);
 
   const addMeal = useCallback((mealId) => {
+    
     setSubscriptionData(prev => ({
       ...prev,
       meals:[...prev.meals, mealId]
     }));
   }, []);
+  
+  const setDeliveryTime = useCallback((time) => {
+  updateSubscriptionData({ preferred_delivery_time: time });
+}, [updateSubscriptionData]);
 
-  const removeMeal = useCallback((mealId) => {
-    setSubscriptionData(prev => ({
-      ...prev,
-      meals: prev.meals.filter(id => id !== mealId)
-    }));
+  const removeMeal = useCallback((index) => {
+  setSubscriptionData(prev => {
+    const newMeals = [...prev.meals];
+    newMeals.splice(index, 1); 
+    return { ...prev, meals: newMeals };
+    });
   }, []);
 
   const setSubscriptionStatus = useCallback((status) => {
@@ -260,6 +304,22 @@ export const ChosenPlanProvider = ({ children }) => {
     });
   }, []);
 
+  // Utility function to get delivery dates for all meals
+  const getDeliverySchedule = useCallback(() => {
+    if (!subscriptionData.start_date || !subscriptionData.total_meals) return [];
+    
+    const schedule = [];
+    for (let i = 0; i < subscriptionData.total_meals; i++) {
+      const deliveryDate = calculateDeliveryDate(subscriptionData.start_date, i);
+      schedule.push({
+        mealIndex: i + 1,
+        date: deliveryDate.toISOString().split('T')[0],
+        dayName: deliveryDate.toLocaleDateString('en-US', { weekday: 'long' })
+      });
+    }
+    return schedule;
+  }, [subscriptionData.start_date, subscriptionData.total_meals]);
+
   // Context value
   const contextValue = {
     // Core data
@@ -279,6 +339,7 @@ export const ChosenPlanProvider = ({ children }) => {
     setSubscriptionStatus,
     pauseSubscription,
     resumeSubscription,
+    setDeliveryTime,
     
     // Computed values
     totalPrice,
@@ -291,6 +352,7 @@ export const ChosenPlanProvider = ({ children }) => {
     getSubscriptionPayload,
     initializeFromSubscription,
     resetSubscriptionData,
+    getDeliverySchedule,
     
     // Convenience getters
     chosenPlan: subscriptionData.plan,

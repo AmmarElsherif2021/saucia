@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useUserMenuFiltering } from '../../Hooks/setUserMenuFiltering'
 import { useLocation } from 'react-router-dom'
 import { CustomizableMealCard } from './CustomizableCard'
 import { Box, Heading, SimpleGrid, Text as ChakraText, Spinner, Center } from '@chakra-ui/react'
@@ -26,6 +27,14 @@ const MenuPage = () => {
   const { addToCart } = useCart()
   const location = useLocation()
   const isArabic = currentLanguage === 'ar'
+  const { 
+    unsafeItems, 
+    userAllergies, 
+    isMealSafe,
+    isItemSafe,
+    unsafeItemIds,
+    isLoadingAllergies
+  } = useUserMenuFiltering();
 
   // Define section refs
   const sectionRefs = {
@@ -63,7 +72,7 @@ const MenuPage = () => {
     'make your own salad': 'salad-items',
   }
 
-  //Elements context
+  // Elements context
   const { meals, fruitItems, saladItems, elementsLoading } = useElements()
   const [sections, setSections] = useState([])
   const [expandedIndex, setExpandedIndex] = useState(-1)
@@ -71,25 +80,37 @@ const MenuPage = () => {
     'salad-fruits': [],
     'salad-items': [],
   })
-  const [loading] = useState(false)
+  
+  // Combine loading states
+  const overallLoading = elementsLoading || isLoadingAllergies;
+  
+  // Filter meals by safety
+  const safeMeals = useMemo(() => {
+    if (overallLoading) return [];
+    return meals.filter(meal => meal.is_available && isMealSafe(meal));
+  }, [meals, overallLoading, isMealSafe]);
 
-  // Use the items from context
+  // Filter and set selectable items
   useEffect(() => {
-    if (!elementsLoading) {
+    if (!overallLoading) {
       setSelectiveItems({
-        'salad-fruits': fruitItems || [],
-        'salad-items': saladItems || [],
-      })
+        'salad-fruits': (fruitItems || []).filter(item => 
+          item.is_available && isItemSafe(item)
+        ),
+        'salad-items': (saladItems || []).filter(item => 
+          item.is_available && isItemSafe(item)
+        ),
+      });
     }
-  }, [fruitItems, saladItems, elementsLoading])
+  }, [fruitItems, saladItems, overallLoading, isItemSafe]);
 
   // Organize meals by sections
   useEffect(() => {
-    if (!elementsLoading && !loading && meals.length > 0) {
+    if (!overallLoading && safeMeals.length > 0) {
       // Group meals by section
       const sectionsMap = {}
 
-      meals.forEach((meal) => {
+      safeMeals.forEach((meal) => {
         // Normalize section name
         const section = (meal.section || 'Other')
           .trim()
@@ -113,21 +134,17 @@ const MenuPage = () => {
 
       setSections(sectionsArray)
     }
-  }, [meals, elementsLoading, loading])
+  }, [safeMeals, overallLoading])
 
   // Handle scrolling to section based on URL state
   useEffect(() => {
     const targetSection = location.state?.scrollTo
 
     if (targetSection && sections.length > 0) {
-      console.log('Attempting to navigate to section:', targetSection)
-
       // Find the index of the section to scroll to (case-insensitive matching)
       const sectionIndex = sections.findIndex(
         (section) => section.name.toLowerCase() === targetSection.toLowerCase(),
       )
-
-      console.log('Found section at index:', sectionIndex)
 
       if (sectionIndex !== -1) {
         // Expand the accordion panel
@@ -137,7 +154,6 @@ const MenuPage = () => {
         setTimeout(() => {
           const element = document.getElementById(`section-${sectionIndex}`)
           if (element) {
-            console.log('Scrolling to element:', element)
             element.scrollIntoView({
               behavior: 'smooth',
               block: 'start',
@@ -148,24 +164,17 @@ const MenuPage = () => {
             setTimeout(() => {
               element.style.boxShadow = ''
             }, 2000)
-          } else {
-            console.error('Could not find element with ID:', `section-${sectionIndex}`)
           }
-        }, 300) // Delay to allow accordion to expand
+        }, 300)
       }
     }
   }, [location.state, sections])
 
   const handleAccordionToggle = (expandedIndexes) => {
-    console.log('MenuPage received toggle event with:', expandedIndexes)
-
     // Check the format of expandedIndexes (could be array or single value)
     if (Array.isArray(expandedIndexes)) {
-      // If it's an empty array, all panels are closed
-      // Otherwise, use the first expanded index (since allowMultiple is false)
       setExpandedIndex(expandedIndexes.length > 0 ? expandedIndexes[0] : -1)
     } else {
-      // If for some reason we get a direct index (not an array)
       setExpandedIndex(expandedIndexes)
     }
   }
@@ -197,24 +206,22 @@ const MenuPage = () => {
           {section.meals.map((meal, index) => {
             const isSelective = meal.preparation_instructions === 'selective'
             let selectableItems = []
-            //let sectionRules = {}
             if (isSelective) {
               const itemSection = selectiveSectionMap[meal.name.toLowerCase()]
-              //console.log('Item section:', itemSection)
               if (itemSection) {
                 selectableItems = selectiveItems[itemSection]
-                // console.log('Section rules:', sectionRules)
               }
-              //console.log('Selectable items for meal:', meal)
             }
 
             return isSelective ? (
               <CustomizableMealCard
                 key={index+ meal.id}
                 meal={meal}
-                //sectionRules={sectionRules}
                 selectableItems={selectableItems}
                 onhandleAddToCart={handleAddToCart}
+                unsafeItemIds={unsafeItemIds}
+                userAllergies={userAllergies}
+                isItemSafe={isItemSafe}
               />
             ) : (
               <Box key={index + meal.id}>
@@ -229,7 +236,7 @@ const MenuPage = () => {
     ),
   }))
 
-  if (elementsLoading || loading) {
+  if (overallLoading) {
     return (
       <Center h="300px">
         <Spinner size="xl" />
@@ -246,5 +253,4 @@ const MenuPage = () => {
     </Box>
   )
 }
-
 export default MenuPage

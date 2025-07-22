@@ -10,7 +10,7 @@ export const ElementsProvider = ({ children }) => {
   const mealsHook = useMeals();
   const plansHook = usePlans();
 
-  // Add section field to items for backward compatibility
+  // section field to items for backward compatibility
   const itemsWithSection = itemsHook.items.map(item => ({
     ...item,
     section: item.category
