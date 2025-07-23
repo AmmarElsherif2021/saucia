@@ -33,7 +33,9 @@ const MenuPage = () => {
     isMealSafe,
     isItemSafe,
     unsafeItemIds,
-    isLoadingAllergies
+    isLoadingAllergies,
+    getMealAllergens,
+    getItemAllergens
   } = useUserMenuFiltering();
 
   // Define section refs
@@ -84,33 +86,29 @@ const MenuPage = () => {
   // Combine loading states
   const overallLoading = elementsLoading || isLoadingAllergies;
   
-  // Filter meals by safety
-  const safeMeals = useMemo(() => {
+  // Filter meals - include all available meals (both safe and unsafe)
+  const availableMeals = useMemo(() => {
     if (overallLoading) return [];
-    return meals.filter(meal => meal.is_available && isMealSafe(meal));
-  }, [meals, overallLoading, isMealSafe]);
+    return meals.filter(meal => meal.is_available);
+  }, [meals, overallLoading]);
 
-  // Filter and set selectable items
+  // Set selectable items - include all available items (both safe and unsafe)
   useEffect(() => {
     if (!overallLoading) {
       setSelectiveItems({
-        'salad-fruits': (fruitItems || []).filter(item => 
-          item.is_available && isItemSafe(item)
-        ),
-        'salad-items': (saladItems || []).filter(item => 
-          item.is_available && isItemSafe(item)
-        ),
+        'salad-fruits': (fruitItems || []).filter(item => item.is_available),
+        'salad-items': (saladItems || []).filter(item => item.is_available),
       });
     }
-  }, [fruitItems, saladItems, overallLoading, isItemSafe]);
+  }, [fruitItems, saladItems, overallLoading]);
 
   // Organize meals by sections
   useEffect(() => {
-    if (!overallLoading && safeMeals.length > 0) {
+    if (!overallLoading && availableMeals.length > 0) {
       // Group meals by section
       const sectionsMap = {}
 
-      safeMeals.forEach((meal) => {
+      availableMeals.forEach((meal) => {
         // Normalize section name
         const section = (meal.section || 'Other')
           .trim()
@@ -134,7 +132,7 @@ const MenuPage = () => {
 
       setSections(sectionsArray)
     }
-  }, [safeMeals, overallLoading])
+  }, [availableMeals, overallLoading])
 
   // Handle scrolling to section based on URL state
   useEffect(() => {
@@ -205,6 +203,9 @@ const MenuPage = () => {
         <SimpleGrid ref={sectionRefs[section.name]} columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
           {section.meals.map((meal, index) => {
             const isSelective = meal.preparation_instructions === 'selective'
+            const mealAllergens = getMealAllergens(meal)
+            const isMealUnsafe = !isMealSafe(meal)
+            
             let selectableItems = []
             if (isSelective) {
               const itemSection = selectiveSectionMap[meal.name.toLowerCase()]
@@ -222,12 +223,19 @@ const MenuPage = () => {
                 unsafeItemIds={unsafeItemIds}
                 userAllergies={userAllergies}
                 isItemSafe={isItemSafe}
+                // Pass meal safety info for special UI
+                isMealUnsafe={isMealUnsafe}
+                mealAllergens={mealAllergens}
               />
             ) : (
               <Box key={index + meal.id}>
                 <MealCard
-                meal={meal}
-              />
+                  meal={meal}
+                  // Pass meal safety info for special UI
+                  isMealUnsafe={isMealUnsafe}
+                  mealAllergens={mealAllergens}
+                  userAllergies={userAllergies}
+                />
               </Box>
             )
           })}

@@ -290,37 +290,58 @@ const updateMealCompleteMutation = useMutation({
   };
 
   // Get plan details
-  const useGetPlanDetails = (planId) => {
-    return useQuery({
-      queryKey: ['admin', 'plan', planId],
-      queryFn: () => adminAPI.getPlanDetails(planId),
-      enabled: !!planId,
-      staleTime: 2 * 60 * 1000, // 2 minutes
-    });
-  };
-
+    const useGetPlanDetails = (planId) => {
+      return useQuery({
+        queryKey: ['admin', 'plan', planId],
+        queryFn: async () => {
+          const plan = await adminAPI.getPlanDetails(planId);
+          const meals = await adminAPI.getPlanMeals(planId);
+          return {
+            ...plan,
+            meals: meals.map(m => m.meal_id)
+          };
+        },
+        enabled: !!planId
+      });
+    };
   // UNIFIED PLAN OPERATIONS
   // Complete plan creation with all related data
-  const createPlanCompleteMutation = useMutation({
-    mutationFn: async (planData) => {
-      const result = await adminAPI.createPlanComplete(planData);
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'plans']);
-    }
-  });
+    const createPlanCompleteMutation = useMutation({
+      mutationFn: async (planData) => {
+        // Process meals and additives
+        const { meals, additives, ...baseData } = planData;
+        
+        // Create plan
+        const result = await adminAPI.createPlanComplete({
+          ...baseData,
+          meals,
+          additives
+        });
+        
+        return result;
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries(['admin', 'plans']);
+      }
+    });
 
-  // Complete plan update with all related data
-  const updatePlanCompleteMutation = useMutation({
-    mutationFn: async ({ planId, updateData }) => {
-      return adminAPI.updatePlan(planId, updateData);
-    },
-    onSuccess: (_, { planId }) => {
-      queryClient.invalidateQueries(['admin', 'plan', planId]);
-      queryClient.invalidateQueries(['admin', 'plans']);
-    }
-  });
+    // updatePlanComplete mutation
+    const updatePlanCompleteMutation = useMutation({
+      mutationFn: async ({ planId, updateData }) => {
+        // Process meals and additives
+        const { meals, additives, ...baseData } = updateData;
+        
+        return adminAPI.updatePlanComplete(planId, {
+          ...baseData,
+          meals,
+          additives
+        });
+      },
+      onSuccess: (_, { planId }) => {
+        queryClient.invalidateQueries(['admin', 'plan', planId]);
+        queryClient.invalidateQueries(['admin', 'plans']);
+      }
+    });
 
   // Complete plan deletion with all related data
   const deletePlanCompleteMutation = useMutation({
@@ -343,7 +364,21 @@ const updateMealCompleteMutation = useMutation({
   });
 
   // ===== SUBSCRIPTION MANAGEMENT =====
-  
+  // create subscription
+  const createSubscriptionMutation = useMutation({
+  mutationFn: (subscriptionData) => adminAPI.createSubscription(subscriptionData),
+  onSuccess: () => {
+    queryClient.invalidateQueries(['admin', 'subscriptions']);
+  }
+});
+// get subscription details
+const useGetSubscriptionDetails = (subscriptionId) => {
+  return useQuery({
+    queryKey: ['admin', 'subscription', subscriptionId],
+    queryFn: () => adminAPI.getSubscriptionDetails(subscriptionId),
+    enabled: !!subscriptionId
+  });
+};
   // Get all subscriptions
   const useGetAllSubscriptions = (options = {}) => {
     return useQuery({
@@ -557,7 +592,8 @@ const updateMealCompleteMutation = useMutation({
     // Subscription Management
     updateSubscriptionStatus: updateSubscriptionStatusMutation.mutateAsync,
     updateSubscription: updateSubscriptionMutation.mutateAsync,
-
+    createSubscription: createSubscriptionMutation.mutateAsync,
+    useGetSubscriptionDetails,
     // Order Management
     updateOrderStatus: updateOrderStatusMutation.mutateAsync,
     updateOrder: updateOrderMutation.mutateAsync,

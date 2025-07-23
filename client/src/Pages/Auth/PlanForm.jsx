@@ -1,11 +1,35 @@
 import { 
   FormControl, FormLabel, Input, Button, Flex, Switch, Textarea,
-  Box, Image, useToast, Badge, Text
+  Box, Image, useToast, SimpleGrid, Text, Heading, Divider, Checkbox,
+  useBreakpointValue, Skeleton, Stack
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
-import { uploadImage, deleteImage } from '../../API/imageUtils'; // Adjust path as needed
+import { uploadImage, deleteImage } from '../../API/imageUtils'; 
+import { useAdminFunctions } from '../../Hooks/useAdminFunctions';
 
 const PlanForm = ({ onSubmit, onCancel, initialData = {} }) => {
+  const { 
+    useGetAllMeals, 
+    useGetAllItems, 
+    useGetPlanDetails 
+  } = useAdminFunctions();
+  
+  // Add loading states for all queries
+  const { 
+    data: meals = [], 
+    isLoading: isLoadingMeals 
+  } = useGetAllMeals();
+  
+  const { 
+    data: items = [], 
+    isLoading: isLoadingItems 
+  } = useGetAllItems();
+  
+  const {
+    data: plan,
+    isLoading: isLoadingPlan
+  } = useGetPlanDetails(initialData?.id);
+
   const [formData, setFormData] = useState({
     title: initialData.title || '',
     title_arabic: initialData.title_arabic || '',
@@ -18,14 +42,28 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {} }) => {
     description: initialData.description || '',
     description_arabic: initialData.description_arabic || '',
     price_per_meal: initialData.price_per_meal || 0,
-    is_active: initialData.is_active ?? true
+    is_active: initialData.is_active ?? true,
+    meals: initialData.meals || [], 
+    additives: initialData.additives || [] 
   });
   
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(initialData.avatar_url || '');
   const [isUploading, setIsUploading] = useState(false);
   const toast = useToast();
+  
+  // Safely set meals from plan data when available
+  useEffect(() => {
+    if (initialData?.id && plan?.meals) {
+      setFormData(prev => ({
+        ...prev,
+        meals: plan.meals
+      }));
+    }
+  }, [plan, initialData?.id]);
 
+  const additiveItems = items || [];
+  
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -38,12 +76,35 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {} }) => {
           : Math.max(Number(value), 0),
     }));
   };
+  
+  const handleMealToggle = (mealId) => {
+    setFormData(prev => {
+      const meals = [...prev.meals];
+      const index = meals.indexOf(mealId);
+      
+      if (index > -1) meals.splice(index, 1);
+      else meals.push(mealId);
+      
+      return { ...prev, meals };
+    });
+  };
 
+  const handleAdditiveToggle = (itemId) => {
+    setFormData(prev => {
+      const additives = [...prev.additives];
+      const index = additives.indexOf(itemId);
+      
+      if (index > -1) additives.splice(index, 1);
+      else additives.push(itemId);
+      
+      return { ...prev, additives };
+    });
+  };
+  
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type
     const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
       toast({
@@ -56,7 +117,6 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {} }) => {
       return;
     }
 
-    // Validate file size (5MB max)
     const MAX_SIZE = 5 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
       toast({
@@ -72,8 +132,6 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {} }) => {
     try {
       setIsUploading(true);
       setImageFile(file);
-      
-      // Create preview
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
       
@@ -104,7 +162,6 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {} }) => {
       let newAvatarUrl = formData.avatar_url;
       const oldAvatarUrl = formData.avatar_url;
       
-      // Upload new image if exists
       if (imageFile) {
         setIsUploading(true);
         newAvatarUrl = await uploadImage(imageFile, 'plans');
@@ -117,7 +174,6 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {} }) => {
       
       await onSubmit(processedData);
       
-      // Delete old image after successful update
       if (initialData.id && imageFile && oldAvatarUrl && oldAvatarUrl !== newAvatarUrl) {
         await deleteImage(oldAvatarUrl, 'plans');
       }
@@ -133,6 +189,8 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {} }) => {
       setIsUploading(false);
     }
   };
+  
+  const gridColumns = useBreakpointValue({ base: 1, sm: 2, md: 3, lg: 4 });
 
   return (
     <form onSubmit={handleSubmit}>
@@ -196,72 +254,216 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {} }) => {
         </Flex>
       </Box>
 
-      {/* Existing form fields */}
-      {[
-        { label: 'Title (English)', type: 'text', name: 'title', required: true },
-        { label: 'Title (Arabic)', type: 'text', name: 'title_arabic', dir: 'rtl', required: true },
-        { label: 'Carbohydrates (g)', type: 'number', name: 'carb', min: 0, required: true },
-        { label: 'Protein (g)', type: 'number', name: 'protein', min: 0, required: true },
-        { label: 'Calories (kcal)', type: 'number', name: 'kcal', min: 0, required: true },
-      ].map((input, index) => (
-        <FormControl key={index} mb={4} isRequired={input.required}>
-          <FormLabel>{input.label}</FormLabel>
+      <SimpleGrid columns={[1, 2]} spacing={4} mb={6}>
+        <FormControl isRequired>
+          <FormLabel>Title (English)</FormLabel>
           <Input
-            type={input.type}
-            name={input.name}
-            value={formData[input.name]}
+            type="text"
+            name="title"
+            value={formData.title}
             onChange={handleChange}
-            min={input.min}
-            placeholder={input.placeholder}
-            dir={input.dir}
+            placeholder="Plan title"
           />
         </FormControl>
-      ))}
+        
+        <FormControl isRequired>
+          <FormLabel>Title (Arabic)</FormLabel>
+          <Input
+            type="text"
+            name="title_arabic"
+            value={formData.title_arabic}
+            onChange={handleChange}
+            placeholder="عنوان الخطة"
+            dir="rtl"
+          />
+        </FormControl>
+      </SimpleGrid>
 
-      <FormControl mb={4}>
-        <FormLabel>Description (English)</FormLabel>
-        <Textarea
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          placeholder="Enter description"
-        />
-      </FormControl>
+      <Heading size="md" mb={4}>Nutritional Information</Heading>
+      <Divider mb={4} />
+      <SimpleGrid columns={[1, 2, 3]} spacing={4} mb={6}>
+        <FormControl isRequired>
+          <FormLabel>Carbohydrates (g)</FormLabel>
+          <Input
+            type="number"
+            name="carb"
+            value={formData.carb}
+            onChange={handleChange}
+            min={0}
+          />
+        </FormControl>
+        
+        <FormControl isRequired>
+          <FormLabel>Protein (g)</FormLabel>
+          <Input
+            type="number"
+            name="protein"
+            value={formData.protein}
+            onChange={handleChange}
+            min={0}
+          />
+        </FormControl>
+        
+        <FormControl isRequired>
+          <FormLabel>Calories (kcal)</FormLabel>
+          <Input
+            type="number"
+            name="kcal"
+            value={formData.kcal}
+            onChange={handleChange}
+            min={0}
+          />
+        </FormControl>
+      </SimpleGrid>
 
-      <FormControl mb={4}>
-        <FormLabel>Description (Arabic)</FormLabel>
-        <Textarea
-          name="description_arabic"
-          value={formData.description_arabic}
-          onChange={handleChange}
-          placeholder="أدخل الوصف"
-          dir="rtl"
-        />
-      </FormControl>
+      <Heading size="md" mb={4}>Meal Terms</Heading>
+      <Divider mb={4} />
+      <SimpleGrid columns={[1, 2]} spacing={4} mb={6}>
+        <FormControl>
+          <FormLabel>Short Term Meals</FormLabel>
+          <Input
+            type="number"
+            name="short_term_meals"
+            value={formData.short_term_meals}
+            onChange={handleChange}
+            min={0}
+          />
+        </FormControl>
+        
+        <FormControl>
+          <FormLabel>Medium Term Meals</FormLabel>
+          <Input
+            type="number"
+            name="medium_term_meals"
+            value={formData.medium_term_meals}
+            onChange={handleChange}
+            min={0}
+          />
+        </FormControl>
+      </SimpleGrid>
 
-      <FormControl mb={4} isRequired>
-        <FormLabel>Price per Meal</FormLabel>
-        <Input
-          type="number"
-          name="price_per_meal"
-          value={formData.price_per_meal}
-          onChange={handleChange}
-          min={0}
-          placeholder="Enter price per meal"
-        />
-      </FormControl>
+      <SimpleGrid columns={[1, 2]} spacing={4} mb={6}>
+        <FormControl>
+          <FormLabel>Description (English)</FormLabel>
+          <Textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            placeholder="Enter description"
+            rows={4}
+          />
+        </FormControl>
+        
+        <FormControl>
+          <FormLabel>Description (Arabic)</FormLabel>
+          <Textarea
+            name="description_arabic"
+            value={formData.description_arabic}
+            onChange={handleChange}
+            placeholder="أدخل الوصف"
+            dir="rtl"
+            rows={4}
+          />
+        </FormControl>
+      </SimpleGrid>
 
-      <FormControl display="flex" alignItems="center" mb={4}>
-        <FormLabel htmlFor="is_active" mb="0">
-          Active
-        </FormLabel>
-        <Switch
-          id="is_active"
-          name="is_active"
-          isChecked={formData.is_active}
-          onChange={handleChange}
-        />
-      </FormControl>
+      <Box mb={6}>
+        <Heading size="md" mb={4}>Meal Selection</Heading>
+        <Divider mb={4} />
+        {(isLoadingMeals || (initialData?.id && isLoadingPlan)) ? (
+          <Stack spacing={3}>
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} height="60px" borderRadius="md" />
+            ))}
+          </Stack>
+        ) : (
+          <SimpleGrid columns={gridColumns} spacing={4}>
+            {meals.map(meal => (
+              <Box 
+                key={meal.id} 
+                p={3} 
+                borderWidth="1px" 
+                borderRadius="md"
+                bg={formData.meals?.includes(meal.id) ? 'blue.50' : 'transparent'}
+                borderColor={formData.meals?.includes(meal.id) ? 'blue.200' : 'gray.200'}
+              >
+                <Checkbox
+                  isChecked={formData.meals?.includes(meal.id)}
+                  onChange={() => handleMealToggle(meal.id)}
+                  colorScheme="blue"
+                >
+                  {meal.name}
+                </Checkbox>
+                <Text fontSize="sm" color="gray.500" mt={1}>
+                  {meal.category} - ${meal.base_price}
+                </Text>
+              </Box>
+            ))}
+          </SimpleGrid>
+        )}
+      </Box>
+
+      <Box mb={6}>
+        <Heading size="md" mb={4}>Additives</Heading>
+        <Divider mb={4} />
+        {isLoadingItems ? (
+          <Stack spacing={3}>
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} height="60px" borderRadius="md" />
+            ))}
+          </Stack>
+        ) : (
+          <SimpleGrid columns={gridColumns} spacing={4}>
+            {additiveItems.map(item => (
+              <Box 
+                key={item.id} 
+                p={3} 
+                borderWidth="1px" 
+                borderRadius="md"
+                bg={formData.additives?.includes(item.id) ? 'teal.50' : 'transparent'}
+                borderColor={formData.additives?.includes(item.id) ? 'teal.200' : 'gray.200'}
+              >
+                <Checkbox
+                  isChecked={formData.additives?.includes(item.id)}
+                  onChange={() => handleAdditiveToggle(item.id)}
+                  colorScheme="teal"
+                >
+                  {item.name}
+                </Checkbox>
+                <Text fontSize="sm" color="gray.500" mt={1}>
+                  ${item.price}
+                </Text>
+              </Box>
+            ))}
+          </SimpleGrid>
+        )}
+      </Box>
+
+      <SimpleGrid columns={[1, 2]} spacing={4} mb={6}>
+        <FormControl isRequired>
+          <FormLabel>Price per Meal</FormLabel>
+          <Input
+            type="number"
+            name="price_per_meal"
+            value={formData.price_per_meal}
+            onChange={handleChange}
+            min={0}
+          />
+        </FormControl>
+        
+        <FormControl display="flex" alignItems="center">
+          <FormLabel htmlFor="is_active" mb="0">
+            Active Status
+          </FormLabel>
+          <Switch
+            id="is_active"
+            name="is_active"
+            isChecked={formData.is_active}
+            onChange={handleChange}
+            size="lg"
+          />
+        </FormControl>
+      </SimpleGrid>
 
       <Flex justify="flex-end" gap={2} mt={6}>
         <Button 

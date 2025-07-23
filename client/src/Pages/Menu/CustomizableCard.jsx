@@ -17,13 +17,13 @@ import { useI18nContext } from '../../Contexts/I18nContext'
  * Free item counts for each salad section (English and Arabic keys)
  */
 const SALAD_SECTION_FREE_COUNTS = {
-  Protein: { value: 0, key_arabic: 'بروتين' },
+  protein: { value: 0, key_arabic: 'بروتين' },
   Nuts: { value: 1, key_arabic: 'مكسرات' },
   Dressings: { value: 2, key_arabic: 'الصلصات' },
   Fruits: { value: 1, key_arabic: 'الفواكه' },
   Cheese: { value: 0, key_arabic: 'جبن' },
   Greens: { value: 2, key_arabic: 'الخضار الورقية' },
-  Toppings: { value: 3, key_arabic: 'الإضافات' },
+  toppings: { value: 3, key_arabic: 'الإضافات' },
   Vegetables: { value: 4, key_arabic: 'خضروات' },
 }
 

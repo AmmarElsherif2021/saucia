@@ -137,12 +137,12 @@ export const MealCard = ({ meal }) => {
   
   // Responsive values
   const cardWidth = useBreakpointValue({ base: '100%', sm: '280px' });
-  const cardHeight = useBreakpointValue({ base: 'auto', sm: '400px' });
+  const cardHeight = useBreakpointValue({ base: 'auto', sm: '500px' });
   const imageHeight = useBreakpointValue({ base: '150px', sm: '210px' });
   const direction = useBreakpointValue({ base: 'column', sm: 'row' });
   const textSize = useBreakpointValue({ base: 'xs', sm: 'sm' });
   const headingSize = useBreakpointValue({ base: 'sm', sm: 'md' });
-  const badgeSize = useBreakpointValue({ base: 'xs', sm: 'sm' });
+  const badgeSize = useBreakpointValue({ base: 'xs', sm: 'sm', lg: "xs" });
 
   // Extract values from meal object
   const {
@@ -185,7 +185,7 @@ export const MealCard = ({ meal }) => {
         borderWidth="1px"
         borderRadius="lg"
         overflow="hidden"
-        bg={colorMode === 'dark' ? 'gray.700' : 'secondary.500'}
+        bg={colorMode === 'dark' ? 'gray.700' : 'secondary.600'}
         transition="transform 0.3s"
         _hover={{ transform: 'translateY(-5px)' }}
         position="relative"
@@ -228,7 +228,7 @@ export const MealCard = ({ meal }) => {
           <Flex justify="space-between" align="center" mb={2}>
             <Heading 
               size={headingSize} 
-              color="brand.700" 
+              color="brand.800" 
               noOfLines={1}
               flex="1"
               mr={2}

@@ -14,25 +14,18 @@ import {
   Box,
   Badge,
   Heading,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
 } from '@chakra-ui/react'
 import { useState, useEffect, useMemo } from 'react'
 import { WarningIcon } from '@chakra-ui/icons'
+
 /**
  * CustomizableMealModal
  * Modal for selecting and customizing meal items with section-based free allowances and extra charges.
- *
- * Props:
- * - isOpen: boolean - Modal open state
- * - onClose: function - Close handler
- * - meal: object - Meal data (with base_price, name, etc.)
- * - groupedItems: { [section: string]: array } - Items grouped by section/category
- * - isArabic: boolean - Whether to display Arabic text
- * - t: function - Translation function
- * - sectionFreeCounts: { [section: string]: { value: number, key_arabic?: string } }
- * - onConfirm: function(selectedItems, totalPrice) - Confirm handler
- * - unsafeItemIds: array of item IDs that contain user allergens
-  - userAllergies: array of user's allergy names
-  - isItemSafe: function to check if an item is safe
+ * Now renders unsafe items with special warning UI while allowing selection.
  */
 export const CustomizableMealModal = ({
   isOpen,
@@ -49,13 +42,29 @@ export const CustomizableMealModal = ({
 }) => {
   // State: selected items only - total price will be calculated
   const [selectedItems, setSelectedItems] = useState({})
+  const [showAllergenWarning, setShowAllergenWarning] = useState(false)
 
   // Reset state when modal opens/closes or meal changes
   useEffect(() => {
     if (isOpen) {
       setSelectedItems({})
+      setShowAllergenWarning(false)
     }
   }, [isOpen, meal])
+
+  // Check if user has selected any unsafe items
+  const hasSelectedUnsafeItems = useMemo(() => {
+    return Object.keys(selectedItems).some(itemId => 
+      selectedItems[itemId] > 0 && unsafeItemIds.includes(parseInt(itemId))
+    )
+  }, [selectedItems, unsafeItemIds])
+
+  // Show warning when unsafe items are selected
+  useEffect(() => {
+    if (hasSelectedUnsafeItems && !showAllergenWarning) {
+      setShowAllergenWarning(true)
+    }
+  }, [hasSelectedUnsafeItems, showAllergenWarning])
 
   /**
    * Calculate total price based on selected items - using useMemo for performance
@@ -126,8 +135,16 @@ export const CustomizableMealModal = ({
 
   /**
    * Select or deselect an item (toggle, default quantity 1)
+   * Now shows confirmation for unsafe items
    */
   const handleSelectItem = (item) => {
+    const isSafe = isItemSafe(item)
+    
+    // If selecting an unsafe item for the first time, show warning
+    if (!isSafe && !selectedItems[item.id]) {
+      setShowAllergenWarning(true)
+    }
+    
     setSelectedItems((prev) => {
       if (prev[item.id]) {
         const { [item.id]: _, ...rest } = prev
@@ -218,14 +235,8 @@ export const CustomizableMealModal = ({
     }
     return section
   }
-    /**
-    Check if an item contains allergens
-   */
-  const itemHasAllergens = (item) => {
-    return unsafeItemIds.includes(item.id);
-  };
 
-    /**
+  /**
    * Get allergens text for display
    */
   const getAllergenText = (item) => {
@@ -271,7 +282,6 @@ export const CustomizableMealModal = ({
     }
   };
 
-
   // Meal display name
   const mealName = isArabic ? (meal?.name_arabic || meal?.name) : meal?.name
 
@@ -283,11 +293,10 @@ export const CustomizableMealModal = ({
     onConfirm(selectedItems, totalPrice)
   }
 
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
-      <ModalContent bg="white" borderRadius="md" maxW="90vw" maxH="90vh" overflowY="auto">
+      <ModalContent bg="white" pt={6} px={3} borderRadius="md" maxW="90vw" maxH="90vh" overflowY="auto">
         <ModalHeader>
           <Flex justify="space-between" align="center" w="100%">
             <Text fontSize="lg" fontWeight="bold">
@@ -299,9 +308,25 @@ export const CustomizableMealModal = ({
           </Flex>
         </ModalHeader>
         <ModalCloseButton />
-        <ModalBody>
+        <ModalBody p={1} >
+          {/* Allergen Warning Alert */}
+          {showAllergenWarning && hasSelectedUnsafeItems && (
+            <Alert status="warning" mb={4} borderRadius="md">
+              <AlertIcon />
+              <Box>
+                <AlertTitle fontSize="sm">
+                  {t('menuPage.allergenWarningTitle') || 'Allergen Warning!'}
+                </AlertTitle>
+                <AlertDescription fontSize="xs">
+                  {t('menuPage.allergenWarningMessage') || 
+                    'You have selected items that contain allergens you are sensitive to. Please review your selection carefully.'}
+                </AlertDescription>
+              </Box>
+            </Alert>
+          )}
+
           {/* Section free allowance summary */}
-          <Text mb={4} fontSize="sm" color="gray.600">
+          <Text mb={4} px={4} fontSize="sm" color="secondary.800">
             {t('menuPage.selectUpTo')}{' '}
             {Object.entries(sectionFreeCounts).map(([section, data], index, array) => (
               <span key={section}>
@@ -313,14 +338,18 @@ export const CustomizableMealModal = ({
           </Text>
 
           {/* Items grid by section */}
-          <SimpleGrid columns={[1, 2]} spacing={4}>
+          <SimpleGrid columns={[1, 2]} spacing={1}>
             {Object.entries(groupedItems).map(([section, items]) => {
-              const usage = getSectionUsage[section]
-              const chargedAmount = getSectionChargedAmount(section, items)
-              // Only show available items
-              const availableItems = items.filter(item => item.is_available !== false)
-              
-              return (
+            const usage = getSectionUsage[section]
+            const chargedAmount = getSectionChargedAmount(section, items)
+            
+            // Filter available items first - show ALL available items
+            let availableItems = items.filter(item => item.is_available !== false)
+
+            const safeItems = availableItems.filter(item => isItemSafe(item))
+            const unsafeItems = availableItems.filter(item => !isItemSafe(item))
+            
+            return (
                 <Box key={section} mb={6}>
                   {/* Section header and usage badge */}
                   <Flex justify="space-between" align="center" mb={2}>
@@ -361,68 +390,37 @@ export const CustomizableMealModal = ({
                     </Box>
                   )}
 
-                  {/* Items in section */}
-                  {availableItems
-                    .filter(item => {
-                      const displayInfo = getItemDisplayInfo(item);
-                      return displayInfo.isAvailable && displayInfo.isSafe;
-                    })
-                    .map((item) => {
+                  {/* Render safe items first */}
+                  {safeItems.map((item) => {
                     const displayInfo = getItemDisplayInfo(item)
-                    const isDisabled = !displayInfo.isAvailable || !displayInfo.isSafe
+                    const isDisabled = !displayInfo.isAvailable
                     const isSelected = (selectedItems[item.id] || 0) > 0
                     
                     return (
                       <Flex
                         key={item.id}
                         p={4}
-                        borderWidth={1}
+                        borderWidth={2}
                         borderRadius="md"
+                        borderColor={'brand.600'}
                         align="center"
                         justify="space-between"
-                        bg={isSelected ? 'blue.50' : isDisabled ? 'gray.100' : 'white'}
+                        bg={isSelected ? 'brand.100' : isDisabled ? 'gray.100' : 'secondary.200'}
                         onClick={isDisabled ? undefined : () => handleSelectItem(item)}
                         cursor={isDisabled ? 'not-allowed' : 'pointer'}
                         mb={2}
                         opacity={isDisabled ? 0.7 : 1}
-                        position="relative"
                       >
-                        {/* Allergen warning badge */}
-                        {displayInfo.hasAllergens && (
-                          <Badge 
-                            colorScheme="red" 
-                            position="absolute"
-                            top={1}
-                            right={1}
-                            fontSize="xs"
-                            display="flex"
-                            alignItems="center"
-                          >
-                            <WarningIcon mr={1} />
-                            {t('menuPage.unsafe')}
-                          </Badge>
-                        )}
-
                         <Box flex="1">
-                          <Text 
-                            fontWeight="bold"
-                            color={displayInfo.hasAllergens ? 'red.600' : 'inherit'}
-                          >
+                          <Text fontWeight="bold">
                             {displayInfo.name}
                           </Text>
                           
-                          {/* Allergen text */}
-                          {displayInfo.allergenText && (
-                            <Text fontSize="xs" color="red.500" fontStyle="italic">
-                              {displayInfo.allergenText}
-                            </Text>
-                          )}
-                          
                           <Text fontSize="sm" color="gray.600">
                             {displayInfo.price > 0 
-                              ? `+${displayInfo.price.toFixed(2)} ${t('common.currency')}/item` 
+                              ? `+${displayInfo.price.toFixed(2)} ${t('common.currency')}/${t('menuPage.item')}` 
                               : t('menuPage.free')}
-                            {usage && usage.selected >= usage.free && ' (if over limit)'}
+                           
                           </Text>
                           
                           {displayInfo.description && (
@@ -470,6 +468,123 @@ export const CustomizableMealModal = ({
                       </Flex>
                     )
                   })}
+
+                  {/* Render unsafe items with special warning UI */}
+                  {unsafeItems.length > 0 && (
+                    <>
+                      {safeItems.length > 0 && (
+                        <Box my={3}>
+                          <Text fontSize="xs" color="orange.600" fontWeight="bold" textAlign="center">
+                            ⚠️ {t('menuPage.itemsWithAllergens') || 'Items with allergens'} ⚠️
+                          </Text>
+                        </Box>
+                      )}
+                      
+                      {unsafeItems.map((item) => {
+                        const displayInfo = getItemDisplayInfo(item)
+                        const isDisabled = !displayInfo.isAvailable
+                        const isSelected = (selectedItems[item.id] || 0) > 0
+                        
+                        return (
+                          <Flex
+                            key={item.id}
+                            p={4}
+                            borderWidth={2}
+                            borderColor="red.300"
+                            borderRadius="md"
+                            align="center"
+                            justify="space-between"
+                            bg={isSelected ? 'red.50' : isDisabled ? 'gray.100' : 'red.25'}
+                            onClick={isDisabled ? undefined : () => handleSelectItem(item)}
+                            cursor={isDisabled ? 'not-allowed' : 'pointer'}
+                            mb={2}
+                            opacity={isDisabled ? 0.7 : 1}
+                            position="relative"
+                            _hover={!isDisabled ? { bg: isSelected ? 'red.100' : 'red.50' } : {}}
+                          >
+                            {/* Allergen warning badge */}
+                            <Badge 
+                              colorScheme="red" 
+                              position="absolute"
+                              top={1}
+                              right={1}
+                              fontSize="xs"
+                              display="flex"
+                              alignItems="center"
+                            >
+                              <WarningIcon mr={1} />
+                              {t('menuPage.allergen') || 'ALLERGEN'}
+                            </Badge>
+
+                            <Box flex="1" pr={12}>
+                              <Text 
+                                fontWeight="bold"
+                                color="red.700"
+                              >
+                                {displayInfo.name}
+                              </Text>
+                              
+                              {/* Allergen text */}
+                              {displayInfo.allergenText && (
+                                <Text fontSize="xs" color="red.600" fontStyle="italic" fontWeight="semibold">
+                                  {displayInfo.allergenText}
+                                </Text>
+                              )}
+                              
+                              <Text fontSize="sm" color="gray.600">
+                                {displayInfo.price > 0 
+                                  ? `+${displayInfo.price.toFixed(2)} ${t('common.currency')}/item` 
+                                  : t('menuPage.free')}
+                                {usage && usage.selected >= usage.free && ' (if over limit)'}
+                              </Text>
+                              
+                              {displayInfo.description && (
+                                <Text fontSize="xs" color="gray.500" mt={1}>
+                                  {displayInfo.description}
+                                </Text>
+                              )}
+                              
+                              {displayInfo.calories > 0 && (
+                                <Text fontSize="xs" color="gray.500">
+                                  {displayInfo.calories} cal
+                                </Text>
+                              )}
+                            </Box>
+
+                            {/* Quantity controls */}
+                            {isSelected && !isDisabled && (
+                              <Flex
+                                direction={['column', 'column', 'row']}
+                                align="center"
+                                gap={1}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Button
+                                  size="xs"
+                                  onClick={(e) => handleQuantityChange(item.id, 1, e)}
+                                  colorScheme="red"
+                                  variant="outline"
+                                >
+                                  +
+                                </Button>
+                                <Text minW="30px" textAlign="center" fontWeight="bold" color="red.600">
+                                  {selectedItems[item.id]}
+                                </Text>
+                                <Button
+                                  size="xs"
+                                  onClick={(e) => handleQuantityChange(item.id, -1, e)}
+                                  colorScheme="red"
+                                  variant="outline"
+                                >
+                                  -
+                                </Button>
+                              </Flex>
+                            )}
+                          </Flex>
+                        )
+                      })}
+                    </>
+                  )}
                 </Box>
               )
             })}
@@ -486,15 +601,22 @@ export const CustomizableMealModal = ({
             <Tag colorScheme="green">
               {t('menuPage.totalPrice') || 'Total'}: {totalPrice.toFixed(2)} {t('common.currency')}
             </Tag>
-            <Button
+            {hasSelectedUnsafeItems && (
+              <Tag colorScheme="red" size="sm">
+                <WarningIcon mr={1} />
+                {t('menuPage.hasAllergens') || 'Contains Allergens'}
+              </Tag>
+            )}
+            
+          </Flex>
+          <Button
               colorScheme="brand"
               onClick={handleConfirm}
-              ml="auto"
               isDisabled={totalSelectedItems === 0}
+              mx={1}
             >
               {t('menuPage.addToCart') || 'Add to Cart'}
-            </Button>
-          </Flex>
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

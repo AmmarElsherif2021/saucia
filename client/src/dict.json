@@ -806,6 +806,7 @@
         "minimumOrder": "Minimum Order Required"
       },
       "checkout": {
+        "confirmOrder":"confirm order",
         "allergenAlert":"allergen alert",
         "unsafe":"unsafe",
         "restrictedMeals":"restricted meals",
@@ -1700,6 +1701,7 @@
         "minimumOrder": "الحد الأدنى المطلوب للطلب"
       },
       "checkout": {
+        "confirmOrder":"تأكيد الطلب",
         "allergenAlert":"مسبب للحساسية",
         "unsafe":"غير امن",
         "restrictedMeals":"وجبات يوجد بها حساسية",

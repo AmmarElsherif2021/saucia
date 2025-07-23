@@ -466,25 +466,68 @@ export const adminAPI = {
     return fetchList('plans', query);
   },
 
-  // Get plan details with meals
+  // Create plan with meals and additives
+    async createPlanComplete(planData) {
+      const { meals = [], additives = [], ...baseData } = planData;
+      
+      // Create plan
+      const { data: plan, error } = await supabase
+        .from('plans')
+        .insert([{ ...baseData, additives }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Create plan_meals relationships
+      const planMeals = meals.map(mealId => ({
+        plan_id: plan.id,
+        meal_id: mealId,
+        is_substitutable: false
+      }));
+
+      if (planMeals.length) {
+        const { error: mealError } = await supabase
+          .from('plan_meals')
+          .insert(planMeals);
+        
+        if (mealError) throw mealError;
+      }
+
+      return plan;
+    },
+
+    // NEW: Update plan with meals and additives
+    async updatePlanComplete(planId, updateData) {
+      const { meals = [], additives = [], ...baseData } = updateData;
+      
+      // Update plan base data
+      const plan = await this.updatePlan(planId, {
+        ...baseData,
+        additives
+      });
+      
+      // Update meals separately in junction table
+      await this.updatePlanMeals(planId, meals);
+      
+      return plan;
+    },
+
   async getPlanDetails(planId) {
-    const [plan, meals, subscriptions] = await Promise.all([
+    const [plan, planMeals] = await Promise.all([
       fetchSingle('plans', { field: 'id', value: planId }),
       fetchList('plan_meals', { 
         field: 'plan_id', 
         value: planId,
-        select: `*, meals(id, name, name_arabic, image_url, calories, protein_g)`,
-        orderBy: 'week_number'
-      }),
-      fetchList('user_subscriptions', { 
-        field: 'plan_id', 
-        value: planId,
-        select: `id, user_id, status, start_date, end_date, user_profiles(id, display_name)`,
-        limit: 10
+        select: `meal_id` // Make sure to select meal_id
       })
     ]);
 
-    return { plan, meals, subscriptions };
+    return {
+      ...plan,
+      meals: planMeals.map(pm => pm.meal_id), // Return array of IDs
+      additives: plan.additives || []
+    };
   },
 
   // Create new plan
@@ -513,25 +556,54 @@ export const adminAPI = {
     return deleteRecord('plans', planId);
   },
 
-  // Update plan status
-  async updatePlanStatus(planId, isActive) {
-    return updateRecord('plans', planId, {
-      is_active: isActive,
-      updated_at: new Date().toISOString()
+    // Update plan status
+    async updatePlanStatus(planId, isActive) {
+      return updateRecord('plans', planId, {
+        is_active: isActive,
+        updated_at: new Date().toISOString()
+      });
+    },
+
+    // Add meal to plan
+    async addMealToPlan(planId, mealId, weekNumber, dayOfWeek) {
+      return createRecord('plan_meals', {
+        plan_id: planId,
+        meal_id: mealId,
+        week_number: weekNumber,
+        day_of_week: dayOfWeek,
+        created_at: new Date().toISOString()
+      });
+    },
+    async getPlanMeals(planId) {
+    return fetchList('plan_meals', {
+      field: 'plan_id',
+      value: planId,
+      select: 'meal_id, is_substitutable'
     });
   },
 
-  // Add meal to plan
-  async addMealToPlan(planId, mealId, weekNumber, dayOfWeek) {
-    return createRecord('plan_meals', {
+  // Update plan meals in junction table
+  async updatePlanMeals(planId, meals) {
+    // Delete existing relationships
+    await supabase
+      .from('plan_meals')
+      .delete()
+      .eq('plan_id', planId);
+
+    // Insert new relationships
+    const newRelations = meals.map(mealId => ({
       plan_id: planId,
       meal_id: mealId,
-      week_number: weekNumber,
-      day_of_week: dayOfWeek,
-      created_at: new Date().toISOString()
-    });
-  },
+      is_substitutable: false // Default value
+    }));
 
+    const { error } = await supabase
+      .from('plan_meals')
+      .insert(newRelations);
+    
+    if (error) throw error;
+    return { success: true };
+  },
   // Remove meal from plan
   async removeMealFromPlan(planId, mealId, weekNumber, dayOfWeek) {
     const { error } = await supabase
@@ -547,8 +619,46 @@ export const adminAPI = {
   },
 
   // ===== SUBSCRIPTION MANAGEMENT =====
+  //create subscription
+  async createSubscription(subscriptionData) {
+    return createRecord('user_subscriptions', {
+      ...subscriptionData,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+   });
+ },
+ //Get subscription details
+ async getSubscriptionDetails(subscriptionId) {
+  const subscription = await fetchSingle('user_subscriptions', {
+    field: 'id',
+    value: subscriptionId,
+    select: `*,
+             user_profiles(id, display_name, email),
+             plans(id, title, title_arabic)`
+  });
 
-  // Get all subscriptions
+  // Fetch meal details
+  const mealsDetails = await Promise.all(
+    (subscription.meals || []).map(mealId =>
+      fetchSingle('meals', { field: 'id', value: mealId })
+    )
+  );
+
+  // Fetch additive details
+  const additivesDetails = await Promise.all(
+    (subscription.additives || []).map(itemId =>
+      fetchSingle('items', { field: 'id', value: itemId })
+    )
+  );
+
+  return {
+    ...subscription,
+    mealsDetails,
+    additivesDetails
+  };
+}
+,
+ // Get all subscriptions
   async getAllSubscriptions(options = {}) {
     const query = {
       select: `
@@ -578,12 +688,10 @@ export const adminAPI = {
 
   // Update subscription
   async updateSubscription(subscriptionId, updateData) {
-    const dataToUpdate = {
+    return updateRecord('user_subscriptions', subscriptionId, {
       ...updateData,
       updated_at: new Date().toISOString()
-    };
-
-    return updateRecord('user_subscriptions', subscriptionId, dataToUpdate);
+    });
   },
 
   // ===== ORDER MANAGEMENT =====

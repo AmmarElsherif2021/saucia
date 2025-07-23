@@ -31,7 +31,8 @@ carbs_g: integer	int4
 fat_g: integer	int4		
 max_free_per_meal: integer	int4		
 image_url: text	text		
-is_available: boolean	bool		
+is_available: boolean	bool	
+is_additive: boolean	bool		
 sort_order: integer	int4		
 created_at: timestamp with time zone	timestamptz		
 updated_at: timestamp with time zone	timestamptz
@@ -157,8 +158,6 @@ updated_at: timestamp with time zone	timestamptz
 id: uuid	uuid		
 plan_id:integer	int4		
 meal_id: integer	int4		
-meal_type: USER-DEFINED	meal_type_enum		
-day_of_week: integer	int4		
 is_substitutable: boolean	bool		
 created_at: timestamp with time zone	timestamptz
 
@@ -176,7 +175,8 @@ protein: integer	int4
 carb: integer	int4		
 avatar_url: text	text		
 is_active: boolean	bool		
-sort_order: integer	int4		
+sort_order: integer	int4
+additives int4[] //references items id		
 created_at: timestamp with time zone	timestamptz		
 updated_at: timestamp with time zone	timestamptz		
 duration_days: bigint	int8
@@ -294,5 +294,6 @@ pause_reason: text	text
 resume_date: date	date		
 next_delivery_date: date	date
 meals: [int4] 'foreign key'	// refers to meals IDs chosen by user
+additives: int4[] //references items idchosen by user for each meal
 created_at: timestamp with time zone	timestamptz		
 updated_at: timestamp with time zone	timestamptz

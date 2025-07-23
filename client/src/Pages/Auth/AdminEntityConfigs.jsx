@@ -181,6 +181,8 @@ export const useEntityConfigs = () => {
         avatar_url: '',
         soaps: [],
         snacks: [],
+        meals: [], 
+        additives: [], 
         is_active: true
       },
       columns: [
@@ -408,13 +410,27 @@ export const useEntityConfigs = () => {
         end_date: '',
         status: 'active',
         price: 0,
-        auto_renew: true
+        auto_renew: true,
+        meals: [],
+        additives: []
       },
       columns: [
         { key: 'id', label: t('admin.ID'), width: '10%' },
         { key: 'userId', label: t('admin.User ID'), width: '12%' },
         { key: 'planId', label: t('admin.Plan ID'), width: '12%' },
         { key: 'plan_title', label: t('admin.Plan Name'), width: '15%' },
+        {
+          key: 'meals',
+          label: t('admin.Meals'),
+          width: '10%',
+          render: value => value?.length ? `${value.length} meals` : t('admin.None')
+        },
+        {
+          key: 'additives',
+          label: t('admin.Additives'),
+          width: '10%',
+          render: value => value?.length ? `${value.length} items` : t('admin.None')
+        },
         {
           key: 'status',
           label: t('admin.Status'),
