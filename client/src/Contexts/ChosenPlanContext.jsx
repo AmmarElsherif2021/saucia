@@ -68,14 +68,15 @@ export const ChosenPlanProvider = ({ children }) => {
     
     // Meal selections
     meals: [],
-    
+    plan_meals: [], 
+    additives: [],
     // UI state for term selection - Set default to null initially
     selected_term: null,
     
     // Store the chosen plan directly
     plan: null,
   });
-
+  
   // Calculate derived values from plan and selected term
   const calculateDerivedValues = useCallback((plan, selectedTerm, currentData = {}) => {
     if (!plan || !selectedTerm) return {};

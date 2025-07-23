@@ -1197,19 +1197,7 @@ export const PlanCard = ({ plan }) => {
         p={10}
         textAlign={isArabic ? 'right' : 'left'}
       >
-        {/* Premium badge */}
-        <Badge
-          colorScheme="brand"
-          position="absolute"
-          top={-12}
-          right={6}
-          px={3}
-          py={1}
-          borderRadius="full"
-          fontSize="sm"
-        >
-          Premium
-        </Badge>
+        
 
         {/* Plan name */}
         <Heading

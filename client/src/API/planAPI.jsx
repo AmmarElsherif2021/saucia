@@ -33,6 +33,21 @@ export const plansAPI = {
     if (error) throw error;
     return data;
   },
+// get plan meals
+  async getPlanMeals(planId) {
+    const { data, error } = await supabase
+      .from('plan_meals')
+      .select(`
+        id,
+        meal_id,
+        is_substitutable,
+        meals (id, name, name_arabic, description, image_url)
+      `)
+      .eq('plan_id', planId);
+
+    if (error) throw error;
+    return data;
+  },
 
   // User endpoints - require user authentication
   async getUserSubscriptions() {
@@ -76,7 +91,9 @@ export const plansAPI = {
         end_date: endDate.toISOString(),
         price_per_meal: plan.price_per_meal,
         meals_per_week: plan.meals_per_week,
-        status: 'active'
+        status: 'active',
+        meals: subscriptionData.meals || [],
+        additives: subscriptionData.additives || [] 
       });
     
     if (error) throw error;
@@ -249,19 +266,25 @@ export const plansAPI = {
     return data;
   },
 
-  async getSubscriptionById(subscriptionId) {
+
+
+    async getSubscriptionById(subscriptionId) {
     await this.verifyAdmin();
 
     const { data, error } = await supabase
       .from('user_subscriptions')
-      .select('*')
+      .select(`
+        *,
+        meals:meals (id, name, name_arabic),
+        additives:additives (id, name, name_arabic)
+      `)
       .eq('id', subscriptionId)
       .single();
     
     if (error) throw error;
     return data;
   },
-
+  
   async updateSubscriptionStatus(subscriptionId, status, notes = '') {
     await this.verifyAdmin();
 

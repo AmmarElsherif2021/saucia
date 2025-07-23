@@ -1,5 +1,5 @@
-import { useUserMenuFiltering } from '../../Hooks/setUserMenuFiltering'
-import { useEffect, useState, useMemo } from 'react'
+import { useUserMenuFiltering } from '../../Hooks/setUserMenuFiltering';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   Modal,
   ModalOverlay,
@@ -21,48 +21,98 @@ import {
   Icon,
   Tooltip,
   Badge,
-} from '@chakra-ui/react'
-import { WarningIcon, CheckIcon } from '@chakra-ui/icons'
-import { useI18nContext } from '../../Contexts/I18nContext'
-import { useAuthContext } from '../../Contexts/AuthContext'
-import { useChosenPlanContext } from '../../Contexts/ChosenPlanContext'
-
+  Select,
+  Skeleton,
+  HStack,
+  CloseButton
+} from '@chakra-ui/react';
+import { WarningIcon, CheckIcon } from '@chakra-ui/icons';
+import { useI18nContext } from '../../Contexts/I18nContext';
+import { useAuthContext } from '../../Contexts/AuthContext';
+import { useChosenPlanContext } from '../../Contexts/ChosenPlanContext';
+import { supabase } from '../../../supabaseClient';
+import { usePlans } from '../../Hooks/usePlans';
 const ConfirmPlanModal = ({
   isOpen,
   onClose,
-  handleSelectMeals,
-  signatureSalads,
   isSubmitting,
   t,
   MealPlanCard,
   today,
   calculateDeliveryDate,
 }) => {
-  const { currentLanguage } = useI18nContext()
-  const { user } = useAuthContext()
+  const { currentLanguage } = useI18nContext();
+  const { user } = useAuthContext();
   const {
     subscriptionData,
     addMeal,
     removeMeal,
     chosenPlan: userPlan,
-  } = useChosenPlanContext() 
+    updateSubscriptionData
+    
+  } = useChosenPlanContext();
   
   // Use the filtering hook
   const { 
     isMealSafe, 
-    getMealAllergens, // Use the corrected function from the hook
+    getMealAllergens,
     userAllergies, 
     isLoadingAllergies,
     unsafeMeals 
-  } = useUserMenuFiltering()
+  } = useUserMenuFiltering();
   
-  const toast = useToast()
-  
-  const isArabic = currentLanguage === 'ar'
+  //plan hook
+    const { 
+    additiveItems, 
+    fetchAdditiveItems, 
+    loading: plansLoading 
+  } = usePlans();
+  const toast = useToast();
+  const isArabic = currentLanguage === 'ar';
   const selectedMeals = subscriptionData.meals || [];
 
+  // State for plan meals and additives
+  const [planMeals, setPlanMeals] = useState([]);
+  // Fetch plan meals and additives when modal opens
+  useEffect(() => {
+    if (isOpen && userPlan?.id) {
+      const fetchPlanData = async () => {
+        try {
+          // Fetch meals for this plan
+          const { data: mealsData } = await supabase
+            .from('plan_meals')
+            .select('meal_id, meals(*)')
+            .eq('plan_id', userPlan.id);
+          
+          if (mealsData) { 
+            setPlanMeals(mealsData.map(item => item.meals));
+          }
+          
+          // Fetch additive items using the hook
+          if (userPlan?.additives && userPlan?.additives?.length) {
+            await fetchAdditiveItems(userPlan.additives);
+          }
+        } catch (error) {
+          console.error('Failed to load plan data:', error);
+          toast({
+            title: t('checkout.loadError') || 'Data Error',
+            description: t('checkout.planDataFailed') || 'Failed to load plan information',
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+        }
+      };
+      
+      fetchPlanData();
+    }
+  }, [isOpen, userPlan?.id, fetchAdditiveItems]);
 
-  // Format dates from context
+  // Update the loading condition to include plans loading
+  const isLoadingAdditives = plansLoading;
+
+
+  // Format dates
   const formattedStartDate = useMemo(() => {
     return subscriptionData?.start_date 
       ? new Date(subscriptionData.start_date).toLocaleDateString(currentLanguage, {
@@ -70,8 +120,8 @@ const ConfirmPlanModal = ({
           month: 'long',
           day: 'numeric'
         })
-      : ''
-  }, [subscriptionData?.start_date, currentLanguage])
+      : '';
+  }, [subscriptionData?.start_date, currentLanguage]);
 
   const formattedEndDate = useMemo(() => {
     return subscriptionData?.end_date 
@@ -80,32 +130,30 @@ const ConfirmPlanModal = ({
           month: 'long',
           day: 'numeric'
         })
-      : ''
-  }, [subscriptionData?.end_date, currentLanguage])
+      : '';
+  }, [subscriptionData?.end_date, currentLanguage]);
 
   // Separate meals into safe and unsafe categories
   const { safeMeals, unsafeMealsFiltered } = useMemo(() => {
-    if (!signatureSalads?.length) {
-      return { safeMeals: [], unsafeMealsFiltered: [] }
+    if (!planMeals?.length) {
+      return { safeMeals: [], unsafeMealsFiltered: [] };
     }
 
-    //console.log('🍽️ Filtering meals for safety...');
-    const safe = []
-    const unsafe = []
+    const safe = [];
+    const unsafe = [];
 
-    signatureSalads.forEach(meal => {
+    planMeals.forEach(meal => {
       if (isMealSafe(meal)) {
-        safe.push(meal)
+        safe.push(meal);
       } else {
-        unsafe.push(meal)
+        unsafe.push(meal);
       }
-    })
+    });
 
-    //console.log(`✅ Safe meals: ${safe.length}, ❌ Unsafe meals: ${unsafe.length}`);
-    return { safeMeals: safe, unsafeMealsFiltered: unsafe }
-  }, [signatureSalads, isMealSafe])
+    return { safeMeals: safe, unsafeMealsFiltered: unsafe };
+  }, [planMeals, isMealSafe]);
 
-  // Enhanced MealPlanCard wrapper with allergen awareness
+  // Enhanced MealPlanCard with additive selector
   const AllergenAwareMealPlanCard = ({
     meal,
     index,
@@ -114,14 +162,22 @@ const ConfirmPlanModal = ({
     showDeliveryDate = false,
     deliveryDate = null,
     showAllergenBadge = false,
+    isSelected = false,
+    selectedAdditives = [],
+    onAddAdditive = () => {},
+    onRemoveAdditive = () => {},
   }) => {
-    const isUnsafe = !isMealSafe(meal)
-    const mealAllergens = getMealAllergens(meal) // Use the hook's function
-
-    //console.log(`🔍 Rendering meal card: "${meal?.name || meal?.name_arabic || 'Unknown'}", Safe: ${!isUnsafe}, Allergens: ${mealAllergens.length}`);
+    const isUnsafe = !isMealSafe(meal);
+    const mealAllergens = getMealAllergens(meal);
 
     return (
-      <Box position="relative">
+      <Box 
+        position="relative" 
+        borderWidth="1px"
+        borderRadius="md"
+        p={3}
+        bg={isSelected ? "brand.50" : "white"}
+      >
         {/* Safety Badge */}
         {showAllergenBadge && (
           <Badge
@@ -143,7 +199,7 @@ const ConfirmPlanModal = ({
           </Badge>
         )}
 
-        {/* Allergen Warning Overlay for unsafe meals */}
+        {/* Allergen Warning Overlay */}
         {isUnsafe && (
           <Box
             position="absolute"
@@ -187,22 +243,22 @@ const ConfirmPlanModal = ({
           filter={isUnsafe ? 'grayscale(50%)' : 'none'}
           pointerEvents={isUnsafe ? 'none' : 'auto'}
           transition="all 0.2s"
-          border={isUnsafe ? "2px solid" : "1px solid"}
-          borderColor={isUnsafe ? "red.300" : "gray.200"}
+          border={isUnsafe ? "2px solid" : "none"}
+          borderColor={isUnsafe ? "red.300" : "transparent"}
           borderRadius="md"
         >
           <MealPlanCard
-          key={index}
-          meal={meal}
-          index={index}
-          onChoose={isUnsafe ? undefined : onChoose}
-          onRemove={onRemove}
-          isArabic={isArabic}
-          t={t}
+            key={index}
+            meal={meal}
+            index={index}
+            onChoose={isUnsafe ? undefined : onChoose}
+            onRemove={onRemove}
+            isArabic={isArabic}
+            t={t}
           />
         </Box>
 
-        {/* Allergen Details for unsafe meals */}
+        {/* Allergen Details */}
         {isUnsafe && mealAllergens.length > 0 && (
           <Box 
             mt={2} 
@@ -233,35 +289,101 @@ const ConfirmPlanModal = ({
         {/* Delivery Date */}
         {showDeliveryDate && deliveryDate && (
           <Text fontSize="xs" textAlign="center" mt={2} color="gray.500">
-            {deliveryDate.toLocaleDateString('en-US', {
+            {deliveryDate.toLocaleDateString(currentLanguage, {
               weekday: 'short',
               month: 'short',
               day: 'numeric',
             })}
           </Text>
         )}
-      </Box>
-    )
-  }
-  // set threshold
-  const maxSelectable = subscriptionData?.total_meals || 0
-// Handle meal selection with validation
-const handleMealSelection = (meal) => {
-  // Check allergen restrictions using the hook
-  if (!isMealSafe(meal)) {
-    toast({
-      title: t('checkout.allergenNotice') || 'Allergen Warning',
-      description: t('checkout.allergenMealWarning') || 
-        'This meal contains allergens you are sensitive to and cannot be selected.',
-      status: 'error',
-      duration: 5000,
-      isClosable: true,
-    });
-    return;
-  }
 
-  // Check meal count limit 
-  if (selectedMeals.length >= maxSelectable) {
+        {/* Additive Selector */}
+        {isSelected && additiveItems?.length > 0 && (
+          <Box mt={3}>
+            <Text fontSize="sm" fontWeight="bold" mb={2}>
+              {t('checkout.addAdditives') || 'Add extras:'}
+            </Text>
+            
+            {isLoadingAdditives ? (
+              <Skeleton height="40px" borderRadius="md" />
+            ) : (
+              <Select 
+                placeholder={t('checkout.selectAdditives') || "Select additives..."}
+                size="sm"
+                value=""
+                onChange={(e) => {
+                  const itemId = parseInt(e.target.value);
+                  if (itemId) onAddAdditive(itemId);
+                }}
+              >
+                {additiveItems.map(item => (
+                  <option 
+                    key={item.id} 
+                    value={item.id}
+                    disabled={selectedAdditives.includes(item.id)}
+                  >
+                    {isArabic ? item.name_arabic : item.name}
+                    {item.price > 0 && ` (+${item.price.toFixed(2)})`}
+                  </option>
+                ))}
+              </Select>
+            )}
+            
+            {selectedAdditives.length > 0 && (
+              <Flex wrap="wrap" gap={2} mt={3}>
+                {selectedAdditives.map(itemId => {
+                  const item = additiveItems.find(a => a.id === itemId);
+                  if (!item) return null;
+                  
+                  return (
+                    <Badge 
+                      key={itemId}
+                      colorScheme="blue"
+                      variant="subtle"
+                      px={2}
+                      py={1}
+                      borderRadius="md"
+                      display="flex"
+                      alignItems="center"
+                    >
+                      {isArabic ? item.name_arabic : item.name}
+                      {item.price > 0 && ` (${item.price.toFixed(2)})`}
+                      <CloseButton 
+                        size="sm" 
+                        ml={2} 
+                        onClick={() => onRemoveAdditive(itemId)} 
+                      />
+                    </Badge>
+                  );
+                })}
+              </Flex>
+            )}
+          </Box>
+        )}
+      </Box>
+    );
+  };
+
+  // Meal selection threshold
+  const maxSelectable = subscriptionData?.total_meals || 0;
+
+  // Handle meal selection with validation
+  const handleMealSelection = (meal) => {
+    // Check allergen restrictions
+    if (!isMealSafe(meal)) {
+      toast({
+        title: t('checkout.allergenNotice') || 'Allergen Warning',
+        description: t('checkout.allergenMealWarning') || 
+          'This meal contains allergens you are sensitive to and cannot be selected.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // Check meal count limit 
+    if (selectedMeals.length >= maxSelectable) {
       toast({
         title: t('checkout.planLimitReachedTitle') || 'Plan Limit Reached',
         description: t('checkout.planLimitReachedDescription') || 
@@ -273,27 +395,87 @@ const handleMealSelection = (meal) => {
       return;
     }
 
-  // Calculate delivery date (using the next available slot)
-  const deliveryDate = calculateDeliveryDate(today, selectedMeals.length);
-  const remainingAfterAdd = maxSelectable - selectedMeals.length - 1;
+    // Calculate delivery date
+    const deliveryDate = calculateDeliveryDate(today, selectedMeals.length);
+    const remainingAfterAdd = maxSelectable - selectedMeals.length - 1;
 
-  // Show success message
-  toast({
-    title: t('checkout.mealAddedTitle') || 'Meal Added',
-    description: 
-      `${isArabic ? meal.name_arabic : meal.name}-${deliveryDate.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-      })}.${isArabic?'الوجبات المتبقية':'meals remaining'} ${remainingAfterAdd}.`,
-    status: 'success',
-    duration: 3000,
-    isClosable: true,
-  });
+    // Show success message
+    toast({
+      title: t('checkout.mealAddedTitle') || 'Meal Added',
+      description: 
+        `${isArabic ? meal.name_arabic : meal.name} - ${deliveryDate.toLocaleDateString('en-US', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+        })}. ${isArabic ? 'الوجبات المتبقية' : 'Meals remaining'} ${remainingAfterAdd}.`,
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
 
-  // Add meal to selection
-  addMeal(meal.id);
-};
+    // Add meal to selection
+    addMeal(meal.id);
+  };
+
+  // Handle additive selection
+  const handleAddAdditive = useCallback((mealIndex, itemId) => {
+    const currentAdditives = [...(subscriptionData.additives || [])];
+    
+    // Initialize additives array if needed
+    if (!currentAdditives[mealIndex]) currentAdditives[mealIndex] = [];
+    
+    // Add additive if not already present
+    if (!currentAdditives[mealIndex].includes(itemId)) {
+      currentAdditives[mealIndex] = [...currentAdditives[mealIndex], itemId];
+      updateSubscriptionData('additives', currentAdditives);
+    }
+  }, [subscriptionData.additives, updateSubscriptionData]);
+
+  // Handle additive removal
+  const handleRemoveAdditive = useCallback((mealIndex, itemId) => {
+    const currentAdditives = [...(subscriptionData.additives || [])];
+    
+    if (currentAdditives[mealIndex]) {
+      currentAdditives[mealIndex] = currentAdditives[mealIndex].filter(id => id !== itemId);
+      updateSubscriptionData('additives', currentAdditives);
+    }
+  }, [subscriptionData.additives, updateSubscriptionData]);
+
+  // Handle subscription confirmation
+  const handleConfirmSubscription = async () => {
+    try {
+      // Create subscription with selected meals and additives
+      const subscription = {
+        ...subscriptionData,
+        meals: selectedMeals,
+        additives: subscriptionData.additives || []
+      };
+
+      // This would call your API via context or hook
+      // await subscribeToPlan(userPlan.id, subscription);
+      
+      toast({
+        title: t('checkout.subscriptionSuccess') || 'Subscription Created!',
+        description: t('checkout.subscriptionCreated') || 
+          'Your meal plan subscription has been successfully created.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      
+      onClose();
+    } catch (error) {
+      console.error('Subscription error:', error);
+      toast({
+        title: t('checkout.subscriptionError') || 'Subscription Failed',
+        description: error.message || t('checkout.subscriptionFailed') || 
+          'Failed to create your subscription. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
 
   // Plan details section
   const PlanDetailsSection = () => (
@@ -318,14 +500,14 @@ const handleMealSelection = (meal) => {
           <Text fontWeight="bold">{formattedEndDate}</Text>
         </Flex>
         
-        {userPlan?.total_meals && (
-        <Flex justify="space-between">
-          <Text color="gray.600">{t('checkout.remainingMeals') || 'Remaining Meals'}</Text>
-          <Text fontWeight="bold" color="brand.500">
-            {maxSelectable - selectedMeals.length} / {maxSelectable}
-          </Text>
-        </Flex>
-      )}
+        {maxSelectable > 0 && (
+          <Flex justify="space-between">
+            <Text color="gray.600">{t('checkout.remainingMeals') || 'Remaining Meals'}</Text>
+            <Text fontWeight="bold" color="brand.500">
+              {maxSelectable - selectedMeals.length} / {maxSelectable}
+            </Text>
+          </Flex>
+        )}
 
         {/* Allergen Summary */}
         {userAllergies.length > 0 && (
@@ -344,7 +526,7 @@ const handleMealSelection = (meal) => {
         )}
       </VStack>
     </Box>
-  )
+  );
 
   // Safe meals section
   const SafeMealsSection = () => (
@@ -359,10 +541,10 @@ const handleMealSelection = (meal) => {
         <SimpleGrid columns={{ base: 2, md: 3, lg: 3 }} spacing={4}>
           {safeMeals.map((meal, index) => (
             <AllergenAwareMealPlanCard
-              key={meal.id || index}
+              key={`safe-${meal.id || index}`}
               meal={meal}
-              index={meal.id || index}
-              onRemove= {false}
+              index={index}
+              onRemove={false}
               onChoose={handleMealSelection}
               showAllergenBadge={true}
             />
@@ -380,9 +562,9 @@ const handleMealSelection = (meal) => {
         </Alert>
       )}
     </Box>
-  )
+  );
 
-  // Unsafe meals section (for reference/display only)
+  // Unsafe meals section
   const UnsafeMealsSection = () => (
     unsafeMealsFiltered.length > 0 && (
       <Box mt={6}>
@@ -397,7 +579,7 @@ const handleMealSelection = (meal) => {
             <AllergenAwareMealPlanCard
               key={`unsafe-${meal.id || index}`}
               meal={meal}
-              index={meal.id || index}
+              index={index}
               showAllergenBadge={true}
               onRemove={false}
             />
@@ -405,54 +587,57 @@ const handleMealSelection = (meal) => {
         </SimpleGrid>
       </Box>
     )
-  )
+  );
 
-  // Available meals section (organized by safety)
+  // Available meals section
   const AvailableMealsSection = () => (
-    <Box mt={1} mb={1} h={'60vh'} bg={'secondary.400'} overflowY="auto" overflowX="hidden" p={4}>
+    <Box mt={1} mb={1} h={'60vh'} bg={'gray.50'} overflowY="auto" overflowX="hidden" p={4} borderRadius="md">
       <SafeMealsSection />
       <UnsafeMealsSection />
     </Box>
-  )
+  );
 
   // Selected meals section
   const SelectedMealsSection = () => (
     selectedMeals.length > 0 && (
-      <Box>
+      <Box mt={6}>
         <Heading size="lg" mb={4}>
           {t('checkout.selectedMeals') || 'Selected Meals'}
         </Heading>
         
-        <SimpleGrid columns={{ base: 2, md: 3, lg: 4 }} spacing={1}>
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
           {selectedMeals.map((mealId, index) => {
-            const matchingMeals = signatureSalads.filter(m => m.id === mealId)
-            const meal = matchingMeals.length > 0 ? matchingMeals[0] : null
+            const meal = planMeals.find(m => m.id === mealId);
+            if (!meal) return null;
 
-            if (!meal) return null
-
-            const deliveryDate = calculateDeliveryDate(today, index)
+            const deliveryDate = calculateDeliveryDate(today, index);
+            const additives = subscriptionData.additives?.[index] || [];
+            
             return (
               <AllergenAwareMealPlanCard
-                key={`${mealId}+${index}`}
+                key={`selected-${mealId}-${index}`}
                 meal={meal}
                 index={index}
                 showDeliveryDate={true}
                 deliveryDate={deliveryDate}
                 showAllergenBadge={true}
+                isSelected={true}
+                selectedAdditives={additives}
+                onAddAdditive={(itemId) => handleAddAdditive(index, itemId)}
+                onRemoveAdditive={(itemId) => handleRemoveAdditive(index, itemId)}
                 onRemove={() => removeMeal(index)}
               />
-            )
+            );
           })}
         </SimpleGrid>
       </Box>
     )
-  )
+  );
 
   // Check if user can proceed with subscription
   const canConfirmSubscription = useMemo(() => {
     return selectedMeals.length === maxSelectable;
   }, [selectedMeals.length, maxSelectable]);
-
 
   if (isLoadingAllergies) {
     return (
@@ -464,13 +649,13 @@ const handleMealSelection = (meal) => {
           </ModalBody>
         </ModalContent>
       </Modal>
-    )
+    );
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} scrollBehavior="inside">
+    <Modal isOpen={isOpen} onClose={onClose} scrollBehavior="inside" size="full">
       <ModalOverlay />
-      <ModalContent maxW="90vw" maxH="96vh" py={1} px={1} mt={2}>
+      <ModalContent maxW="95vw" maxH="95vh" py={1} px={1} mt={2}>
         <ModalHeader borderBottom="1px" borderColor="gray.200">
           <Heading size="md">{t('checkout.confirmSubscription') || 'Confirm Your Subscription'}</Heading>
         </ModalHeader>
@@ -496,7 +681,7 @@ const handleMealSelection = (meal) => {
               </Alert>
             )}
             
-            {/* Available Meals (Safe and Unsafe) */}
+            {/* Available Meals */}
             <AvailableMealsSection />
             
             {/* Selected Meals */}
@@ -514,15 +699,15 @@ const handleMealSelection = (meal) => {
         </ModalBody>
         
         <ModalFooter borderTop="1px" borderColor="gray.200" gap={3}>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} isDisabled={isSubmitting}>
             {t('checkout.back') || 'Back'}
           </Button>
           
           <Button
             colorScheme="brand"
-            onClick={onClose}
+            onClick={handleConfirmSubscription}
             isLoading={isSubmitting}
-            isDisabled={!canConfirmSubscription}
+            isDisabled={!canConfirmSubscription || isSubmitting}
             loadingText={t('checkout.processing') || 'Processing...'}
           >
             {t('checkout.confirmAndPay') || 'Confirm & Pay'}
@@ -530,7 +715,7 @@ const handleMealSelection = (meal) => {
         </ModalFooter>
       </ModalContent>
     </Modal>
-  )
-}
+  );
+};
 
-export default ConfirmPlanModal
+export default ConfirmPlanModal;

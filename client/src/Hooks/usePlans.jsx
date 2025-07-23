@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { plansAPI } from '../API/planAPI';
-
+import { supabase } from '../../supabaseClient';
 /**
  * Custom hook for managing subscription plans
  * Aligned with the plansAPI implementation
@@ -10,6 +10,35 @@ export function usePlans() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [additiveItems, setAdditiveItems] = useState([]);
+
+// Add this new function to fetch additives
+const fetchAdditiveItems = useCallback(async (additiveIds) => {
+  if (!additiveIds || additiveIds.length === 0) {
+    setAdditiveItems([]);
+    return [];
+  }
+  
+  setLoading(true);
+  setError(null);
+  try {
+    const { data: additiveData } = await supabase
+      .from('items')
+      .select('*')
+      .in('id', additiveIds)
+      .eq('is_additive', true);
+    
+    const items = additiveData || [];
+    setAdditiveItems(items);
+    return items;
+  } catch (err) {
+    console.error('Error fetching additive items:', err);
+    setError(err);
+    throw err;
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   // Public plan operations (no auth required)
   const fetchPlans = useCallback(async (queryParams = {}) => {
@@ -69,24 +98,6 @@ export function usePlans() {
       return data;
     } catch (err) {
       console.error('Error fetching user subscriptions:', err);
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const subscribeToPlan = useCallback(async (planId, subscriptionData) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const newSubscription = await plansAPI.subscribeToPlan(planId, subscriptionData);
-      if (newSubscription) {
-        setSubscriptions(prev => [...prev, newSubscription]);
-      }
-      return newSubscription;
-    } catch (err) {
-      console.error('Error subscribing to plan:', err);
       setError(err);
       throw err;
     } finally {
@@ -348,20 +359,6 @@ export function usePlans() {
     }
   }, []);
 
-  const getSubscriptionById = useCallback(async (subscriptionId) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await plansAPI.getSubscriptionById(subscriptionId);
-      return data;
-    } catch (err) {
-      console.error('Error fetching subscription:', err);
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   const updateSubscriptionStatus = useCallback(async (subscriptionId, status, notes = '') => {
     setLoading(true);
@@ -489,7 +486,65 @@ export function usePlans() {
       plan.meals_per_week <= maxMeals
     );
   }, [plans]);
+  
+  // Add new function to fetch plan meals
+    const fetchPlanMeals = useCallback(async (planId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await plansAPI.getPlanMeals(planId);
+      return data;
+    } catch (err) {
+      console.error('Error fetching plan meals:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  // Update subscribeToPlan to handle meals
+  const subscribeToPlan = useCallback(async (planId, subscriptionData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Include meals and additives in subscription
+      const newSubscription = await plansAPI.subscribeToPlan(
+        planId, 
+        {
+          ...subscriptionData,
+          meals: subscriptionData.meals || [],
+          additives: subscriptionData.additives || []
+        }
+      );
+      
+      if (newSubscription) {
+        setSubscriptions(prev => [...prev, newSubscription]);
+      }
+      return newSubscription;
+    } catch (err) {
+      console.error('Error subscribing to plan:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
+  // Update getSubscriptionById to include meals
+  const getSubscriptionById = useCallback(async (subscriptionId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await plansAPI.getSubscriptionById(subscriptionId);
+      return data;
+    } catch (err) {
+      console.error('Error fetching subscription:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
   // Helper functions for managing subscriptions
   const getActiveSubscriptions = useCallback(() => {
     return subscriptions.filter(sub => sub.status === 'active');
@@ -529,8 +584,10 @@ export function usePlans() {
     fetchPlans,
     fetchPlanById,
     fetchFeaturedPlans,
-    
+    fetchPlanMeals,
+    fetchAdditiveItems,
     // User subscription operations
+    getSubscriptionById,
     fetchUserSubscriptions,
     subscribeToPlan,
     updateSubscription,
@@ -561,6 +618,8 @@ export function usePlans() {
     getActivePlans,
     getPlansByPriceRange,
     getPlansByMealCount,
-    getPlanAnalytics
+    getPlanAnalytics,
+    
+    
   };
 }
