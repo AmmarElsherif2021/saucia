@@ -280,7 +280,8 @@
         "n/a": "N/A",
         "featured": "featured",
         "offer": "offer",
-        "currency": "SAR"
+        "currency": "SAR",
+        "cancel":"Cancel"
       },
 
       "buttons": {
@@ -314,6 +315,14 @@
         "clearAll": "Clear All"
       },
       "profile": {
+        "profileCompletion":"Profile Completion",
+        "createReview":"Create Review",
+        "addPayment":"Add Payment Methods",
+        "addAddress":"Add Address",
+        "favorites":"favourites",
+        "reviews":"reviews",
+        "paymentMethods":"Payment Methods",
+        "addresses":"addresses",
         "consumedMeals": "Consumed Meals",
         "mealsCount": "Meals Count",
         "disabled": "Disabled",
@@ -806,6 +815,7 @@
         "minimumOrder": "Minimum Order Required"
       },
       "checkout": {
+        "remainingMeals":"Remaining Meals",
         "confirmOrder":"confirm order",
         "allergenAlert":"allergen alert",
         "unsafe":"unsafe",
@@ -1132,6 +1142,7 @@
         "makeYourOwnFruitSalad": "اصنع سلطة فواكه خاصة بك"
       },
       "common": {
+        "cancel":"إلغاء",
         "ready": "جاهز",
         "unitPrice": "سعر الوحدة",
         "welcome": "مرحبا بكم في تطبيقنا!",
@@ -1198,6 +1209,14 @@
         "clearAll": "مسح الكل"
       },
       "profile": {
+        "profileCompletion":"اكمال بيانات العميل",
+        "createReview":"اضف تقييم",
+        "addAddress":"اضف عنوان",
+        "addPayment":"اضف وسيلة دفع",
+        "favorites":"الوجبات المفضلة",
+        "paymentMethods":"وسائل الدفع",
+        "reviews":"التقييمات",
+        "addresses":"العناوين",
         "consumedMeals": "الوجبات المستهلكة",
         "mealsCount": "عدد الوجبات",
         "disabled": "معطل",
@@ -1701,6 +1720,7 @@
         "minimumOrder": "الحد الأدنى المطلوب للطلب"
       },
       "checkout": {
+        "remainingMeals":"الوجبات المتبقية",
         "confirmOrder":"تأكيد الطلب",
         "allergenAlert":"مسبب للحساسية",
         "unsafe":"غير امن",

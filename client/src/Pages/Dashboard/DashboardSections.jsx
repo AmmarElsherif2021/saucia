@@ -1,39 +1,55 @@
 import { EditIcon, StarIcon } from '@chakra-ui/icons';
 import { useTranslation } from 'react-i18next';
 import {
-Box,
-Heading,
-SimpleGrid,
-FormControl,
-FormLabel,
-Textarea,
-Flex,
-Avatar,
-Text,
-Badge,
-Button,
-Select,
-VStack,
+  Box,
+  Heading,
+  SimpleGrid,
+  FormControl,
+  FormLabel,
+  Textarea,
+  Flex,
+  Avatar,
+  Text,
+  Badge,
+  Button,
+  Select,
+  VStack,
+  Input,
+  Radio,
+  RadioGroup,
+  Stack,
+  Wrap,
+  WrapItem,
+  useColorMode,
+  Skeleton,
+  Alert,
+  AlertIcon,
+  Divider,
+  HStack,
+  Icon,
 } from '@chakra-ui/react';
 import {
-BasicFormControl,
-NumberFormControl,
-SelectFormControl,
-SwitchFormControl,
-CheckboxGrid,
-AddressInput,
-UserInfoItem, 
-NotificationStatus,
-OrderHistoryTable
+  BasicFormControl,
+  NumberFormControl,
+  SelectFormControl,
+  SwitchFormControl,
+  CheckboxGrid,
+  AddressInput,
+  UserInfoItem, 
+  NotificationStatus,
+  OrderHistoryTable
 } from './DashboardComponents';
 import MapModal from '../Checkout/MapModal';
-import { get } from 'ol/proj';
-//Options getters
-// Extracted form options generators
+import { useI18nContext } from '../../Contexts/I18nContext';
+import { useUserAllergies } from '../../hooks/userHooks';
+import { useUserDietaryPreferences } from '../../hooks/useUserDietaryPreferences';
 
+// Options getters
 const getGenderOptions = [
     { value: 'male', label: 'Male' },
     { value: 'female', label: 'Female' },
+    { value: 'other', label: 'Other' },
+    { value: 'prefer-not-to-say', label: 'Prefer not to say' },
 ];
 
 const getLanguageOptions = [
@@ -42,63 +58,46 @@ const getLanguageOptions = [
 ];
 
 const getFitnessGoalOptions = [
-    { id: 1, value: 'lose-weight', label: 'Lose Weight' },
-    { id: 2, value: 'gain-weight', label: 'Gain Weight' },
-    { id: 3, value: 'maintain-weight', label: 'Maintain Weight' },
-    { id: 4, value: 'build-muscle', label: 'Build Muscle' },
-    { id: 5, value: 'improve-endurance', label: 'Improve Endurance' },
+    { value: 'weight-loss', label: 'Weight Loss' },
+    { value: 'weight-gain', label: 'Weight Gain' },
+    { value: 'maintenance', label: 'Maintenance' },
+    { value: 'muscle-gain', label: 'Muscle Gain' },
+    { value: 'improve-fitness', label: 'Improve Fitness' },
 ];
 
 const getActivityLevelOptions = [
-    { id: 1, value: 'sedentary', label: 'Sedentary' },
-    { id: 2, value: 'lightly-active', label: 'Lightly Active' },
-    { id: 3, value: 'moderately-active', label: 'Moderately Active' },
-    { id: 4, value: 'very-active', label: 'Very Active' },
-    { id: 5, value: 'extremely-active', label: 'Extremely Active' },
-];
-
-const getDietaryPreferences = [
-    { id: 1, value: 'vegetarian', label: 'Vegetarian' },
-    { id: 2, value: 'vegan', label: 'Vegan' },
-    { id: 3, value: 'pescatarian', label: 'Pescatarian' },
-    { id: 4, value: 'keto', label: 'Ketogenic' },
-    { id: 5, value: 'paleo', label: 'Paleo' },
-    { id: 6, value: 'mediterranean', label: 'Mediterranean' },
-    { id: 7, value: 'low-carb', label: 'Low Carb' },
-    { id: 8, value: 'gluten-free', label: 'Gluten Free' },
-    { id: 9, value: 'dairy-free', label: 'Dairy Free' },
-    { id: 10, value: 'none', label: 'None' },
-];
-
-const getAllergies = [
-    { id: 1, value: 'nuts', label: 'Nuts' },
-    { id: 2, value: 'peanuts', label: 'Peanuts' },
-    { id: 3, value: 'shellfish', label: 'Shellfish' },
-    { id: 4, value: 'fish', label: 'Fish' },
-    { id: 5, value: 'eggs', label: 'Eggs' },
-    { id: 6, value: 'milk', label: 'Milk/Dairy' },
-    { id: 7, value: 'soy', label: 'Soy' },
-    { id: 8, value: 'wheat', label: 'Wheat' },
-    { id: 9, value: 'sesame', label: 'Sesame' },
-    { id: 10, value: 'sulfites', label: 'Sulfites' },
-    { id: 11, value: 'none', label: 'None' },
+    { value: 'sedentary', label: 'Sedentary' },
+    { value: 'lightly_active', label: 'Lightly Active' },
+    { value: 'moderately_active', label: 'Moderately Active' },
+    { value: 'very_active', label: 'Very Active' },
+    { value: 'extremely_active', label: 'Extremely Active' },
 ];
 
 // Extracted modal sections
-export const BasicInfoSection = ({ formData, handlers,t}) => {
-  const { handleInputChange, handleNumberChange } = handlers
+export const BasicInfoSection = ({ formData, handlers, t }) => { 
+  const { handleInputChange, handleNumberChange } = handlers;
+  const { colorMode } = useColorMode();
+  const inputBg = { light: 'white', dark: 'gray.700' };
+  
   return (
-    <Box>
-      <Heading size="sm" mb={4} color="brand.500">
-        {t('profile.basicInformation')}
-      </Heading>
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+    <Box p={6} borderRadius="lg" bg={colorMode === 'light' ? 'gray.50' : 'gray.800'} borderWidth="1px">
+      <HStack mb={4} spacing={3}>
+        <Icon viewBox="0 0 24 24" color="brand.500">
+          <path fill="currentColor" d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
+        </Icon>
+        <Heading size="md" color="brand.500">
+          {t('profile.basicInformation')}
+        </Heading>
+      </HStack>
+      
+      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
         <BasicFormControl
           label={t('profile.displayName')}
           name="display_name"
           value={formData.display_name || ''}
           onChange={handleInputChange}
           placeholder={t('profile.enterDisplayName')}
+          bg={inputBg[colorMode]}
         />
         <BasicFormControl
           label={t('profile.phoneNumber')}
@@ -106,13 +105,15 @@ export const BasicInfoSection = ({ formData, handlers,t}) => {
           value={formData.phone_number || ''}
           onChange={handleInputChange}
           placeholder={t('profile.enterPhoneNumber')}
+          bg={inputBg[colorMode]}
         />
         <NumberFormControl
           label={t('profile.age')}
           value={formData.age || 0}
-          min={0}
+          min={10}
           max={120}
           onChange={(_, value) => handleNumberChange('age', value)}
+          bg={inputBg[colorMode]}
         />
         <SelectFormControl
           label={t('profile.gender')}
@@ -121,6 +122,7 @@ export const BasicInfoSection = ({ formData, handlers,t}) => {
           onChange={handleInputChange}
           options={getGenderOptions}
           placeholder={t('profile.selectGender')}
+          bg={inputBg[colorMode]}
         />
         <SelectFormControl
           label={t('profile.language')}
@@ -128,8 +130,10 @@ export const BasicInfoSection = ({ formData, handlers,t}) => {
           value={formData.language || 'en'}
           onChange={handleInputChange}
           options={getLanguageOptions}
+          bg={inputBg[colorMode]}
         />
       </SimpleGrid>
+      
       <FormControl mt={4}>
         <FormLabel>{t('profile.notes')}</FormLabel>
         <Textarea
@@ -138,65 +142,227 @@ export const BasicInfoSection = ({ formData, handlers,t}) => {
           onChange={handleInputChange}
           placeholder={t('profile.enterNotes')}
           rows={3}
+          bg={inputBg[colorMode]}
+          resize="vertical"
         />
       </FormControl>
     </Box>
-  )
-}
+  );
+};
 
-export const HealthProfileSection = ({ formData, handlers,t}) => {
-    const { handleHealthProfileChange, handleCheckboxArrayChange } = handlers
-    return (
-      <Box>
-        <Heading size="sm" mb={4} color="brand.500">
+// Enhanced HealthProfileSection cloned from CommonQuestions
+export const HealthProfileSection = ({ formData, handlers, t, isLoading = false }) => {
+  const { handleHealthProfileChange, handleCheckboxArrayChange, toggleSelection } = handlers;
+  const { colorMode } = useColorMode();
+  const { currentLanguage } = useI18nContext();
+  const isArabic = currentLanguage === 'ar';
+  const inputBg = { light: 'white', dark: 'gray.700' };
+  
+  // Fetch dietary preferences and allergies using hooks
+  const { 
+    dietaryPreferences: availablePreferences = [],
+    userDietaryPreferences = [],
+    isLoading: isLoadingPreferences,
+  } = useUserDietaryPreferences();
+  
+  const { 
+    allergies: availableAllergies = [],
+    userAllergies = [],
+    isLoading: isLoadingAllergies,
+  } = useUserAllergies();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name in formData) {
+      handleInputChange(e);
+    } else {
+      handleHealthProfileChange(name, value);
+    }
+  };
+
+  const togglePreferenceSelection = (preferenceId) => {
+    if (toggleSelection) {
+      toggleSelection('dietaryPreferences', preferenceId);
+    }
+  };
+
+  const toggleAllergySelection = (allergyId) => {
+    if (toggleSelection) {
+      toggleSelection('allergies', allergyId);
+    }
+  };
+
+  return (
+    <Box p={6} borderRadius="lg" bg={colorMode === 'light' ? 'gray.50' : 'gray.800'} borderWidth="1px">
+      <HStack mb={4} spacing={3}>
+        <Icon viewBox="0 0 24 24" color="brand.500">
+          <path fill="currentColor" d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M12,8A3,3 0 0,1 15,11A3,3 0 0,1 12,14A3,3 0 0,1 9,11A3,3 0 0,1 12,8Z" />
+        </Icon>
+        <Heading size="md" color="brand.500">
           {t('profile.healthProfile')}
         </Heading>
-        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
-          <NumberFormControl
-            label={t('profile.height')} 
-            value={formData.healthProfile?.height || 0}
-            min={50}
-            max={100}
-            onChange={(_, value) => handleHealthProfileChange('height', value)}
-          />
-          <NumberFormControl
-            label={t('profile.weight')}
-            value={formData.healthProfile?.weight || 0}
-            min={50}
-            max={150}
-            onChange={(_, value) => handleHealthProfileChange('weight', value)}
-          />
-        </SimpleGrid>
-        <FormControl mt={4}>
-          <FormLabel>{t('profile.dietaryPreferences')}</FormLabel>
-          <CheckboxGrid
-              items={getDietaryPreferences}
-              selectedItems={formData.healthProfile?.dietaryPreferences || []}
-              fieldPath="healthProfile.dietaryPreferences" 
-              handleCheckboxArrayChange={handlers.handleCheckboxArrayChange}
-              />
-        </FormControl>
-        <FormControl mt={4}>
-          <FormLabel>{t('profile.allergies')}</FormLabel>
-          <CheckboxGrid
-            items={getAllergies}
-            selectedItems={formData.healthProfile?.allergies || []}
-            // Add the missing fieldPath prop here
-            fieldPath="healthProfile.allergies"
-            handleCheckboxArrayChange={handlers.handleCheckboxArrayChange}
-          />
-        </FormControl>
-      </Box>
-    )
-  }
+      </HStack>
 
-export const NotificationSection = ({ formData, handlers,t}) => {
-  const { handleNotificationChange } = handlers
+      <VStack spacing={5} align="stretch">
+        {/* Physical Stats */}
+         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+          <FormControl>
+            <FormLabel>{t('premium.heightCm')}</FormLabel>
+            {isLoading ? (
+              <Skeleton height="40px" borderRadius="md" />
+            ) : (
+              <Input
+                type="number"
+                name="height_cm"
+                value={formData.healthProfile?.height_cm || ''}
+                onChange={handleChange}
+                placeholder={t('premium.yourHeight')}
+                min="100"
+                max="250"
+                bg={inputBg[colorMode]}
+              />
+            )}
+          </FormControl>
+
+          <FormControl>
+            <FormLabel>{t('premium.weightKg')}</FormLabel>
+            {isLoading ? (
+              <Skeleton height="40px" borderRadius="md" />
+            ) : (
+              <Input
+                type="number"
+                name="weight_kg"
+                value={formData.healthProfile?.weight_kg || ''}
+                onChange={handleChange}
+                placeholder={t('premium.yourWeight')}
+                min="30"
+                max="200"
+                bg={inputBg[colorMode]}
+              />
+            )}
+          </FormControl>
+        </SimpleGrid>
+
+        {/* Activity Level */}
+        <FormControl>
+          <FormLabel>{t('premium.activityLevel')}</FormLabel>
+          {isLoading ? (
+            <Skeleton height="120px" borderRadius="md" />
+          ) : (
+            <RadioGroup
+               value={formData.healthProfile?.activity_level || 'moderately_active'}
+               onChange={value => handleHealthProfileChange('activity_level', value)}
+            >
+              <Stack direction="column" spacing={3}>
+                <Radio value="sedentary">{t('premium.sedentary')}</Radio>
+                <Radio value="lightly_active">{t('premium.lightlyActive')}</Radio>
+                <Radio value="moderately_active">{t('premium.moderatelyActive')}</Radio>
+                <Radio value="very_active">{t('premium.veryActive')}</Radio>
+                <Radio value="extremely_active">{t('premium.extremelyActive')}</Radio>
+              </Stack>
+            </RadioGroup>
+          )}
+        </FormControl>
+
+        {/* Fitness Goal */}
+        <FormControl>
+          <FormLabel>{t('premium.fitnessGoal')}</FormLabel>
+          {isLoading ? (
+            <Skeleton height="40px" borderRadius="md" />
+          ) : (
+            <Select
+              name="fitness_goal"
+              value={formData.healthProfile?.fitness_goal || 'maintenance'}
+              onChange={handleChange}
+              placeholder={t('premium.selectFitnessGoal')}
+              bg={inputBg[colorMode]}
+            >
+              <option value="weight-loss">{t('premium.weightLoss')}</option>
+              <option value="weight-gain">{t('premium.weightGain')}</option>
+              <option value="maintenance">{t('premium.maintenance')}</option>
+              <option value="muscle-gain">{t('premium.muscleGain')}</option>
+              <option value="improve-fitness">{t('premium.improveFitness')}</option>
+            </Select>
+          )}
+        </FormControl>
+
+        <Divider />
+
+        {/* Dietary Preferences */}
+        <FormControl>
+          <FormLabel>{t('premium.dietaryPreferences')}</FormLabel>
+          {isLoading || isLoadingPreferences || availablePreferences.length === 0 ? (
+            <Skeleton height="100px" borderRadius="md" />
+          ) : (
+            <Wrap spacing={3}>
+              {availablePreferences.map(pref => (
+                <WrapItem key={pref.id}>
+                  <Button
+                    size="sm"
+                    variant={
+                      formData.healthProfile?.dietaryPreferences?.includes(pref.id) ||
+                      userDietaryPreferences?.some(up => up.preference_id === pref.id)
+                        ? 'solid' 
+                        : 'outline'
+                    }
+                    colorScheme="brand"
+                    onClick={() => togglePreferenceSelection(pref.id)}
+                  >
+                    {isArabic ? pref.name_arabic : pref.name}
+                  </Button>
+                </WrapItem>
+              ))}
+            </Wrap>
+          )}
+        </FormControl>
+
+        {/* Allergies */}
+        <FormControl>
+          <FormLabel>{t('premium.allergies')}</FormLabel>
+          {isLoading || isLoadingAllergies || availableAllergies.length === 0 ? (
+            <Skeleton height="100px" borderRadius="md" />
+          ) : (
+            <Wrap spacing={3}>
+              {availableAllergies.map(allergy => (
+                <WrapItem key={allergy.id}>
+                  <Button
+                    size="sm"
+                    variant={
+                      formData.healthProfile?.allergies?.includes(allergy.id) ||
+                      userAllergies?.some(ua => ua.allergy_id === allergy.id)
+                        ? 'solid' 
+                        : 'outline'
+                    }
+                    colorScheme="red"
+                    onClick={() => toggleAllergySelection(allergy.id)}
+                  >
+                    {isArabic ? allergy.name_arabic : allergy.name}
+                  </Button>
+                </WrapItem>
+              ))}
+            </Wrap>
+          )}
+        </FormControl>
+      </VStack>
+    </Box>
+  );
+};
+
+export const NotificationSection = ({ formData, handlers, t }) => {
+  const { handleNotificationChange } = handlers;
+  const { colorMode } = useColorMode();
+  
   return (
-    <Box>
-      <Heading size="sm" mb={4} color="brand.500">
-        {t('profile.notificationPreferences')}
-      </Heading>
+    <Box p={6} borderRadius="lg" bg={colorMode === 'light' ? 'gray.50' : 'gray.800'} borderWidth="1px">
+      <HStack mb={4} spacing={3}>
+        <Icon viewBox="0 0 24 24" color="brand.500">
+          <path fill="currentColor" d="M21,19V20H3V19L5,17V11A7,7 0 0,1 12,4A7,7 0 0,1 19,11V17L21,19M12,2A9,9 0 0,0 3,11V18L1,20V21H23V20L21,18V11A9,9 0 0,0 12,2M12,22A2,2 0 0,1 10,20H14A2,2 0 0,1 12,22Z" />
+        </Icon>
+        <Heading size="md" color="brand.500">
+          {t('profile.notificationPreferences')}
+        </Heading>
+      </HStack>
+      
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
         <SwitchFormControl
           label={t('profile.emailNotifications')}
@@ -215,91 +381,107 @@ export const NotificationSection = ({ formData, handlers,t}) => {
         />
       </SimpleGrid>
     </Box>
-  )
-}
+  );
+};
 
-export const DeliverySection = ({ formData, handlers, onOpenMap,t}) => {
-  const { handleNestedFieldChange, handleDeliveryTimeChange } = handlers
+export const DeliverySection = ({ formData, handlers, onOpenMap, t }) => {
+  const { handleNestedFieldChange, handleDeliveryTimeChange } = handlers;
+  const { colorMode } = useColorMode();
+  const inputBg = { light: 'white', dark: 'gray.700' };
+  
   return (
-    <Box>
-      <Heading size="sm" mb={4} color="brand.500">
-        {t('premium.deliverySettings')}
-      </Heading>
-      <AddressInput
-        label={t('profile.defaultDeliveryAddress')}
-        value={formData.defaultAddress}
-        onChange={(value) => handleNestedFieldChange('', 'defaultAddress', value)}
-        onMapOpen={onOpenMap}
-      />
-      <FormControl mt={4}>
-        <FormLabel>{t('profile.defaultDeliveryTime')}</FormLabel>
-        <Select
-          value={formData.deliveryTime}
-          onChange={handleDeliveryTimeChange}
-        >
-          {Array.from({ length: 10 }, (_, i) => {
-            const hour = 9 + i
-            const time = `${hour < 10 ? '0' + hour : hour}:00`
-            const display = hour < 12 ? `${time} AM` : 
-                          hour === 12 ? `${time} PM` : 
-                          `${hour - 12}:00 PM`
-            return <option key={time} value={time}>{display}</option>
-          })}
-        </Select>
-      </FormControl>
+    <Box p={6} borderRadius="lg" bg={colorMode === 'light' ? 'gray.50' : 'gray.800'} borderWidth="1px">
+      <HStack mb={4} spacing={3}>
+        <Icon viewBox="0 0 24 24" color="brand.500">
+          <path fill="currentColor" d="M3,8L9,2L10.5,3.5L11,3L17,9L15,11C15.8,12.37 16,14.05 16,15A4,4 0 0,1 12,19A4,4 0 0,1 8,15C8,14.05 8.2,12.37 9,11L3,8M9,16A1,1 0 0,0 10,15A1,1 0 0,0 9,14A1,1 0 0,0 8,15A1,1 0 0,0 9,16M12,14L11,13L10,14L11,15L12,14M17,12L19,10L20.5,11.5L22,10L20,8L18.5,9.5L17,8L15,10L17,12Z" />
+        </Icon>
+        <Heading size="md" color="brand.500">
+          {t('premium.deliverySettings')}
+        </Heading>
+      </HStack>
+      
+      <VStack spacing={4} align="stretch">
+        <AddressInput
+          label={t('profile.defaultDeliveryAddress')}
+          value={formData.defaultAddress}
+          onChange={(value) => handleNestedFieldChange('', 'defaultAddress', value)}
+          onMapOpen={onOpenMap}
+          bg={inputBg[colorMode]}
+        />
+        
+        <FormControl>
+          <FormLabel>{t('profile.defaultDeliveryTime')}</FormLabel>
+          <Select
+            value={formData.deliveryTime}
+            onChange={handleDeliveryTimeChange}
+            bg={inputBg[colorMode]}
+          >
+            {Array.from({ length: 10 }, (_, i) => {
+              const hour = 9 + i;
+              const time = `${hour < 10 ? '0' + hour : hour}:00`;
+              const display = hour < 12 ? `${time} AM` : 
+                            hour === 12 ? `${time} PM` : 
+                            `${hour - 12}:00 PM`;
+              return <option key={time} value={time}>{display}</option>;
+            })}
+          </Select>
+        </FormControl>
+      </VStack>
     </Box>
-  )
-}
+  );
+};
 
-export const ProfileHeader = ({ user, userPlan, onOpen,t}) => {
-  return(
-  <Flex align="center" mb={8} direction={{ base: 'column', md: 'row' }} gap={4}>
-    <Avatar
-      size="2xl"
-      name={user.displayName}
-      src={user.photoURL}
-      bg="brand.500"
-      color="white"
-    />
-    <Box textAlign={{ base: 'center', md: 'left' }}>
-      <Heading size="lg" mb={2}>
-        {user.displayName || t('profile.anonymousUser')}
-      </Heading>
-      <Text fontSize="lg" color="gray.500">
-        {user.email}
-      </Text>
-      {user.isAdmin && (
-        <Badge colorScheme="red" mt={2}>
-          {t('profile.admin')}
-        </Badge>
-      )}
-      <Flex mt={4} gap={3} wrap="wrap" justify={{ base: 'center', md: 'start' }}>
-        {userPlan && (
-          <Badge colorScheme="brand" px={3} py={1} borderRadius="md">
-            {userPlan.title}
+export const ProfileHeader = ({ user, userPlan, onOpen, t }) => {
+  return (
+    <Flex align="center" mb={8} direction={{ base: 'column', md: 'row' }} gap={4}>
+      <Avatar
+        size="2xl"
+        name={user.displayName}
+        src={user.photoURL}
+        bg="brand.500"
+        color="white"
+      />
+      <Box textAlign={{ base: 'center', md: 'left' }}>
+        <Heading size="lg" mb={2}>
+          {user.displayName || t('profile.anonymousUser')}
+        </Heading>
+        <Text fontSize="lg" color="gray.500">
+          {user.email}
+        </Text>
+        {user.isAdmin && (
+          <Badge colorScheme="red" mt={2}>
+            {t('profile.admin')}
           </Badge>
         )}
-        <Flex align="center" gap={2}>
-          <StarIcon color="brand.500" />
-          <Text>
-            {user.loyaltyPoints ?? 0} {t('profile.loyaltyPoints')}
-          </Text>
+        <Flex mt={4} gap={3} wrap="wrap" justify={{ base: 'center', md: 'start' }}>
+          {userPlan && (
+            <Badge colorScheme="brand" px={3} py={1} borderRadius="md">
+              {userPlan.title}
+            </Badge>
+          )}
+          <Flex align="center" gap={2}>
+            <StarIcon color="brand.500" />
+            <Text>
+              {user.loyaltyPoints ?? 0} {t('profile.loyaltyPoints')}
+            </Text>
+          </Flex>
         </Flex>
-      </Flex>
-    </Box>
-    <Button
-      ml="auto"
-      leftIcon={<EditIcon />}
-      onClick={onOpen}
-      variant="outline"
-      colorScheme="brand"
-    >
-      {t('profile.editProfile')}
-    </Button>
-  </Flex>
-)}
+      </Box>
+      <Button
+        ml="auto"
+        leftIcon={<EditIcon />}
+        onClick={onOpen}
+        variant="outline"
+        colorScheme="brand"
+        size="lg"
+      >
+        {t('profile.editProfile')}
+      </Button>
+    </Flex>
+  );
+};
 
-export const OverviewSection = ({ user,t}) => {
+export const OverviewSection = ({ user, t }) => {
   const personalFields = [
     { label: t('profile.email'), value: user.email, verified: user.emailVerified },
     { label: t('profile.displayName'), value: user.displayName },
@@ -310,7 +492,7 @@ export const OverviewSection = ({ user,t}) => {
     { label: t('profile.accountCreated'), value: new Date(user.createdAt).toLocaleDateString() },
     { label: t('profile.loyaltyPoints'), value: user.loyaltyPoints || 0 },
     { label: t('profile.notes'), value: user.notes },
-  ].filter(field => field.value != null)
+  ].filter(field => field.value != null);
 
   const healthFields = user.healthProfile ? [
     { label: t('profile.height'), value: user.healthProfile.height ? `${user.healthProfile.height} cm` : null },
@@ -329,13 +511,13 @@ export const OverviewSection = ({ user,t}) => {
         ? user.healthProfile.allergies.join(', ') 
         : null 
     },
-  ].filter(field => field.value != null) : []
+  ].filter(field => field.value != null) : [];
 
   const notificationFields = [
     { label: t('profile.emailNotifications'), enabled: user.notificationPreferences?.email },
     { label: t('profile.smsNotifications'), enabled: user.notificationPreferences?.sms },
     { label: t('profile.pushNotifications'), enabled: user.notificationPreferences?.push },
-  ]
+  ];
 
   return (
     <Box p={4} bg="brand.200" borderRadius="lg">
@@ -364,6 +546,5 @@ export const OverviewSection = ({ user,t}) => {
         </VStack>
       </SimpleGrid>
     </Box>
-  )
-}
-
+  );
+};

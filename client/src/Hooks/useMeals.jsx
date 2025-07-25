@@ -54,8 +54,10 @@ export function useMeals() {
 
   // Validate and normalize meal data according to schema
   const validateMealData = (meal) => {
-    if (!meal) return null;
-
+     if (!meal || typeof meal !== 'object') {
+        console.warn('Invalid meal data - not an object:', meal);
+        return null;
+      }
     // Handle nested relations from API
     const processedMeal = {
       ...meal,
@@ -177,11 +179,12 @@ export function useMeals() {
   const fetchMeal = useCallback(async (mealId) => {
     setLoading(true);
     setError(null);
-    try {
-      const data = await mealsAPI.getMealById(mealId);
-      const validatedMeal = validateMealData(data);
-      return validatedMeal;
-    } catch (err) {
+      try {
+    const data = await mealsAPI.getMealById(mealId)
+    if (!data) return null;    
+    const validatedMeal = validateMealData(data);
+    return validatedMeal;
+  } catch (err) {
       console.error('Error fetching meal:', err);
       setError(err);
       throw err;
@@ -439,7 +442,7 @@ export function useMeals() {
   }, [meals]);
 
   const getDiscountedMeals = useCallback(() => {
-    return meals.filter(meal => meal.is_discount_active && meal.is_available);
+    return meals.filter(meal => meal.discount_percentage && meal.is_available);
   }, [meals]);
 
   const getMealsBySection = useCallback((section) => {

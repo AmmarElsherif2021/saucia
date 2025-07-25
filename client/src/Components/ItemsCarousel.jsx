@@ -37,7 +37,7 @@ export const ItemsCarousel = ({
   auto = false,
   visibleButtons = true,
   transitionDuration = 15000,
-  carouselBg = 'brand.200',
+  carouselBg = 'secondary.700',
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
   const { colorMode } = useColorMode()
@@ -140,7 +140,7 @@ export const ItemsCarousel = ({
           px={8}
         >
           {visibleItems.map((item, index) =>
-            item.id!= undefined && (
+            item.id && item.id!= undefined && (
               <Box
                 key={`item-${index}-${currentIndex}`}
                 as={motion.div}

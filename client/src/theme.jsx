@@ -1,6 +1,9 @@
-import { border, extendTheme, Input, position, textDecoration, Toast } from '@chakra-ui/react'
+import { border, extendTheme, IconButton, Input, position, Select, space, textDecoration, Toast } from '@chakra-ui/react'
 import './index.css'
-import { cancelFrame, color, px } from 'framer-motion'
+import { cancelFrame, color, m, px } from 'framer-motion'
+import { defaultTextAlign } from 'ol/render/canvas'
+import { ChevronDownIcon } from '@chakra-ui/icons'
+import { Children } from 'react'
 
 const createTheme = (config) => {
   const isArabic = config?.language === 'ar'
@@ -729,6 +732,23 @@ const createTheme = (config) => {
           color: props.colorMode === 'dark' ? 'white' : 'gray.800',
         }),
       },
+     Select: {
+        parts: ['field', 'icon'],
+        baseStyle: (props) => ({
+          field: {
+            bg: props.colorMode === 'dark' ? 'gray.700' : 'brand.50',
+            color: props.colorMode === 'dark' ? 'white' : 'brand.800',
+            px: 2,
+            pr: '3rem', 
+            borderColor:'brand.500'
+          },
+          icon: {
+            right: '0.75rem', 
+            fontSize: '1.25rem' 
+          }
+        }),
+      },
+  
       Spinner: {
         baseStyle: (props) => ({
           color: props.colorMode === 'dark' ? 'brand.500' : 'brand.600',

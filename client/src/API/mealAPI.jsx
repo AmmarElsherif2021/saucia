@@ -51,16 +51,18 @@ export const mealsAPI = {
         query = query.order('rating', { ascending: false })
       }
 
-      const { data, error } = await query
-
-      if (error) throw error
-      console.log(`Meals fetched from Supabase: ${data.length || 0} meals`)
-      return data
-    } catch (error) {
-      console.error('Failed to fetch meals:', error)
-      handleSupabaseError(error)
-    }
-  },
+      const { data, error } = await query;
+    
+    if (error) throw error;
+    
+    // Return empty array 
+    return data || [];
+  } catch (error) {
+    console.error('Failed to fetch meals:', error);
+    handleSupabaseError(error);
+    return []; 
+  }
+},
 
   async getMealById(mealId) {
     try {
@@ -83,12 +85,15 @@ export const mealsAPI = {
         .eq('is_available', true)
         .single()
 
-      if (error) throw error
-      return data
-    } catch (error) {
-      handleSupabaseError(error)
-    }
-  },
+
+    
+    if (error) throw error;
+    return data || null; // Return null if no data
+  } catch (error) {
+    handleSupabaseError(error);
+    return null; // Return null on error
+  }
+},
 
   async getMealsBySection(section) {
     try {

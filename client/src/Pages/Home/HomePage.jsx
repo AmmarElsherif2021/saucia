@@ -33,12 +33,11 @@ const HomePage = () => {
   //   // offersMeals,
   //   // elementsLoading
   //   // )
-  // }, [])
+  // }, []) <OffersSlide offersMeals={offersMeals} />
   return (
     <Box textAlign="center" p={5} bg={colorMode === "dark" ? "teal.800":"none"}>
       <Hero />
       <FeaturedMeals featuredMeals={featuredMeals} />
-      <OffersSlide offersMeals={offersMeals} />
       <AboutUs />
       <Footer />
     </Box>

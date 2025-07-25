@@ -8,7 +8,7 @@ export const FeaturedMeals = ({ featuredMeals }) => {
   //useEffect(() => console.log(`From featured items ${(JSON.stringify(featuredMeals))}`), [featuredMeals]);
 
   return (
-    <VStack p={4} bg="transparent" alignItems={'center'} w={'99%'}>
+    <VStack mt={6} p={4} bg="transparent" alignItems={'center'} w={'99%'}>
       <Heading mb={6} fontSize={'3em'} textStyle="heading" color={'brand.800'}>
         {t('featuredSlide.title')}
       </Heading>

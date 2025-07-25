@@ -171,27 +171,29 @@ export const Navbar = () => {
             flexShrink={0}
           >
             {/* Cart Button */}
-            <Box position="relative" display="inline-block">
-            <IconButton
-              aria-label={t('navbar.cart')}
-              icon={<FaShoppingCart />}
-              variant="ghost"
-              size="sm"
-            />
-            {cartCount > 0 && (
-              <Badge
-            bg={"red.300"}
-            borderRadius="full"
-            position="absolute"
-            top="-1"
-            right="-1"
-            fontSize="0.7em"
-            px={1}
-          >
-            {cartCount}
-          </Badge>
-        )}
-      </Box>
+           <Link to="/cart">
+              <Box position="relative" display="inline-block">
+                <IconButton
+                  aria-label={t('navbar.cart')}
+                  icon={<FaShoppingCart />}
+                  variant="ghost"
+                  size="sm"
+                />
+                {cartCount > 0 && (
+                  <Badge
+                colorScheme="red"
+                borderRadius="full"
+                position="absolute"
+                top="-1"
+                right="-1"
+                fontSize="0.7em"
+                px={2}
+              >
+                {cartCount}
+              </Badge>
+            )}
+            </Box>
+          </Link>
 
             {/* Profile Dropdown - Desktop Only */}
             <Box display={{ base: 'none', md: 'block', lg: 'block' }}>

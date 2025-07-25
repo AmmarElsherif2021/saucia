@@ -2,10 +2,12 @@ import { Heading, VStack, Text } from '@chakra-ui/react'
 import { ItemsCarousel } from '../../Components/ItemsCarousel'
 import { OfferMealCard } from '../../Components/Cards'
 import { useTranslation } from 'react-i18next'
-//import { useEffect } from "react";
+
 export const OffersSlide = ({ offersMeals }) => {
   const { t } = useTranslation()
-  //useEffect(() => console.log(`From offers items ${(JSON.stringify(offersMeals))}`), [offersMeals]);
+  
+  // Filter out any undefined meals
+  const validMeals = offersMeals?.filter(meal => meal) || []
 
   return (
     <VStack p={2} my={8} bg="transparent" alignItems="center">
@@ -13,8 +15,12 @@ export const OffersSlide = ({ offersMeals }) => {
         {t('offerSlide.title')}
       </Heading>
 
-      {offersMeals?.length > 0 ? (
-        <ItemsCarousel items={offersMeals} CardComponent={OfferMealCard} visibleCount={3} />
+      {validMeals.length > 0 ? (
+        <ItemsCarousel 
+          items={validMeals} 
+          CardComponent={OfferMealCard} 
+          visibleCount={3} 
+        />
       ) : (
         <Text>{t('offerSlide.noOffers')}</Text>
       )}

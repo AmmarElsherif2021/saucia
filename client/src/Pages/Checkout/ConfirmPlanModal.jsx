@@ -415,6 +415,9 @@ const ConfirmPlanModal = ({
 
     // Add meal to selection
     addMeal(meal.id);
+    const currentAdditives = [...(subscriptionData.additives || [])];
+    currentAdditives.push([]);
+    updateSubscriptionData('additives', currentAdditives);
   };
 
   // Handle additive selection
@@ -440,16 +443,24 @@ const ConfirmPlanModal = ({
       updateSubscriptionData('additives', currentAdditives);
     }
   }, [subscriptionData.additives, updateSubscriptionData]);
-
+  
+   // Handle additive and meals removal
+  const removeMealAndAdditives = useCallback((index) => {
+  removeMeal(index);
+  
+  const currentAdditives = [...(subscriptionData.additives || [])];
+  currentAdditives.splice(index, 1);
+  updateSubscriptionData('additives', currentAdditives);
+}, [removeMeal, subscriptionData.additives, updateSubscriptionData]);
   // Handle subscription confirmation
   const handleConfirmSubscription = async () => {
     try {
       // Create subscription with selected meals and additives
-      const subscription = {
-        ...subscriptionData,
-        meals: selectedMeals,
-        additives: subscriptionData.additives || []
-      };
+       const subscription = {
+      ...subscriptionData,
+      meals: selectedMeals,
+      additives: subscriptionData.additives || []
+    };
 
       // This would call your API via context or hook
       // await subscribeToPlan(userPlan.id, subscription);
@@ -612,20 +623,20 @@ const ConfirmPlanModal = ({
 
             const deliveryDate = calculateDeliveryDate(today, index);
             const additives = subscriptionData.additives?.[index] || [];
-            
-            return (
-              <AllergenAwareMealPlanCard
+  
+          return (
+            <AllergenAwareMealPlanCard
                 key={`selected-${mealId}-${index}`}
                 meal={meal}
                 index={index}
                 showDeliveryDate={true}
                 deliveryDate={deliveryDate}
                 showAllergenBadge={true}
-                isSelected={true}
+                 isSelected={true}
                 selectedAdditives={additives}
                 onAddAdditive={(itemId) => handleAddAdditive(index, itemId)}
                 onRemoveAdditive={(itemId) => handleRemoveAdditive(index, itemId)}
-                onRemove={() => removeMeal(index)}
+                onRemove={() => removeMealAndAdditives(index)}
               />
             );
           })}

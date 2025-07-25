@@ -25,7 +25,7 @@ import {
   useHealthProfile
 } from '../../../hooks/userHooks'
 import { useUserAllergies } from '../../../hooks/useUserAllergies' 
-import { useUserDietaryPreferences } from '../../../hooks/useUserDietaryPreferences' // Use custom hook
+import { useUserDietaryPreferences } from '../../../hooks/useUserDietaryPreferences'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useState } from 'react'

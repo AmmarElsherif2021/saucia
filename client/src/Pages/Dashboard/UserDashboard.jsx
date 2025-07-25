@@ -1,4 +1,5 @@
-import { BasicInfoSection, HealthProfileSection, NotificationSection, DeliverySection, ProfileHeader, OverviewSection } from './DashboardSections'
+import {ProfileHeader, OverviewSection } from './DashboardSections';
+import EnhancedProfileModal from './EnhancedProfileModal';
 import { OrderHistoryTable, SubscriptionDetails } from './DashboardComponents'
 import { 
   Box,
@@ -49,7 +50,7 @@ import {
   useDietaryPreferences,
   useFavorites,
   useUserReviews
-} from '../../Hooks/userHooks'
+} from '../../Hooks/userHooks';
 import { useUserSubscriptions } from '../../Hooks/useUserSubscriptions'
 import { usePaymentMethods } from '../../Hooks/usePaymentMethods'
 
@@ -172,7 +173,8 @@ export const UserDashboard = () => {
   const [editingAddress, setEditingAddress] = useState(null)
   const [editingPayment, setEditingPayment] = useState(null)
   const [editingReview, setEditingReview] = useState(null)
-
+  const [initialFormData, setInitialFormData] = useState(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const toast = useToast()
 
   // Default address
@@ -180,8 +182,8 @@ export const UserDashboard = () => {
 
   // Initialize form data
   useEffect(() => {
-    if (profile) {
-      setFormData({
+    if (profile && !initialFormData) {
+      const initialData = {
         display_name: profile.display_name || '',
         phone_number: profile.phone_number || '',
         age: profile.age || 0,
@@ -189,19 +191,21 @@ export const UserDashboard = () => {
         language: profile.language || 'en',
         notes: profile.notes || '',
         healthProfile: {
-          height: healthProfile?.height_cm || 0,
-          weight: healthProfile?.weight_kg || 0,
-          fitnessGoal: healthProfile?.fitness_goal || '',
-          activityLevel: healthProfile?.activity_level || '',
+          height_cm: healthProfile?.height_cm ?? '',
+          weight_kg: healthProfile?.weight_kg ?? '',
+          fitness_goal: healthProfile?.fitness_goal || '',
+          activity_level: healthProfile?.activity_level || '',
         },
         notificationPreferences: {
           email: profile.notification_preferences?.email ?? true,
           sms: profile.notification_preferences?.sms ?? false,
           push: profile.notification_preferences?.push ?? true,
         }
-      })
+      };
+      setInitialFormData(initialData);
+      setFormData(initialData);
     }
-  }, [profile, healthProfile])
+  }, [profile, healthProfile, initialFormData]);
 
   // Handlers
   const handleInputChange = (e) => {
@@ -282,6 +286,18 @@ export const UserDashboard = () => {
 
   // Profile update handler
   const handleSubmit = async () => {
+    // Validate weight before submission
+    const weight = parseFloat(formData.healthProfile?.weight_kg);
+    if (weight && (weight < 30 || weight > 200)) {
+      toast({
+        title: t('profile.invalidWeight'),
+        description: t('profile.weightRangeError'),
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
     try {
       // Update user profile
       await updateProfile({
@@ -295,13 +311,13 @@ export const UserDashboard = () => {
       })
 
       // Update health profile
-      if (formData.healthProfile) {
+         if (formData.healthProfile) {
         await updateHealthProfile({
-          height_cm: formData.healthProfile.height,
-          weight_kg: formData.healthProfile.weight,
-          fitness_goal: formData.healthProfile.fitnessGoal,
-          activity_level: formData.healthProfile.activityLevel
-        })
+          height_cm: parseFloat(formData.healthProfile.height_cm) || null,
+          weight_kg: parseFloat(formData.healthProfile.weight_kg) || null,
+          fitness_goal: formData.healthProfile.fitness_goal,
+          activity_level: formData.healthProfile.activity_level
+        });
       }
 
       toast({
@@ -589,6 +605,14 @@ export const UserDashboard = () => {
     }
   }
 
+  const closeProfileModal = () => {
+    if (initialFormData) {
+      setFormData(initialFormData);
+    }
+    setHasUnsavedChanges(false);
+    onClose();
+  };
+
   // Combined user data for display
   const userData = {
     ...user,
@@ -616,61 +640,26 @@ export const UserDashboard = () => {
       />
       
       {/* Edit Profile Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="6xl">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>{t('profile.editProfile')}</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack spacing={6}>
-              <BasicInfoSection 
-                formData={formData} 
-                handlers={{
-                  handleInputChange,
-                  handleNumberChange,
-                }}
-                t={t}
-              />
-
-              <HealthProfileSection 
-                formData={formData}
-                handlers={{
-                  handleHealthProfileChange,
-                  handleCheckboxArrayChange
-                }}
-                t={t}
-              />
-
-              <NotificationSection 
-                formData={formData}
-                handlers={{
-                  handleNotificationChange
-                }}
-                t={t}
-              />
-
-              <DeliverySection 
-                formData={formData}
-                handlers={{
-                  handleNestedFieldChange,
-                  handleDeliveryTimeChange
-                }}
-                onOpenMap={onOpenMap}
-                t={t}
-              />
-              
-              <Button
-                colorScheme="brand"
-                onClick={handleSubmit}
-                isLoading={isUpdatingProfile || isUpdatingHealthProfile}
-                size="lg"
-              >
-                {t('profile.saveChanges')}
-              </Button>
-            </VStack>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+       <EnhancedProfileModal
+        isOpen={isOpen}
+        onClose={closeProfileModal}
+        t={t}
+        formData={formData}
+        handlers={{
+          handleInputChange,
+          handleNumberChange,
+          handleHealthProfileChange,
+          handleNotificationChange,
+          handleCheckboxArrayChange,
+          handleNestedFieldChange,
+          handleDeliveryTimeChange
+        }}
+        onOpenMap={onOpenMap}
+        handleSubmit={handleSubmit}
+        isUpdatingProfile={isUpdatingProfile}
+        isUpdatingHealthProfile={isUpdatingHealthProfile}
+        hasUnsavedChanges={hasUnsavedChanges}
+      />
 
       {/* Address Management Modal */}
       <Modal isOpen={isAddressOpen} onClose={onAddressClose} size="lg">
@@ -902,13 +891,14 @@ export const UserDashboard = () => {
                               setEditingAddress(address)
                               onAddressOpen()
                             }}
-                            mr={2}
+                            mx={2}
                           />
                           <IconButton
                             icon={<DeleteIcon />}
                             size="sm"
                             colorScheme="red"
                             onClick={() => handleDeleteAddress(address.id)}
+                            mx={2}
                           />
                         </Flex>
                       </Flex>

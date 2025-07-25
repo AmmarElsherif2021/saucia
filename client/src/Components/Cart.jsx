@@ -105,7 +105,7 @@ export const CartCard = ({
       {/* Price and controls */}
       <Flex direction="column" align="flex-end">
         <Text fontSize="sm" fontWeight="bold" mb={1}>
-          ${(price * quantity).toFixed(2)}
+          {(price * quantity).toFixed(2)}{t("common.currency")}
         </Text>
 
         <Flex align="center">
@@ -260,12 +260,12 @@ export const CRT = ({
             </Flex>
             <Flex justify="space-between" fontSize="sm">
               <Text color="gray.500">{t('cart.deliveryFee')}</Text>
-              <Text color="gray.600">$2.99</Text>
+              <Text color="gray.600">15 {t("common.currency")}</Text>
             </Flex>
             <Divider my={1} />
             <Flex justify="space-between" fontSize="md" fontWeight="bold">
               <Text>{t('cart.total')}</Text>
-              <Text color="teal.600">${(totalPrice + 2.99).toFixed(2)}</Text>
+              <Text color="teal.600">{(totalPrice + 15).toFixed(2)}{t("common.currency")}</Text>
             </Flex>
           </Stack>
         </>

@@ -10,7 +10,7 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import { ItemsCarousel } from '../../Components/ItemsCarousel'
-import heroA from '../../assets/hero/heroA.PNG'
+import heroA from '../../assets/hero/heroA.JPG'
 import heroB from '../../assets/hero/heroB.JPG'
 import heroC from '../../assets/hero/heroC.PNG'
 import heroD from '../../assets/hero/heroD.JPG'

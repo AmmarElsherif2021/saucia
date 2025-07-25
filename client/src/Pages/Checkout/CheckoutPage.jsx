@@ -1,4 +1,4 @@
-import { useState, useReducer, useEffect } from 'react'
+import { useState, useReducer, useEffect, useMemo, useCallback } from 'react'
 import {
   Box,
   Heading,
@@ -86,6 +86,11 @@ function checkoutReducer(state, action) {
         ...state,
         orderSummary: { ...state.orderSummary, ...action.payload },
       }
+    case 'INITIALIZE_USER_DATA':
+      return {
+        ...state,
+        orderInfo: { ...state.orderInfo, ...action.payload },
+      }
     case 'START_SUBMISSION':
       return { ...state, isSubmitting: true }
     case 'END_SUBMISSION':
@@ -136,6 +141,12 @@ const Section = ({ title, children, bgColor, titleColor, icon }) => {
 }
 
 const PaymentMethodInputs = ({ paymentMethod, paymentInfo, onPaymentInfoChange, t, colorMode }) => {
+  const inputProps = useMemo(() => ({
+    variant: "ghost",
+    bg: colorMode === 'dark' ? 'gray.800' : 'warning.100',
+    focusBorderColor: "warning.500"
+  }), [colorMode]);
+
   switch (paymentMethod) {
     case 'credit-card':
       return (
@@ -144,11 +155,10 @@ const PaymentMethodInputs = ({ paymentMethod, paymentInfo, onPaymentInfoChange, 
             <FormLabel fontSize="sm">{t('checkout.cardNumber')}</FormLabel>
             <Input
               placeholder={t('checkout.cardNumberPlaceholder') || '1234 5678 9012 3456'}
-              variant="ghost"
               maxLength={19}
               value={paymentInfo.cardNumber}
               onChange={(e) => onPaymentInfoChange('cardNumber', e.target.value)}
-              bg={colorMode === 'dark' ? 'gray.800' : 'warning.100'}
+              {...inputProps}
             />
           </FormControl>
 
@@ -157,11 +167,10 @@ const PaymentMethodInputs = ({ paymentMethod, paymentInfo, onPaymentInfoChange, 
               <FormLabel fontSize="sm">{t('checkout.expiryDate')}</FormLabel>
               <Input
                 placeholder={t('checkout.expiryDatePlaceholder') || 'MM/YY'}
-                variant="ghost"
                 maxLength={5}
                 value={paymentInfo.expiryDate}
                 onChange={(e) => onPaymentInfoChange('expiryDate', e.target.value)}
-                bg={colorMode === 'dark' ? 'gray.800' : 'warning.100'}
+                {...inputProps}
               />
             </FormControl>
 
@@ -169,12 +178,11 @@ const PaymentMethodInputs = ({ paymentMethod, paymentInfo, onPaymentInfoChange, 
               <FormLabel fontSize="sm">CVV</FormLabel>
               <Input
                 placeholder="123"
-                variant="ghost"
                 maxLength={3}
                 type="password"
                 value={paymentInfo.cvv}
                 onChange={(e) => onPaymentInfoChange('cvv', e.target.value)}
-                bg={colorMode === 'dark' ? 'gray.800' : 'warning.100'}
+                {...inputProps}
               />
             </FormControl>
           </Flex>
@@ -183,10 +191,9 @@ const PaymentMethodInputs = ({ paymentMethod, paymentInfo, onPaymentInfoChange, 
             <FormLabel fontSize="sm">{t('checkout.nameOnCard')}</FormLabel>
             <Input
               placeholder={t('checkout.cardholderNamePlaceholder') || 'John Doe'}
-              variant="ghost"
               value={paymentInfo.nameOnCard}
               onChange={(e) => onPaymentInfoChange('nameOnCard', e.target.value)}
-              bg={colorMode === 'dark' ? 'gray.800' : 'warning.100'}
+              {...inputProps}
             />
           </FormControl>
 
@@ -331,22 +338,14 @@ const CheckoutPage = () => {
   const { addresses, addAddress } = useUserAddresses()
   const { createOrder } = useOrders()
 
-  // Get default address from userProfile
-  const defaultAddress = userProfile?.addresses?.find(addr => addr.is_default)?.address || ''
+  // Memoized default address
+  const defaultAddress = useMemo(() => 
+    addresses?.find(addr => addr.is_default) || addresses?.[0],
+    [addresses]
+  );
 
-  // Initialize state with user data
-  const [state, dispatch] = useReducer(checkoutReducer, {
-    ...initialState,
-    orderInfo: {
-      ...initialState.orderInfo,
-      userId: user?.id || '',
-      email: user?.email || '',
-      phoneNumber: userProfile?.phone_number || '',
-      fullName: userProfile?.full_name || '',
-      deliveryAddress: defaultAddress,
-    },
-  })
-
+  // Initialize state with initial values
+  const [state, dispatch] = useReducer(checkoutReducer, initialState)
   const { isSubmitting, paymentMethod, orderInfo, paymentInfo, orderSummary } = state
 
   // Modal controls
@@ -358,36 +357,54 @@ const CheckoutPage = () => {
 
   const { isOpen: isMapOpen, onOpen: onOpenMap, onClose: onCloseMap } = useDisclosure()
 
-  // Update state when user profile loads
+  // Memoized input props for consistent styling
+  const inputProps = useMemo(() => ({
+    variant: "ghost",
+    bg: colorMode === 'dark' ? 'gray.800' : 'brand.100',
+    focusBorderColor: "brand.500",
+    maxW: '85%'
+  }), [colorMode]);
+
+  // Initialize user data when profile and addresses load
   useEffect(() => {
-    if (userProfile && !profileLoading) {
+    if (userProfile && addresses && !profileLoading) {
+      const defaultAddr = addresses.find(addr => addr.is_default) || addresses[0];
+      
       dispatch({
-        type: 'SET_ORDER_INFO',
+        type: 'INITIALIZE_USER_DATA',
         payload: {
+          userId: user?.id || '',
+          email: user?.email || '',
           phoneNumber: userProfile.phone_number || '',
-          fullName: userProfile.full_name || '',
-          deliveryAddress: userProfile.addresses?.find(addr => addr.is_default)?.address || '',
+          fullName: userProfile.display_name || userProfile.full_name || '',
+          deliveryAddress: defaultAddr ? 
+            (defaultAddr.display_name || `${defaultAddr.address_line1}, ${defaultAddr.city}`) : '',
         },
       })
     }
-  }, [userProfile, profileLoading])
+  }, [userProfile, addresses, profileLoading, user?.id, user?.email])
 
-  // Event handlers
-  const handleOrderInfoChange = (field, value) => {
+  // Event handlers with useCallback for optimization
+  const handleOrderInfoChange = useCallback((field, value) => {
     dispatch({
       type: 'SET_ORDER_INFO',
       payload: { [field]: value },
     })
-  }
+  }, []);
 
-  const handlePaymentInfoChange = (field, value) => {
+  const handlePaymentInfoChange = useCallback((field, value) => {
     dispatch({
       type: 'SET_PAYMENT_INFO',
       payload: { [field]: value },
     })
-  }
+  }, []);
 
-  const handleOpenConfirmation = () => {
+  const handleSelectLocation = useCallback((location) => {
+    handleOrderInfoChange('deliveryAddress', location.display_name || location.address)
+    onCloseMap()
+  }, [handleOrderInfoChange, onCloseMap]);
+
+  const handleOpenConfirmation = useCallback(() => {
     if (!paymentMethod) {
       toast({
         title: t('checkout.paymentMethodRequired') || 'Payment Method Required',
@@ -411,7 +428,7 @@ const CheckoutPage = () => {
     }
 
     onOpenConfirmation()
-  }
+  }, [paymentMethod, orderInfo.fullName, orderInfo.phoneNumber, orderInfo.deliveryAddress, toast, t, onOpenConfirmation]);
 
   const handleConfirmOrder = async () => {
     dispatch({ type: 'START_SUBMISSION' })
@@ -422,7 +439,7 @@ const CheckoutPage = () => {
         throw new Error('User not authenticated')
       }
 
-      const deliveryAddress = orderInfo.deliveryAddress || defaultAddress
+      const deliveryAddress = orderInfo.deliveryAddress || defaultAddress?.display_name
 
       // Prepare order data - simplified to match API expectations
       const orderData = {
@@ -448,10 +465,14 @@ const CheckoutPage = () => {
 
       // Save address if requested and not already present
       if (orderInfo.saveAddress && deliveryAddress) {
-        const addressExists = addresses.some(addr => addr.address === deliveryAddress)
+        const addressExists = addresses.some(addr => 
+          addr.display_name === deliveryAddress || 
+          addr.address_line1 === deliveryAddress
+        )
         if (!addressExists) {
           await addAddress({
-            address: deliveryAddress,
+            address_line1: deliveryAddress,
+            display_name: deliveryAddress,
             is_default: true,
           })
         }
@@ -508,10 +529,20 @@ const CheckoutPage = () => {
                 <FormLabel fontSize="sm">{t('checkout.fullName')}</FormLabel>
                 <Input
                   placeholder={t('checkout.enterYourFullName') || 'Enter your full name'}
-                  variant="ghost"
-                  maxW={'85%'}
                   value={orderInfo.fullName}
                   onChange={(e) => handleOrderInfoChange('fullName', e.target.value)}
+                  {...inputProps}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel fontSize="sm">{t('checkout.emailAddress')}</FormLabel>
+                <Input
+                  type="email"
+                  placeholder={t('checkout.yourEmailAddress') || 'Your email address'}
+                  value={orderInfo.email}
+                  onChange={(e) => handleOrderInfoChange('email', e.target.value)}
+                  {...inputProps}
                 />
               </FormControl>
 
@@ -519,10 +550,9 @@ const CheckoutPage = () => {
                 <FormLabel fontSize="sm">{t('checkout.phoneNumber')}</FormLabel>
                 <Input
                   placeholder={t('checkout.yourPhoneNumber') || 'Your phone number'}
-                  variant="ghost"
-                  maxW={'85%'}
                   value={orderInfo.phoneNumber}
                   onChange={(e) => handleOrderInfoChange('phoneNumber', e.target.value)}
+                  {...inputProps}
                 />
               </FormControl>
 
@@ -530,10 +560,9 @@ const CheckoutPage = () => {
                 <FormLabel fontSize="sm">{t('checkout.deliveryAddress')}</FormLabel>
                 <Input
                   placeholder={t('checkout.enterDeliveryAddress') || 'Enter delivery address'}
-                  variant="ghost"
-                  maxW={'85%'}
                   value={orderInfo.deliveryAddress}
                   onChange={(e) => handleOrderInfoChange('deliveryAddress', e.target.value)}
+                  {...inputProps}
                 />
                 <Button mt={2} size="sm" variant="outline" colorScheme="brand" onClick={onOpenMap}>
                   {t('checkout.selectOnMap') || 'Select on Map'}
@@ -544,9 +573,8 @@ const CheckoutPage = () => {
                 <Input
                   placeholder={t('checkout.specialInstructions')}
                   value={orderInfo.notes}
-                  variant="ghost"
-                  maxW={'85%'}
                   onChange={(e) => handleOrderInfoChange('notes', e.target.value)}
+                  {...inputProps}
                 />
               </FormControl>
 
@@ -554,9 +582,8 @@ const CheckoutPage = () => {
                 <Input
                   placeholder={t('checkout.couponCode')}
                   value={orderInfo.couponCode}
-                  variant={'ghost'}
-                  maxW={'85%'}
                   onChange={(e) => handleOrderInfoChange('couponCode', e.target.value)}
+                  {...inputProps}
                 />
               </FormControl>
 
@@ -565,10 +592,9 @@ const CheckoutPage = () => {
                   placeholder={
                     t('checkout.deliveryInstructions') || 'Optional delivery instructions'
                   }
-                  variant="ghost"
-                  maxW={'85%'}
                   value={orderInfo.deliveryInstructions}
                   onChange={(e) => handleOrderInfoChange('deliveryInstructions', e.target.value)}
+                  {...inputProps}
                 />
               </FormControl>
 
@@ -671,10 +697,7 @@ const CheckoutPage = () => {
       <MapModal
         isOpen={isMapOpen}
         onClose={onCloseMap}
-        onSelectLocation={(location) => {
-          handleOrderInfoChange('deliveryAddress', location.display_name || location.address)
-          onCloseMap()
-        }}
+        onSelectLocation={handleSelectLocation}
       />
 
       <OrderConfirmationModal
