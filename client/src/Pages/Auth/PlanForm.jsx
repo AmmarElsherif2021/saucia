@@ -6,8 +6,9 @@ import {
 import { useState, useEffect } from 'react';
 import { uploadImage, deleteImage } from '../../API/imageUtils'; 
 import { useAdminFunctions } from '../../Hooks/useAdminFunctions';
-
+import { useTranslation } from 'react-i18next';
 const PlanForm = ({ onSubmit, onCancel, initialData = {} }) => {
+  const {t}= useTranslation();
   const { 
     useGetAllMeals, 
     useGetAllItems, 
@@ -194,297 +195,309 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {} }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      {/* Image Upload Section */}
-      <Box mb={6}>
-        <FormLabel>Plan Avatar</FormLabel>
-        <Flex direction="column" align="center" gap={3}>
-          {imagePreview ? (
-            <Image 
-              src={imagePreview} 
-              alt="Plan preview" 
-              maxW="200px"
-              maxH="150px"
-              objectFit="contain"
-              borderRadius="md"
-              border="1px solid"
-              borderColor="gray.200"
-            />
-          ) : (
-            <Box 
-              w="200px" 
-              h="150px" 
-              border="2px dashed" 
-              borderColor="gray.300" 
-              borderRadius="md"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Text color="gray.500">No Image</Text>
-            </Box>
-          )}
-          
-          <Box position="relative">
-            <Button 
-              as="label"
-              colorScheme="blue"
-              cursor="pointer"
-              isLoading={isUploading}
-              loadingText="Uploading..."
-              size="sm"
-            >
-              Choose Image
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                position="absolute"
-                top={0}
-                left={0}
-                opacity={0}
-                width="100%"
-                height="100%"
-                cursor="pointer"
-              />
-            </Button>
-          </Box>
-          <Text fontSize="sm" color="gray.500">
-            JPEG, PNG or WebP (Max 5MB)
-          </Text>
-        </Flex>
-      </Box>
-
-      <SimpleGrid columns={[1, 2]} spacing={4} mb={6}>
-        <FormControl isRequired>
-          <FormLabel>Title (English)</FormLabel>
-          <Input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            placeholder="Plan title"
-          />
-        </FormControl>
-        
-        <FormControl isRequired>
-          <FormLabel>Title (Arabic)</FormLabel>
-          <Input
-            type="text"
-            name="title_arabic"
-            value={formData.title_arabic}
-            onChange={handleChange}
-            placeholder="عنوان الخطة"
-            dir="rtl"
-          />
-        </FormControl>
-      </SimpleGrid>
-
-      <Heading size="md" mb={4}>Nutritional Information</Heading>
-      <Divider mb={4} />
-      <SimpleGrid columns={[1, 2, 3]} spacing={4} mb={6}>
-        <FormControl isRequired>
-          <FormLabel>Carbohydrates (g)</FormLabel>
-          <Input
-            type="number"
-            name="carb"
-            value={formData.carb}
-            onChange={handleChange}
-            min={0}
-          />
-        </FormControl>
-        
-        <FormControl isRequired>
-          <FormLabel>Protein (g)</FormLabel>
-          <Input
-            type="number"
-            name="protein"
-            value={formData.protein}
-            onChange={handleChange}
-            min={0}
-          />
-        </FormControl>
-        
-        <FormControl isRequired>
-          <FormLabel>Calories (kcal)</FormLabel>
-          <Input
-            type="number"
-            name="kcal"
-            value={formData.kcal}
-            onChange={handleChange}
-            min={0}
-          />
-        </FormControl>
-      </SimpleGrid>
-
-      <Heading size="md" mb={4}>Meal Terms</Heading>
-      <Divider mb={4} />
-      <SimpleGrid columns={[1, 2]} spacing={4} mb={6}>
-        <FormControl>
-          <FormLabel>Short Term Meals</FormLabel>
-          <Input
-            type="number"
-            name="short_term_meals"
-            value={formData.short_term_meals}
-            onChange={handleChange}
-            min={0}
-          />
-        </FormControl>
-        
-        <FormControl>
-          <FormLabel>Medium Term Meals</FormLabel>
-          <Input
-            type="number"
-            name="medium_term_meals"
-            value={formData.medium_term_meals}
-            onChange={handleChange}
-            min={0}
-          />
-        </FormControl>
-      </SimpleGrid>
-
-      <SimpleGrid columns={[1, 2]} spacing={4} mb={6}>
-        <FormControl>
-          <FormLabel>Description (English)</FormLabel>
-          <Textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="Enter description"
-            rows={4}
-          />
-        </FormControl>
-        
-        <FormControl>
-          <FormLabel>Description (Arabic)</FormLabel>
-          <Textarea
-            name="description_arabic"
-            value={formData.description_arabic}
-            onChange={handleChange}
-            placeholder="أدخل الوصف"
-            dir="rtl"
-            rows={4}
-          />
-        </FormControl>
-      </SimpleGrid>
-
-      <Box mb={6}>
-        <Heading size="md" mb={4}>Meal Selection</Heading>
-        <Divider mb={4} />
-        {(isLoadingMeals || (initialData?.id && isLoadingPlan)) ? (
-          <Stack spacing={3}>
-            {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} height="60px" borderRadius="md" />
-            ))}
-          </Stack>
-        ) : (
-          <SimpleGrid columns={gridColumns} spacing={4}>
-            {meals.map(meal => (
-              <Box 
-                key={meal.id} 
-                p={3} 
-                borderWidth="1px" 
-                borderRadius="md"
-                bg={formData.meals?.includes(meal.id) ? 'blue.50' : 'transparent'}
-                borderColor={formData.meals?.includes(meal.id) ? 'blue.200' : 'gray.200'}
-              >
-                <Checkbox
-                  isChecked={formData.meals?.includes(meal.id)}
-                  onChange={() => handleMealToggle(meal.id)}
-                  colorScheme="blue"
-                >
-                  {meal.name}
-                </Checkbox>
-                <Text fontSize="sm" color="gray.500" mt={1}>
-                  {meal.category} - ${meal.base_price}
-                </Text>
-              </Box>
-            ))}
-          </SimpleGrid>
-        )}
-      </Box>
-
-      <Box mb={6}>
-        <Heading size="md" mb={4}>Additives</Heading>
-        <Divider mb={4} />
-        {isLoadingItems ? (
-          <Stack spacing={3}>
-            {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} height="60px" borderRadius="md" />
-            ))}
-          </Stack>
-        ) : (
-          <SimpleGrid columns={gridColumns} spacing={4}>
-            {additiveItems.map(item => (
-              <Box 
-                key={item.id} 
-                p={3} 
-                borderWidth="1px" 
-                borderRadius="md"
-                bg={formData.additives?.includes(item.id) ? 'teal.50' : 'transparent'}
-                borderColor={formData.additives?.includes(item.id) ? 'teal.200' : 'gray.200'}
-              >
-                <Checkbox
-                  isChecked={formData.additives?.includes(item.id)}
-                  onChange={() => handleAdditiveToggle(item.id)}
-                  colorScheme="teal"
-                >
-                  {item.name}
-                </Checkbox>
-                <Text fontSize="sm" color="gray.500" mt={1}>
-                  ${item.price}
-                </Text>
-              </Box>
-            ))}
-          </SimpleGrid>
-        )}
-      </Box>
-
-      <SimpleGrid columns={[1, 2]} spacing={4} mb={6}>
-        <FormControl isRequired>
-          <FormLabel>Price per Meal</FormLabel>
-          <Input
-            type="number"
-            name="price_per_meal"
-            value={formData.price_per_meal}
-            onChange={handleChange}
-            min={0}
-          />
-        </FormControl>
-        
-        <FormControl display="flex" alignItems="center">
-          <FormLabel htmlFor="is_active" mb="0">
-            Active Status
-          </FormLabel>
-          <Switch
-            id="is_active"
-            name="is_active"
-            isChecked={formData.is_active}
-            onChange={handleChange}
-            size="lg"
-          />
-        </FormControl>
-      </SimpleGrid>
-
-      <Flex justify="flex-end" gap={2} mt={6}>
-        <Button 
-          onClick={onCancel} 
-          variant="outline" 
-          width="20%"
-          isDisabled={isUploading}
+  {/* Image Upload Section */}
+  <Box mb={6}>
+    <Flex direction="column" align="center" gap={3}>
+      {imagePreview ? (
+        <Image
+          src={imagePreview}
+          alt={t('admin.modals.planPreview')}
+          maxW="200px"
+          maxH="150px"
+          objectFit="contain"
+          borderRadius="md"
+          border="1px solid"
+          borderColor="gray.200"
+        />
+      ) : (
+        <Box
+          w="200px"
+          h="150px"
+          border="2px dashed"
+          borderColor="gray.300"
+          borderRadius="md"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
         >
-          Cancel
-        </Button>
-        <Button 
-          type="submit" 
-          colorScheme="brand" 
-          width="20%"
+          <Text color="gray.500">{t('admin.modals.noImage')}</Text>
+        </Box>
+      )}
+
+      <Box position="relative">
+        <Button
+          as="label"
+          colorScheme="blue"
+          cursor="pointer"
           isLoading={isUploading}
-          loadingText="Saving..."
+          loadingText={t('admin.modals.uploading')}
+          size="sm"
         >
-          Save Plan
+          {t('admin.modals.chooseImage')}
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            position="absolute"
+            top={0}
+            left={0}
+            opacity={0}
+            width="100%"
+            height="100%"
+            cursor="pointer"
+          />
         </Button>
-      </Flex>
-    </form>
+      </Box>
+      <Text fontSize="sm" color="gray.500">
+        {t('admin.modals.imageHint')}
+      </Text>
+    </Flex>
+  </Box>
+
+  <SimpleGrid columns={[1, 2]} spacing={4} mb={6}>
+    <FormControl isRequired>
+      <FormLabel>{t('admin.modals.titleEn')}</FormLabel>
+      <Input
+        type="text"
+        name="title"
+        value={formData.title}
+        onChange={handleChange}
+        placeholder={t('admin.modals.titleEn')}
+      />
+    </FormControl>
+
+    <FormControl isRequired>
+      <FormLabel>{t('admin.modals.titleAr')}</FormLabel>
+      <Input
+        type="text"
+        name="title_arabic"
+        value={formData.title_arabic}
+        onChange={handleChange}
+        placeholder={t('admin.modals.titleAr')}
+        dir="rtl"
+      />
+    </FormControl>
+  </SimpleGrid>
+
+  <Heading size="md" mb={4}>{t('admin.modals.nutritionalInfo')}</Heading>
+  <Divider mb={4} />
+  <SimpleGrid columns={[1, 2, 3]} spacing={4} mb={6}>
+    <FormControl isRequired>
+      <FormLabel>{t('admin.modals.carbs')}</FormLabel>
+      <Input
+        type="number"
+        name="carb"
+        value={formData.carb}
+        onChange={handleChange}
+        min={0}
+      />
+    </FormControl>
+
+    <FormControl isRequired>
+      <FormLabel>{t('admin.modals.protein')}</FormLabel>
+      <Input
+        type="number"
+        name="protein"
+        value={formData.protein}
+        onChange={handleChange}
+        min={0}
+      />
+    </FormControl>
+
+    <FormControl isRequired>
+      <FormLabel>{t('admin.modals.calories')}</FormLabel>
+      <Input
+        type="number"
+        name="kcal"
+        value={formData.kcal}
+        onChange={handleChange}
+        min={0}
+      />
+    </FormControl>
+  </SimpleGrid>
+
+  <Heading size="md" mb={4}>{t('admin.modals.mealTerms')}</Heading>
+  <Divider mb={4} />
+  <SimpleGrid columns={[1, 2]} spacing={4} mb={6}>
+    <FormControl>
+      <FormLabel>{t('admin.modals.shortTermMeals')}</FormLabel>
+      <Input
+        type="number"
+        name="short_term_meals"
+        value={formData.short_term_meals}
+        onChange={handleChange}
+        min={0}
+      />
+    </FormControl>
+
+    <FormControl>
+      <FormLabel>{t('admin.modals.mediumTermMeals')}</FormLabel>
+      <Input
+        type="number"
+        name="medium_term_meals"
+        value={formData.medium_term_meals}
+        onChange={handleChange}
+        min={0}
+      />
+    </FormControl>
+  </SimpleGrid>
+
+  <SimpleGrid columns={[1, 2]} spacing={4} mb={6}>
+    <FormControl>
+      <FormLabel>{t('admin.modals.descriptionEn')}</FormLabel>
+      <Textarea
+        name="description"
+        value={formData.description}
+        onChange={handleChange}
+        placeholder={t('admin.modals.descriptionEn')}
+        rows={4}
+      />
+    </FormControl>
+
+    <FormControl>
+      <FormLabel>{t('admin.modals.descriptionAr')}</FormLabel>
+      <Textarea
+        name="description_arabic"
+        value={formData.description_arabic}
+        onChange={handleChange}
+        placeholder={t('admin.modals.descriptionAr')}
+        dir="rtl"
+        rows={4}
+      />
+    </FormControl>
+  </SimpleGrid>
+
+  {/* Meals */}
+  <Box mb={6}>
+    <Heading size="md" mb={4}>{t('admin.modals.mealSelection')}</Heading>
+    <Divider mb={4} />
+    {(isLoadingMeals || (initialData?.id && isLoadingPlan)) ? (
+      <Stack spacing={3}>
+        {[...Array(6)].map((_, i) => (
+          <Skeleton key={i} height="60px" borderRadius="md" />
+        ))}
+      </Stack>
+    ) : (
+      <Box maxH="300px" overflowY="auto" pr={2} border="1px solid" borderColor="gray.200" borderRadius="md">
+        <SimpleGrid columns={gridColumns} spacing={4} p={2}>
+          {meals.map(meal => (
+            <Box
+              key={meal.id}
+              p={3}
+              borderWidth="1px"
+              borderRadius="md"
+              cursor="pointer"
+              transition="0.2s"
+              bg={formData.meals?.includes(meal.id) ? 'blue.50' : 'white'}
+              borderColor={formData.meals?.includes(meal.id) ? 'blue.300' : 'gray.200'}
+              _hover={{ borderColor: 'blue.400' }}
+            >
+              <Checkbox
+                isChecked={formData.meals?.includes(meal.id)}
+                onChange={() => handleMealToggle(meal.id)}
+                colorScheme="blue"
+              >
+                {meal.name}
+              </Checkbox>
+              <Text fontSize="sm" color="gray.500" mt={1}>
+                {meal.category} - ${meal.base_price}
+              </Text>
+            </Box>
+          ))}
+        </SimpleGrid>
+      </Box>
+    )}
+  </Box>
+
+  {/* Additives */}
+  <Box mb={6}>
+    <Heading size="md" mb={4}>{t('admin.modals.additives')}</Heading>
+    <Divider mb={4} />
+    {isLoadingItems ? (
+      <Stack spacing={3}>
+        {[...Array(6)].map((_, i) => (
+          <Skeleton key={i} height="60px" borderRadius="md" />
+        ))}
+      </Stack>
+    ) : (
+      <Box maxH="300px" overflowY="auto" pr={2} border="1px solid" borderColor="gray.200" borderRadius="md">
+        <SimpleGrid columns={gridColumns} spacing={4} p={2}>
+          {additiveItems.map(item => (
+            <Box
+              key={item.id}
+              p={3}
+              borderWidth="1px"
+              borderRadius="md"
+              cursor="pointer"
+              transition="0.2s"
+              bg={formData.additives?.includes(item.id) ? 'teal.50' : 'white'}
+              borderColor={formData.additives?.includes(item.id) ? 'teal.300' : 'gray.200'}
+              _hover={{ borderColor: 'teal.400' }}
+            >
+              <Checkbox
+                isChecked={formData.additives?.includes(item.id)}
+                onChange={() => handleAdditiveToggle(item.id)}
+                colorScheme="teal"
+              >
+                {item.name}
+              </Checkbox>
+              <Text fontSize="sm" color="gray.500" mt={1}>
+                ${item.price}
+              </Text>
+            </Box>
+          ))}
+        </SimpleGrid>
+      </Box>
+    )}
+  </Box>
+
+  <SimpleGrid columns={[1, 2]} spacing={4} mb={6}>
+    <FormControl isRequired>
+      <FormLabel>{t('admin.modals.pricePerMeal')}</FormLabel>
+      <Input
+        type="number"
+        name="price_per_meal"
+        value={formData.price_per_meal}
+        onChange={handleChange}
+        min={0}
+      />
+    </FormControl>
+
+    <FormControl display="flex" alignItems="center">
+      <FormLabel htmlFor="is_active" mb="0">
+        {t('admin.modals.isActive')}
+      </FormLabel>
+      <Switch
+        id="is_active"
+        name="is_active"
+        isChecked={formData.is_active}
+        onChange={handleChange}
+        size="lg"
+      />
+    </FormControl>
+  </SimpleGrid>
+
+  <Flex justify="flex-end" gap={2} mt={6}>
+    <Button
+      onClick={onCancel}
+      variant="outline"
+      width="20%"
+      isDisabled={isUploading}
+    >
+      {t('admin.modals.cancel')}
+    </Button>
+    <Button
+      type="submit"
+      colorScheme="brand"
+      width="20%"
+      isLoading={isUploading}
+      loadingText={t('admin.modals.saving')}
+    >
+      {t('admin.modals.save')}
+    </Button>
+  </Flex>
+</form>
+
   )
 }
 

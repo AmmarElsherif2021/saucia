@@ -107,7 +107,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
         p={{ base: 4, md: 6 }} 
         borderWidth="1px" 
         borderRadius="lg" 
-        bg="warning.50"
+        bg="brand.50"
         textAlign="center"
       >
         <Text color="gray.600" fontSize={{ base: 'md', md: 'lg' }}>
@@ -176,8 +176,8 @@ const SubscriptionSummary = ({ onDataChange }) => {
     <Box 
       p={{ base: 1, md: 2, lg: 3 }} 
       borderWidth="2px"
-      borderColor={'warning.500'}
-      bg={colorMode=='dark' ? 'gray.700':'warning.50'} 
+      borderColor={'brand.500'}
+      bg={colorMode=='dark' ? 'gray.700':'brand.50'} 
       borderRadius="lg" 
     >  
       <VStack spacing={{ base: 4, md: 5, lg: 6 }} align="stretch">
@@ -209,7 +209,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
               {chosenPlan.kcal} {t('premium.kcal') || 'kcal'}
             </Badge>
             <Badge 
-              colorScheme="warning" 
+              colorScheme="brand" 
               variant="solid" 
               fontSize={{ base: 'xs', sm: 'sm' }} 
               px={2} 
@@ -363,7 +363,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
 
         {/* Pause Information */}
         {subscriptionData.is_paused && (
-          <Alert status="warning" borderRadius="md" fontSize={{ base: 'xs', sm: 'sm' }}>
+          <Alert status="brand" borderRadius="md" fontSize={{ base: 'xs', sm: 'sm' }}>
             <AlertIcon boxSize={{ base: '14px', sm: '16px' }} />
             <Box>
               <Text fontSize={{ base: 'xs', sm: 'sm' }} fontWeight="medium">

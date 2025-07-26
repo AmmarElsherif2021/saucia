@@ -26,7 +26,7 @@ const fetchAdditiveItems = useCallback(async (additiveIds) => {
       .from('items')
       .select('*')
       .in('id', additiveIds)
-      .eq('is_additive', true);
+      .eq('is_available', true);
     
     const items = additiveData || [];
     setAdditiveItems(items);
@@ -577,6 +577,7 @@ const fetchAdditiveItems = useCallback(async (additiveIds) => {
     // State
     plans,
     subscriptions,
+    additiveItems,
     loading,
     error,
     
@@ -619,7 +620,5 @@ const fetchAdditiveItems = useCallback(async (additiveIds) => {
     getPlansByPriceRange,
     getPlansByMealCount,
     getPlanAnalytics,
-    
-    
   };
 }

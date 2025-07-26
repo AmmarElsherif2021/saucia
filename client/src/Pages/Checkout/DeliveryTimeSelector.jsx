@@ -28,6 +28,7 @@ const DeliveryTimeSelector = () => {
         transition="all 0.2s ease"
         boxShadow={isSelected ? 'md' : 'none'}
         _hover={{ transform: 'scale(1.05)' }}
+        fontSize={'xs'}
       >
         {slot}
       </Button>
@@ -35,7 +36,7 @@ const DeliveryTimeSelector = () => {
   });
 
   return (
-    <Box mb={2}>
+    <Box mb={2} w={'100%'} px={4}>
       <Heading size="md" mb={3}>
         {t('premium.selectDeliveryTime')}
       </Heading>
@@ -43,7 +44,7 @@ const DeliveryTimeSelector = () => {
         {t('premium.deliveryTimeInstructions')}
       </Text>
 
-      <SimpleGrid columns={{ base: 2, sm: 3, md: 3 }} spacing={1}>
+      <SimpleGrid columns={{ base: 2, sm: 3, md: 3 }} spacing={2}>
         {timeSlots.map((slot) => (
           <TimeSlotButton slot={slot} key={slot} />
         ))}

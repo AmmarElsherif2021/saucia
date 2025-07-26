@@ -566,7 +566,7 @@ const CheckoutPlan = () => {
         </Section>
 
         {/* Subscription Summary */}
-        <Section title={t('checkout.subscriptionSummary')} bgColor="warning" icon={orderIcon}>
+        <Section title={t('checkout.subscriptionSummary')} bgColor="brand" icon={orderIcon}>
           <SubscriptionSummary />
           <Button
             colorScheme="brand"

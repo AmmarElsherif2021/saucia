@@ -71,7 +71,7 @@ export const FormModal = ({
 }) => (
   <Modal isOpen={isOpen} onClose={onClose}>
     <ModalOverlay />
-    <ModalContent>
+    <ModalContent px={2}>
       <ModalHeader>{title}</ModalHeader>
       <ModalCloseButton />
       <ModalBody>
