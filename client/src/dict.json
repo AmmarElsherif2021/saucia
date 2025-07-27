@@ -338,6 +338,12 @@
         "clearAll": "Clear All"
       },
       "profile": {
+        "rating":"Rating",
+        "reviewTitle":"Review Title",
+        "enterReviewTitle":"Enter Review Title",
+        "reviewContent":"Review Content",
+        "enterReviewContent":"Enter Review Content",
+        "signOut":"sign out",
         "profileCompletion":"Profile Completion",
         "createReview":"Create Review",
         "addPayment":"Add Payment Methods",
@@ -838,6 +844,12 @@
         "minimumOrder": "Minimum Order Required"
       },
       "checkout": {
+        "subscriptionSuccess":"Subscribed successfully",
+        "subscriptionCreated":"Subscription created",
+        "selectedAdditives":"Selected extras",
+        "noAdditive":"No Additives",
+        "addMeal":"Add meal",
+        "addAdditives":"Add extras",
         "remainingMeals":"Remaining Meals",
         "confirmOrder":"confirm order",
         "allergenAlert":"allergen alert",
@@ -1255,6 +1267,12 @@
         "clearAll": "مسح الكل"
       },
       "profile": {
+        "rating":"التقييم",
+        "reviewTitle":"عنوان التقييم",
+        "enterReviewTitle":"ادخل عنوان التقييم",
+        "reviewContent":"تفاصيل التقييم",
+        "enterReviewContent":"ادخل تفاصيل التقييم",
+        "signOut":"تسجيل الخروج",
         "profileCompletion":"اكمال بيانات العميل",
         "createReview":"اضف تقييم",
         "addAddress":"اضف عنوان",
@@ -1766,6 +1784,12 @@
         "minimumOrder": "الحد الأدنى المطلوب للطلب"
       },
       "checkout": {
+        "subscriptionSuccess":"تم الاشتراك بنجاح",
+         "subscriptionCreated":"تم اضافتك على قوائم الاشتراك في الخطة",
+        "selectedAdditives":"اضافات",
+        "noAdditive":"لا اضافات",
+        "addMeal":"اضف وجبة",
+        "addAdditives": "اختر اضافة للوجبة",
         "remainingMeals":"الوجبات المتبقية",
         "confirmOrder":"تأكيد الطلب",
         "allergenAlert":"مسبب للحساسية",

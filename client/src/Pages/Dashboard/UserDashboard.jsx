@@ -1,7 +1,8 @@
 import {ProfileHeader, OverviewSection } from './DashboardSections';
 import EnhancedProfileModal from './EnhancedProfileModal';
 import { OrderHistoryTable, SubscriptionDetails } from './DashboardComponents'
-import { 
+import {
+  Center, 
   Box,
   Button, 
   useColorMode, 
@@ -98,7 +99,7 @@ export const UserDashboard = () => {
   } = useUserOrders()
 
   const { 
-    subscriptions, 
+    subscription, 
     isLoading: isSubLoading,
     createSubscription,
     updateSubscription,
@@ -176,7 +177,9 @@ export const UserDashboard = () => {
   const [initialFormData, setInitialFormData] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const toast = useToast()
-
+  useEffect(()=>{
+    console.log(`userDashboard subscripton ${JSON.stringify(subscription)}`)
+  },[])
   // Default address
   const defaultAddress = addresses?.find(addr => addr.is_default) || null
 
@@ -620,7 +623,7 @@ export const UserDashboard = () => {
     healthProfile,
     addresses,
     orders,
-    subscriptions,
+    subscription,
     paymentMethods,
     allergies,
     dietaryPreferences,
@@ -817,242 +820,284 @@ export const UserDashboard = () => {
       </Modal>
       
       {/* Main Content */}
-      <Tabs variant="enclosed">
-        <TabList>
-          <Tab>{t('profile.overview')}</Tab>
-          <Tab>{t('profile.orderHistory')}</Tab>
-          <Tab>{t('profile.subscription')}</Tab>
-          <Tab>{t('profile.addresses')}</Tab>
-          <Tab>{t('profile.paymentMethods')}</Tab>
-          <Tab>{t('profile.reviews')}</Tab>
-          <Tab>{t('profile.favorites')}</Tab>
-        </TabList>
-        
-        <TabPanels>
-          <TabPanel>
-            <OverviewSection user={userData} t={t} />
-          </TabPanel>
-          
-          <TabPanel>
-            <OrderHistoryTable orders={orders} isLoading={isOrdersLoading} t={t} />
-          </TabPanel>
-          
-          <TabPanel>
-            <SubscriptionDetails 
-              subscriptions={subscriptions} 
-              isLoading={isSubLoading}
-              onPause={handlePauseSubscription}
-              onResume={handleResumeSubscription}
-              isPausing={isPausingSubscription}
-              isResuming={isResumingSubscription}
-              t={t}
-            />
-          </TabPanel>
+<Tabs variant="enclosed" isFitted={{ base: true, md: false }}>
+  <TabList 
+    overflowX="auto"
+    overflowY="hidden"
+    whiteSpace="nowrap"
+    pb={2}
+    sx={{
+      scrollbarWidth: 'none',
+      '::-webkit-scrollbar': { display: 'none' },
+      msOverflowStyle: 'none'
+    }}
+  >
+    <Tab fontSize={{ base: 'sm', md: 'md' }}>{t('profile.overview')}</Tab>
+    <Tab fontSize={{ base: 'sm', md: 'md' }}>{t('profile.orderHistory')}</Tab>
+    <Tab fontSize={{ base: 'sm', md: 'md' }}>{t('profile.subscription')}</Tab>
+    <Tab fontSize={{ base: 'sm', md: 'md' }}>{t('profile.addresses')}</Tab>
+    <Tab fontSize={{ base: 'sm', md: 'md' }}>{t('profile.paymentMethods')}</Tab>
+    <Tab fontSize={{ base: 'sm', md: 'md' }}>{t('profile.reviews')}</Tab>
+    <Tab fontSize={{ base: 'sm', md: 'md' }}>{t('profile.favorites')}</Tab>
+  </TabList>
+  
+  <TabPanels>
+    <TabPanel px={0}>
+      <OverviewSection user={userData} t={t} />
+    </TabPanel>
+    
+    <TabPanel px={0}>
+      <OrderHistoryTable orders={orders} isLoading={isOrdersLoading} t={t} />
+    </TabPanel>
+    
+    <TabPanel px={0}>
+      <SubscriptionDetails 
+        subscriptions={subscription} 
+        isLoading={isSubLoading}
+        onPause={handlePauseSubscription}
+        onResume={handleResumeSubscription}
+        isPausing={isPausingSubscription}
+        isResuming={isResumingSubscription}
+        t={t}
+      />
+    </TabPanel>
 
-          <TabPanel>
-            <Box>
-              <Flex justify="space-between" align="center" mb={4}>
-                <Heading size="md">{t('profile.addresses')}</Heading>
-                <Button
-                  leftIcon={<AddIcon />}
-                  colorScheme="brand"
-                  onClick={() => {
-                    setAddressFormData({})
-                    setEditingAddress(null)
-                    onAddressOpen()
-                  }}
-                >
-                  {t('profile.addAddress')}
-                </Button>
-              </Flex>
-              {isAddressLoading ? (
-                <Spinner />
-              ) : (
-                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                  {addresses?.map(address => (
-                    <Box key={address.id} p={4} borderWidth="1px" borderRadius="lg">
-                      <Flex justify="space-between" align="start">
-                        <Box>
-                          <Text fontWeight="bold">{address.label}</Text>
-                          <Text>{address.street}</Text>
-                          <Text>{address.city}</Text>
-                          {address.is_default && (
-                            <Badge colorScheme="green" mt={2}>
-                              {t('profile.default')}
-                            </Badge>
-                          )}
-                        </Box>
-                        <Flex>
-                          <IconButton
-                            icon={<EditIcon />}
-                            size="sm"
-                            onClick={() => {
-                              setAddressFormData(address)
-                              setEditingAddress(address)
-                              onAddressOpen()
-                            }}
-                            mx={2}
-                          />
-                          <IconButton
-                            icon={<DeleteIcon />}
-                            size="sm"
-                            colorScheme="red"
-                            onClick={() => handleDeleteAddress(address.id)}
-                            mx={2}
-                          />
-                        </Flex>
-                      </Flex>
-                    </Box>
-                  ))}
-                </SimpleGrid>
-              )}
-            </Box>
-          </TabPanel>
-
-          <TabPanel>
-            <Box>
-              <Flex justify="space-between" align="center" mb={4}>
-                <Heading size="md">{t('profile.paymentMethods')}</Heading>
-                <Button
-                  leftIcon={<AddIcon />}
-                  colorScheme="brand"
-                  onClick={() => {
-                    setPaymentFormData({})
-                    setEditingPayment(null)
-                    onPaymentOpen()
-                  }}
-                >
-                  {t('profile.addPayment')}
-                </Button>
-              </Flex>
-              {isPaymentLoading ? (
-                <Spinner />
-              ) : (
-                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                  {paymentMethods?.map(payment => (
-                    <Box key={payment.id} p={4} borderWidth="1px" borderRadius="lg">
-                      <Flex justify="space-between" align="start">
-                        <Box>
-                          <Text fontWeight="bold">
-                            **** **** **** {payment.card_number?.slice(-4)}
-                          </Text>
-                          <Text>{payment.cardholder_name}</Text>
-                          <Text>Expires: {payment.expiry_date}</Text>
-                        </Box>
-                        <Flex>
-                          <IconButton
-                            icon={<EditIcon />}
-                            size="sm"
-                            onClick={() => {
-                              setPaymentFormData(payment)
-                              setEditingPayment(payment)
-                              onPaymentOpen()
-                            }}
-                            mr={2}
-                          />
-                          <IconButton
-                            icon={<DeleteIcon />}
-                            size="sm"
-                            colorScheme="red"
-                            onClick={() => handleDeletePaymentMethod(payment.id)}
-                          />
-                        </Flex>
-                      </Flex>
-                    </Box>
-                  ))}
-                </SimpleGrid>
-              )}
-            </Box>
-          </TabPanel>
-
-          <TabPanel>
-            <Box>
-              <Flex justify="space-between" align="center" mb={4}>
-                <Heading size="md">{t('profile.reviews')}</Heading>
-                <Button
-                  leftIcon={<AddIcon />}
-                  colorScheme="brand"
-                  onClick={() => {
-                    setReviewFormData({})
-                    setEditingReview(null)
-                    onReviewOpen()
-                  }}
-                >
-                  {t('profile.createReview')}
-                </Button>
-              </Flex>
-              {isReviewsLoading ? (
-                <Spinner />
-              ) : (
-                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                  {reviews?.map(review => (
-                    <Box key={review.id} p={4} borderWidth="1px" borderRadius="lg">
-                      <Flex justify="space-between" align="start">
-                        <Box>
-                          <Text fontWeight="bold">{review.title}</Text>
-                          <Text>{review.content}</Text>
-                          <Text>Rating: {review.rating} Stars</Text>
-                        </Box>
-                        <Flex>
-                          <IconButton
-                            icon={<EditIcon />}
-                            size="sm"
-                            onClick={() => {
-                              setReviewFormData(review)
-                              setEditingReview(review)
-                              onReviewOpen()
-                            }}
-                            mr={2}
-                          />
-                          <IconButton
-                            icon={<DeleteIcon />}
-                            size="sm"
-                            colorScheme="red"
-                            onClick={() => handleDeleteReview(review.id)}
-                          />
-                        </Flex>
-                      </Flex>
-                    </Box>
-                  ))}
-                </SimpleGrid>
-              )}
-            </Box>
-          </TabPanel>
-          <TabPanel>
-            <Box>
-              <Flex justify="space-between" align="center" mb={4}>
-                <Heading size="md">{t('profile.favorites')}</Heading>
-              </Flex>
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                {favoriteMeals?.map(meal => (
-                  <Box key={meal.id} p={4} borderWidth="1px" borderRadius="lg">
-                    <Text fontWeight="bold">{meal.name}</Text>
-                    <Text>{meal.description}</Text>
+    <TabPanel px={0}>
+      <Box>
+        <Flex 
+          direction={{ base: 'column', md: 'row' }}
+          justify="space-between"
+          align={{ base: 'flex-start', md: 'center' }}
+          gap={3}
+          mb={4}
+        >
+          <Heading size="md">{t('profile.addresses')}</Heading>
+          <Button
+            leftIcon={<AddIcon />}
+            colorScheme="brand"
+            size={{ base: 'sm', md: 'md' }}
+            onClick={() => {
+              setAddressFormData({})
+              setEditingAddress(null)
+              onAddressOpen()
+            }}
+          >
+            {t('profile.addAddress')}
+          </Button>
+        </Flex>
+        {isAddressLoading ? (
+          <Center minH="200px"><Spinner /></Center>
+        ) : (
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            {addresses?.map(address => (
+              <Box key={address.id} p={4} borderWidth="1px" borderRadius="lg">
+                <Flex justify="space-between" align="start">
+                  <Box>
+                    <Text fontWeight="bold">{address.label}</Text>
+                    <Text>{address.street}</Text>
+                    <Text>{address.city}</Text>
+                    {address.is_default && (
+                      <Badge colorScheme="green" mt={2}>
+                        {t('profile.default')}
+                      </Badge>
+                    )}
+                  </Box>
+                  <Flex gap={1}>
+                    <IconButton
+                      icon={<EditIcon />}
+                      size="sm"
+                      aria-label={t('common.edit')}
+                      onClick={() => {
+                        setAddressFormData(address)
+                        setEditingAddress(address)
+                        onAddressOpen()
+                      }}
+                    />
                     <IconButton
                       icon={<DeleteIcon />}
                       size="sm"
                       colorScheme="red"
-                      onClick={() => removeFavoriteMeal(meal.id)}
+                      aria-label={t('common.delete')}
+                      onClick={() => handleDeleteAddress(address.id)}
                     />
+                  </Flex>
+                </Flex>
+              </Box>
+            ))}
+          </SimpleGrid>
+        )}
+      </Box>
+    </TabPanel>
+
+    <TabPanel px={0}>
+      <Box>
+        <Flex 
+          direction={{ base: 'column', md: 'row' }}
+          justify="space-between"
+          align={{ base: 'flex-start', md: 'center' }}
+          gap={3}
+          mb={4}
+        >
+          <Heading size="md">{t('profile.paymentMethods')}</Heading>
+          <Button
+            leftIcon={<AddIcon />}
+            colorScheme="brand"
+            size={{ base: 'sm', md: 'md' }}
+            onClick={() => {
+              setPaymentFormData({})
+              setEditingPayment(null)
+              onPaymentOpen()
+            }}
+          >
+            {t('profile.addPayment')}
+          </Button>
+        </Flex>
+        {isPaymentLoading ? (
+          <Center minH="200px"><Spinner /></Center>
+        ) : (
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            {paymentMethods?.map(payment => (
+              <Box key={payment.id} p={4} borderWidth="1px" borderRadius="lg">
+                <Flex justify="space-between" align="start">
+                  <Box>
+                    <Text fontWeight="bold">
+                      **** **** **** {payment.card_number?.slice(-4)}
+                    </Text>
+                    <Text>{payment.cardholder_name}</Text>
+                    <Text>Expires: {payment.expiry_date}</Text>
                   </Box>
-                ))}
-                {favoriteItems?.map(item => (
-                  <Box key={item.id} p={4} borderWidth="1px" borderRadius="lg">
-                    <Text fontWeight="bold">{item.name}</Text>
-                    <Text>{item.description}</Text>
+                  <Flex gap={1}>
+                    <IconButton
+                      icon={<EditIcon />}
+                      size="sm"
+                      aria-label={t('common.edit')}
+                      onClick={() => {
+                        setPaymentFormData(payment)
+                        setEditingPayment(payment)
+                        onPaymentOpen()
+                      }}
+                    />
                     <IconButton
                       icon={<DeleteIcon />}
                       size="sm"
                       colorScheme="red"
-                      onClick={() => removeFavoriteItem(item.id)}
+                      aria-label={t('common.delete')}
+                      onClick={() => handleDeletePaymentMethod(payment.id)}
                     />
+                  </Flex>
+                </Flex>
+              </Box>
+            ))}
+          </SimpleGrid>
+        )}
+      </Box>
+    </TabPanel>
+
+    <TabPanel px={0}>
+      <Box>
+        <Flex 
+          direction={{ base: 'column', md: 'row' }}
+          justify="space-between"
+          align={{ base: 'flex-start', md: 'center' }}
+          gap={3}
+          mb={4}
+        >
+          <Heading size="md">{t('profile.reviews')}</Heading>
+          <Button
+            leftIcon={<AddIcon />}
+            colorScheme="brand"
+            size={{ base: 'sm', md: 'md' }}
+            onClick={() => {
+              setReviewFormData({})
+              setEditingReview(null)
+              onReviewOpen()
+            }}
+          >
+            {t('profile.createReview')}
+          </Button>
+        </Flex>
+        {isReviewsLoading ? (
+          <Center minH="200px"><Spinner /></Center>
+        ) : (
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            {reviews?.map(review => (
+              <Box key={review.id} p={4} borderWidth="1px" borderRadius="lg">
+                <Flex justify="space-between" align="start">
+                  <Box>
+                    <Text fontWeight="bold">{review.title}</Text>
+                    <Text>{review.content}</Text>
+                    <Text>Rating: {review.rating} Stars</Text>
                   </Box>
-                ))}
-              </SimpleGrid>
+                  <Flex gap={1}>
+                    <IconButton
+                      icon={<EditIcon />}
+                      size="sm"
+                      aria-label={t('common.edit')}
+                      onClick={() => {
+                        setReviewFormData(review)
+                        setEditingReview(review)
+                        onReviewOpen()
+                      }}
+                    />
+                    <IconButton
+                      icon={<DeleteIcon />}
+                      size="sm"
+                      colorScheme="red"
+                      aria-label={t('common.delete')}
+                      onClick={() => handleDeleteReview(review.id)}
+                    />
+                  </Flex>
+                </Flex>
+              </Box>
+            ))}
+          </SimpleGrid>
+        )}
+      </Box>
+    </TabPanel>
+    
+    <TabPanel px={0}>
+      <Box>
+        <Heading size="md" mb={4}>{t('profile.favorites')}</Heading>
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+          {favoriteMeals?.map(meal => (
+            <Box key={meal.id} p={4} borderWidth="1px" borderRadius="lg">
+              <Flex justify="space-between" align="start">
+                <Box>
+                  <Text fontWeight="bold">{meal.name}</Text>
+                  <Text>{meal.description}</Text>
+                </Box>
+                <IconButton
+                  icon={<DeleteIcon />}
+                  size="sm"
+                  colorScheme="red"
+                  aria-label={t('common.delete')}
+                  onClick={() => removeFavoriteMeal(meal.id)}
+                />
+              </Flex>
             </Box>
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
+          ))}
+          {favoriteItems?.map(item => (
+            <Box key={item.id} p={4} borderWidth="1px" borderRadius="lg">
+              <Flex justify="space-between" align="start">
+                <Box>
+                  <Text fontWeight="bold">{item.name}</Text>
+                  <Text>{item.description}</Text>
+                </Box>
+                <IconButton
+                  icon={<DeleteIcon />}
+                  size="sm"
+                  colorScheme="red"
+                  aria-label={t('common.delete')}
+                  onClick={() => removeFavoriteItem(item.id)}
+                />
+              </Flex>
+            </Box>
+          ))}
+        </SimpleGrid>
+      </Box>
+    </TabPanel>
+  </TabPanels>
+</Tabs>
       {/* Map Modal for Address */}
       <MapModal
         isOpen={isMapOpen}

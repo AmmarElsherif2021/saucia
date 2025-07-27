@@ -2,7 +2,7 @@ import { Box, useColorMode, VStack } from '@chakra-ui/react'
 import { Hero } from './Hero'
 import { FeaturedMeals } from './FeaturedSlide'
 import { OffersSlide } from './OffersSlide'
-import { AboutUs } from './GetAbout'
+import {AboutPage} from './GetAbout'
 import { Footer } from './Footer'
 import { useEffect } from 'react'
 import { useElements } from '../../Contexts/ElementsContext'
@@ -38,7 +38,7 @@ const HomePage = () => {
     <Box textAlign="center" p={5} bg={colorMode === "dark" ? "teal.800":"none"}>
       <Hero />
       <FeaturedMeals featuredMeals={featuredMeals} />
-      <AboutUs />
+      <AboutPage/>
       <Footer />
     </Box>
   )

@@ -20,7 +20,7 @@ export const MealPlanCard = ({ meal, index, onRemove, onChoose, isArabic, t }) =
     >
       {/* Background Image */}
       <Image
-        src={meal.image || unknownDefaultImage}
+        src={meal.image_url || unknownDefaultImage}
         alt={isArabic ? meal.name_arabic : meal.name}
         w="100%"
         h="100%"

@@ -1,6 +1,7 @@
 import { Box, Heading, Flex, Text, Button, Image, VStack, useColorMode, Input, InputGroup, InputRightElement } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import chefImage from '../../assets/chef.png'
 import valuesImage from '../../assets/value.svg'
 import missionImage from '../../assets/experience.png'
@@ -121,10 +122,16 @@ const SupportForm = () => {
   )
 }
 
-export const AboutUs = ({ contactUs }) => {
+export const AboutPage = ({ contactUs }) => {
   const { t } = useTranslation()
   const { colorMode } = useColorMode()
   const MotionBox = motion(Box)
+
+  // Navigation handler function - consistent with Navbar
+  const handleSectionNavigation = (section) => {
+    console.log('AboutPage requesting navigation to:', section)
+    return { scrollTo: section }
+  }
 
   const aboutSections = [
     {
@@ -133,13 +140,14 @@ export const AboutUs = ({ contactUs }) => {
       description: t('about.mealExperienceDescription'),
       image: chefImage,
       inputComponent: (
-        <Button 
-          colorScheme="brand" 
-          size="sm"
-          onClick={() => window.location.href = '/menu'}
-        >
-          {t('about.browseMenu')}
-        </Button>
+        <Link to="/menu">
+          <Button 
+            colorScheme="brand" 
+            size="sm"
+          >
+            {t('about.browseMenu')}
+          </Button>
+        </Link>
       ),
       cardBg:'teal.200'
     },
@@ -149,13 +157,17 @@ export const AboutUs = ({ contactUs }) => {
       description: t('about.customizationFlowDescription'),
       image: customImage,
       inputComponent: (
-        <Button 
-          colorScheme="teal" 
-          size="sm"
-          onClick={() => window.location.href = '/customize'}
+        <Link 
+          to="/menu" 
+          state={handleSectionNavigation('Make Your Own Salad')}
         >
-          {t('about.createYourOwn')}
-        </Button>
+          <Button 
+            colorScheme="teal" 
+            size="sm"
+          >
+            {t('about.createYourOwn')}
+          </Button>
+        </Link>
       ),
       cardBg: 'orange.200'
     },
@@ -165,13 +177,17 @@ export const AboutUs = ({ contactUs }) => {
       description: t('about.signatureMealsDescription'),
       image: missionImage,
       inputComponent: (
-        <Button 
-          colorScheme="secondary" 
-          size="sm"
-          onClick={() => window.location.href = '/signature'}
+        <Link 
+          to="/menu" 
+          state={handleSectionNavigation('Our signature salad')}
         >
-          {t('about.viewSignatureMeals')}
-        </Button>
+          <Button 
+            colorScheme="secondary" 
+            size="sm"
+          >
+            {t('about.viewSignatureMeals')}
+          </Button>
+        </Link>
       ),
       cardBg: 'brand.200'
     },
@@ -181,13 +197,14 @@ export const AboutUs = ({ contactUs }) => {
       description: t('about.premiumPlansDescription'),
       image: premiumImage,
       inputComponent: (
-        <Button 
-          colorScheme="brand" 
-          size="sm"
-          onClick={() => window.location.href = '/premium'}
-        >
-          {t('about.explorePlans')}
-        </Button>
+        <Link to="/premium">
+          <Button 
+            colorScheme="brand" 
+            size="sm"
+          >
+            {t('about.explorePlans')}
+          </Button>
+        </Link>
       ),
       cardBg: 'tertiary.400'
     },
@@ -224,7 +241,7 @@ export const AboutUs = ({ contactUs }) => {
           textAlign="center"
           color={colorMode === 'dark' ? 'white' : 'brand.800'}
         >
-          {t('about.aboutUs')}
+          {t('about.aboutPage')}
         </Heading>
 
         <Text

@@ -433,7 +433,15 @@ export const DeliverySection = ({ formData, handlers, onOpenMap, t }) => {
 
 export const ProfileHeader = ({ user, userPlan, onOpen, t }) => {
   return (
-    <Flex align="center" mb={8} direction={{ base: 'column', md: 'row' }} gap={4}>
+    <Flex 
+      align="center"
+      mb={8} 
+      direction={{ base: 'column', md: 'row' }} 
+      textAlign={{ base: 'center', md: 'left' }}
+      justify={{ base: 'center', md: 'flex-start' }}
+      gap={2}
+      
+    >
       <Avatar
         size="2xl"
         name={user.displayName}
@@ -441,24 +449,44 @@ export const ProfileHeader = ({ user, userPlan, onOpen, t }) => {
         bg="brand.500"
         color="white"
       />
-      <Box textAlign={{ base: 'center', md: 'left' }}>
-        <Heading size="lg" mb={2}>
+
+      <VStack
+      direction={{ base: 'column', md: 'row' }} 
+      textAlign={{ base: 'center', md: 'left' }}
+      align={{ base: 'center', md: 'flex-start' }}
+      >
+        <Heading size="lg" mb={1}>
           {user.displayName || t('profile.anonymousUser')}
         </Heading>
-        <Text fontSize="lg" color="gray.500">
+        <Text fontSize="md" color="gray.500">
           {user.email}
         </Text>
+        
         {user.isAdmin && (
-          <Badge colorScheme="red" mt={2}>
+          <Badge colorScheme="red" mt={2} display="inline-block">
             {t('profile.admin')}
           </Badge>
         )}
-        <Flex mt={4} gap={3} wrap="wrap" justify={{ base: 'center', md: 'start' }}>
+
+        <Flex 
+          mt={4} 
+          gap={3} 
+          justify="center"
+          direction={{ base: 'column', sm: 'row' }}
+          align="center"
+        >
           {userPlan && (
-            <Badge colorScheme="brand" px={3} py={1} borderRadius="md">
+            <Badge 
+              colorScheme="brand" 
+              px={3} 
+              py={1} 
+              borderRadius="md"
+              alignSelf="center"
+            >
               {userPlan.title}
             </Badge>
           )}
+          
           <Flex align="center" gap={2}>
             <StarIcon color="brand.500" />
             <Text>
@@ -466,14 +494,17 @@ export const ProfileHeader = ({ user, userPlan, onOpen, t }) => {
             </Text>
           </Flex>
         </Flex>
-      </Box>
+      </VStack>
+
       <Button
-        ml="auto"
         leftIcon={<EditIcon />}
         onClick={onOpen}
         variant="outline"
         colorScheme="brand"
         size="lg"
+        order={{ base: 2, md: 1 }}
+        mt={{ base: 4, md: 0 }}
+        mx={8}
       >
         {t('profile.editProfile')}
       </Button>
@@ -521,14 +552,14 @@ export const OverviewSection = ({ user, t }) => {
 
   return (
     <Box p={4} bg="brand.200" borderRadius="lg">
-      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-        <VStack align="start" spacing={3}>
+      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
+        <VStack align="start" spacing={2}>
           <Heading size="sm">{t('profile.personalInformation')}</Heading>
           {personalFields.map(field => (
             <UserInfoItem key={field.label} {...field} />
           ))}
         </VStack>
-        <VStack align="start" spacing={3}>
+        <VStack align="start" spacing={2}>
           {healthFields.length > 0 && (
             <>
               <Heading size="sm">{t('profile.healthProfile')}</Heading>

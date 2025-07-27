@@ -224,25 +224,26 @@ export const userAPI = {
   },
 
   // User Subscriptions Management
-  async getUserSubscriptions(userId) {
-    return fetchList('user_subscriptions', {
-      field: 'user_id',
-      value: userId,
-      select: `*,
-        plans (
-          id,
-          title,
-          title_arabic,
-          description,
-          description_arabic,
-          price_per_meal,
-          duration_days,
-          target_calories_per_meal,
-          target_protein_per_meal,
-          target_carbs_per_meal,
-          avatar_url
-        )`
-    });
+  async getUserActiveSubscription(userId) {
+    return fetchSingle('user_subscriptions', {
+    field: 'user_id',
+    value: userId,
+    select: `*,
+      plans (
+        id,
+        title,
+        title_arabic,
+        description,
+        description_arabic,
+        price_per_meal,
+        duration_days,
+        kcal,
+        protein,
+        carb,
+        avatar_url
+      )`,
+    orderBy: 'created_at' 
+  });
   },
 
   async createUserSubscription(userId, subscriptionData) {
@@ -620,7 +621,7 @@ export const userAPI = {
         this.getUserHealthProfile(userId),
         this.getUserAddresses(userId),
         this.getUserPaymentMethods(userId),
-        this.getUserSubscriptions(userId),
+        this.getUserActiveSubscription(userId),
         this.getUserAllergies(userId),
         this.getUserDietaryPreferences(userId),
         this.getUserFavoriteMeals(userId),

@@ -73,13 +73,18 @@ export const ChosenPlanProvider = ({ children }) => {
 
     const startDate = currentData.start_date || new Date().toISOString().split('T')[0];
     const endDate = calculateSubscriptionEndDate(startDate, totalMeals);
-
+    const deliveryDays = [];
+    for (let i = 0; i < totalMeals; i++) {
+      const deliveryDate = calculateDeliveryDate(startDate, i);
+      deliveryDays.push(deliveryDate.toISOString().split('T')[0]);
+    }
     return {
       plan_id: plan.id,
       total_meals: totalMeals,
       price_per_meal: pricePerMeal,
       start_date: startDate,
       end_date: endDate,
+      delivery_days: deliveryDays
     };
   }, []);
   
@@ -130,20 +135,25 @@ export const ChosenPlanProvider = ({ children }) => {
           merged.end_date = newEndDate;
         }
       }
-      
+      const deliveryDays = [];
+      for (let i = 0; i < merged.total_meals; i++) {
+        const deliveryDate = calculateDeliveryDate(merged.start_date, i);
+        deliveryDays.push(deliveryDate.toISOString().split('T')[0]);
+      }
+      merged.delivery_days = deliveryDays;
       return merged;
     });
   }, [calculateDerivedValues]);
 
   // Set selected plan with additives fetch
   const setSelectedPlan = useCallback(async (plan) => {
-    const additives = plan?.additives?.length 
-      ? await fetchPlanAdditives(plan.additives)
-      : [];
+  const newAdditives = plan?.additives?.length 
+    ? await fetchPlanAdditives(plan.additives)
+    : [];
 
-    updateSubscriptionData({ 
-      plan,
-      additives,  // Store fetched additives
+  updateSubscriptionData({ 
+    plan,
+    additives: [...subscriptionData.additives, ...newAdditives],
       ...((!subscriptionData.selected_term && plan?.medium_term_meals > 0) && { 
         selected_term: 'medium' 
       })

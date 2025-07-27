@@ -285,7 +285,7 @@ total_meals: integer	int4 //number of meals should be consumed
 consumed_meals: integer	int4 //number of consumed meals		
 delivery_address_id: uuid	uuid		
 preferred_delivery_time: time without time zone	time		
-delivery_days: ARRAY	_int4		
+delivery_days: ARRAY	_dates		
 auto_renewal: boolean	bool		
 payment_method_id: uuid	uuid		
 is_paused: boolean	bool		

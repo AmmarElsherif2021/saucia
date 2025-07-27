@@ -6,11 +6,11 @@ export const useUserSubscriptions = () => {
     const { user } = useAuthContext();
     const queryClient = useQueryClient();
     
-    const subscriptionsQuery = useQuery({
-      queryKey: ['userSubscriptions', user?.id],
-      queryFn: () => userAPI.getUserSubscriptions(user.id),
-      enabled: !!user?.id
-    });
+    const subscriptionQuery = useQuery({
+    queryKey: ['userSubscription', user?.id],
+    queryFn: () => userAPI.getUserActiveSubscription(user.id),
+    enabled: !!user?.id
+  });
     
     const createMutation = useMutation({
       mutationFn: (subscriptionData) => 
@@ -45,10 +45,10 @@ export const useUserSubscriptions = () => {
     });
     
     return {
-      subscriptions: subscriptionsQuery.data || [],
-      isLoading: subscriptionsQuery.isLoading,
-      isError: subscriptionsQuery.isError,
-      error: subscriptionsQuery.error,
+      subscription: subscriptionQuery.data || [],
+      isLoading: subscriptionQuery.isLoading,
+      isError: subscriptionQuery.isError,
+      error: subscriptionQuery.error,
       createSubscription: createMutation.mutateAsync,
       updateSubscription: updateMutation.mutateAsync,
       pauseSubscription: pauseMutation.mutateAsync,

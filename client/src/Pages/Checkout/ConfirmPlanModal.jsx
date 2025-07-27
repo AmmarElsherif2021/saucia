@@ -33,6 +33,9 @@ import { useAuthContext } from '../../Contexts/AuthContext';
 import { useChosenPlanContext } from '../../Contexts/ChosenPlanContext';
 import { supabase } from '../../../supabaseClient';
 import { usePlans } from '../../Hooks/usePlans';
+import { useItems } from '../../Hooks/useItems';
+import { useUserSubscriptions } from '../../Hooks/useUserSubscriptions';
+import { useElements } from '../../Contexts/ElementsContext';
 
 // Additive Selection Modal Component
 const AdditiveSelectionModal = ({ 
@@ -46,54 +49,116 @@ const AdditiveSelectionModal = ({
   t,
   isArabic
 }) => {
+  const { items } = useElements();
+  
+  // Get additive items from context using additive IDs
+  const additiveItems = useMemo(() => {
+    return items.filter(item => additives.includes(item.id));
+  }, [items, additives]);
+
   const handleAdditiveToggle = (itemId) => {
+    // If this additive is already selected, deselect it
+    // Otherwise, select this one and deselect others
     const newSelected = selectedAdditives.includes(itemId)
-      ? selectedAdditives.filter(id => id !== itemId)
-      : [...selectedAdditives, itemId];
+      ? null
+      : [itemId];
     onSelectAdditives(newSelected);
   };
   
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="md">
       <ModalOverlay />
-      <ModalContent borderRadius="md">
-        <ModalHeader borderBottomWidth="1px" pb={3}>
+      <ModalContent borderRadius="md" maxH={'70vh'}  p={3}>
+        <ModalHeader color={'brand.700'} borderBottomWidth="1px" pb={2}>
           {t('checkout.addAdditives') || 'Add Extras'}
         </ModalHeader>
-        <ModalBody py={4}>
+        <ModalBody py={4}overflowY={"scroll"}>
           <Text fontWeight="bold" mb={3} fontSize="lg">
             {isArabic ? meal?.name_arabic : meal?.name}
           </Text>
           
-          <VStack align="stretch" spacing={3} maxH="300px" overflowY="auto">
-            {additives?.map(item => (
+          <VStack align="stretch" spacing={1} maxH="300px" overflowY="auto">
+            {/* "None" option */}
+            <Box 
+              p={3} 
+              borderWidth="1px" 
+              borderRadius="md"
+              bg={selectedAdditives.length === 0 ? "brand.50" : "white"}
+              onClick={() => onSelectAdditives([])}
+              cursor="pointer"
+            >
+              <Flex align="center">
+                <Box
+                  w="4"
+                  h="4"
+                  borderRadius="full"
+                  borderWidth="2px"
+                  borderColor={selectedAdditives.length === 0 ? "brand.500" : "gray.300"}
+                  bg={selectedAdditives.length === 0 ? "brand.500" : "transparent"}
+                  mr={3}
+                  position="relative"
+                >
+                  {selectedAdditives.length === 0 && (
+                    <Box
+                      position="absolute"
+                      top="50%"
+                      left="50%"
+                      transform="translate(-50%, -50%)"
+                      w="2"
+                      h="2"
+                      borderRadius="full"
+                      bg="white"
+                    />
+                  )}
+                </Box>
+                <Text px={3}>{t('checkout.noAdditive') || 'No extra'}</Text>
+              </Flex>
+            </Box>
+            
+            {additiveItems?.map(item => (
               <Box 
                 key={item.id} 
                 p={3} 
                 borderWidth="1px" 
                 borderRadius="md"
                 bg={selectedAdditives.includes(item.id) ? "brand.50" : "white"}
+                onClick={() => handleAdditiveToggle(item.id)}
+                cursor="pointer"
               >
-                <Checkbox 
-                  isChecked={selectedAdditives.includes(item.id)}
-                  onChange={() => handleAdditiveToggle(item.id)}
-                  colorScheme="brand"
-                >
-                  <Flex justify="space-between" w="full">
-                    <Text ml={2}>{isArabic ? item.name_arabic : item.name}</Text>
-                    {item.price > 0 && (
-                      <Badge colorScheme="green" ml={2}>
-                        +{item.price.toFixed(2)}
-                      </Badge>
-                    )}
+                <Flex justify="space-between" w="full" align="center">
+                  <Flex align="center">
+                    <Box
+                      w="4"
+                      h="4"
+                      borderRadius="full"
+                      borderWidth="2px"
+                      borderColor={selectedAdditives.includes(item.id) ? "brand.500" : "gray.300"}
+                      bg={selectedAdditives.includes(item.id) ? "brand.500" : "transparent"}
+                      mr={3}
+                      position="relative"
+                    >
+                      {selectedAdditives.includes(item.id) && (
+                        <Box
+                          position="absolute"
+                          top="50%"
+                          left="50%"
+                          transform="translate(-50%, -50%)"
+                          w="2"
+                          h="2"
+                          borderRadius="full"
+                          bg="white"
+                        />
+                      )}
+                    </Box>
+                    <Text px={3}>{isArabic ? item.name_arabic : item.name}</Text>
                   </Flex>
-                </Checkbox>
+                </Flex>
               </Box>
             ))}
           </VStack>
         </ModalBody>
         <ModalFooter borderTopWidth="1px" pt={4}>
-          <Button variant="outline" mr={3} onClick={onClose}>
+          <Button variant="outline" mx={3} onClick={onClose}>
             {t('common.cancel') || 'Cancel'}
           </Button>
           <Button colorScheme="brand" onClick={onConfirm}>
@@ -104,7 +169,6 @@ const AdditiveSelectionModal = ({
     </Modal>
   );
 };
-
 const ConfirmPlanModal = ({
   isOpen,
   onClose,
@@ -125,7 +189,9 @@ const ConfirmPlanModal = ({
   const userPlan= subscriptionData.plan
   // Get additives directly from chosen plan
   const contextAdditives = userPlan?.additives || [];
-  
+  const { createSubscription, isCreating } = useUserSubscriptions();
+  const isLoading = isSubmitting || isCreating;
+
   // Use the filtering hook
   const { 
     isMealSafe, 
@@ -313,7 +379,7 @@ const ConfirmPlanModal = ({
   }) => {
     const isUnsafe = !isMealSafe(meal);
     const mealAllergens = getMealAllergens(meal);
-
+    const { items } = useElements();
     return (
       <Box 
         position="relative" 
@@ -442,41 +508,40 @@ const ConfirmPlanModal = ({
         )}
 
         {/* Selected Additives */}
-        {isSelected && selectedAdditives.length > 0 && (
-          <Box mt={3}>
-            <Text fontSize="sm" fontWeight="bold" mb={1}>
-              {t('checkout.selectedAdditives') || 'Selected extras'}:
-            </Text>
-            <Flex wrap="wrap" gap={1}>
-              {selectedAdditives.map(itemId => {
-                // Use context additives directly
-                const item = contextAdditives.find(a => a.id === itemId);
-                if (!item) return null;
-                
-                return (
-                  <Badge 
-                    key={itemId}
-                    colorScheme="blue"
-                    variant="subtle"
-                    px={2}
-                    py={1}
-                    borderRadius="md"
-                    display="flex"
-                    alignItems="center"
-                  >
-                    {isArabic ? item.name_arabic : item.name}
-                    {item.price > 0 && ` (${item.price.toFixed(2)})`}
-                    <CloseButton 
-                      size="xs" 
-                      ml={1} 
-                      onClick={() => onRemoveAdditive(itemId)} 
-                    />
-                  </Badge>
-                );
-              })}
-            </Flex>
-          </Box>
-        )}
+      {isSelected && selectedAdditives.length > 0 && (
+        <Box mt={3}>
+          <Text fontSize="sm" fontWeight="bold" mb={1}>
+            {t('checkout.selectedAdditives') || 'Selected extras'}:
+          </Text>
+          <Flex wrap="wrap" gap={1}>
+            {selectedAdditives.map(itemId => {
+              // Get additive from ElementsContext instead of plan context
+              const item = items.find(i => i.id === itemId);
+              if (!item) return null;
+              
+              return (
+                <Badge 
+                  key={itemId}
+                  colorScheme="warning"
+                  variant="subtle"
+                  px={2}
+                  py={1}
+                  borderRadius="md"
+                  display="flex"
+                  alignItems="center"
+                >
+                  {isArabic ? item.name_arabic : item.name}
+                  <CloseButton 
+                    size="xs" 
+                    ml={1} 
+                    onClick={() => onRemoveAdditive(itemId)} 
+                  />
+                </Badge>
+              );
+            })}
+          </Flex>
+        </Box>
+      )}
       </Box>
     );
   };
@@ -517,16 +582,30 @@ const ConfirmPlanModal = ({
   // Handle subscription confirmation
   const handleConfirmSubscription = async () => {
     try {
-      // Create subscription with selected meals and additives
+      const flattenedAdditives = (subscriptionData.additives || []).flat();
+      
       const subscription = {
-        ...subscriptionData,
+        plan_id: userPlan.id,  // Use plan_id instead of plan
+        status: 'pending',      // Default status
+        start_date: subscriptionData.start_date,
+        end_date: subscriptionData.end_date,
+        price_per_meal: userPlan.price_per_meal,
+        total_meals: subscriptionData.total_meals,
+        consumed_meals: 0,      // Initialize as 0
+        delivery_address_id: null, // Will be set later
+        preferred_delivery_time: subscriptionData.preferred_delivery_time || '10:00-11:00',
+        delivery_days: subscriptionData.delivery_days,
+        auto_renewal: false,    // Default to false
+        payment_method_id: null, // Will be set later
         meals: selectedMeals,
-        additives: subscriptionData.additives || []
+        additives: flattenedAdditives,
       };
 
-      // This would call your API via context or hook
-      // await subscribeToPlan(userPlan.id, subscription);
+      console.log(`Confirming subscriptionData: ${JSON.stringify(subscription)}`);
       
+      // Use hook to create subscription
+      await createSubscription(subscription);
+      console.log(`Confirming subscriptionData: ${JSON.stringify(subscription)}`)
       toast({
         title: t('checkout.subscriptionSuccess') || 'Subscription Created!',
         description: t('checkout.subscriptionCreated') || 
@@ -560,7 +639,7 @@ const ConfirmPlanModal = ({
       <VStack spacing={3} align="stretch">
         <Flex justify="space-between">
           <Text color="gray.600">{t('checkout.plan') || 'Plan'}</Text>
-          <Text fontWeight="bold">{userPlan?.title || t('checkout.premiumPlan')}</Text>
+          <Text fontWeight="bold">{isArabic?userPlan?.title_arabic:userPlan?.title || t('checkout.premiumPlan')}</Text>
         </Flex>
         
         <Flex justify="space-between">
@@ -683,7 +762,9 @@ const ConfirmPlanModal = ({
             const meal = planMeals.find(m => m.id === mealId);
             if (!meal) return null;
 
-            const deliveryDate = calculateDeliveryDate(today, index);
+            const deliveryDate = subscriptionData.delivery_days?.[index] 
+              ? new Date(subscriptionData.delivery_days[index]) 
+              : null;
             const additives = subscriptionData.additives?.[index] || [];
   
             return (

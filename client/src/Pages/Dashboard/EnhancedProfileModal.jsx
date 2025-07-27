@@ -73,6 +73,7 @@ const EnhancedProfileModal = ({
         bg={colorMode === 'light' ? 'white' : 'gray.900'}
         borderRadius="xl"
         p={4}
+        mx={8}
       >
         <ModalHeader 
           borderBottom="1px" 
