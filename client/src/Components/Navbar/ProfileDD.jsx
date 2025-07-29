@@ -239,13 +239,13 @@ export const ProfileDD = ({ disabled = false }) => {
             <VStack spacing={4} p={2}>
               <motion.div variants={itemVariants}>
                 <Text fontSize="lg" fontWeight="bold" textAlign="center">
-                  Guest User
+                 {t('premium.authenticationRequired')}
                 </Text>
               </motion.div>
               
               <motion.div variants={itemVariants}>
                 <Text textAlign="center" fontSize="sm" color={textColor}>
-                  Sign in to access your profile and premium features
+                 {t('profile.signInRequired')}
                 </Text>
               </motion.div>
               
@@ -259,7 +259,7 @@ export const ProfileDD = ({ disabled = false }) => {
                     onClose()
                   }}
                 >
-                  Sign In
+                  {t('buttons.login')}
                 </Button>
               </motion.div>
             </VStack>

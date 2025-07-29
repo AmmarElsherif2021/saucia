@@ -266,8 +266,6 @@ export const plansAPI = {
     return data;
   },
 
-
-
     async getSubscriptionById(subscriptionId) {
     await this.verifyAdmin();
 
@@ -327,18 +325,7 @@ export const plansAPI = {
     return data; // Return as JSON, convert to CSV/Excel on client
   },
 
-  async getUserSubscriptions(userId) {
-    await this.verifyAdmin();
-
-    const { data, error } = await supabase
-      .from('user_subscriptions')
-      .select('*')
-      .eq('user_id', userId);
-    
-    if (error) throw error;
-    return data;
-  },
-
+  
   async setPlanFeatured(planId, isFeatured) {
     await this.verifyAdmin();
 

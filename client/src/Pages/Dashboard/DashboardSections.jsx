@@ -41,8 +41,8 @@ import {
 } from './DashboardComponents';
 import MapModal from '../Checkout/MapModal';
 import { useI18nContext } from '../../Contexts/I18nContext';
-import { useUserAllergies } from '../../hooks/userHooks';
-import { useUserDietaryPreferences } from '../../hooks/useUserDietaryPreferences';
+import { useUserAllergies } from '../../Hooks/userHooks';
+import { useUserDietaryPreferences } from '../../Hooks/useUserDietaryPreferences';
 
 // Options getters
 const getGenderOptions = [

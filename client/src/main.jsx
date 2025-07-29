@@ -60,8 +60,8 @@ const Layout = ({ children }) => {
     <div
       style={{
         backgroundColor: 'none',
-        width: '100%',
-        minWidth: '320px',
+        width: '100vw',
+        minWidth: '220px !important',
         height: 'fit-content',
         paddingX: '0',
         marginX: '0',
@@ -101,9 +101,7 @@ const router = createBrowserRouter([
   {
     path: '/auth',
     element: (
-      <div
-        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
-      >
+      <div>
         <Suspense fallback={<PageLoader />}>
           <OAuth />
         </Suspense>

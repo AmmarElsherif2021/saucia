@@ -12,7 +12,7 @@ import { Vector as VectorSource } from 'ol/source.js'
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer.js'
 import Point from 'ol/geom/Point.js'
 import { useAuthContext } from '../../Contexts/AuthContext' 
-import { useUserAddresses } from '../../hooks/userHooks'
+import { useUserAddresses } from '../../Hooks/userHooks'
 
 const markerIconSvg = `
   <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">

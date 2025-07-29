@@ -33,7 +33,7 @@ import { StarIcon, MinusIcon, AddIcon } from '@chakra-ui/icons'
 // import dessertPic from "../assets/dessert.JPG";
 // import fruitPic from "../assets/fruits.JPG";
 // import leavesPic from "../assets/leaves.JPG"
-import unknownDefaultImage from '../assets//menu/unknownMeal.JPG'
+import unknownDefaultImage from '../assets//menu/unknownMeal.jpg'
 import { useI18nContext } from '../Contexts/I18nContext'
 import { useTranslation } from 'react-i18next'
 import { useCart } from '../Contexts/CartContext'

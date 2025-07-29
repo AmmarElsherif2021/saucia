@@ -21,7 +21,7 @@ import {
 } from '@chakra-ui/react'
 import { useEffect, useCallback, useState } from 'react'
 import MapBox from '../../Components/Map/MapBox'
-import { useUserAddresses } from '../../hooks/userHooks'
+import { useUserAddresses } from '../../Hooks/userHooks'
 
 const MapModal = ({ isOpen, onClose, onSelectLocation }) => {
   const [selectedLocation, setSelectedLocation] = useState(null)

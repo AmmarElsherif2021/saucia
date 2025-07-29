@@ -10,11 +10,11 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import { ItemsCarousel } from '../../Components/ItemsCarousel'
-import heroA from '../../assets/hero/heroA.JPG'
-import heroB from '../../assets/hero/heroB.JPG'
-import heroC from '../../assets/hero/heroC.PNG'
-import heroD from '../../assets/hero/heroD.JPG'
-import heroE from '../../assets/hero/heroE.JPG'
+import heroA from '../../assets/hero/heroA.jpg'
+import heroB from '../../assets/hero/heroB.jpg'
+import heroC from '../../assets/hero/heroC.png'
+import heroD from '../../assets/hero/heroD.jpg'
+import heroE from '../../assets/hero/heroE.jpg'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import { useEffect, useState, useMemo } from 'react'
 import { useI18nContext } from '../../Contexts/I18nContext'
@@ -248,7 +248,7 @@ const HeroCard = ({ item }) => {
               whileHover={{ scale: 1.02 }}
               transition={{ type: 'spring', stiffness: 400, damping: 10 }}
               width="96%"
-              bgColor="brand.600"
+              bgColor="secondary.800"
               p={0}
             >
               <Heading
@@ -281,7 +281,7 @@ const HeroCard = ({ item }) => {
                   fontSize={['md', 'lg', 'xl']}
                   margin={0}
                   lineHeight={1.5}
-                  color={'brand.200'}
+                  color={'secondary.700'}
                   fontWeight="medium"
                 >
                   <AnimatedText
@@ -320,7 +320,7 @@ const HeroCard = ({ item }) => {
                   px={8}
                   py={6}
                   fontSize={{ base: 'md', md: 'lg' }}
-                  _hover={{ bg: 'brand.700' }}
+                  _hover={{ bg: 'secondary.500' }}
                 >
                   {t('hero.explore')}
                 </Link>
@@ -403,16 +403,17 @@ export const Hero = () => {
 
   return (
     <Box
-      height="100vh"
-      width="100%" // Ensure full width
+      height="100%"
+      width="100%"
       display="flex"
       alignItems="center"
       justifyContent="start"
-      bg="transparent"
+      bg="translate"
       color="white"
       position="relative"
       marginY={1}
-      paddingY={0}
+      py={0}
+      my={0}
     >
       <ItemsCarousel
         items={heroSlides}

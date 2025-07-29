@@ -14,10 +14,18 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
+  Flex,
+  Center,
+  Stack,
+  useBreakpointValue,
+  Icon,
 } from '@chakra-ui/react'
 import { useNavigate } from 'react-router'
 import { useAuthContext } from '../../Contexts/AuthContext'
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { CheckCircleIcon } from '@chakra-ui/icons'
+
 export default function OAuth() {
   const { 
     user, 
@@ -28,7 +36,21 @@ export default function OAuth() {
     requiresCompletion 
   } = useAuthContext();
   
+  const { t } = useTranslation();
   const navigate = useNavigate();
+
+  // Responsive values
+  const containerMaxW = useBreakpointValue({ base: 'sm', md: 'md', lg: 'lg' });
+  const containerPy = useBreakpointValue({ base: 4, md: 8, lg: 10 });
+  const boxP = useBreakpointValue({ base: 4, md: 6, lg: 8 });
+  const headingSize = useBreakpointValue({ base: 'md', md: 'lg', lg: 'xl' });
+  const buttonSize = useBreakpointValue({ base: 'md', md: 'lg' });
+
+  // Color mode values
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('brand.200', 'gray.600');
+  const textColor = useColorModeValue('gray.600', 'gray.300');
+  const shadowColor = useColorModeValue('lg', 'dark-lg');
 
   const handleLogout = async () => {
     try {
@@ -45,157 +67,262 @@ export default function OAuth() {
       navigate('/account');
     }
   };
-  //timeout fallback
+
+  // Timeout fallback
   useEffect(() => {
     const timer = setTimeout(() => {
       if (isLoading) {
         console.error('Auth loading timeout');
-        setError('Authentication timed out. Please refresh the page.');
+        setError(t('profile.timeoutError'));
       }
     }, 10000); // 10 second timeout
   
     return () => clearTimeout(timer);
-  }, [isLoading]);
+  }, [isLoading, t]);
 
   // Show loading state
   if (isLoading) {
     return (
-      <Container maxW="md" py={10}>
-        <Box
-          p={8}
-          borderWidth={1}
-          borderRadius="lg"
-          boxShadow="lg"
-          bg={useColorModeValue('white', 'gray.700')}
-          textAlign="center"
-        >
-          <Spinner size="lg" color="blue.500" />
-          <Text mt={4}>Loading...</Text>
-        </Box>
-      </Container>
+      <Flex minH="100vh" align="center" justify="center" bg="gray.50">
+        <Container maxW={containerMaxW} py={containerPy}>
+          <Center>
+            <Box
+              p={boxP}
+              borderWidth={1}
+              borderRadius="xl"
+              borderColor={borderColor}
+              boxShadow={shadowColor}
+              bg={bgColor}
+              textAlign="center"
+              w="full"
+              maxW="400px"
+            >
+              <VStack spacing={4}>
+                <Spinner size="xl" color="brand.500" thickness="4px" />
+                <Text fontSize="lg" fontWeight="medium">
+                  {t('common.loading')}
+                </Text>
+                <Text fontSize="sm" color={textColor}>
+                  {t('common.pleaseWait')}
+                </Text>
+              </VStack>
+            </Box>
+          </Center>
+        </Container>
+      </Flex>
     );
   }
 
   // Show error state
   if (error) {
     return (
-      <Container maxW="md" py={10}>
-        <Box
-          p={8}
-          borderWidth={1}
-          borderRadius="lg"
-          boxShadow="lg"
-          bg={useColorModeValue('white', 'gray.700')}
-        >
-          <Alert status="error" borderRadius="md">
-            <AlertIcon />
-            <Box>
-              <AlertTitle>Authentication Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
+      <Flex minH="100vh" align="center" justify="center" bg="gray.50">
+        <Container maxW={containerMaxW} py={containerPy}>
+          <Center>
+            <Box
+              p={boxP}
+              borderWidth={1}
+              borderRadius="xl"
+              borderColor={borderColor}
+              boxShadow={shadowColor}
+              bg={bgColor}
+              w="full"
+              maxW="500px"
+            >
+              <Alert status="error" borderRadius="lg" flexDirection="column" textAlign="center">
+                <AlertIcon boxSize="40px" mr={0} mb={4} />
+                <AlertTitle fontSize="lg" mb={2}>
+                  {t('profile.authenticationError')}
+                </AlertTitle>
+                <AlertDescription fontSize="sm" textAlign="center">
+                  {error}
+                </AlertDescription>
+                <Button
+                  mt={4}
+                  colorScheme="red"
+                  variant="outline"
+                  onClick={() => window.location.reload()}
+                  size={buttonSize}
+                >
+                  {t('profile.refresh')}
+                </Button>
+              </Alert>
             </Box>
-          </Alert>
-        </Box>
-      </Container>
+          </Center>
+        </Container>
+      </Flex>
     );
   }
 
   // Show login form if not authenticated
   if (!user || !supabaseSession) {
     return (
-      <Container maxW="md" py={10}>
+    <Flex minH="100vh" alignItems="center" justifyContent="center" bg="gray.50">
+      <Container 
+        w={{ base: "90vw", md: "70vw", lg: "50vw" }}
+        mx={{ base: "5vw", md: "15vw", lg: "25vw" }}
+        py={0}
+        px={4}
+        centerContent
+      >
         <Box
-          p={8}
-          borderWidth={1}
-          borderRadius="lg"
-          boxShadow="lg"
-          bg={useColorModeValue('white', 'gray.700')}
+          p={boxP}
+          borderWidth={3}
+          borderRadius="xl"
+          borderColor={borderColor}
+          bg={bgColor}
+          w="full"
         >
-          <VStack spacing={4} mb={6}>
-            <Heading size="lg" textAlign="center">
-              Welcome
-            </Heading>
-            <Text color="gray.600" textAlign="center">
-              Sign in to continue to your account
+          <VStack spacing={6}>
+            {/* Header */}
+            <VStack spacing={3} align={'center'} textAlign="center">
+              <Heading size={headingSize} color="brand.500" textAlign="center">
+                {t('common.welcome')}
+              </Heading>
+              <Text color={textColor} fontSize={{ base: 'sm', md: 'md' }}>
+                {t('profile.signInToContinue')}
+              </Text>
+            </VStack>
+            
+            {/* Auth Component */}
+            <Box w="full">
+              <Auth
+                supabaseClient={supabase}
+                appearance={{ 
+                  theme: ThemeSupa,
+                  style: {
+                    button: {
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      padding: '12px 16px',
+                    },
+                    input: {
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      padding: '12px 16px',
+                    }
+                  }
+                }}
+                providers={['google']}
+                onlyThirdPartyProviders
+                redirectTo={window.location.origin}
+                localization={{
+                  variables: {
+                    sign_in: {
+                      button_label: t('profile.signIn'),
+                      loading_button_label: t('profile.signingIn'),
+                    },
+                    sign_up: {
+                      button_label: t('profile.signUp'),
+                      loading_button_label: t('profile.signingUp'),
+                    }
+                  }
+                }}
+              />
+            </Box>
+
+            {/* Footer text */}
+            <Text fontSize="xs" color={textColor} textAlign="center">
+              {t('profile.termsAgreement')}
             </Text>
           </VStack>
-          
-          <Auth
-            supabaseClient={supabase}
-            appearance={{ theme: ThemeSupa }}
-            providers={['google']}
-            onlyThirdPartyProviders
-            redirectTo={window.location.origin}
-          />
         </Box>
       </Container>
-    );
+    </Flex>
+  );
   }
 
   // Show authenticated state
   return (
-    <Container maxW="xl" py={10}>
-      <Box
-        p={8}
-        borderWidth={1}
-        borderRadius="lg"
-        boxShadow="lg"
-        bg={useColorModeValue('white', 'gray.700')}
-      >
-        <VStack spacing={4} align="stretch">
-          <Heading size="md" color="green.500">
-            Successfully Logged In! 🎉
-          </Heading>
-          
-          <Box>
-            <Text fontSize="sm" color="gray.600">
-              <strong>Email:</strong> {user.email}
-            </Text>
-            <Text>Name: {user.display_name || 'Not provided'}</Text>
-            <Text>Role: {user.is_admin ? 'Administrator' : 'User'}</Text>
-            <Text fontSize="sm" color="gray.600">
-              <strong>Profile Status:</strong> {user.profile_completed ? 'Complete' : 'Incomplete'}
-            </Text>
-           
-          </Box>
-          
-          <Heading size="lg">
-            Welcome back, {user.displayName || user.email}!
-          </Heading>
-          
-          {requiresCompletion && (
-            <Alert status="info" borderRadius="md">
-              <AlertIcon />
-              <Box>
-                <AlertTitle>Profile Incomplete</AlertTitle>
-                <AlertDescription>
-                  Please complete your profile to access all features.
-                </AlertDescription>
+    <Flex minH="100vh" align="center" justify="center" bg="gray.50">
+      <Container maxW={containerMaxW} py={containerPy} px={{ base: 4, md: 6 }}>
+        <Center>
+          <Box
+            p={boxP}
+            borderWidth={1}
+            borderRadius="xl"
+            borderColor={borderColor}
+            boxShadow={shadowColor}
+            bg={bgColor}
+            w="full"
+            maxW="600px"
+          >
+            <VStack spacing={6} align="stretch">
+              {/* Success Header */}
+              <VStack spacing={3} textAlign="center">
+                <Icon as={CheckCircleIcon} boxSize={12} color="green.500" />
+                <Heading size={headingSize} color="green.500">
+                  {t('profile.successfullyLoggedIn')} 🎉
+                </Heading>
+                <Text fontSize="lg" fontWeight="medium">
+                  {t('profile.welcomeBack', { name: user.displayName || user.email })}
+                </Text>
+              </VStack>
+              
+              {/* User Info */}
+              <Box 
+                p={4} 
+                bg={useColorModeValue('gray.50', 'gray.700')} 
+                borderRadius="lg"
+              >
+                <Stack spacing={2} fontSize="sm">
+                  <Text>
+                    <Text as="span" fontWeight="bold">{t('profile.email')}:</Text> {user.email}
+                  </Text>
+                  <Text>
+                    <Text as="span" fontWeight="bold">{t('profile.name')}:</Text> {user.display_name || t('profile.notProvided')}
+                  </Text>
+                  <Text>
+                    <Text as="span" fontWeight="bold">{t('profile.role')}:</Text> {user.is_admin ? t('profile.administrator') : t('profile.user')}
+                  </Text>
+                  <Text>
+                    <Text as="span" fontWeight="bold">{t('profile.profileStatus')}:</Text> {user.profile_completed ? t('profile.complete') : t('profile.incomplete')}
+                  </Text>
+                </Stack>
               </Box>
-            </Alert>
-          )}
-          
-          <VStack spacing={3}>
-            <Button 
-              colorScheme="blue" 
-              onClick={handleDashboardClick}
-              size="lg"
-              w="full"
-            >
-              {requiresCompletion ? 'Complete Profile' : 'Go to Dashboard'}
-            </Button>
-            
-            <Button 
-              colorScheme="red" 
-              variant="outline"
-              onClick={handleLogout}
-              size="md"
-              w="full"
-            >
-              Logout
-            </Button>
-          </VStack>
-        </VStack>
-      </Box>
-    </Container>
+              
+              {/* Profile completion alert */}
+              {requiresCompletion && (
+                <Alert status="info" borderRadius="lg">
+                  <AlertIcon />
+                  <Box>
+                    <AlertTitle fontSize="md">
+                      {t('profile.profileIncomplete')}
+                    </AlertTitle>
+                    <AlertDescription fontSize="sm">
+                      {t('profile.completeProfileMessage')}
+                    </AlertDescription>
+                  </Box>
+                </Alert>
+              )}
+              
+              {/* Action Buttons */}
+              <VStack spacing={3}>
+                <Button 
+                  colorScheme="brand" 
+                  onClick={handleDashboardClick}
+                  size={buttonSize}
+                  w="full"
+                  borderRadius="lg"
+                >
+                  {requiresCompletion ? t('profile.completeProfile') : t('profile.goToDashboard')}
+                </Button>
+                
+                <Button 
+                  colorScheme="red" 
+                  variant="outline"
+                  onClick={handleLogout}
+                  size={buttonSize}
+                  w="full"
+                  borderRadius="lg"
+                >
+                  {t('profile.logout')}
+                </Button>
+              </VStack>
+            </VStack>
+          </Box>
+        </Center>
+      </Container>
+    </Flex>
   );
 }

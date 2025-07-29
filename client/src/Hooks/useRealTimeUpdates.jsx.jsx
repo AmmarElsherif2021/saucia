@@ -90,7 +90,7 @@ TANSTACK QUERY HOOKS FOR SUBSCRIPTION MANAGEMENT (IMPLEMENT SEPARATELY)
 
 
 // // 4. Component Usage Example
-// // import { useSubscriptions, useSubscriptionMutations, useActiveSubscription } from '../hooks/useSubscriptions';
+// // import { useSubscriptions, useSubscriptionMutations, useActiveSubscription } from '../Hooks/useSubscriptions';
 
 // // const SubscriptionComponent = () => {
 // //   const { user } = useAuth();

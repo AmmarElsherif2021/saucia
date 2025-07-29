@@ -17,18 +17,28 @@ import {
   useToast,
   Alert,
   AlertIcon,
+  Modal,
+  ModalBody,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  HStack,
 } from '@chakra-ui/react'
+import { motion } from 'framer-motion'
 
 import { useElements } from '../../Contexts/ElementsContext';
 import { useAuthContext } from '../../Contexts/AuthContext';
 import { useChosenPlanContext } from '../../Contexts/ChosenPlanContext';
 import { CurrentPlanBrief } from './CurrentPlanBrief';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { JoinPremiumTeaser } from './JoinPremiumTeaser';
 import { useTranslation } from 'react-i18next';
 import { useI18nContext } from '../../Contexts/I18nContext';
 import { useUserSubscriptions } from '../../Hooks/useUserSubscriptions';
 import { CardPlanAvatar } from './PlanAvatar'
+import profileIcon from '../../assets/profile-b.svg'
+
 // Import plan images 
 import gainWeightPlanImage from '../../assets/premium/gainWeight.png'
 import keepWeightPlanImage from '../../assets/premium/keepWeight.png'
@@ -45,6 +55,116 @@ const planImages = {
   'Gain Weight': gainWeightPlanImage,
   'Keep Weight': keepWeightPlanImage,
   'Lose Weight': loseWeightPlanImage,
+}
+
+// Login Modal Component
+const LoginModal = ({ isOpen, onClose }) => {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const modalBg = useColorModeValue('white', 'gray.800')
+  const borderColor = useColorModeValue('gray.200', 'gray.700')
+  const textColor = useColorModeValue('gray.600', 'gray.300')
+
+  const containerVariants = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.2,
+        ease: "easeOut",
+        staggerChildren: 0.1,
+        delayChildren: 0.1
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        duration: 0.25,
+        ease: "easeOut"
+      }
+    }
+  }
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} size="md">
+      <ModalOverlay />
+      <ModalContent 
+        as={motion.div}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.2 }}
+        width={['95%', '80%', '60%']} 
+        maxWidth="400px" 
+        p={2} 
+        mx="30px"
+        bg={modalBg}
+        borderRadius="xl"
+        boxShadow="xl"
+        border="1px solid"
+        borderColor={borderColor}
+      >
+        <ModalHeader textAlign="center">
+          {t('premium.authenticationRequired')}
+        </ModalHeader>
+        <ModalCloseButton />
+        <ModalBody p={6}>
+          <motion.div
+            initial="hidden"
+            animate={isOpen ? "visible" : "hidden"}
+            variants={containerVariants}
+          >
+            <VStack spacing={4} p={2}>
+              <motion.div variants={itemVariants}>
+                <HStack spacing={4} align="center" justify="center">
+                  <Image
+                    src={profileIcon}
+                    alt="Profile"
+                    boxSize="60px"
+                    opacity={0.7}
+                  />
+                </HStack>
+              </motion.div>
+              
+              <motion.div variants={itemVariants}>
+                <Text fontSize="lg" fontWeight="bold" textAlign="center">
+                  {t('profile.signInRequired')}
+                </Text>
+              </motion.div>
+              
+              <motion.div variants={itemVariants}>
+                <Text textAlign="center" fontSize="sm" color={textColor}>
+                  {t('profile.signInToAccessPremium')}
+                </Text>
+              </motion.div>
+              
+              <motion.div variants={itemVariants}>
+                <Button
+                  colorScheme="brand"
+                  w="full"
+                  borderRadius="md"
+                  onClick={() => {
+                    navigate('/auth')
+                    onClose()
+                  }}
+                >
+                  {t('buttons.login')}
+                </Button>
+              </motion.div>
+
+             
+            </VStack>
+          </motion.div>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
+  )
 }
 
 const PlanCard = ({ plan, isUserPlan, onSelect }) => {
@@ -113,6 +233,7 @@ const PlanCard = ({ plan, isUserPlan, onSelect }) => {
     </Box>
   )
 }
+
 const PlanDetails = ({ plan }) => {
   const { t } = useTranslation()
   const { currentLanguage } = useI18nContext()
@@ -177,12 +298,15 @@ const PlanDetails = ({ plan }) => {
 export const PremiumPage = () => {
   const { plans, elementsLoading } = useElements();
   const { user } = useAuthContext();
+  const navigate = useNavigate();
+  
+  // Only call useUserSubscriptions if user exists
   const { 
     subscriptions, 
     createSubscription, 
     updateSubscription,
     isLoading: isSubscriptionsLoading 
-  } = useUserSubscriptions();
+  } = user ? useUserSubscriptions() : { subscriptions: [], isLoading: false };
   
   // Use the context properly
   const { 
@@ -195,18 +319,19 @@ export const PremiumPage = () => {
   
   const [explorePlans, setExplorePlans] = useState(false);
   const [subscribing, setSubscribing] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { t } = useTranslation();
   const toast = useToast();
   const detailsSectionRef = useRef(null);
   const plansContainerRef = useRef(null);
 
-  // Find user's active subscription
-  const activeSubscription = subscriptions.find(sub => 
-    sub.status === 'active' || sub.status === 'paused'
-  );
+  // Find user's active subscription - with safe check
+  const activeSubscription = user && subscriptions?.length > 0 
+    ? subscriptions.find(sub => sub.status === 'active' || sub.status === 'paused')
+    : null;
   
   // Find the plan associated with active subscription
-  const userPlan = activeSubscription 
+  const userPlan = activeSubscription && plans?.length > 0
     ? plans.find(plan => plan.id === activeSubscription.plan_id)
     : null;
 
@@ -239,6 +364,12 @@ export const PremiumPage = () => {
   }, [userPlan, activeSubscription, updateSubscriptionData, resetSubscriptionData]);
 
   const handlePlanSelect = (plan) => {
+    // Check if user is authenticated
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
     // Set the selected plan in context
     setSelectedPlan(plan);
     
@@ -281,13 +412,7 @@ export const PremiumPage = () => {
 
   const handleSubscribe = async () => {
     if (!user) {
-      toast({
-        title: t('premium.authenticationRequired'),
-        description: t('premium.signInToSubscribe'),
-        status: 'warning',
-        duration: 5000,
-        isClosable: false,
-      });
+      setShowLoginModal(true);
       return;
     }
 
@@ -337,7 +462,7 @@ export const PremiumPage = () => {
         duration: 5000,
         isClosable: false,
       });
-
+      
       setExplorePlans(false);
     } catch (error) {
       toast({
@@ -352,7 +477,7 @@ export const PremiumPage = () => {
     }
   };
 
-  const isLoading = elementsLoading || isSubscriptionsLoading;
+  const isLoading = elementsLoading || (user && isSubscriptionsLoading);
 
   if (isLoading) {
     return (
@@ -367,13 +492,6 @@ export const PremiumPage = () => {
   return (
     <Box p={{ base: 4, md: 8 }} bg="gray.50" minH="100vh">
       <VStack spacing={8} align="stretch">
-        {!user && (
-          <Alert status="info" borderRadius="md">
-            <AlertIcon />
-            {t('premium.signInToSubscribe')}
-          </Alert>
-        )}
-
         {/* Current Plan Section */}
         <Box as={VStack} bg="white" p={6} borderRadius="xl" alignItems={'center'}>
           <JoinPremiumTeaser />
@@ -405,7 +523,7 @@ export const PremiumPage = () => {
                 {t('premium.availablePremiumPlans')}
               </Heading>
 
-              {plans.length > 0 ? (
+              {plans && plans.length > 0 ? (
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
                   {plans.map((plan) => (
                     <PlanCard
@@ -439,8 +557,6 @@ export const PremiumPage = () => {
 
             <Divider my={4} />
 
-           
-
             {userPlan?.id !== chosenPlan.id && (
               <Link
                 to="/premium/join"
@@ -455,6 +571,7 @@ export const PremiumPage = () => {
                   isLoading={subscribing}
                   loadingText={t('premium.updatingSubscription')}
                   isDisabled={!user}
+                  onClick={!user ? () => setShowLoginModal(true) : undefined}
                 >
                   {t('premium.subscribeToPlan')}
                 </Button>
@@ -477,6 +594,12 @@ export const PremiumPage = () => {
           </Box>
         )}
       </VStack>
+
+      {/* Login Modal */}
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)} 
+      />
     </Box>
   );
 };

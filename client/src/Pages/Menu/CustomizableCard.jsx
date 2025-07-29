@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import mealImage from '../../assets/menu/defaultMeal.JPG'
+import mealImage from '../../assets/menu/defaultMeal.jpg'
 import {
   Box,
   Text,

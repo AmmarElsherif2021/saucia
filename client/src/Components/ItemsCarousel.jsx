@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { useState, useEffect, useRef } from 'react'
-import { Box, Flex, IconButton, useColorMode, Button, useBreakpointValue } from '@chakra-ui/react'
+import { Box, Flex, IconButton, Button, useBreakpointValue } from '@chakra-ui/react'
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { useTranslation } from 'react-i18next'
 import { FeaturedMealCard } from './Cards'
@@ -37,10 +37,10 @@ export const ItemsCarousel = ({
   auto = false,
   visibleButtons = true,
   transitionDuration = 15000,
-  carouselBg = 'secondary.700',
+  carouselBg = 'secondary.600',
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const { colorMode } = useColorMode()
+  //const { colorMode } = useColorMode()
   const { t } = useTranslation()
   const carouselRef = useRef(null)
   const carouselContentRef = useRef(null)

@@ -270,6 +270,8 @@
         }
       ,
       "common": {
+        "language":"عربي",
+        "pleaseWait":"Please wait",
         "ready":"Ready for Pickup",
         "unitPrice": "Unit Price",
         "welcome": "Welcome to our app!",
@@ -338,6 +340,11 @@
         "clearAll": "Clear All"
       },
       "profile": {
+        "termsAgreement":"Terms & Agreement",
+        "signInToContinue":"Sign in to continue",
+        "authenticationError":"Authentication Error!",
+        "signInToAccessPremium":"Sign in to accss premim plans",
+        "signInRequired":"Sigining in required",
         "rating":"Rating",
         "reviewTitle":"Review Title",
         "enterReviewTitle":"Enter Review Title",
@@ -1200,6 +1207,8 @@
         "makeYourOwnFruitSalad": "اصنع سلطة فواكه خاصة بك"
       },
       "common": {
+        "language":"English",
+        "pleaseWait":"من فضلك انتظر",
         "cancel":"إلغاء",
         "ready": "جاهز",
         "unitPrice": "سعر الوحدة",
@@ -1267,6 +1276,11 @@
         "clearAll": "مسح الكل"
       },
       "profile": {
+        "termsAgreement":"شروط الاستخدام",
+        "signInToContinue":"قم بتسجيل الدخول للاستكمال",
+        "authenticationError":"خطأ في تسجيل الدخول",
+        "signInToAccessPremium":"قم بتسجيل الدخول لمتابعة نظام الاشتراكات المميزة",
+        "signInRequired":"مطلوب تسجيل دخول",
         "rating":"التقييم",
         "reviewTitle":"عنوان التقييم",
         "enterReviewTitle":"ادخل عنوان التقييم",

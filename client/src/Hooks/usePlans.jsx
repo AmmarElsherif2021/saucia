@@ -588,7 +588,6 @@ const fetchAdditiveItems = useCallback(async (additiveIds) => {
     fetchPlanMeals,
     fetchAdditiveItems,
     // User subscription operations
-    getSubscriptionById,
     fetchUserSubscriptions,
     subscribeToPlan,
     updateSubscription,
@@ -619,6 +618,5 @@ const fetchAdditiveItems = useCallback(async (additiveIds) => {
     getActivePlans,
     getPlansByPriceRange,
     getPlansByMealCount,
-    getPlanAnalytics,
   };
 }

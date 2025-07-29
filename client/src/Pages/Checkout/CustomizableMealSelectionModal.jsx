@@ -17,7 +17,7 @@ import {
   Icon,
   Tooltip,
 } from '@chakra-ui/react'
-import { useUserAllergies } from '../../hooks/userHooks' 
+import { useUserAllergies } from '../../Hooks/userHooks' 
 import { useAuthContext } from '../../Contexts/AuthContext'
 import { WarningIcon } from '@chakra-ui/icons'
 

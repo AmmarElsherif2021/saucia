@@ -241,7 +241,7 @@ export const AboutPage = ({ contactUs }) => {
           textAlign="center"
           color={colorMode === 'dark' ? 'white' : 'brand.800'}
         >
-          {t('about.aboutPage')}
+          {t('about.aboutUs')}
         </Heading>
 
         <Text

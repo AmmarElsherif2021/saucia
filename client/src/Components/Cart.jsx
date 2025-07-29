@@ -16,7 +16,7 @@ import {
 import { IconButton, AddIcon, MinusIcon, DeleteIcon } from '@chakra-ui/icons'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import dailySaladIcon from '../assets/menu/unknownMeal.JPG'
+import dailySaladIcon from '../assets/menu/unknownMeal.jpg'
 import cartIcon from '../assets/cartIcon.svg'
 import { useElements } from '../Contexts/ElementsContext'
 

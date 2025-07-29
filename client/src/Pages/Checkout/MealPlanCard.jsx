@@ -1,6 +1,6 @@
 import { Box, Button, IconButton, Image, Text, Badge, Flex, Tooltip } from '@chakra-ui/react'
 import { SmallCloseIcon, StarIcon } from '@chakra-ui/icons'
-import unknownDefaultImage from '../../assets//menu/unknownMeal.JPG'
+import unknownDefaultImage from '../../assets//menu/unknownMeal.jpg'
 export const MealPlanCard = ({ meal, index, onRemove, onChoose, isArabic, t }) => {
   return (
     <Box

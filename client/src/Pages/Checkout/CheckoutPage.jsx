@@ -36,7 +36,7 @@ import { useTranslation } from 'react-i18next'
 import { useI18nContext } from '../../Contexts/I18nContext'
 import { useNavigate } from 'react-router-dom'
 import { useAuthContext } from '../../Contexts/AuthContext'
-import { useUserProfile, useUserAddresses } from '../../hooks/userHooks'
+import { useUserProfile, useUserAddresses } from '../../Hooks/userHooks'
 import { useOrders } from '../../Hooks/useOrders'
 
 const initialState = {

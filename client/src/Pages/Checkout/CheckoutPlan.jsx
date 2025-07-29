@@ -38,7 +38,7 @@ import saladIcon from '../../assets/menu/salad.svg'
 import locationPin from '../../assets/locationPin.svg'
 
 // Hooks
-import { useUserProfile, useUserAddresses } from '../../hooks/userHooks'
+import { useUserProfile, useUserAddresses } from '../../Hooks/userHooks'
 import { useUserSubscriptions } from '../../Hooks/useUserSubscriptions'
 import { useChosenPlanContext } from '../../Contexts/ChosenPlanContext'
 
