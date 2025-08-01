@@ -4,43 +4,624 @@ import keepWeightPlanImage from '../assets/premium/keepWeight.png'
 import loseWeightPlanImage from '../assets/premium/loseWeight.png'
 import dailyMealPlanImage from '../assets/premium/dailymealplan.png'
 import saladsPlanImage from '../assets/premium/proteinsaladplan.png'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import {
-  Skeleton,
-  Box,
-  Image,
-  Text,
+    Box,
   Flex,
-  Badge,
+  Text,
   Heading,
+  Image,
+  Badge,
   Button,
-  Stack,
-  HStack,
   useColorMode,
-  useColorModeValue,
+  useBreakpointValue,
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
+  ModalFooter,
   ModalBody,
   ModalCloseButton,
-  ModalFooter,
+  VStack,
+  HStack,
+  Skeleton,
   IconButton,
-  useBreakpointValue
+  useDisclosure,
+  ScaleFade,
+  Divider,
+  useColorModeValue
 } from '@chakra-ui/react'
 import cartIcon from '../assets/cartIcon2.svg'
-import { StarIcon, MinusIcon, AddIcon } from '@chakra-ui/icons'
+import { StarIcon, MinusIcon, AddIcon, InfoIcon } from '@chakra-ui/icons'
 // import dessertPic from "../assets/dessert.JPG";
 // import fruitPic from "../assets/fruits.JPG";
 // import leavesPic from "../assets/leaves.JPG"
-import unknownDefaultImage from '../assets//menu/unknownMeal.jpg'
+import unknownDefaultImage from '../assets/menu/unknownMeal.jpg'
 import { useI18nContext } from '../Contexts/I18nContext'
 import { useTranslation } from 'react-i18next'
 import { useCart } from '../Contexts/CartContext'
 import { motion } from 'framer-motion'
+import { t } from 'i18next'
+
+// Enhanced Image Component with loading states
+const EnhancedImage = ({ 
+  src, 
+  alt, 
+  fallback = '/placeholder-food.jpg',
+  width,
+  height,
+  borderRadius = 'md',
+  objectFit = 'cover',
+  ...props 
+}) => {
+  const [imageState, setImageState] = useState({
+    isLoading: true,
+    hasError: false,
+    isLoaded: false
+  });
+
+  const handleLoad = useCallback(() => {
+    setImageState({
+      isLoading: false,
+      hasError: false,
+      isLoaded: true
+    });
+  }, []);
+
+  const handleError = useCallback(() => {
+    setImageState({
+      isLoading: false,
+      hasError: true,
+      isLoaded: false
+    });
+  }, []);
+
+  return (
+    <Box position="relative" width={width} height={height} {...props}>
+      {imageState.isLoading && (
+        <Skeleton
+          width="100%"
+          height="100%"
+          borderRadius={borderRadius}
+          startColor="gray.200"
+          endColor="gray.300"
+        />
+      )}
+      
+      <Image
+        src={imageState.hasError ? fallback : src}
+        alt={alt}
+        width="100%"
+        height="100%"
+        objectFit={objectFit}
+        borderRadius={borderRadius}
+        onLoad={handleLoad}
+        onError={handleError}
+        opacity={imageState.isLoaded || imageState.hasError ? 1 : 0}
+        transition="opacity 0.3s ease"
+        position={imageState.isLoading ? 'absolute' : 'static'}
+        top={0}
+        left={0}
+      />
+    </Box>
+  );
+};
+
+// Enhanced Star Rating Component
+const StarRating = ({ rating = 0, rating_count = 0, size = "sm", showCount = true }) => {
+  const { colorMode } = useColorMode();
+  
+  return (
+    <Flex align="center" gap={1}>
+      <Flex>
+        {Array(5)
+          .fill('')
+          .map((_, i) => (
+            <StarIcon
+              key={i}
+              color={i < Math.floor(rating) ? 'yellow.400' : 'gray.300'}
+              boxSize={size === "sm" ? "3" : "4"}
+            />
+          ))}
+      </Flex>
+      <Text 
+        fontSize={size === "sm" ? "xs" : "sm"} 
+        color={colorMode === 'dark' ? 'gray.400' : 'gray.600'}
+        fontWeight="medium"
+      >
+        {rating?.toFixed?.(1) || '0.0'}
+        {showCount && rating_count > 0 && (
+          <Text as="span" ml={1}>
+            ({rating_count})
+          </Text>
+        )}
+      </Text>
+    </Flex>
+  );
+};
+
+// Dietary Badges Component
+const DietaryBadges = ({ meal, size = "xs" }) => {
+  const { t } = useTranslation();
+  
+  const badges = [];
+  if (meal.is_vegetarian) badges.push({ key: 'vegetarian', color: 'green' });
+  if (meal.is_vegan) badges.push({ key: 'vegan', color: 'teal' });
+  if (meal.is_gluten_free) badges.push({ key: 'glutenFree', color: 'orange' });
+  if (meal.is_dairy_free) badges.push({ key: 'dairyFree', color: 'blue' });
+
+  if (badges.length === 0) return null;
+
+  return (
+    <Flex wrap="wrap" justifyContent={'center'} gap={1} maxH={"25%"}>
+      {badges.map(({ key, color }) => (
+        <Badge
+          key={key}
+          colorScheme={color}
+          variant="subtle"
+          fontSize={size}
+          borderRadius="full"
+          px={2}
+          py={0.5}
+        >
+          {t(`dietaryTags.${key}`)}
+        </Badge>
+      ))}
+    </Flex>
+  );
+};
+
+// Price Display Component
+const PriceDisplay = ({ price, base_price, is_discount_active, discount_percentage, size = "md" }) => {
+  const {t}=useTranslation();
+  return (
+    <VStack align="flex-start" spacing={0}>
+      <Text 
+        fontWeight="bold" 
+        fontSize={size} 
+        color="brand.800"
+        lineHeight="2.2"
+      >
+        {typeof price === 'number' ? price.toFixed(2) : 'N/A'}{t('common.currency')}
+      </Text>
+      {is_discount_active && base_price && base_price !== price && (
+        <Text
+          fontSize="xs"
+          color="gray.500"
+          textDecoration="line-through"
+          lineHeight="1"
+        >
+          {base_price.toFixed(2)}{t('common.currency')}
+        </Text>
+      )}
+    </VStack>
+  );
+};
+
+// Enhanced Minimal Meal Card - Grid optimized
+export const MinimalMealCard = ({ meal, onClick }) => {
+  const { colorMode } = useColorMode();
+  const { t } = useTranslation();
+  const { currentLanguage } = useI18nContext();
+  
+  const isArabic = currentLanguage === 'ar';
+  const displayName = isArabic && meal.name_arabic ? meal.name_arabic : meal.name;
+  const displayDescription = isArabic && meal.description_arabic ? meal.description_arabic : meal.description;
+
+  const cardBg = colorMode === 'dark' ? 'gray.800' : 'secondary.600';
+  const borderColor = colorMode === 'dark' ? 'gray.700' : 'brand.400';
+  const hoverBg = colorMode === 'dark' ? 'gray.750' : 'brand.600';
+
+  if (!meal.is_available) return null;
+
+  return (
+    <Box
+     as={Button}
+      bg={cardBg}
+      borderWidth="2px"
+      borderColor={borderColor}
+      borderRadius="md"
+      overflow="hidden"
+      cursor="pointer"
+      transition="all 0.3s ease"
+      _hover={{
+        transform: 'translateY(-4px)',
+       borderColor: 'brand.600',
+        bg: hoverBg,
+      }}
+      onClick={() => onClick?.(meal)}
+      position="relative"
+      height="100%"
+      minH="250px"
+      px={0}
+      py={0}
+    >
+      {/* Discount Badge */}
+      {meal.is_discount_active && meal.discount_percentage > 0 && (
+        <Badge
+          position="absolute"
+          top="12px"
+          right="12px"
+          colorScheme="red"
+          borderRadius="sm"          
+          px="3"
+          py="1"
+          zIndex={2}
+          fontSize="xs"
+          fontWeight="bold"
+        >
+          -{meal.discount_percentage.toFixed(0)}%
+        </Badge>
+      )}
+
+      {/* Image Section */}
+      <Box position="relative" h={'100%'} w={'100%'}>
+        <EnhancedImage
+          src={meal.image_url}
+          alt={displayName}
+          height="100%"
+          width="100%"
+          borderRadius="none"
+        />
+        
+        {/* Quick Info Overlay */}
+        <Box
+          position="absolute"
+          bottom="0"
+          left="0"
+          right="0"
+          bg="rgba(0,0,0,0.5)"
+          p="3"
+        >
+          <Flex justify="space-between" align="flex-end">
+            <StarRating 
+              rating={meal.rating} 
+              rating_count={meal.rating_count}
+              size="sm"
+              showCount={false}
+            />
+            {meal.prep_time_minutes && (
+              <Text fontSize="xs" color="white" fontWeight="medium">
+                {meal.prep_time_minutes} {t('common.minutes')}
+              </Text>
+            )}
+          </Flex>
+        </Box>
+      </Box>
+
+      {/* Content Section */}
+     <VStack
+        p="1"
+        spacing="1"
+        bg="transparent"
+        justify="space-between"
+        align="stretch"
+        h="100%" // ensure full height is used within its grid cell
+      >
+
+        {/* Title and Category Section */}
+        <VStack spacing="1" align="stretch" h="50%">
+          <Heading
+            pt={1}
+            size="lg"
+            borderRadius="md"
+            color={colorMode === 'dark' ? 'white' : 'brand.500'}
+            bg="rgba(0,0,0,0.7)"
+            noOfLines={3}
+            lineHeight={1}
+            w="100%" // full width
+            whiteSpace="normal"
+            wordBreak="break-word"
+            h="70%" // 70% of the section height
+          >
+            {displayName}
+          </Heading>
+          <Badge
+            alignSelf="flex-start"
+            colorScheme="warning"
+            variant="subtle"
+            fontSize="xs"
+            borderRadius="sm"
+          >
+            {meal.section ? t(`foodCategories.${meal.section?.toLowerCase?.()}`) : t('common.uncategorized')}
+          </Badge>
+        </VStack>
+
+        {/* Description */}
+        <Box h="5%">
+          <Text
+            fontSize="xs"
+            color={colorMode === 'dark' ? 'gray.400' : 'gray.600'}
+            noOfLines={2}
+            lineHeight="1.4"
+            minH="2.8em"
+          >
+            {displayDescription}
+          </Text>
+        </Box>
+
+        {/* Dietary Badges */}
+        <Box h="15%">
+          <DietaryBadges meal={meal} size="xs" />
+        </Box>
+
+        {/* Price and Action */}
+        <Flex
+          justify="space-between"
+          align="center"
+          py="2"
+          h="30%" // enough space for the price + button
+          mt="auto"
+        >
+          <PriceDisplay
+            price={meal.price}
+            base_price={meal.base_price}
+            is_discount_active={meal.is_discount_active}
+            discount_percentage={meal.discount_percentage}
+            size="lg"
+          />
+          <IconButton
+            icon={<InfoIcon />}
+            size="lg"
+            colorScheme="brand"
+            variant="solid"
+            borderRadius="full"
+            aria-label={t('buttons.viewDetails')}
+          />
+        </Flex>
+      </VStack>
+
+    </Box>
+  );
+};
+
+// Enhanced Full Meal Card with Add to Cart Modal
+export const MealCard = ({ meal, isModal = false, onClose }) => {
+  const { colorMode } = useColorMode();
+  const { t } = useTranslation();
+  const { currentLanguage } = useI18nContext();
+  const { addToCart } = useCart();
+  const [quantity, setQuantity] = useState(1);
+  
+  const isArabic = currentLanguage === 'ar';
+  const displayName = isArabic && meal.name_arabic ? meal.name_arabic : meal.name;
+  const displayDescription = isArabic && meal.description_arabic ? meal.description_arabic : meal.description;
+  
+  // Responsive values for modal vs regular card
+  const cardWidth = isModal ? '80%' : useBreakpointValue({ base: '80vw', md: '70vw' ,lg:'50vw'});
+  const imageHeight = isModal ? '250px' : useBreakpointValue({ base: '150px', sm: '210px' });
+
+  const handleAddToCart = useCallback(() => {
+    addToCart({
+      id: meal.id,
+      name: displayName,
+      price: meal.price,
+      image: meal.image_url,
+      qty: quantity
+    });
+    if (onClose) onClose();
+  }, [meal, displayName, quantity, addToCart, onClose]);
+
+  const incrementQuantity = () => setQuantity(prev => prev + 1);
+  const decrementQuantity = () => setQuantity(prev => Math.max(1, prev - 1));
+
+  if (!meal.is_available) return null;
+
+  const CardContent = (
+    <VStack spacing="2" align="stretch" >
+      {/* Image Section */}
+      <Box position="relative">
+        <EnhancedImage
+          src={meal.image_url}
+          alt={displayName}
+          height={imageHeight}
+          borderRadius="lg"
+        />
+        
+        {/* Discount Badge */}
+        {meal.is_discount_active && meal.discount_percentage > 0 && (
+          <Badge
+            position="absolute"
+            top="12px"
+            right="12px"
+            colorScheme="red"
+            borderRadius="full"
+            px="3"
+            py="1"
+            fontSize="sm"
+            fontWeight="bold"
+          >
+            -{meal.discount_percentage.toFixed(0)}% OFF
+          </Badge>
+        )}
+      </Box>
+
+      {/* Content Section */}
+      <VStack align="stretch" spacing="3" flex="1">
+        {/* Title and Prep Time */}
+        <Flex justify="space-between" align="flex-start">
+          <Heading 
+            size="lg" 
+            color={colorMode === 'dark' ? 'white' : 'brand.700'}
+            flex="1"
+            pr="2"
+          >
+            {displayName}
+          </Heading>
+          {meal.prep_time_minutes && (
+            <Text fontSize="sm" color="gray.500" whiteSpace="nowrap">
+              {meal.prep_time_minutes} {t('common.minutes')}
+            </Text>
+          )}
+        </Flex>
+        
+        {/* Description */}
+        <Text 
+          color={colorMode === 'dark' ? 'gray.300' : 'gray.600'} 
+          fontSize="sm"
+          lineHeight="1.5"
+        >
+          {displayDescription}
+        </Text>
+
+        {/* Rating */}
+        <StarRating 
+          rating={meal.rating} 
+          rating_count={meal.rating_count}
+          size="md"
+        />
+
+        {/* Spice Level */}
+        {meal.spice_level > 0 && (
+          <Flex align="center" gap="2">
+            <Text fontSize="sm" color={colorMode === 'dark' ? 'gray.400' : 'gray.600'}>
+              {t('common.spiceLevel')}:
+            </Text>
+            <Flex>
+              {Array(5).fill('').map((_, i) => (
+                <Box
+                  key={i}
+                  w="2"
+                  h="2"
+                  bg={i < meal.spice_level ? 'red.400' : 'gray.300'}
+                  borderRadius="full"
+                  mx="0.5"
+                />
+              ))}
+            </Flex>
+          </Flex>
+        )}
+
+        {/* Dietary Information */}
+        <DietaryBadges meal={meal} size="sm" />
+
+        <Divider />
+
+        {/* Price Section */}
+        <Flex justify="space-between" align="center">
+          <PriceDisplay
+            price={meal.price}
+            base_price={meal.base_price}
+            is_discount_active={meal.is_discount_active}
+            discount_percentage={meal.discount_percentage}
+            size="xl"
+          />
+          
+          <VStack spacing="1">
+            <Badge colorScheme="blue" variant="subtle" borderRadius="full">
+              {meal.section ? t(`foodCategories.${meal.section?.toLowerCase?.()}`) : t('common.uncategorized')}
+            </Badge>
+            <Badge colorScheme="green" borderRadius="full">
+              {t('common.ready')}
+            </Badge>
+          </VStack>
+        </Flex>
+
+        {/* Quantity and Add to Cart for Modal */}
+        {isModal && (
+          <>
+            <Divider />
+            <VStack spacing="4">
+              {/* Quantity Selector */}
+              <Flex align="center" justify="center" gap="4">
+                <Text fontWeight="medium">{t('common.quantity')}:</Text>
+                <HStack>
+                  <IconButton
+                    icon={<MinusIcon />}
+                    size="sm"
+                    onClick={decrementQuantity}
+                    isDisabled={quantity <= 1}
+                    borderRadius="full"
+                  />
+                  <Text 
+                    minW="8" 
+                    textAlign="center" 
+                    fontWeight="bold" 
+                    fontSize="lg"
+                  >
+                    {quantity}
+                  </Text>
+                  <IconButton
+                    icon={<AddIcon />}
+                    size="sm"
+                    onClick={incrementQuantity}
+                    borderRadius="full"
+                  />
+                </HStack>
+              </Flex>
+
+              {/* Total Price */}
+              <Text fontSize="lg" fontWeight="bold" color="secondary.800">
+                {t('checkout.total')}: {(meal.price * quantity).toFixed(2)} {t('common.currency')}
+              </Text>
+
+              {/* Add to Cart Button */}
+              <Button
+                colorScheme="brand"
+                size="lg"
+                width="full"
+                onClick={handleAddToCart}
+                leftIcon={<AddIcon />}
+              >
+                {t('buttons.addToCart')}
+              </Button>
+            </VStack>
+          </>
+        )}
+      </VStack>
+    </VStack>
+  );
+
+  // Return modal version or regular card
+  if (isModal) {
+    return CardContent;
+  }
+
+  return (
+    <Box
+      padding={2}
+      w={cardWidth}
+      borderWidth="1px"
+      borderRadius="xl"
+      overflow="hidden"
+      bg={colorMode === 'dark' ? 'gray.800' : 'warning.400'}
+      borderColor={'transparent'}
+      transition="all 0.3s ease"
+      _hover={{ 
+        transform: 'translateY(-4px)',
+      }}
+      p="4"
+    >
+      {CardContent}
+    </Box>
+  );
+};
+
+// Main Component with Modal System
+export const MealCardWithModal = ({ meal }) => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { t } = useTranslation();
+
+  return (
+    <>
+      <MinimalMealCard meal={meal} onClick={onOpen} />
+      
+      <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered scrollBehavior={'inside'}>
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <ModalContent bg="secondary.100" w={'auto'} my={4} py={0} px={1} maxH={'92%'}>
+          <ModalBody>
+            <ScaleFade initialScale={0.9} in={isOpen}>
+              <MealCard meal={meal} isModal={true} onClose={onClose} />
+            </ScaleFade>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    </>
+  );
+};
 
 
-export const AddToCartModal = ({
+const AddToCartModal = ({
   isOpen,
   onClose,
   name,
@@ -123,271 +704,7 @@ export const AddToCartModal = ({
 
 
 
-export const MealCard = ({ meal }) => {
-  const { colorMode } = useColorMode();
-  const { t } = useTranslation();
-  const { currentLanguage } = useI18nContext();
-  const { addToCart } = useCart();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [quantity, setQuantity] = useState(1);
-  
-  const isArabic = currentLanguage === 'ar';
-  const displayName = isArabic && meal.name_arabic ? meal.name_arabic : meal.name;
-  const displayDescription = isArabic && meal.description_arabic ? meal.description_arabic : meal.description;
-  
-  // Responsive values
-  const cardWidth = useBreakpointValue({ base: '100%', sm: '280px' });
-  const cardHeight = useBreakpointValue({ base: 'auto', sm: '500px' });
-  const imageHeight = useBreakpointValue({ base: '150px', sm: '210px' });
-  const direction = useBreakpointValue({ base: 'column', sm: 'row' });
-  const textSize = useBreakpointValue({ base: 'xs', sm: 'sm' });
-  const headingSize = useBreakpointValue({ base: 'sm', sm: 'lg' });
-  const badgeSize = useBreakpointValue({ base: 'xs', sm: 'sm', lg: "xs" });
 
-  // Extract values from meal object
-  const {
-    id,
-    image_url,
-    price,
-    base_price,
-    rating,
-    is_discount_active,
-    discount_percentage,
-    is_vegetarian,
-    is_vegan,
-    is_gluten_free,
-    is_dairy_free,
-    spice_level,
-    section,
-    is_available = true,
-    prep_time_minutes,
-    rating_count
-  } = meal;
-
-  const handleConfirm = () => {
-    addToCart({ 
-      id, 
-      name: displayName, 
-      price, 
-      image: image_url, 
-      qty: quantity 
-    });
-    setIsModalOpen(false);
-  };
-
-  if (!is_available) return null;
-
-  return (
-    <>
-      <Box
-        w={cardWidth}
-        h={cardHeight}
-        borderWidth="1px"
-        borderRadius="lg"
-        overflow="hidden"
-        bg={colorMode === 'dark' ? 'gray.700' : 'secondary.400'}
-        transition="transform 0.3s"
-        _hover={{ transform: 'translateY(-5px)' }}
-        position="relative"
-        p={{ base: 2, sm: 4 }}
-        display="flex"
-        flexDirection="column"
-      >
-        {/* Offer badge */}
-        {is_discount_active && discount_percentage > 0 && (
-          <Badge
-            position="absolute"
-            top="8px"
-            right="8px"
-            colorScheme="green"
-            borderRadius="full"
-            px="2"
-            py="1"
-            zIndex={1}
-            fontSize={badgeSize}
-          >
-            {t('common.offer')} {discount_percentage.toFixed(0)}% OFF
-          </Badge>
-        )}
-
-        {/* Image section */}
-        <Box flexShrink={0}>
-          <Image
-            src={image_url || unknownDefaultImage}
-            alt={displayName}
-            h={imageHeight}
-            w="100%"
-            objectFit="cover"
-            borderRadius="md"
-          />
-        </Box>
-
-        {/* Content section */}
-        <Box flex="1" display="flex" flexDirection="column" pt={3}>
-          {/* Title and prep time */}
-          <Flex justify="space-between" align="center" mb={2}>
-            <Heading 
-              size={headingSize} 
-              color="brand.800" 
-              noOfLines={1}
-              flex="1"
-              mr={2}
-            >
-              {displayName}
-            </Heading>
-            {prep_time_minutes && (
-              <Text fontSize={textSize} color="gray.500" whiteSpace="nowrap">
-                {prep_time_minutes} {t('common.minutes')}
-              </Text>
-            )}
-          </Flex>
-          
-          {/* Description */}
-          <Text 
-            color={colorMode === 'dark' ? 'gray.300' : 'brand.600'} 
-            fontSize={textSize}
-            mb={2}
-            noOfLines={2}
-            flexShrink={0}
-          >
-            {displayDescription}
-          </Text>
-          
-          {/* Price and dietary badges */}
-          <Flex justify="space-between" align="center" mb={2} wrap="wrap">
-            <Box>
-              <Text fontWeight="bold" fontSize="md" color="gray.800">
-                ${typeof price === 'number' ? price.toFixed(2) : 'N/A'}
-              </Text>
-              {is_discount_active && base_price && base_price !== price && (
-                <Text
-                  fontSize={textSize}
-                  color="gray.500"
-                  textDecoration="line-through"
-                >
-                  ${base_price.toFixed(2)}
-                </Text>
-              )}
-            </Box>
-            
-            <Flex wrap="wrap" gap={1} justify="flex-end" mt={{ base: 1, sm: 0 }}>
-              {is_vegetarian && (
-                <Badge colorScheme="green" variant="subtle" fontSize={badgeSize}>
-                  {t('dietaryTags.vegetarian')}
-                </Badge>
-              )}
-              {is_vegan && (
-                <Badge colorScheme="teal" variant="subtle" fontSize={badgeSize}>
-                  {t('dietaryTags.vegan')}
-                </Badge>
-              )}
-              {is_gluten_free && (
-                <Badge colorScheme="orange" variant="subtle" fontSize={badgeSize}>
-                  {t('dietaryTags.glutenFree')}
-                </Badge>
-              )}
-              {is_dairy_free && (
-                <Badge colorScheme="teal" variant="subtle" fontSize={badgeSize}>
-                  {t('dietaryTags.dairyFree')}
-                </Badge>
-              )}
-            </Flex>
-          </Flex>
-          
-          {/* Spice level */}
-          {spice_level > 0 && (
-            <Text 
-              fontSize={textSize} 
-              mb={2} 
-              color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}
-              noOfLines={1}
-            >
-              {t('common.spiceLevel')}: {spice_level}/5
-            </Text>
-          )}
-
-          {/* Rating */}
-          <Flex w={'50%'} align="center"justifyContent={'center'} mb={2} py={0} bg={'secondary.900'} borderRadius={4}>
-          
-              {Array(5)
-              .fill('')
-              .map((_, i) => (
-                <StarIcon
-                  key={i}
-                  color={i < (rating || 0) ? 'warning.300' : 'warning.50'}
-                  my={0}
-                  py={0}
-                  mr={1}
-                />
-              ))}
-           
-            <Text 
-              mx={1}
-              my={0}
-              py={0} 
-              fontSize={'auto'} 
-              color={colorMode === 'dark' ? 'error.400' : 'warning.300'}
-              align={'center'}
-            >
-              {rating?.toFixed?.(1) || '0.0'}
-              {rating_count > 0 && (
-                <Text as="span" ml={1}>
-                  ({rating_count})
-                </Text>
-              )}
-            </Text>
-          </Flex>
-
-          {/* Section and type */}
-          <Flex justify="space-between" align="center" mb={2} wrap="wrap" gap={1}>
-            <Badge 
-              bg={'brand.400'}
-              variant="subtle" 
-              borderRadius="full"
-              fontSize={badgeSize}
-            >
-              {section ? t(`foodCategories.${section?.toLowerCase?.()}`) : t('common.uncategorized')}
-            </Badge>
-            <Badge 
-              bg={'tertiary.400'}
-              borderRadius="full"
-              fontSize={badgeSize}
-            >
-              {t('common.ready')}
-            </Badge>
-          </Flex>
-
-          {/* Add to cart button */}
-          <Button 
-            colorScheme="brand" 
-            size="sm" 
-            width="full" 
-            onClick={() => setIsModalOpen(true)}
-            mt="auto"
-          >
-            {t('buttons.addToCart')}
-          </Button>
-        </Box>
-      </Box>
-
-      {isModalOpen && (
-        <AddToCartModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          name={displayName}
-          price={price}
-          quantity={quantity}
-          setQuantity={setQuantity}
-          onConfirm={handleConfirm}
-          t={t}
-          hasOffer={is_discount_active}
-          discountPercentage={discount_percentage}
-          colorMode={colorMode}
-        />
-      )}
-    </>
-  );
-};
 
 // Premium Food Card - More detailed with rating, tag, and action buttons
 export const PremiumMealCard = ({ meal }) => {
@@ -528,226 +845,96 @@ export const PremiumMealCard = ({ meal }) => {
   );
 };
 
-// Minimalist Food Card - Clean design with horizontal layout
-export const MinimalistMealCard = ({ meal }) => {
-  const { colorMode } = useColorMode();
-  const { t } = useTranslation();
-  
-  // Extract values from meal object
-  const {
-    id,
-    name,
-    description,
-    price,
-    rate,
-    section,
-    type = 'ready',
-    image_url: image,
-    discount_percentage,
-    prep_time_minutes: prepTime,
-    is_discount_active: hasOffer,
-    is_vegetarian,
-    is_vegan,
-    is_gluten_free,
-    is_dairy_free,
-  } = meal;
 
-  // Generate dietary info array
-  const dietaryInfo = [];
-  if (is_vegetarian) dietaryInfo.push('vegetarian');
-  if (is_vegan) dietaryInfo.push('vegan');
-  if (is_gluten_free) dietaryInfo.push('gluten-free');
-  if (is_dairy_free) dietaryInfo.push('dairy-free');
 
-  return (
-    <Flex
-      direction={{ base: 'column', md: 'row' }}
-      overflow="hidden"
-      bg={colorMode === 'dark' ? 'gray.700' : 'white'}
-      borderRadius="lg"
-      maxW="500px"
-      borderWidth="1px"
-      borderColor={colorMode === 'dark' ? 'gray.600' : 'gray.200'}
-      position="relative"
-    >
-      {/* Offer badge */}
-      {hasOffer && (
-        <Badge
-          position="absolute"
-          top="10px"
-          right="10px"
-          colorScheme="green"
-          borderRadius="full"
-          px="2"
-          py="1"
-          zIndex={1}
-        >
-          {t('common.offer')} {discount_percentage.toFixed(0)}% OFF
-        </Badge>
-      )}
-
-      <Image
-        src={image || unknownDefaultImage}
-        alt={name}
-        objectFit="cover"
-        maxW={{ base: '100%', md: '150px' }}
-        height={{ base: '150px', md: 'auto' }}
-      />
-
-      <Box p="4" width="100%">
-        <Heading size="md" color="brand.700" mb="1">
-          {name}
-        </Heading>
-
-        <Text
-          color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}
-          fontSize="sm"
-          noOfLines={2}
-          mb="2"
-        >
-          {description}
-        </Text>
-
-        <Flex wrap="wrap" mb="2">
-          {dietaryInfo.map((tag, index) => (
-            <Badge
-              key={index}
-              bg="secondary.100"
-              color="secondary.700"
-              mr="2"
-              mb="1"
-              borderRadius="full"
-              px="2"
-              py="0.5"
-              fontSize="xs"
-            >
-              {t(`dietaryTags.${tag?.toLowerCase().replace('-', '')}`)}
-            </Badge>
-          ))}
-        </Flex>
-
-        <Flex align="center" mb="2">
-          {Array(5)
-            .fill('')
-            .map((_, i) => (
-              <StarIcon
-                key={i}
-                color={i < (rate || 0) ? 'brand.500' : 'gray.300'}
-                boxSize="3"
-                mr="1"
-              />
-            ))}
-          <Text ml="1" fontSize="sm" color={colorMode === 'dark' ? 'gray.400' : 'gray.500'}>
-            {rate?.toFixed?.(1) || '0.0'}
-          </Text>
-        </Flex>
-
-        <Flex justify="space-between" align="center" mt="2">
-          <Box>
-            {hasOffer && (
-              <Text
-                as="span"
-                fontSize="sm"
-                color="gray.500"
-                textDecoration="line-through"
-                mr="1"
-              >
-                ${(price / (1 - discount_percentage/100)).toFixed(2)}
-              </Text>
-            )}
-            <Text fontWeight="bold" fontSize="md" color="brand.700" as="span">
-              ${typeof price === 'number' ? price.toFixed(2) : 'N/A'}
-            </Text>
-            {prepTime && (
-              <Text fontSize="xs" color={colorMode === 'dark' ? 'gray.400' : 'gray.500'}>
-                {prepTime} {t('common.minPrepTime')}
-              </Text>
-            )}
-          </Box>
-          <Flex gap={2}>
-            <Badge colorScheme="brand" variant="subtle" borderRadius="full">
-              {t(`foodCategories.${section?.toLowerCase?.()}`)}
-            </Badge>
-            <Badge colorScheme={type === 'custom' ? 'purple' : 'blue'} borderRadius="full">
-              {type === 'custom' ? t('common.custom') : t('common.ready')}
-            </Badge>
-          </Flex>
-          <Button colorScheme="brand" size="sm">
-            {t('buttons.order')}
-          </Button>
-        </Flex>
-      </Box>
-    </Flex>
-  );
-};
-
-// Food Cards Demo Component
-
-export const FeaturedMealCard = ({ item,index = 0 }) => { 
+//featured cards
+export const FeaturedMealCard = ({ item, index = 0 }) => {
   const { colorMode } = useColorMode()
   const { t, i18n } = useTranslation()
   const { addToCart } = useCart()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const isArabic = i18n.language === 'ar'
+  
+  // Motion variants for animations
   const cardVariants = {
     hidden: {
-      opacity: 0.7,
-      x: 50,     
-    },
-    visible: {
-      opacity: 1,
-      x: 0,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut",
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
-  }
-  const elementVariants = {
-    hidden: {
-      opacity: 0,
-      y: 20
+      opacity: 0.3,
+      y: 10,
+      scale: 0.9
     },
     visible: {
       opacity: 1,
       y: 0,
+      scale: 1,
       transition: {
-        duration: 0.4,
-        ease: "easeOut"
+        duration: 0.1,
+        ease: "easeIn",
+        delay: index * 0.05 // Reduced delay for carousel
       }
     }
   }
-  // Extract properties from item object (changed from 'meal' to 'item')
+
+  // Extract properties from item object
   const {
     id,
     name,
     name_arabic,
     description,
+    description_arabic,
     base_price: originalPrice = 0,
     price: effectivePrice = 0,
     rating: rate = 0,
-    offerRatio = 1,
+    rating_count = 0,
     section,
     image_url: image,
     is_featured,
-    is_discount_active: hasOffer
-  } = item 
+    is_discount_active: hasOffer,
+    discount_percentage = 0,
+    is_vegetarian,
+    is_vegan,
+    is_gluten_free,
+    is_dairy_free,
+    prep_time_minutes
+  } = item
+
   // Motion components
   const MotionBox = motion(Box)
-  const MotionFlex = motion(Flex)
-  const MotionHeading = motion(Heading)
-  const MotionText = motion(Text)
-  const MotionButton = motion(Button)
-  // Pricing calculations
-  const discountPercentage = hasOffer ? (100 - offerRatio * 100).toFixed(0) : 0
 
+  // Compact responsive values optimized for carousel
+  const cardWidth = useBreakpointValue({ 
+    base: '100%',    // Fixed width for better carousel control
+    sm: '95%', 
+    md: '95%', 
+    lg: '90%',
+    xl: '90%'
+  })
+  
+  const cardHeight = useBreakpointValue({ 
+    base: '100%',    // Compact height
+    sm: '90%', 
+    md: '95%',
+    lg: '98%'
+  })
+  
+  const imageHeight = useBreakpointValue({ 
+    base: '180px',    // Fixed image height
+    sm: '200px', 
+    md: '220px',
+    lg: '240px'
+  })
+
+  // Color values
+  const cardBg = colorMode === 'dark' ? 'gray.800' : 'white'
+  const borderColor = colorMode === 'dark' ? 'gray.700' : 'brand.200'
+  const hoverBg = colorMode === 'dark' ? 'gray.750' : 'brand.50'
+  
+  // Display names based on language
+  const displayName = isArabic ? name_arabic || name : name
   const handleConfirm = () => {
     addToCart({
       id,
-      name,
+      name: displayName,
       price: effectivePrice,
       image,
       qty: quantity,
@@ -757,167 +944,181 @@ export const FeaturedMealCard = ({ item,index = 0 }) => {
 
   return (
     <>
-      {/* Card Container with Motion */}
       <MotionBox
-        maxW={['62vw', '54vw', '28vw']}
-        minW={['50vw', '48vw', '20vw']}
-        w="full"
-        borderRadius="xl"
+        as={Box}
+        w={cardWidth}
+        h={cardHeight}
+        bg={cardBg}
+        borderWidth="1px"
+        borderColor={borderColor}
+        borderRadius="14px"
         overflow="hidden"
-        bg={colorMode === 'dark' ? 'gray.700' : 'white'}
-        position="relative"
-        transition="all 0.3s ease"
-        _hover={{
-          transform: 'translateY(-0.5vw)',
-        }}
-        height="60vh"
-        my={2}
-        mx="auto"
         cursor="pointer"
+        transition="all 0.2s ease"
+        _hover={{
+          transform: 'translateY(-4px)',
+          borderColor: 'brand.500',
+          bg: hoverBg,
+          shadow: 'lg'
+        }}
+        onClick={() => setIsModalOpen(true)}
+        position="relative"
         variants={cardVariants}
         initial="hidden"
         animate="visible"
-        custom={index} // Pass index for custom staggering
-        style={{
-          animationDelay: `${index * 0.1}s` // Additional stagger delay
-        }}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        flexShrink={0} 
+        pb={2}
+        mb={2}
       >
+        {/* Top Badges Row */}
+        <Box position="absolute" top="8px" left="8px" right="8px" zIndex={3}>
+          <Flex justify="space-between" align="flex-start">
+            {/* Featured Badge */}
+            {is_featured && (
+              <Badge
+                colorScheme="yellow"
+                borderRadius="full"
+                px="2"
+                py="0.5"
+                fontSize="2xs"
+                fontWeight="bold"
+              >
+                <StarIcon boxSize="2" mr="1" /> {t('common.featured')}
+              </Badge>
+            )}
+            
+            {/* Discount Badge */}
+            {hasOffer && discount_percentage > 0 && (
+              <Badge
+                colorScheme="red"
+                borderRadius="full"
+                px="2"
+                py="0.5"
+                fontSize="2xs"
+                fontWeight="bold"
+              >
+                -{discount_percentage.toFixed(0)}%
+              </Badge>
+            )}
+          </Flex>
+        </Box>
+
         {/* Image Section */}
-        <Box 
-          position="relative" 
-          height={'45%'} 
-          width="100%"
-          variants={elementVariants}
-        >
-          <Image
-            src={image || unknownDefaultImage}
-            alt={name}
+        <Box position="relative" h={imageHeight} w="100%">
+          <EnhancedImage
+            src={image}
+            alt={displayName}
             height="100%"
             width="100%"
             objectFit="cover"
-            fallback={<Skeleton height="100%" />}
+            fallback={unknownDefaultImage}
           />
-
-          {/* Badges */}
-          <MotionFlex
+          
+          {/* Bottom overlay with rating and time */}
+          <Box
             position="absolute"
-            top="0"
+            bottom="0"
             left="0"
             right="0"
-            px={2}
-            justifyContent="space-between"
-            variants={elementVariants}
+            bg="linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0))"
+            p="2"
           >
-            <Flex gap={2} m={2}>
-              {is_featured && (
-                <motion.div variants={elementVariants}>
-                  <Badge colorScheme="yellow" variant="solid" borderRadius="md" p={0}>
-                    {t('common.featured')}
-                  </Badge>
-                </motion.div>
-              )}
-              {hasOffer && (
-                <motion.div variants={elementVariants}>
-                  <Badge colorScheme="green" variant="solid" borderRadius="md" p={0}>
-                    {t('common.offer')} {discountPercentage}% OFF
-                  </Badge>
-                </motion.div>
+            <Flex justify="space-between" align="center">
+              <StarRating 
+                rating={rate} 
+                rating_count={rating_count}
+                size="xs"
+                showCount={false}
+                color="white"
+              />
+              {prep_time_minutes && (
+                <Text fontSize="2xs" color="white" fontWeight="medium">
+                  ⏱️ {prep_time_minutes}min
+                </Text>
               )}
             </Flex>
-
-            <motion.div variants={elementVariants}>
-              <Badge bg="brand.600" color="white" borderRadius="md" p={0} m={2} fontSize="xs">
-                {t(`foodCategories.${section?.toLowerCase?.()}`)}
-              </Badge>
-            </motion.div>
-          </MotionFlex>
+          </Box>
         </Box>
 
         {/* Content Section */}
-        <MotionBox 
-          p={2} 
-          bg={colorMode === 'dark' ? 'gray.700' : 'white'} 
-          height={'30%'}
-          variants={elementVariants}
-        >
-          <MotionFlex direction="column" gap={2} variants={elementVariants}>
-            <MotionHeading
-              fontSize={'1.3em'}
-              color={colorMode === 'dark' ? 'white' : 'brand.700'}
-              noOfLines={1}
-              variants={elementVariants}
-            >
-              {isArabic? name_arabic || name : name}
-            </MotionHeading>
+        <Box p="3" h={`calc(${cardHeight} - ${imageHeight})`}>
+          <VStack spacing="2" align="stretch" h="100%">
+            
+            {/* Title and Category */}
+            <Box>
+              <Heading
+                textAlign={'center'}
+                color={colorMode === 'dark' ? 'white' : 'brand.700'}
+                noOfLines={2}
+                lineHeight="1.3"
+                mb="1"
+                fontSize={useBreakpointValue({ base: 'lg', md: 'xl' })}
+              >
+                {displayName}
+              </Heading>
+              
+              <Badge
+                colorScheme="brand"
+                variant="subtle"
+                fontSize="2xs"
+                borderRadius="full"
+                px="2"
+                py="0.5"
+              >
+                {section ? t(`foodCategories.${section?.toLowerCase?.()}`) : t('common.uncategorized')}
+              </Badge>
+            </Box>
 
-            <MotionText 
-              fontSize="sm" 
-              color="gray.500" 
-              minH="2vw" 
-              noOfLines={1}
-              variants={elementVariants}
-            >
-              {description}
-            </MotionText>
+            {/* Dietary Badges - Compact */}
+            <Box>
+              <DietaryBadges meal={item} size="2xs" maxDisplay={3} />
+            </Box>
 
-            {/* Price and Rating */}
-            <MotionFlex 
-              justify="space-between" 
-              align="center" 
-              mt={0}
-              variants={elementVariants}
-            >
-              <Flex direction="column">
-                {hasOffer && (
-                  <motion.div variants={elementVariants}>
-                    <Text fontSize="0.7em" color="gray.500" textDecoration="line-through">
-                     {t("common.currency")}{originalPrice.toFixed(2)}
+            {/* Price and Action Section */}
+            <Box mt="auto">
+              <Flex justify="space-between" align="center" mb="2">
+                <VStack spacing="0" align="flex-start">
+                  {/* Original price if discounted */}
+                  {hasOffer && originalPrice > effectivePrice && (
+                    <Text
+                      fontSize="xs"
+                      color="gray.500"
+                      textDecoration="line-through"
+                      lineHeight="1"
+                    >
+                      {originalPrice.toFixed(2)}{t('common.currency')}
                     </Text>
-                  </motion.div>
-                )}
-                <motion.div variants={elementVariants}>
+                  )}
+                  
+                  {/* Current price */}
                   <Text
                     fontWeight="bold"
-                    fontSize={['md', 'lg']}
+                    fontSize={useBreakpointValue({ base: 'lg', md: 'xl' })}
                     color={hasOffer ? 'green.500' : 'brand.700'}
+                    lineHeight="1"
                   >
-                   {effectivePrice.toFixed(2)}{t("common.currency")}
+                    {effectivePrice.toFixed(2)}{t('common.currency')}
                   </Text>
-                </motion.div>
+                </VStack>
+
+                {/* Compact Add Button */}
+                <IconButton
+                  colorScheme="brand"
+                  size="sm"
+                  icon={<Image src={cartIcon} alt="Cart" boxSize="4" />}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setIsModalOpen(true)
+                  }}
+                  borderRadius="full"
+                  aria-label={t('buttons.addToCart')}
+                />
               </Flex>
-
-              <motion.div variants={elementVariants}>
-                <Flex align="center">
-                  {Array(5)
-                    .fill('')
-                    .map((_, i) => (
-                      <StarIcon
-                        key={i}
-                        color={i < rate ? 'warning.300' : 'gray.300'}
-                        boxSize="1.2em"
-                      />
-                    ))}
-                  <Text mx={2} fontSize="sm">
-                    ({rate?.toFixed?.(1) || '0.0'})
-                  </Text>
-                </Flex>
-              </motion.div>
-            </MotionFlex>
-
-            <MotionButton
-              colorScheme="brand"
-              size="md"
-              mt={2}
-              width="full"
-              onClick={() => setIsModalOpen(true)}
-              variants={elementVariants}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {t('buttons.addToCart')} {<Image src={cartIcon} alt="Cart" boxSize="1.7em" m={1} /> || null}
-            </MotionButton>
-          </MotionFlex>
-        </MotionBox>
+            </Box>
+          </VStack>
+        </Box>
       </MotionBox>
 
       {/* Add to Cart Modal */}
@@ -925,21 +1126,21 @@ export const FeaturedMealCard = ({ item,index = 0 }) => {
         <AddToCartModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          name={name}
+          name={displayName}
           price={effectivePrice}
           quantity={quantity}
           setQuantity={setQuantity}
           onConfirm={handleConfirm}
           t={t}
           hasOffer={hasOffer}
-          discountPercentage={discountPercentage}
+          discountPercentage={discount_percentage.toFixed(0)}
           colorMode={colorMode}
         />
       )}
     </>
   )
-}
-
+};
+//offers meal cards
 export const OfferMealCard = ({ meal }) => {
   const { colorMode } = useColorMode()
   const { t, i18n } = useTranslation()
@@ -1303,74 +1504,4 @@ export const PlanCard = ({ plan }) => {
       </Flex>
     </Box>
   )
-}
-//Tiny plan card
-export const PlanTinyCard = ({ recommendedPlan, handleChoosePlan, selected = false }) => {
-  const { t } = useTranslation()
-  const { currentLanguage } = useI18nContext()
-  const isArabic = currentLanguage === 'ar'
-  const saladImage = saladsPlanImage // Fallback image for salad plans
-  return
-  ;<Box
-    sx={{
-      width: 'auto',
-      maxWidth: '20vw',
-      minWidth: '10vw',
-      bgImage: `url(${recommendedPlan?.image || saladImage})`,
-      bgSize: 'cover',
-      bgPosition: 'center',
-      borderRadius: '30px',
-      overflow: 'hidden',
-      transition: 'transform 300ms',
-      _hover: !selected && {
-        transform: 'scale(1.1)',
-      },
-    }}
-    p="4"
-    color="white"
-    onClick={handleChoosePlan}
-  >
-    <Box>
-      <Heading size="md" mt="4" color="brand.800" isTruncated>
-        {recommendedPlan?.name}
-      </Heading>
-    </Box>
-    <Box>
-      <Flex align="start" spacing="2" mt="4" wrap="wrap">
-        {[t('premium.carbs'), t('premium.protein'), t('premium.snacks'), t('premium.soups')].map(
-          (label, i) => (
-            <HStack key={i} spacing="1">
-              <Box
-                px="3"
-                my="1"
-                bg={'gray.800'}
-                borderRadius="md"
-                color={['brand.500', 'secondary.500', 'orange.500', 'error.500'][i]}
-                fontWeight="bold"
-              >
-                {label}
-              </Box>
-              <Text fontSize="sm" isTruncated>
-                {label === t('premium.carbs') || label === t('premium.protein')
-                  ? `${recommendedPlan?.[label.toLowerCase()]}g`
-                  : label === t('premium.snacks')
-                    ? t('premium.chooseYourSnacks')
-                    : t('premium.chooseYourSoups')}
-              </Text>
-            </HStack>
-          ),
-        )}
-      </Flex>
-    </Box>
-    {selected && (
-      <Box mt={8}>
-        <Text>{isArabic ? recommendedPlan.description_arabic : recommendedPlan.description}</Text>
-        <Box>
-          <Button mt="6" colorScheme="brand" onClick={handleChoosePlan}>
-            Select Plan
-          </Button>
-        </Box>
-      </Box>
-    )}
-  </Box>
 }

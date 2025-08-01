@@ -5,7 +5,6 @@ import nonProteinSaladsPlanImage from '../../assets/premium/nonproteinsaladplan.
 import gainWeightPlanImage from '../../assets/premium/gainWeight.png'
 import keepWeightPlanImage from '../../assets/premium/keepWeight.png'
 import loseWeightPlanImage from '../../assets/premium/loseWeight.png'
-import planIcon from '../../assets/premium/planIcon.svg'
 
 // Map plan titles to fallback images
 const planImages = {

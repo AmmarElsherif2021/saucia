@@ -313,17 +313,6 @@ export const useUserAllergies = () => {
     };
   };
   
-  // 11. Unified User Data Hook (Use Sparingly - Prefer Individual Hooks)
-  export const useCompleteUserData = () => {
-    const { user } = useAuthContext();
-    
-    return useQuery({
-      queryKey: ['completeUserData', user?.id],
-      queryFn: () => userAPI.getCompleteUserData(user.id),
-      enabled: !!user?.id,
-      // Only use where absolutely necessary (admin views)
-      staleTime: 1000 * 60 * 10 // 10 minutes
-    });
-  };
+
   
 

@@ -112,7 +112,7 @@ export const useAdminFunctions = () => {
       queryFn: () => adminAPI.getAllMeals(options),
       staleTime: 5 * 60 * 1000, // 5 minutes
       onSuccess: (data) => {
-        console.log('Fetched meals from useGetAllMeals :', JSON.stringify(data, null, 2));
+        //console.log('Fetched meals from useGetAllMeals :', JSON.stringify(data, null, 2));
       }
     });
   };

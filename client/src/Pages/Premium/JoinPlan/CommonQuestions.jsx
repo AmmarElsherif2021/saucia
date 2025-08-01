@@ -91,11 +91,11 @@ const CommonQuestions = ({ onComplete }) => {
 
    // Initialize form with user data
   useEffect(() => {
-    console.log('Initializing form with user data...');
-    console.log('User Profile:', userProfile);
-    console.log('Health Profile:', healthProfile);
-    console.log('User Dietary Preferences:', userDietaryPreferences);
-    console.log('User Allergies:', userAllergies);
+    //console.log('Initializing form with user data...');
+    //console.log('User Profile:', userProfile);
+    //console.log('Health Profile:', healthProfile);
+    //console.log('User Dietary Preferences:', userDietaryPreferences);
+    //console.log('User Allergies:', userAllergies);
     
     if (userProfile || healthProfile || userDietaryPreferences || userAllergies) {
       setFormData({
@@ -145,7 +145,7 @@ const CommonQuestions = ({ onComplete }) => {
     e.preventDefault()
     setFormError(null)
     setIsSubmitting(true)
-    console.log('Submitting form data:', formData);
+    //console.log('Submitting form data:', formData);
 
     try {
       if (!user?.id) throw new Error('User not authenticated')
@@ -163,11 +163,11 @@ const CommonQuestions = ({ onComplete }) => {
         fitness_goal: formData.healthProfile.fitnessGoal
       }
 
-      console.log('Preparing to update:');
-      console.log('Profile Data:', profileData);
-      console.log('Health Data:', healthData);
-      console.log('Dietary Preferences:', formData.healthProfile.dietaryPreferences);
-      console.log('Allergies:', formData.healthProfile.allergies);
+      //console.log('Preparing to update:');
+      //console.log('Profile Data:', profileData);
+      //console.log('Health Data:', healthData);
+      //console.log('Dietary Preferences:', formData.healthProfile.dietaryPreferences);
+      //console.log('Allergies:', formData.healthProfile.allergies);
 
       // Prepare bulk data for allergies and preferences
       const allergiesData = formData.healthProfile.allergies.map(allergyId => ({
@@ -187,7 +187,7 @@ const CommonQuestions = ({ onComplete }) => {
         bulkUpdatePreferences(preferencesData)
       ]);
 
-      console.log('Profile updated successfully');
+      //console.log('Profile updated successfully');
 
       toast({
         title: t('profile.profileUpdated'),

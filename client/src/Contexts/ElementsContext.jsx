@@ -43,8 +43,8 @@ export const ElementsProvider = ({ children }) => {
   ]);
    //Debug
    useEffect(() => {
-    console.log('Featured meals:', featuredMeals);
-    console.log('Offers meals:', offersMeals);
+    //console.log('Featured meals:', featuredMeals);
+    //console.log('Offers meals:', offersMeals);
    },[])
   // Initial fetch on mount
   useEffect(() => {

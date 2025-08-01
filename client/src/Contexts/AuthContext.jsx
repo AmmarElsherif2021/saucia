@@ -23,14 +23,14 @@ export const AuthProvider = ({ children }) => {
   // Unified auth change handler
   const handleAuthChange = useCallback(async (event, session) => {
     console.groupCollapsed(`Auth Event: ${event}`);
-    console.log('Current session:', supabaseSession);
-    console.log('New session:', session);
+    //console.log('Current session:', supabaseSession);
+    //console.log('New session:', session);
     console.groupEnd();
     
     try {
       if (session?.user) {
         if (supabaseSession?.access_token === session.access_token) {
-          console.log('Session already processed, skipping');
+          //console.log('Session already processed, skipping');
           return;
         }
         
@@ -190,6 +190,5 @@ export const useAuthContext = () => {
   return context;
 };
 
-export const useUser = () => useAuthContext();
 export const useAuth = () => useAuthContext();
 

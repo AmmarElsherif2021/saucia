@@ -142,7 +142,7 @@ const MapBox = ({ onSelectLocation }) => {
         
         if (overlayRef.current && popupRef.current) {
           overlayRef.current.setPosition(coordinate)
-          console.log('Current Location:', address, hdms)
+          //console.log('Current Location:', address, hdms)
           popupRef.current.innerHTML = `
             <div>
               <p><strong>📍 Current Location:</strong></p>

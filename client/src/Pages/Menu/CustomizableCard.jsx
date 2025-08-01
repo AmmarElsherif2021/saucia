@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import mealImage from '../../assets/menu/defaultMeal.jpg'
 import {
   Box,
@@ -173,4 +172,3 @@ export const CustomizableMealCard = ({
   )
 }
 
-export default CustomizableMealCard

@@ -206,7 +206,7 @@ const ConfirmPlanModal = ({
   const selectedMeals = subscriptionData.meals || [];
   //debugg
     useEffect(()=>{
-    console.log(`SubscriptionData in confirmPlanModal ${JSON.stringify(subscriptionData)}`)
+    //console.log(`SubscriptionData in confirmPlanModal ${JSON.stringify(subscriptionData)}`)
   },[])
   // State for additive selection modal
   const [additiveModalState, setAdditiveModalState] = useState({
@@ -385,7 +385,7 @@ const ConfirmPlanModal = ({
         position="relative" 
         borderWidth="1px"
         borderRadius="md"
-        p={3}
+        p={0}
         bg={isSelected ? "brand.50" : "white"}
       >
         {/* Safety Badge */}
@@ -601,11 +601,11 @@ const ConfirmPlanModal = ({
         additives: flattenedAdditives,
       };
 
-      console.log(`Confirming subscriptionData: ${JSON.stringify(subscription)}`);
+      //console.log(`Confirming subscriptionData: ${JSON.stringify(subscription)}`);
       
       // Use hook to create subscription
       await createSubscription(subscription);
-      console.log(`Confirming subscriptionData: ${JSON.stringify(subscription)}`)
+      //console.log(`Confirming subscriptionData: ${JSON.stringify(subscription)}`)
       toast({
         title: t('checkout.subscriptionSuccess') || 'Subscription Created!',
         description: t('checkout.subscriptionCreated') || 
@@ -690,7 +690,7 @@ const ConfirmPlanModal = ({
       </Flex>
 
       {safeMeals.length > 0 ? (
-        <SimpleGrid columns={{ base: 2, md: 3, lg: 3 }} spacing={4}>
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
           {safeMeals.map((meal, index) => (
             meal&&<AllergenAwareMealPlanCard
               key={`safe-${meal.id || index}`}

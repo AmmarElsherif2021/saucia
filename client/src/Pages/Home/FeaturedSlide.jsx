@@ -5,7 +5,7 @@ import { ItemsCarousel } from '../../Components/ItemsCarousel'
 
 export const FeaturedMeals = ({ featuredMeals }) => {
   const { t } = useTranslation()
-  //useEffect(() => console.log(`From featured items ${(JSON.stringify(featuredMeals))}`), [featuredMeals]);
+  //useEffect(() => //console.log(`From featured items ${(JSON.stringify(featuredMeals))}`), [featuredMeals]);
 
   return (
     <VStack mt={6} p={4} bg="transparent" alignItems={'center'} w={'99%'}>

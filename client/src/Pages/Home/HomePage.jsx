@@ -8,6 +8,7 @@ import { useEffect } from 'react'
 import { useElements } from '../../Contexts/ElementsContext'
 import SupportPortal from './SupportPortal'
 import MapBox from '../../Components/Map/MapBox'
+import { MealPlanCardDemo } from '../Checkout/MealPlanCard'
 const HomePage = () => {
 
   const {

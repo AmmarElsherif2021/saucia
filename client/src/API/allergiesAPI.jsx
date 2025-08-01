@@ -7,7 +7,7 @@ export const allergiesAPI = {
       .from('allergies')
       .select('*')
       .order('name');
-    console.log(`Allergies fetched from Supabase: ${data?.length} allergies`);
+    //console.log(`Allergies fetched from Supabase: ${data?.length} allergies`);
     if (error) throw error;
     return data;
   },

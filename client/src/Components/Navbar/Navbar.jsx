@@ -119,7 +119,7 @@ export const Navbar = () => {
   }
 
   const handleSectionNavigation = (section) => {
-    console.log('Navbar requesting navigation to:', section)
+    //console.log('Navbar requesting navigation to:', section)
     return { scrollTo: section }
   }
 

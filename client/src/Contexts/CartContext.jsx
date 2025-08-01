@@ -26,7 +26,7 @@ import { createContext, useEffect, useState, useContext } from 'react'
  *   name: string
  *   price: number
  */
-export const CartContext = createContext()
+const CartContext = createContext()
 
 // CartContext provider component
 export const CartProvider = ({ children }) => {
@@ -59,7 +59,7 @@ export const CartProvider = ({ children }) => {
         price: i.price
       }))
     }
-    console.log('Adding to cart with safeMeal:', safeMeal)
+    //console.log('Adding to cart with safeMeal:', safeMeal)
     setCart((prevCart) => {
       const existingItemIndex = prevCart.findIndex((cartMeal) => cartMeal.id === safeMeal.id)
       if (existingItemIndex !== -1) {
@@ -80,7 +80,9 @@ export const CartProvider = ({ children }) => {
     setCart([])
   }
 
-  useEffect(() => console.log('from cart context', cart), [cart])
+  // useEffect(() => //console.log('from cart context', cart)
+  // // 
+  // , [cart])
 
   return (
     <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart }}>

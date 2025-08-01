@@ -1,4 +1,4 @@
-import { useState, useReducer, useEffect, useMemo, useCallback } from 'react'
+import { useReducer, useEffect, useMemo, useCallback,Suspense,lazy  } from 'react'
 import {
   Box,
   Heading,
@@ -31,14 +31,14 @@ import { ALT } from '../../Components/ComponentsTrial'
 import saladIcon from '../../assets/menu/salad.svg'
 import paymentIcon from '../../assets/payment.svg'
 import orderIcon from '../../assets/order.svg'
-import MapModal from './MapModal'
+//import MapModal from './MapModal'
 import { useTranslation } from 'react-i18next'
 import { useI18nContext } from '../../Contexts/I18nContext'
 import { useNavigate } from 'react-router-dom'
 import { useAuthContext } from '../../Contexts/AuthContext'
 import { useUserProfile, useUserAddresses } from '../../Hooks/userHooks'
 import { useOrders } from '../../Hooks/useOrders'
-
+const MapModal = lazy(() => import('./MapModal'));
 const initialState = {
   isSubmitting: false,
   paymentMethod: '',
@@ -694,11 +694,14 @@ const CheckoutPage = () => {
       </VStack>
 
       {/* Modals */}
-      <MapModal
+      <Suspense fallback={<div>Loading...</div>}>
+        <MapModal
         isOpen={isMapOpen}
         onClose={onCloseMap}
         onSelectLocation={handleSelectLocation}
       />
+      </Suspense>
+      
 
       <OrderConfirmationModal
         isOpen={isConfirmationOpen}

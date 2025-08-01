@@ -560,7 +560,7 @@ export const userAPI = {
         };
         
         const createdProfile = await this.createUserProfile(newProfileData);
-        console.log('Created new user profile for:', userId);
+        //console.log('Created new user profile for:', userId);
         return createdProfile;
       } else {
         // Update existing profile if needed
@@ -574,7 +574,7 @@ export const userAPI = {
         
         if (Object.keys(updates).length > 0) {
           const updatedProfile = await this.updateUserProfile(userId, updates);
-          console.log('Updated user profile for:', userId);
+          //console.log('Updated user profile for:', userId);
           return updatedProfile;
         }
         

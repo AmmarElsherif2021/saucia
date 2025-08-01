@@ -1,9 +1,8 @@
 /* eslint-disable */
 import { useState, useEffect, useRef } from 'react'
-import { Box, Flex, IconButton, Button, useBreakpointValue } from '@chakra-ui/react'
+import { HStack, Box, Flex, IconButton, Button, useBreakpointValue } from '@chakra-ui/react'
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons'
 import { useTranslation } from 'react-i18next'
-import { FeaturedMealCard } from './Cards'
 import { motion } from 'framer-motion'
 
 const containerVariants = {
@@ -32,7 +31,7 @@ const itemVariants = {
 
 export const ItemsCarousel = ({
   items,
-  CardComponent = FeaturedMealCard, // eslint-disable-line no-unused-vars
+  CardComponent,
   visibleCount = 1,
   auto = false,
   visibleButtons = true,
@@ -49,8 +48,8 @@ export const ItemsCarousel = ({
   const itemsToShow =
     useBreakpointValue({
       base: 1, // Mobile screens
-      sm: visibleCount === 1 ? 1 : 1, // Small screens
-      md: visibleCount === 1 ? 1 : 2, // Medium screens
+      sm: visibleCount === 1 ? 1 : 2, // Small screens
+      md: visibleCount === 1 ? 1 : 3, // Medium screens
       lg: visibleCount === 1 ? 1 : 3, // Large screens
       xl: visibleCount === 1 ? 1 : 4, // Extra-large screens
     }) || visibleCount
@@ -124,7 +123,7 @@ export const ItemsCarousel = ({
       )}
 
       <Box width="100%" overflow="hidden">
-        <Flex
+        <HStack
           as={motion.div}
           ref={carouselContentRef}
           width="100%"
@@ -133,11 +132,11 @@ export const ItemsCarousel = ({
           animate="visible"
           alignItems="center"
           justifyContent="center !important"
-          flexDirection="row"
+          justify={"center"}
           flexWrap="nowrap"
-          gap={3}
+          gap={2}
           bg={'transparent'}
-          px={8}
+          px={4}
         >
           {visibleItems.map((item, index) =>
             item.id && item.id!= undefined && (
@@ -147,8 +146,9 @@ export const ItemsCarousel = ({
                 variants={itemVariants}
                 flex={itemsToShow === 1 ? '0 0 auto' : `0 0 ${100 / itemsToShow}%`} // Modified this line
                 maxWidth={itemsToShow === 1 ? '100%' : `${100 / itemsToShow}%`} // Modified this line
+                width={'auto'}
                 display="flex"
-                justifyContent="center"
+                justifySelf="center"
                 alignItems="center"
                 px={0}
               >
@@ -159,7 +159,7 @@ export const ItemsCarousel = ({
               </Box>
             )
           )}
-        </Flex>
+        </HStack>
       </Box>
 
       {showControls && (

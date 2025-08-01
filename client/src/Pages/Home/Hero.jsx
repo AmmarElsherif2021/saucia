@@ -10,18 +10,18 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import { ItemsCarousel } from '../../Components/ItemsCarousel'
-import heroA from '../../assets/hero/heroA.jpg'
-import heroB from '../../assets/hero/heroB.jpg'
-import heroC from '../../assets/hero/heroC.png'
-import heroD from '../../assets/hero/heroD.jpg'
-import heroE from '../../assets/hero/heroE.jpg'
+import heroA from '../../assets/hero/heroA_compressed.jpg'
+import heroB from '../../assets/hero/heroB_compressed.jpg'
+import heroC from '../../assets/hero/heroC_compressed.png'
+import heroD from '../../assets/hero/heroD_compressed.jpg'
+import heroE from '../../assets/hero/heroE_compressed.jpg'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import { useEffect, useState, useMemo } from 'react'
 import { useI18nContext } from '../../Contexts/I18nContext'
 import { useTranslation } from 'react-i18next'
-import { Link, Link as RouterLink } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
-export const AnimatedText = ({ text, delay = 0 }) => {
+const AnimatedText = ({ text, delay = 0 }) => {
   const [displayText, setDisplayText] = useState('')
   const count = useMotionValue(0)
   const rounded = useTransform(count, (latest) => Math.round(latest))

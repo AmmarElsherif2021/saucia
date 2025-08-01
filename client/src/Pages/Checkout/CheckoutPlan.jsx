@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, Suspense, lazy } from 'react'
 import {
   Box,
   Heading,
@@ -21,7 +21,7 @@ import {
   useDisclosure,
   useBreakpointValue,
 } from '@chakra-ui/react'
-import MapModal from './MapModal'
+//import MapModal from './MapModal'
 import { useTranslation } from 'react-i18next'
 import { useI18nContext } from '../../Contexts/I18nContext'
 import { useNavigate } from 'react-router-dom'
@@ -42,6 +42,8 @@ import { useUserProfile, useUserAddresses } from '../../Hooks/userHooks'
 import { useUserSubscriptions } from '../../Hooks/useUserSubscriptions'
 import { useChosenPlanContext } from '../../Contexts/ChosenPlanContext'
 
+//Map
+const MapModal = lazy(() => import('./MapModal'));
 // Date calculation utilities - moved outside component for better performance
 const calculateDeliveryDate = (startDate, mealIndex) => {
   const date = new Date(startDate);
@@ -59,7 +61,7 @@ const calculateDeliveryDate = (startDate, mealIndex) => {
     
     // Skip Fridays (5) and Saturdays (6)
     if (dayOfWeek !== 5 && dayOfWeek !== 6) {
-      //console.log(`Day calculated ${dayOfWeek}`)
+      ////console.log(`Day calculated ${dayOfWeek}`)
       validDays++;
     }
   }
@@ -526,11 +528,13 @@ const CheckoutPlan = () => {
                 </Button>
               </Flex>
               
-              <MapModal
-                isOpen={isMapOpen}
-                onClose={onCloseMap}
-                onSelectLocation={handleSelectLocation} 
-              />
+              <Suspense fallback={<div>Loading...</div>}>
+                      <MapModal
+                      isOpen={isMapOpen}
+                      onClose={onCloseMap}
+                      onSelectLocation={handleSelectLocation}
+                    />
+              </Suspense>
             </FormControl>
 
             <Checkbox 

@@ -32,15 +32,14 @@ import {
   Text,
   Flex,
   Heading,
-  Switch
 } from '@chakra-ui/react'
 import { AddIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons'
 
 import { useTranslation } from 'react-i18next'
 import { useAuthContext } from '../../Contexts/AuthContext'
-import { useState, useEffect } from 'react'
+import { useState, useEffect,Suspense,lazy } from 'react'
 import { useNavigate } from 'react-router-dom'
-import MapModal from '../Checkout/MapModal'
+//import MapModal from '../Checkout/MapModal'
 // Import all necessary hooks
 import { 
   useUserProfile, 
@@ -54,6 +53,7 @@ import {
 } from '../../Hooks/userHooks';
 import { useUserSubscriptions } from '../../Hooks/useUserSubscriptions'
 import { usePaymentMethods } from '../../Hooks/usePaymentMethods'
+const MapModal = lazy(() => import('../Checkout/MapModal'));
 
 export const UserDashboard = () => {
   const navigate = useNavigate()
@@ -178,7 +178,7 @@ export const UserDashboard = () => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const toast = useToast()
   useEffect(()=>{
-    console.log(`userDashboard subscripton ${JSON.stringify(subscription)}`)
+    //console.log(`userDashboard subscripton ${JSON.stringify(subscription)}`)
   },[])
   // Default address
   const defaultAddress = addresses?.find(addr => addr.is_default) || null
@@ -1099,13 +1099,15 @@ export const UserDashboard = () => {
   </TabPanels>
 </Tabs>
       {/* Map Modal for Address */}
-      <MapModal
-        isOpen={isMapOpen}
-        onClose={onCloseMap}
-        addressFormData={addressFormData}
-        setAddressFormData={setAddressFormData}
-        onAddressSubmit={handleAddressSubmit}
+      <Suspense fallback={<div>Loading...</div>}>
+        <MapModal
+          isOpen={isMapOpen}
+          onClose={onCloseMap}
+          addressFormData={addressFormData}
+          setAddressFormData={setAddressFormData}
+          onAddressSubmit={handleAddressSubmit}
       />
+      </Suspense>
     </Box>
   )
 }

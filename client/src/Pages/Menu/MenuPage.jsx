@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom'
 import { CustomizableMealCard } from './CustomizableCard'
 import { Box, Heading, SimpleGrid, Text as ChakraText, Spinner, Center } from '@chakra-ui/react'
 import { ACC } from '../../Components/ComponentsTrial'
-import { MealCard } from '../../Components/Cards'
+import { MealCardWithModal } from '../../Components/Cards'
 import { useTranslation } from 'react-i18next'
 import { useI18nContext } from '../../Contexts/I18nContext'
 import { useElements } from '../../Contexts/ElementsContext'
@@ -229,13 +229,7 @@ const MenuPage = () => {
               />
             ) : (
               <Box key={index + meal.id}>
-                <MealCard
-                  meal={meal}
-                  // Pass meal safety info for special UI
-                  isMealUnsafe={isMealUnsafe}
-                  mealAllergens={mealAllergens}
-                  userAllergies={userAllergies}
-                />
+                <MealCardWithModal key={meal.id} meal={meal}/>
               </Box>
             )
           })}

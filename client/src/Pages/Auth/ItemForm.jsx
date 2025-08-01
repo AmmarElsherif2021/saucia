@@ -45,7 +45,7 @@ const ItemForm = ({ onSubmit, onCancel, initialData = {} }) => {
       allergy_ids: [],
     };
     if (initialData.id) {
-      console.log(`From ItemForm ${JSON.stringify(initialData)}`);
+      //console.log(`From ItemForm ${JSON.stringify(initialData)}`);
       
       // Extract allergy IDs from initialData.item_allergies
       const allergyIds = initialData.item_allergies 
