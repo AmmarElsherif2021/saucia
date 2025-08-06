@@ -202,14 +202,14 @@ const createTheme = (config) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'flex-start',
-          gap: 4,
+          gap: 2,
           width: '100%',
           transition: 'all 0.2s ease-in-out',
         }),
         variants: {
           solid: (props) => ({
             bg: props.colorScheme ? `${props.colorScheme}.100` : 'gray.100',
-            px: 4,
+            px: 2,
             borderRadius: 'lg',
             border: 'none',
             _hover: {

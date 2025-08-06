@@ -225,6 +225,7 @@
         "addToCart": "Add to Cart"
       },
       "navbar": {
+        "aboutUs": "About Us",
         "premium": "premium",
         "home": "Home",
         "menu": "Menu",
@@ -1188,6 +1189,7 @@
         "addToCart": "أضف إلى السلة"
       },
       "navbar": {
+        "aboutUs":"من نحن",
         "premium": "اشتراكات",
         "home": "الرئيسية",
         "menu": "قائمة",

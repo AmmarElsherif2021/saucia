@@ -1,367 +1,275 @@
-import {
-  Box,
-  Heading,
-  Text,
-  useColorMode,
+import { useEffect, useState, useMemo, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import Lottie from 'lottie-react'
+import { 
+  Box, 
+  Flex, 
+  Grid, 
+  GridItem, 
+  Heading, 
+  Text, 
+  Button, 
   useBreakpointValue,
-  Flex,
-  Container,
-  Button,
-  VStack,
+  useColorModeValue
 } from '@chakra-ui/react'
-import { ItemsCarousel } from '../../Components/ItemsCarousel'
-import heroA from '../../assets/hero/heroA_compressed.jpg'
-import heroB from '../../assets/hero/heroB_compressed.jpg'
-import heroC from '../../assets/hero/heroC_compressed.png'
-import heroD from '../../assets/hero/heroD_compressed.jpg'
-import heroE from '../../assets/hero/heroE_compressed.jpg'
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
-import { useEffect, useState, useMemo } from 'react'
-import { useI18nContext } from '../../Contexts/I18nContext'
-import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { useI18nContext } from '../../Contexts/I18nContext'
+// Directly import JSON animations
+import hero1 from '../../assets/hero/hero-1.json'
+import hero2 from '../../assets/hero/hero-2.json'
+import hero3 from '../../assets/hero/hero-3.json'
+import hero4 from '../../assets/hero/hero-4.json'
 
-const AnimatedText = ({ text, delay = 0 }) => {
-  const [displayText, setDisplayText] = useState('')
-  const count = useMotionValue(0)
-  const rounded = useTransform(count, (latest) => Math.round(latest))
 
-  // Safely handle undefined text
-  const safeText = text || ''
 
-  useEffect(() => {
-    const onChangeHandler = (latest) => {
-      setDisplayText(safeText.slice(0, latest))
+
+const LocalLottieAnimation = ({ currentSlide, className = "" }) => {
+  const lottieRef = useRef(null)
+  
+  const animationConfigs = useMemo(() => [
+    {
+      animationData: hero1,
+      colors: ['#059669', '#10b981', '#34d399'],
+      name: 'salad-bowl'
+    },
+    {
+      animationData: hero2,
+      colors: ['#059669', '#10b981', '#34d399'],
+      name: 'create-custom'
+    },
+    {
+      animationData: hero3,
+      colors: ['#059669', '#10b981', '#34d399'],
+      name: 'signature-dish'
+    },
+    {
+      animationData: hero4,
+      colors: ['#059669', '#10b981', '#34d399'],
+      name: 'nutrition-expert'
+    },
+    {
+      animationData: hero1, // Reusing hero1 for slide 4
+      colors: ['#059669', '#10b981', '#34d399'],
+      name: 'premium-offers'
     }
-    rounded.on('change', onChangeHandler)
-    return () => rounded.clearListeners('change')
-  }, [rounded, safeText])
+  ], [])
 
+  const config = animationConfigs[currentSlide] || animationConfigs[0]
+  
+  // Force restart animation when slide changes
   useEffect(() => {
-    const controls = animate(count, safeText.length, {
-      type: 'tween',
-      delay: delay,
-      duration: safeText.length * 0.06,
-      ease: 'easeInOut',
-    })
-    return () => controls.stop()
-  }, [safeText, delay, count])
-
+    if (lottieRef.current) {
+      lottieRef.current.goToAndStop(0, true)
+      lottieRef.current.play()
+    }
+  }, [currentSlide])
+  
   return (
-    <motion.span
-      style={
-        {
-          /* ... */
-        }
-      }
-    >
-      {displayText}
-    </motion.span>
+    <AnimatePresence mode="wait">
+      <motion.div 
+        key={`lottie-${currentSlide}`}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.8 }}
+        transition={{ duration: 0.5 }}
+        className={className}
+      >
+        <Lottie
+          lottieRef={lottieRef}
+          animationData={config.animationData}
+          loop={true}
+          autoplay={true}
+          className="w-full h-full"
+          rendererSettings={{
+            preserveAspectRatio: 'xMidYMid meet',
+            hideOnTransparent: true
+          }}
+        />
+      </motion.div>
+    </AnimatePresence>
   )
 }
 
-// Motion variants for animations
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.3,
-      delayChildren: 0.2,
-    },
-  },
-}
-
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      type: 'spring',
-      stiffness: 100,
-      damping: 12,
-    },
-  },
-}
-
-const HeroCard = ({ item }) => {
-  const { id, name, description, image, path } = item || {}
-  const { colorMode } = useColorMode()
+const TextContent = ({ slide, isActive }) => {
   const { currentLanguage } = useI18nContext()
-  const { t } = useTranslation()
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [hasError, setHasError] = useState(false)
-  const isArabic = currentLanguage === 'ar'
+  const isRTL = currentLanguage === 'ar'
+  const textColor = useColorModeValue('gray.600', 'gray.300')
+  const indicatorColor = useColorModeValue('gray.300', 'gray.600')
+  const isMobile = useBreakpointValue({ base: true, lg: false })
 
-  // Responsive layout: column on mobile, row on md+
-  const contentLayout = useBreakpointValue({
-    base: 'column',
-    md: 'row',
-  })
+  if (!slide) return null
 
-  // Responsive width for content/image
-  const contentWidth = useBreakpointValue({
-    base: '86%',
-    md: '50%',
-  })
+  // Determine alignment and textAlign based on language and screen size
+  let alignItems, textAlign
+  if (isMobile) {
+    alignItems = 'center'
+    textAlign = 'center'
+  } else {
+    alignItems = isRTL ? 'flex-end' : 'flex-start'
+    textAlign = isRTL ? 'right' : 'left'
+  }
 
-  const optimizedImage = useMemo(() => image, [image])
-
-  // Preload image and handle loading states
-  useEffect(() => {
-    if (optimizedImage) {
-      const img = new Image()
-      img.onload = () => {
-        setIsLoaded(true)
-        setHasError(false)
-      }
-      img.onerror = () => {
-        setHasError(true)
-        setIsLoaded(false)
-      }
-      img.src = optimizedImage
+  // Helper function to handle section navigation state
+  const handleSectionNavigation = (section) => {
+    if (section) {
+      return { scrollTo: section }
     }
-  }, [optimizedImage])
-
-  const MotionFlex = motion(Flex)
-  const MotionBox = motion(Box)
+    return undefined
+  }
 
   return (
-    <Box
-      key={id}
-      bgImage={`url(${optimizedImage})`}
-      bgSize="cover"
-      bgPosition="center"
-      bgRepeat="no-repeat"
-      minHeight={{ base: '80vh', md: '100vh' }}
-      width="100vw"
-      left="50%" // Center the element
-      marginLeft="-50vw" // Offset for centering
-      position="relative"
-      px={{ base: 12, md: 16, lg: 24 }}
-      py={{ base: 6, md: 0 }}
-      overflow="hidden"
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-    >
-      {/* Loading overlay - only show when not loaded and no error */}
-      {!isLoaded && !hasError && (
-        <Box
-          position="absolute"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          bg="gray.200"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          zIndex={0}
+    <AnimatePresence mode="wait">
+      {isActive && (
+        <motion.div
+          key={`text-${slide.id}`}
+          initial={{ opacity: 0, x: isRTL ? 50 : -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: isRTL ? -50 : 50 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          <Box
-            as={motion.div}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 0.5, repeat: Infinity, ease: 'linear' }}
-            w="60px"
-            h="60px"
-            border="4px solid"
-            borderColor="brand.200"
-            borderTopColor="brand.500"
-            borderRadius="full"
-          />
-        </Box>
-      )}
-
-      {/* Error fallback */}
-      {hasError && (
-        <Box
-          position="absolute"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          bg="gray.100"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          zIndex={0}
-        >
-          <Text color="gray.500" fontSize="lg">
-            Image failed to load
-          </Text>
-        </Box>
-      )}
-
-      {/* Dark overlay for better text readability */}
-      <Box
-        position="absolute"
-        top={0}
-        left={0}
-        right={0}
-        bottom={0}
-        bg="blackAlpha.400"
-        zIndex={0}
-      />
-
-      <Container
-        maxW="container.xl"
-        height="100%"
-        centerContent={false}
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        px={0}
-        position="relative"
-        zIndex={1}
-      >
-        <MotionFlex
-          alignItems="stretch"
-          justifyContent="space-between"
-          flexDirection={contentLayout}
-          w="80%"
-          gap={{ base: 8, md: 12, lg: 24 }}
-          //bg={colorMode === 'light' ? 'whiteAlpha.800' : 'blackAlpha.800'}
-          padding={0}
-          variants={containerVariants}
-          initial="hidden"
-          animate={isLoaded || hasError ? 'visible' : 'hidden'}
-        >
-          <MotionBox
-            as={VStack}
-            width={contentWidth}
-            maxW={{ base: '100%', md: '520px' }}
-            variants={itemVariants}
-            textAlign={isArabic ? 'right' : 'left'}
-            alignItems={
-              contentLayout === 'column' ? 'center' : isArabic ? 'flex-end' : 'flex-start'
-            }
-            mb={contentLayout === 'column' ? 4 : 0}
-            spacing={2}
+          <Flex
+            direction="column"
+            gap={6}
+            alignItems={alignItems}
+            textAlign={textAlign}
+            maxW="2xl"
           >
-            <Box
-              as={motion.div}
-              color="#ffffff"
-              mb={1}
-              borderRadius="md"
-              whileHover={{ scale: 1.02 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 10 }}
-              width="96%"
-              bgColor="secondary.800"
-              p={0}
+            <Heading
+              as="h1"
+              size={{ base: '2xl', md: '3xl', lg: '4xl' }}
+              fontWeight="extrabold"
+              lineHeight="tall"
+              bgGradient="linear(to-r, brand.700, secondary.600)"
+              bgClip="text"
             >
-              <Heading
-                as="h1"
-                fontSize={['2xl', '3xl', '4xl']}
-                margin={0}
-                lineHeight={1.2}
-                color={'white'}
-              >
-                <AnimatedText text={name} color="white" />
-              </Heading>
-            </Box>
+              {slide.name}
+            </Heading>
 
-            {description && (
-              <Box
-                display="inline-flex"
-                as={motion.div}
-                color="brand.500"
-                mb={1}
-                borderRadius="md"
-                whileHover={{ scale: 1.02 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 10 }}
-                width="96%"
-                bg="rgba(0, 0, 0, 0.7)"
-                // mr={{ base: '15vw', md: '10vw', lg:'4vw'}}
-                // ml={{ base: '15vw', md: '10vw', lg:'4vw'}}
-                px={0}
-              >
-                <Text
-                  fontSize={['md', 'lg', 'xl']}
-                  margin={0}
-                  lineHeight={1.5}
-                  color={'secondary.700'}
-                  fontWeight="medium"
-                >
-                  <AnimatedText
-                    text={description}
-                    delay={name?.length * 0.1 || 0}
-                    color="#ffffff"
-                  />
-                </Text>
-              </Box>
-            )}
+            <Text
+              fontSize={{ base: 'md', md: 'lg', lg: 'xl' }}
+              color={textColor}
+              fontWeight="normal"
+              lineHeight="relaxed"
+              maxW="90%"
+            >
+              {slide.description}
+            </Text>
 
-            {path && (
-              <Box
-                as={motion.div}
-                mt={4}
-                // mx={{ base: 8, md: 12 }}
-                display="inline-block"
-                whileHover={{ scale: 1.05 }}
+            {slide.path && (
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  type: 'spring',
-                  stiffness: 400,
-                  damping: 10,
-                  delay: (name?.length + (description?.length || 0)) * 0.05,
-                }}
-                //bg={colorMode === 'light' ? 'brand.100' : 'brand.600'}
+                transition={{ delay: 0.4, duration: 0.6 }}
               >
-                <Link
-                  as={Button}
-                  to={path}
-                  variant={'solid'}
-                  colorScheme="brand"
-                  size="lg"
-                  fontWeight="bold"
-                  px={8}
-                  py={6}
-                  fontSize={{ base: 'md', md: 'lg' }}
-                  _hover={{ bg: 'secondary.500' }}
+                <Link 
+                  to={slide.path}
+                  state={slide.section ? handleSectionNavigation(slide.section) : undefined}
                 >
-                  {t('hero.explore')}
+                  <Button
+                    size={{ base: 'md', md: 'lg' }}
+                    px={{ base: 6, md: 8 }}
+                    py={{ base: 3, md: 4 }}
+                    colorScheme="brand"
+                    bgGradient="linear(to-r, brand.500, brand.800)"
+                    _hover={{
+                      transform: 'translateY(-1px) scale(1.05)',
+                      boxShadow: '2xl',
+                      bgGradient: 'linear(to-r, brand.600, brand.700)'
+                    }}
+                    _active={{
+                      transform: 'translateY(0)'
+                    }}
+                    transition="all 0.2s"
+                    borderRadius="full"
+                    boxShadow="xl"
+                  >
+                    <Flex alignItems="center" gap={2}>
+                      <span>{currentLanguage === 'en' ? 'Explore Now' : 'اكتشف الآن'}</span>
+                      <motion.span
+                        animate={{
+                          x: isRTL ? [-4, 0] : [0, 4]
+                        }}
+                        transition={{
+                          duration: 0.2,
+                          repeat: Infinity,
+                          repeatType: 'reverse'
+                        }}
+                      >
+                        {isRTL ? '←' : '→'}
+                      </motion.span>
+                    </Flex>
+                  </Button>
                 </Link>
-              </Box>
+              </motion.div>
             )}
-          </MotionBox>
-        </MotionFlex>
-      </Container>
-    </Box>
+
+            <Flex gap={2} mt={4}>
+              {[...Array(5)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ width: '8px' }}
+                  animate={{
+                    width: i === slide.id ? '32px' : '8px',
+                  }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Box
+                    h="1"
+                    borderRadius="full"
+                    transition="background-color 0.3s"
+                    bg={i === slide.id ? 'brand.500' : indicatorColor}
+                  />
+                </motion.div>
+              ))}
+            </Flex>
+          </Flex>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }
 
-// Hero
 export const Hero = () => {
   const { currentLanguage } = useI18nContext()
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
+  const [isMounted, setIsMounted] = useState(false)
+  const intervalRef = useRef(null)
+  const isMobile = useBreakpointValue({ base: true, lg: false })
+  const bgFrom = useColorModeValue('white', 'gray.900')
+  const bgVia = useColorModeValue('secondary.50', 'gray.800')
+  const bgTo = useColorModeValue('secondary.100', 'gray.900')
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
   const heroSlides = useMemo(
     () => [
       {
-        id: 1,
+        id: 0,
         name: currentLanguage === 'en' ? 'Welcome to SauciaSalad!' : 'مرحبًا بكم في سوسيا سالاد!',
         description:
           currentLanguage === 'en'
-            ? 'Delicious taste and healthy choices supervised by nutrition experts. Try us and enjoy the perfect flavor!'
-            : '!طعم لذيذ واختيارات صحية بإشراف خبراء التغذية، جرب معنا واستمتع بالطعم الصح.',
-        image: heroA,
+            ? 'Delicious taste and healthy choices supervised by nutrition experts. Experience the perfect blend of flavor and wellness!'
+            : 'طعم لذيذ واختيارات صحية بإشراف خبراء التغذية، جرب معنا واستمتع بالطعم الصح.',
+        path: '/menu',
+        section: '' // No specific section, just navigate to menu
       },
       {
-        id: 2,
+        id: 1,
         name:
           currentLanguage === 'en'
             ? 'Create Your Own Salad & Fruit Bowl'
             : 'اصنع سلطتك وطبق الفواكه الخاص بك',
         description:
           currentLanguage === 'en'
-            ? 'Pick your favorite ingredients and craft your perfect salad—fresh, tasty, and personalized!'
+            ? 'Pick your favorite ingredients and craft your perfect salad—fresh, tasty, and personalized just for you!'
             : 'اختر مكوناتك المفضلة واصنع سلطتك المثالية - طازجة ولذيذة ومخصصة لك!',
-        image: heroB,
         path: '/menu',
+        section: 'Make Your Own Salad' // Navigate to specific section
       },
       {
-        id: 3,
+        id: 2,
         name:
           currentLanguage === 'en'
             ? 'Signature Salads, Crafted to Perfection'
@@ -370,69 +278,221 @@ export const Hero = () => {
           currentLanguage === 'en'
             ? 'Our expertly designed salads, packed with fresh ingredients and unique flavors—ready for you to enjoy.'
             : 'سلطاتنا المصممة بعناية، مليئة بالمكونات الطازجة والنكهات الفريدة - جاهزة لتستمتع بها.',
-        image: heroC,
         path: '/menu',
+        section: 'Our signature salad' // Navigate to signature salads section
+      },
+      {
+        id: 3,
+        name:
+          currentLanguage === 'en' ? 'Meet Our Nutrition Expert' : 'خدمك بكل ود واهتمام',
+        description:
+          currentLanguage === 'en'
+            ? 'Balance, taste, and nutrition—our experts ensure every meal is both healthy and absolutely delicious!'
+            : 'التوازن والطعم والتغذية - خبرؤنا يضمنون أن كل وجبة صحية ولذيذة!',
+        path: '/',
+        section: 'about us' // Navigate to about section on home page
       },
       {
         id: 4,
-        name:
-          currentLanguage === 'en' ? 'Meet Our Nutrition Expert' : 'تعرف على خبير التغذية لدينا',
-        description:
-          currentLanguage === 'en'
-            ? 'Balance, taste, and nutrition—our expert ensures every meal is both healthy and delicious!'
-            : 'التوازن والطعم والتغذية - خبيرنا يضمن أن كل وجبة صحية ولذيذة!',
-        image: heroD,
-        path: '/',
-      },
-      {
-        id: 5,
         name:
           currentLanguage === 'en'
             ? 'Exclusive Offers & Premium Meal Plans'
             : 'عروض حصرية وخطط وجبات مميزة',
         description:
           currentLanguage === 'en'
-            ? 'Enjoy personalized meal plans, loyalty rewards, and unbeatable offers—crafted for your lifestyle.'
+            ? 'Enjoy personalized meal plans, loyalty rewards, and unbeatable offers—crafted perfectly for your lifestyle.'
             : 'استمتع بخطط وجبات مخصصة، ومكافآت ولاء، وعروض لا تقاوم - مصممة لأسلوب حياتك.',
-        image: heroE,
         path: '/premium',
+        section: '' // Navigate to premium page
       },
     ],
     [currentLanguage],
   )
 
+  // Auto-advance slides with proper cleanup
+  useEffect(() => {
+    if (!isMounted) return
+    
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+    }
+    
+    intervalRef.current = setInterval(() => {
+      setCurrentSlideIndex((prev) => (prev + 1) % heroSlides.length)
+    }, 5000)
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+    }
+  }, [heroSlides.length, isMounted])
+
+  if (!isMounted) {
+    return (
+      <Flex h="100vh" w="full" align="center" justify="center" bg={bgFrom}>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          style={{
+            width: '6rem',
+            height: '6rem',
+            border: '3px solid',
+            borderColor: 'secondary.200',
+            opacity: 0.4,
+            borderRadius: 'full'
+          }}
+        />
+      </Flex>
+    )
+  }
+
   return (
     <Box
-      height="100%"
-      width="100%"
-      display="flex"
-      alignItems="center"
-      justifyContent="start"
-      bg="translate"
-      color="white"
+      as="section"
+      minH="100vh"
+      w="full"
+      bgGradient={`linear(to-br, ${bgFrom}, ${bgVia}, ${bgTo})`}
       position="relative"
-      marginY={1}
-      py={0}
-      my={0}
+      overflow="hidden"
+      role="banner"
+      aria-label="Hero section"
     >
-      <ItemsCarousel
-        items={heroSlides}
-        CardComponent={HeroCard}
-        visibleCount={1}
-        auto={true}
-        visibleButtons={true}
-        transitionDuration={16000}
+      {/* Background gradient animation */}
+      <Box position="absolute" inset={0} opacity={0.05}>
+        <motion.div
+          animate={{
+            backgroundPosition: ['0% 0%', '100% 100%'],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            repeatType: 'reverse',
+            ease: 'linear'
+          }}
+          style={{
+            width: '100%',
+            height: '100%',
+            backgroundImage: `radial-gradient(circle at 20% 50%, rgba(16, 185, 129, 0.3)),
+                             radial-gradient(circle at 80% 20%, rgba(35, 122, 79, 0.3) 0%, transparent 50%),
+                             radial-gradient(circle at 40% 80%, rgba(22, 249, 162, 0.3) 0%, transparent 50%)`,
+            backgroundSize: '100% 100%'
+          }}
+        />
+      </Box>
+      
+      {/* Main content container */}
+      <Box maxW="7xl" mx="auto" h="full" position="relative" zIndex={10} px={4}>
+        {isMobile ? (
+          <Flex 
+            direction="column" 
+            minH="100vh" 
+            justify="center" 
+            align="center" 
+            textAlign="center" 
+            gap={8} 
+            py={12}
+          >
+            {/* Animation section */}
+            <Box w="64" h="64" flexShrink={0}>
+              <LocalLottieAnimation currentSlide={currentSlideIndex} />
+            </Box>
+            
+            {/* Text content section */}
+            <Box flex={1} w="full" display="flex" alignItems="center" justifyContent="center">
+              <TextContent slide={heroSlides[currentSlideIndex]} isActive={true} />
+            </Box>
+          </Flex>
+        ) : (
+          <Grid templateColumns="repeat(2, 1fr)" h="100vh" alignItems="center" gap={12}>
+            {/* Text content section - Left */}
+            <GridItem>
+              <Flex h="full" align="center" justify="flex-start">
+                <TextContent slide={heroSlides[currentSlideIndex]} isActive={true} />
+              </Flex>
+            </GridItem>
+            
+            {/* Animation section - Right */}
+            <GridItem>
+              <Flex h="full" align="center" justify="center">
+                <Box w="full" maxW="lg" h="96">
+                  <LocalLottieAnimation currentSlide={currentSlideIndex} />
+                </Box>
+              </Flex>
+            </GridItem>
+          </Grid>
+        )}
+      </Box>
+
+      {/* Floating background elements */}
+      <motion.div
+        animate={{ 
+          y: [0, -20, 0],
+          rotate: [0, 5, 0]
+        }}
+        transition={{ 
+          duration: 6, 
+          repeat: Infinity, 
+          ease: "easeInOut" 
+        }}
+        style={{
+          position: 'absolute',
+          top: '5rem',
+          left: '2.5rem',
+          width: '4rem',
+          height: '4rem',
+          backgroundColor: 'var(--chakra-colors-secondary-600)',
+          borderRadius: 'full',
+          opacity: 0.2
+        }}
+      />
+      
+      <motion.div
+        animate={{ 
+          y: [0, 15, 0],
+          rotate: [0, -3, 0]
+        }}
+        transition={{ 
+          duration: 8, 
+          repeat: Infinity, 
+          ease: "easeInOut",
+          delay: 1
+        }}
+        style={{
+          position: 'absolute',
+          bottom: '8rem',
+          left: '4rem',
+          width: '3rem',
+          height: '3rem',
+          backgroundColor: 'var(--chakra-colors-brand-400)',
+          borderRadius: 'full',
+          opacity: 0.2
+        }}
       />
 
-      <Box
-        position="absolute"
-        bottom={0}
-        left={0}
-        right={0}
-        height="20%"
-        bgGradient="linear(to-t, whiteAlpha.600, transparent)"
-        pointerEvents="none"
+      <motion.div
+        animate={{ 
+          y: [0, -10, 0],
+          x: [0, 5, 0]
+        }}
+        transition={{ 
+          duration: 7, 
+          repeat: Infinity, 
+          ease: "easeInOut",
+          delay: 2
+        }}
+        style={{
+          position: 'absolute',
+          top: '33%',
+          right: '5rem',
+          width: '2rem',
+          height: '2rem',
+          backgroundColor: 'var(--chakra-colors-orange-100)',
+          borderRadius: 'full',
+          opacity: 0.2
+        }}
       />
     </Box>
   )
 }
+//rotate

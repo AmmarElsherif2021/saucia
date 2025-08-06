@@ -53,15 +53,11 @@ export const Navbar = () => {
   const borderColor = useColorModeValue('gray.200', 'gray.700')
   const overlayBg = useColorModeValue('rgba(255, 255, 255, 0.95)', 'rgba(26, 32, 44, 0.95)')
 
-  // Define menu sections for navigation
+  // Define remaining menu sections for navigation (moved sections removed)
   const menuSections = [
     { path: '/menu', section: '', label: 'menu' },
-    { path: '/menu', section: 'Our signature salad', label: 'signatureSalad' },
-    { path: '/menu', section: 'Soups', label: 'soups' },
-    { path: '/menu', section: 'Desserts', label: 'desserts' },
-    { path: '/menu', section: 'Make Your Own Salad', label: 'makeYourOwnSalad' },
-    { path: '/menu', section: 'Make Your Own Fruit Salad', label: 'makeYourOwnFruitSalad' },
     { path: '/premium', section: '', label: 'premium' },
+    {path: '/', section: 'about us', label: 'aboutUs'}, //handle navigating scrolling to to about us in Home
   ]
 
   // Cart count management
@@ -119,9 +115,10 @@ export const Navbar = () => {
   }
 
   const handleSectionNavigation = (section) => {
-    //console.log('Navbar requesting navigation to:', section)
+  if (section) {
     return { scrollTo: section }
   }
+  return undefined}
 
   const CartIcon = ({ isMobile = false }) => (
     <Link to="/cart">

@@ -5,7 +5,7 @@ A comprehensive food ordering and subscription management platform built with Re
 
 ## 🚀 Live Demo
 
-[https://saucia-6c18c.web.app/](https://saucia-6c18c.web.app/)
+[https://saucia-web-app.vercel.app/](https://saucia-web-app.vercel.app/)
 
 ## 📋 Project Overview
 

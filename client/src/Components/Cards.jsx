@@ -855,25 +855,6 @@ export const FeaturedMealCard = ({ item, index = 0 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const isArabic = i18n.language === 'ar'
-  
-  // Motion variants for animations
-  const cardVariants = {
-    hidden: {
-      opacity: 0.3,
-      y: 10,
-      scale: 0.9
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.1,
-        ease: "easeIn",
-        delay: index * 0.05 // Reduced delay for carousel
-      }
-    }
-  }
 
   // Extract properties from item object
   const {
@@ -898,16 +879,13 @@ export const FeaturedMealCard = ({ item, index = 0 }) => {
     prep_time_minutes
   } = item
 
-  // Motion components
-  const MotionBox = motion(Box)
-
   // Compact responsive values optimized for carousel
   const cardWidth = useBreakpointValue({ 
-    base: '100%',    // Fixed width for better carousel control
-    sm: '95%', 
-    md: '95%', 
-    lg: '90%',
-    xl: '90%'
+    base: '190px',    // Fixed width for better carousel control
+    sm: '200px', 
+    md: '200px', 
+    lg: '220px',
+    xl: '240px'
   })
   
   const cardHeight = useBreakpointValue({ 
@@ -944,12 +922,11 @@ export const FeaturedMealCard = ({ item, index = 0 }) => {
 
   return (
     <>
-      <MotionBox
-        as={Box}
+      <Box
         w={cardWidth}
         h={cardHeight}
         bg={cardBg}
-        borderWidth="1px"
+        borderWidth="3px"
         borderColor={borderColor}
         borderRadius="14px"
         overflow="hidden"
@@ -957,20 +934,15 @@ export const FeaturedMealCard = ({ item, index = 0 }) => {
         transition="all 0.2s ease"
         _hover={{
           transform: 'translateY(-4px)',
-          borderColor: 'brand.500',
+          borderColor: 'brand.600',
           bg: hoverBg,
-          shadow: 'lg'
         }}
         onClick={() => setIsModalOpen(true)}
         position="relative"
-        variants={cardVariants}
-        initial="hidden"
-        animate="visible"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
         flexShrink={0} 
-        pb={2}
+        pb={8}
         mb={2}
+        mx={2}
       >
         {/* Top Badges Row */}
         <Box position="absolute" top="8px" left="8px" right="8px" zIndex={3}>
@@ -1119,7 +1091,7 @@ export const FeaturedMealCard = ({ item, index = 0 }) => {
             </Box>
           </VStack>
         </Box>
-      </MotionBox>
+      </Box>
 
       {/* Add to Cart Modal */}
       {isModalOpen && (
