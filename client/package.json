@@ -19,6 +19,7 @@
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/supabase-js": "^2.50.3",
     "@tanstack/react-query": "^5.81.5",
+    "@tanstack/react-query-devtools": "^5.84.2",
     "framer-motion": "^10.16.4",
     "globals": "^16.1.0",
     "i18next": "^23.7.16",
