@@ -19,7 +19,7 @@ import hero1 from '../../assets/hero/hero-1.json'
 import hero2 from '../../assets/hero/hero-2.json'
 import hero3 from '../../assets/hero/hero-3.json'
 import hero4 from '../../assets/hero/hero-4.json'
-
+import hero5 from '../../assets/hero/hero-5.json'
 
 
 
@@ -48,7 +48,7 @@ const LocalLottieAnimation = ({ currentSlide, className = "" }) => {
       name: 'nutrition-expert'
     },
     {
-      animationData: hero1, // Reusing hero1 for slide 4
+      animationData: hero5, // Reusing hero1 for slide 4
       colors: ['#059669', '#10b981', '#34d399'],
       name: 'premium-offers'
     }

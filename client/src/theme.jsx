@@ -757,8 +757,6 @@ const createTheme = (config) => {
           thickness: '4px',
           emptyColor: props.colorMode === 'dark' ? 'gray.600' : 'gray.200',
           position: 'relative',
-          top: '50%',
-          left: '50%',
           transform: 'translate(-50%, -50%)',
           zIndex: 1000,
           display: 'inline-block',

@@ -14,9 +14,8 @@ import { smartPrefetch } from '../../lib/prefetchQueries'
 // Loading component for better UX
 const FeaturedMealsLoading = () => (
   <Center h="300px">
-    <Box textAlign="center">
+    <Box textAlign="center" maxW="96vw">
       <Spinner size="xl" color="brand.500" mb={4} />
-      <Box color="gray.500">Loading featured meals...</Box>
     </Box>
   </Center>
 )

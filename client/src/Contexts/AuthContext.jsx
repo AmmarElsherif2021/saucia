@@ -19,18 +19,27 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [supabaseSession, setSupabaseSession] = useState(null);
   const [initialSessionProcessed, setInitialSessionProcessed] = useState(false);
+  
+  // Enhanced redirect handling instead of simple isJoiningPremium
+  const [pendingRedirect, setPendingRedirect] = useState(null);
+  /* pendingRedirect structure:
+  {
+    path: '/premium/join',
+    planId: 'plan_123',
+    selectedTerm: 'medium',
+    timestamp: Date.now(),
+    reason: 'subscription_flow' // or 'profile_completion', etc.
+  }
+  */
 
   // Unified auth change handler
   const handleAuthChange = useCallback(async (event, session) => {
     console.groupCollapsed(`Auth Event: ${event}`);
-    //console.log('Current session:', supabaseSession);
-    //console.log('New session:', session);
     console.groupEnd();
     
     try {
       if (session?.user) {
         if (supabaseSession?.access_token === session.access_token) {
-          //console.log('Session already processed, skipping');
           return;
         }
         
@@ -45,7 +54,7 @@ export const AuthProvider = ({ children }) => {
           isAdmin: false, // Will be updated via profile query
           profileCompleted: false, // Will be updated via profile query
         });
-        //Debugging
+        
         setError(null);
       } else if (event === 'SIGNED_OUT') {
         resetAuthState();
@@ -61,6 +70,7 @@ export const AuthProvider = ({ children }) => {
     setSupabaseSession(null);
     setUser(null);
     setError(null);
+    setPendingRedirect(null); // Clear any pending redirects on logout
   }, []);
 
   // Initialize authentication state
@@ -147,6 +157,62 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // Enhanced redirect management
+  const setPendingRedirectAfterAuth = useCallback((redirectData) => {
+    const redirect = {
+      ...redirectData,
+      timestamp: Date.now()
+    };
+    
+    // Store in both state and localStorage for persistence across page reloads
+    setPendingRedirect(redirect);
+    try {
+      localStorage.setItem('auth_pending_redirect', JSON.stringify(redirect));
+    } catch (e) {
+      console.warn('Could not store redirect in localStorage:', e);
+    }
+  }, []);
+
+  const clearPendingRedirect = useCallback(() => {
+    setPendingRedirect(null);
+    try {
+      localStorage.removeItem('auth_pending_redirect');
+    } catch (e) {
+      console.warn('Could not clear redirect from localStorage:', e);
+    }
+  }, []);
+
+  const consumePendingRedirect = useCallback(() => {
+    const redirect = pendingRedirect;
+    if (redirect) {
+      clearPendingRedirect();
+      return redirect;
+    }
+    return null;
+  }, [pendingRedirect, clearPendingRedirect]);
+
+  // Initialize pending redirect from localStorage on mount
+  useEffect(() => {
+    try {
+      const storedRedirect = localStorage.getItem('auth_pending_redirect');
+      if (storedRedirect) {
+        const redirect = JSON.parse(storedRedirect);
+        
+        // Check if redirect is not too old (e.g., 30 minutes)
+        const maxAge = 30 * 60 * 1000; // 30 minutes
+        if (Date.now() - redirect.timestamp < maxAge) {
+          setPendingRedirect(redirect);
+        } else {
+          // Clear expired redirect
+          localStorage.removeItem('auth_pending_redirect');
+        }
+      }
+    } catch (e) {
+      console.warn('Could not load redirect from localStorage:', e);
+      localStorage.removeItem('auth_pending_redirect');
+    }
+  }, []);
+
   // Helper functions
   const requiresProfileCompletion = useCallback(() => {
     return user && !user.profileCompleted;
@@ -156,7 +222,7 @@ export const AuthProvider = ({ children }) => {
     return !!user && !!supabaseSession;
   }, [user, supabaseSession]);
 
-  // Context value - only core auth state and methods
+  // Context value - enhanced with redirect management
   const contextValue = {
     // Core auth state
     user,
@@ -171,8 +237,28 @@ export const AuthProvider = ({ children }) => {
 
     // Helper functions
     requiresProfileCompletion,
-    isAuthenticated
+    isAuthenticated,
+
+    // Enhanced redirect handling
+    pendingRedirect,
+    setPendingRedirectAfterAuth,
+    clearPendingRedirect,
+    consumePendingRedirect,
     
+    // Backward compatibility
+    get isJoiningPremium() {
+      return pendingRedirect?.reason === 'subscription_flow';
+    },
+    setIsJoiningPremium: (value) => {
+      if (value) {
+        setPendingRedirectAfterAuth({
+          path: '/premium/join',
+          reason: 'subscription_flow'
+        });
+      } else {
+        clearPendingRedirect();
+      }
+    }
   };
 
   return (
@@ -191,4 +277,3 @@ export const useAuthContext = () => {
 };
 
 export const useAuth = () => useAuthContext();
-

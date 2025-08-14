@@ -405,12 +405,7 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
               </HStack>
             )}
 
-            {/* Plan Counter */}
-            {processedPlans.length > 1 && (
-              <Text color="whiteAlpha.800" fontSize="sm">
-                {currentPlanIndex + 1} {t('common.of')} {processedPlans.length} {t('premium.plans')}
-              </Text>
-            )}
+           
           </VStack>
         </motion.div>
       </VStack>

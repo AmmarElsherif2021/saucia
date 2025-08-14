@@ -57,14 +57,15 @@ const planImages = {
   'Lose Weight': loseWeightPlanImage,
 }
 
-// Login Modal Component
-const LoginModal = ({ isOpen, onClose }) => {
+// Enhanced Login Modal Component
+const LoginModal = ({ isOpen, onClose, selectedPlan = null, selectedTerm = null }) => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const modalBg = useColorModeValue('white', 'gray.800')
   const borderColor = useColorModeValue('gray.200', 'gray.700')
   const textColor = useColorModeValue('gray.600', 'gray.300')
-
+  const { setPendingRedirectAfterAuth } = useAuthContext()
+  
   const containerVariants = {
     hidden: { opacity: 0, scale: 0.95 },
     visible: {
@@ -91,6 +92,28 @@ const LoginModal = ({ isOpen, onClose }) => {
     }
   }
 
+  const handleLoginRedirect = () => {
+    // Set up enhanced redirect with plan context
+    const redirectData = {
+      path: '/premium/join',
+      reason: 'subscription_flow'
+    };
+    
+    // Include plan context if available
+    if (selectedPlan) {
+      redirectData.planId = selectedPlan.id;
+      redirectData.planTitle = selectedPlan.title;
+    }
+    
+    if (selectedTerm) {
+      redirectData.selectedTerm = selectedTerm;
+    }
+    
+    setPendingRedirectAfterAuth(redirectData);
+    navigate('/auth');
+    onClose();
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="md">
       <ModalOverlay />
@@ -111,7 +134,10 @@ const LoginModal = ({ isOpen, onClose }) => {
         borderColor={borderColor}
       >
         <ModalHeader textAlign="center">
-          {t('premium.authenticationRequired')}
+          {selectedPlan 
+            ? t('premium.signInToSubscribe')
+            : t('premium.authenticationRequired')
+          }
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody p={6}>
@@ -132,6 +158,19 @@ const LoginModal = ({ isOpen, onClose }) => {
                 </HStack>
               </motion.div>
               
+              {selectedPlan && (
+                <motion.div variants={itemVariants}>
+                  <VStack spacing={2}>
+                    <Badge colorScheme="brand" fontSize="sm" px={3} py={1}>
+                      {selectedPlan.title}
+                    </Badge>
+                    <Text fontSize="sm" color={textColor} textAlign="center">
+                      {t('premium.selectedPlanWillBeReserved')}
+                    </Text>
+                  </VStack>
+                </motion.div>
+              )}
+              
               <motion.div variants={itemVariants}>
                 <Text fontSize="lg" fontWeight="bold" textAlign="center">
                   {t('profile.signInRequired')}
@@ -140,7 +179,10 @@ const LoginModal = ({ isOpen, onClose }) => {
               
               <motion.div variants={itemVariants}>
                 <Text textAlign="center" fontSize="sm" color={textColor}>
-                  {t('profile.signInToAccessPremium')}
+                  {selectedPlan 
+                    ? t('premium.signInToContinueWithPlan')
+                    : t('profile.signInToAccessPremium')
+                  }
                 </Text>
               </motion.div>
               
@@ -149,16 +191,11 @@ const LoginModal = ({ isOpen, onClose }) => {
                   colorScheme="brand"
                   w="full"
                   borderRadius="md"
-                  onClick={() => {
-                    navigate('/auth')
-                    onClose()
-                  }}
+                  onClick={handleLoginRedirect}
                 >
-                  {t('buttons.login')}
+                  {t('buttons.continueWithLogin')}
                 </Button>
               </motion.div>
-
-             
             </VStack>
           </motion.div>
         </ModalBody>
@@ -274,7 +311,7 @@ const PlanDetails = ({ plan }) => {
             {t('premium.mealsOver')} {plan.short_term_meals} {t('premium.days')}
           </Text>
           <Text fontSize="sm" fontWeight="bold">
-            {t('premium.overallPrice')}: ${plan.price_per_meal* plan.short_term_meals }
+            {t('premium.overallPrice')}: ${plan.price_per_meal * plan.short_term_meals}
           </Text>
         </Box>
 
@@ -287,7 +324,7 @@ const PlanDetails = ({ plan }) => {
             {t('premium.mealsOver')} {plan.medium_term_meals} {t('premium.days')}
           </Text>
           <Text fontSize="sm" fontWeight="bold">
-            {t('premium.overallPrice')}: ${plan.price_per_meal*plan.medium_term_meals} <Badge colorScheme="green">10% off</Badge>
+            {t('premium.overallPrice')}: ${plan.price_per_meal * plan.medium_term_meals} <Badge colorScheme="green">10% off</Badge>
           </Text>
         </Box>
       </VStack>
@@ -297,7 +334,7 @@ const PlanDetails = ({ plan }) => {
 
 export const PremiumPage = () => {
   const { plans, elementsLoading } = useElements();
-  const { user } = useAuthContext();
+  const { user, setPendingRedirectAfterAuth } = useAuthContext();
   const navigate = useNavigate();
   
   // Only call useUserSubscriptions if user exists
@@ -320,6 +357,7 @@ export const PremiumPage = () => {
   const [explorePlans, setExplorePlans] = useState(false);
   const [subscribing, setSubscribing] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginModalContext, setLoginModalContext] = useState({ plan: null, term: null });
   const { t } = useTranslation();
   const toast = useToast();
   const detailsSectionRef = useRef(null);
@@ -366,6 +404,7 @@ export const PremiumPage = () => {
   const handlePlanSelect = (plan) => {
     // Check if user is authenticated
     if (!user) {
+      setLoginModalContext({ plan, term: null });
       setShowLoginModal(true);
       return;
     }
@@ -410,8 +449,38 @@ export const PremiumPage = () => {
     }
   };
 
+  const handleSubscribeRedirect = (plan, selectedTerm = null) => {
+    if (!user) {
+      setLoginModalContext({ plan, term: selectedTerm });
+      setShowLoginModal(true);
+      return;
+    }
+
+    // Set up redirect context for subscription flow
+    const redirectData = {
+      path: '/premium/join',
+      reason: 'subscription_flow',
+      planId: plan.id,
+      planTitle: plan.title
+    };
+    
+    if (selectedTerm) {
+      redirectData.selectedTerm = selectedTerm;
+    }
+
+    // Navigate to premium join page
+    navigate('/premium/join', { 
+      state: { 
+        planId: plan.id,
+        selectedTerm: selectedTerm,
+        fromPremiumPage: true 
+      } 
+    });
+  };
+
   const handleSubscribe = async () => {
     if (!user) {
+      setLoginModalContext({ plan: chosenPlan, term: null });
       setShowLoginModal(true);
       return;
     }
@@ -441,29 +510,21 @@ export const PremiumPage = () => {
             end_date: subscriptionData.end_date
           }
         });
-      } else {
-        // Create new subscription - redirect to checkout
-        // The context already has the plan data, so we can navigate to checkout
+
         toast({
-          title: t('premium.planSelected'),
-          description: t('premium.proceedToCheckout'),
-          status: 'info',
-          duration: 3000,
+          title: t('premium.planUpdated'),
+          description: t('premium.nowSubscribedToPlan', { planTitle: chosenPlan.title }),
+          status: 'success',
+          duration: 5000,
           isClosable: false,
         });
-        // Navigation will be handled by the Link component
+        
+        setExplorePlans(false);
+      } else {
+        // For new subscriptions, redirect to join page
+        handleSubscribeRedirect(chosenPlan);
         return;
       }
-
-      toast({
-        title: t('premium.planUpdated'),
-        description: t('premium.nowSubscribedToPlan', { planTitle: chosenPlan.title }),
-        status: 'success',
-        duration: 5000,
-        isClosable: false,
-      });
-      
-      setExplorePlans(false);
     } catch (error) {
       toast({
         title: t('premium.subscriptionFailed'),
@@ -477,6 +538,11 @@ export const PremiumPage = () => {
     }
   };
 
+  const handleCloseLoginModal = () => {
+    setShowLoginModal(false);
+    setLoginModalContext({ plan: null, term: null });
+  };
+
   const isLoading = elementsLoading || (user && isSubscriptionsLoading);
 
   if (isLoading) {
@@ -484,6 +550,7 @@ export const PremiumPage = () => {
       <Center h="100vh">
         <VStack spacing={4}>
           <Spinner size="xl" color="brand.500" />
+          <Text>{t('common.loading')}</Text>
         </VStack>
       </Center>
     );
@@ -558,24 +625,17 @@ export const PremiumPage = () => {
             <Divider my={4} />
 
             {userPlan?.id !== chosenPlan.id && (
-              <Link
-                to="/premium/join"
-                state={{ planId: chosenPlan.id }}
-                style={{ textDecoration: 'none' }}
+              <Button
+                mt={4}
+                colorScheme="brand"
+                size="lg"
+                width="full"
+                isLoading={subscribing}
+                loadingText={t('premium.processingSubscription')}
+                onClick={() => handleSubscribeRedirect(chosenPlan)}
               >
-                <Button
-                  mt={4}
-                  colorScheme="brand"
-                  size="lg"
-                  width="full"
-                  isLoading={subscribing}
-                  loadingText={t('premium.updatingSubscription')}
-                  isDisabled={!user}
-                  onClick={!user ? () => setShowLoginModal(true) : undefined}
-                >
-                  {t('premium.subscribeToPlan')}
-                </Button>
-              </Link>
+                {t('premium.subscribeToPlan')}
+              </Button>
             )}
 
             {userPlan?.id === chosenPlan.id && (
@@ -593,12 +653,25 @@ export const PremiumPage = () => {
             )}
           </Box>
         )}
+
+        {/* Quick Action Alert for Non-authenticated Users */}
+        {!user && !explorePlans && (
+          <Alert status="info" borderRadius="lg">
+            <AlertIcon />
+            <Box>
+              <Text fontWeight="bold">{t('premium.readyToStart')}</Text>
+              <Text fontSize="sm">{t('premium.signInToExploreAndSubscribe')}</Text>
+            </Box>
+          </Alert>
+        )}
       </VStack>
 
-      {/* Login Modal */}
+      {/* Enhanced Login Modal */}
       <LoginModal 
         isOpen={showLoginModal} 
-        onClose={() => setShowLoginModal(false)} 
+        onClose={handleCloseLoginModal}
+        selectedPlan={loginModalContext.plan}
+        selectedTerm={loginModalContext.term}
       />
     </Box>
   );

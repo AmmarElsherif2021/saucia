@@ -172,19 +172,24 @@ const DietaryBadges = ({ meal, size = "xs" }) => {
 };
 
 // Price Display Component
-const PriceDisplay = ({ price, base_price, is_discount_active, discount_percentage, size = "md" }) => {
-  const {t}=useTranslation();
+const PriceDisplay = ({ base_price, is_discount_active, discount_percentage = 0, size = "md" }) => {
+  const { t } = useTranslation();
+  // Calculate price based on discount
+  const price = is_discount_active && discount_percentage > 0
+    ? base_price * (1 - discount_percentage / 100)
+    : base_price;
+
   return (
     <VStack align="flex-start" spacing={0}>
-      <Text 
-        fontWeight="bold" 
-        fontSize={size} 
+      <Text
+        fontWeight="bold"
+        fontSize={size}
         color="brand.800"
         lineHeight="2.2"
       >
         {typeof price === 'number' ? price.toFixed(2) : 'N/A'}{t('common.currency')}
       </Text>
-      {is_discount_active && base_price && base_price !== price && (
+      {is_discount_active && discount_percentage > 0 && (
         <Text
           fontSize="xs"
           color="gray.500"
@@ -354,7 +359,6 @@ export const MinimalMealCard = ({ meal, onClick }) => {
           mt="auto"
         >
           <PriceDisplay
-            price={meal.price}
             base_price={meal.base_price}
             is_discount_active={meal.is_discount_active}
             discount_percentage={meal.discount_percentage}
@@ -500,7 +504,6 @@ export const MealCard = ({ meal, isModal = false, onClose }) => {
         {/* Price Section */}
         <Flex justify="space-between" align="center">
           <PriceDisplay
-            price={meal.price}
             base_price={meal.base_price}
             is_discount_active={meal.is_discount_active}
             discount_percentage={meal.discount_percentage}
@@ -849,12 +852,12 @@ export const PremiumMealCard = ({ meal }) => {
 
 //featured cards
 export const FeaturedMealCard = ({ item, index = 0 }) => {
-  const { colorMode } = useColorMode()
-  const { t, i18n } = useTranslation()
-  const { addToCart } = useCart()
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [quantity, setQuantity] = useState(1)
-  const isArabic = i18n.language === 'ar'
+  const { colorMode } = useColorMode();
+  const { t, i18n } = useTranslation();
+  const { addToCart } = useCart();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const isArabic = i18n.language === 'ar';
 
   // Extract properties from item object
   const {
@@ -863,62 +866,75 @@ export const FeaturedMealCard = ({ item, index = 0 }) => {
     name_arabic,
     description,
     description_arabic,
-    base_price: originalPrice = 0,
-    price: effectivePrice = 0,
+    base_price = 0, // Default to 0 if undefined
     rating: rate = 0,
     rating_count = 0,
     section,
     image_url: image,
     is_featured,
-    is_discount_active: hasOffer,
+    is_discount_active: hasOffer = false,
     discount_percentage = 0,
     is_vegetarian,
     is_vegan,
     is_gluten_free,
     is_dairy_free,
     prep_time_minutes
-  } = item
+  } = item;
 
-  // Compact responsive values optimized for carousel
-  const cardWidth = useBreakpointValue({ 
-    base: '190px',    // Fixed width for better carousel control
-    sm: '200px', 
-    md: '200px', 
-    lg: '220px',
-    xl: '240px'
-  })
-  
-  const cardHeight = useBreakpointValue({ 
-    base: '100%',    // Compact height
-    sm: '90%', 
-    md: '95%',
-    lg: '98%'
-  })
-  
-  const imageHeight = useBreakpointValue({ 
-    base: '180px',    // Fixed image height
-    sm: '200px', 
-    md: '220px',
-    lg: '240px'
-  })
+  // Validate base_price
+  if (typeof base_price !== 'number' || base_price <= 0) {
+    console.error('Invalid base_price for meal:', item);
+    return null;
+  }
 
-  // Color values
-  const cardBg = colorMode === 'dark' ? 'gray.800' : 'white'
-  const borderColor = colorMode === 'dark' ? 'gray.700' : 'brand.200'
-  const hoverBg = colorMode === 'dark' ? 'gray.750' : 'brand.50'
-  
+  // Price calculations (only using base_price)
+  const originalPrice = base_price;
+  const effectivePrice = hasOffer && discount_percentage > 0
+    ? base_price * (1 - discount_percentage / 100)
+    : base_price;
+
   // Display names based on language
-  const displayName = isArabic ? name_arabic || name : name
+  const displayName = isArabic ? name_arabic || name : name;
+
   const handleConfirm = () => {
     addToCart({
       id,
       name: displayName,
-      price: effectivePrice,
+      price: base_price, // Always use base_price here
       image,
       qty: quantity,
-    })
-    setIsModalOpen(false)
-  }
+      discount: hasOffer ? discount_percentage : 0 // Pass discount separately
+    });
+    setIsModalOpen(false);
+  };
+
+  // Responsive values
+  const cardWidth = useBreakpointValue({ 
+    base: '190px',
+    sm: '200px', 
+    md: '200px', 
+    lg: '220px',
+    xl: '240px'
+  });
+  
+  const cardHeight = useBreakpointValue({ 
+    base: '100%',
+    sm: '90%', 
+    md: '95%',
+    lg: '98%'
+  });
+  
+  const imageHeight = useBreakpointValue({ 
+    base: '180px',
+    sm: '200px', 
+    md: '220px',
+    lg: '240px'
+  });
+
+  // Color values
+  const cardBg = colorMode === 'dark' ? 'gray.800' : 'white';
+  const borderColor = colorMode === 'dark' ? 'gray.700' : 'brand.200';
+  const hoverBg = colorMode === 'dark' ? 'gray.750' : 'brand.50';
 
   return (
     <>
@@ -1043,7 +1059,7 @@ export const FeaturedMealCard = ({ item, index = 0 }) => {
               </Badge>
             </Box>
 
-            {/* Dietary Badges - Compact */}
+            {/* Dietary Badges */}
             <Box>
               <DietaryBadges meal={item} size="2xs" maxDisplay={3} />
             </Box>
@@ -1053,7 +1069,7 @@ export const FeaturedMealCard = ({ item, index = 0 }) => {
               <Flex justify="space-between" align="center" mb="2">
                 <VStack spacing="0" align="flex-start">
                   {/* Original price if discounted */}
-                  {hasOffer && originalPrice > effectivePrice && (
+                  {hasOffer && discount_percentage > 0 && (
                     <Text
                       fontSize="xs"
                       color="gray.500"
@@ -1099,18 +1115,18 @@ export const FeaturedMealCard = ({ item, index = 0 }) => {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           name={displayName}
-          price={effectivePrice}
+          price={base_price}
           quantity={quantity}
           setQuantity={setQuantity}
           onConfirm={handleConfirm}
           t={t}
           hasOffer={hasOffer}
-          discountPercentage={discount_percentage.toFixed(0)}
+          discountPercentage={discount_percentage}
           colorMode={colorMode}
         />
       )}
     </>
-  )
+  );
 };
 //offers meal cards
 export const OfferMealCard = ({ meal }) => {
@@ -1148,8 +1164,8 @@ export const OfferMealCard = ({ meal }) => {
 const currentDate = new Date();
 const isDiscountActive = discount_valid_until && new Date(discount_valid_until) > currentDate;
 const discountPercentage = isDiscountActive ? discount_percentage : 0;
-const effectivePrice = isDiscountActive 
-  ? base_price * (1 - discount_percentage / 100) 
+const effectivePrice = isDiscountActive && discount_percentage > 0
+  ? base_price * (1 - discount_percentage / 100)
   : base_price;
 
 // Determine dietary badges

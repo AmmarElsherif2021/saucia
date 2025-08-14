@@ -104,10 +104,22 @@ const AuthCompleteProfile = React.lazy(() =>
 )
 
 // Enhanced page loader with better UX
-const PageLoader = ({ message = 'Loading...' }) => (
-  <Center h="100vh" flexDirection="column">
+const PageLoader = ({ message = 'Loading...', showRetry = false, onRetry }) => (
+  <Center maxWidth={'97vw'} h="100vh" flexDirection="column">
     <Spinner size="xl" color="brand.500" mb={4} />
-    <Box color="gray.500" fontSize="sm">{message}</Box>
+    <Box color="gray.500" fontSize="sm" mb={2}>{message}</Box>
+    {showRetry && (
+      <Box 
+        as="button" 
+        onClick={onRetry}
+        color="brand.500" 
+        fontSize="sm" 
+        textDecoration="underline"
+        cursor="pointer"
+      >
+        Click to retry
+      </Box>
+    )}
   </Center>
 )
 
@@ -140,6 +152,10 @@ const Layout = ({ children }) => {
         left: '0',
         right: '0',
         bottom: '0',
+        alignItems: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
       }}
     >
       <Navbar />
@@ -162,37 +178,66 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000,
-      refetchOnWindowFocus: true,
-      refetchOnReconnect: true
+      refetchOnWindowFocus: false, // Reduce unnecessary refetches
+      refetchOnReconnect: true,
+      retry: (failureCount, error) => {
+        // Don't retry on 4xx errors except 408, 429
+        if (error?.status >= 400 && error?.status < 500 && error?.status !== 408 && error?.status !== 429) {
+          return false
+        }
+        return failureCount < 3
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 30000),
+    },
+    mutations: {
+      retry: 1,
     }
   }
 });
-
 // Enhanced router with prefetching
 const RouterWithPrefetch = ({ router, queryClient }) => {
+  const [retryCount, setRetryCount] = React.useState(0)
+  
   React.useEffect(() => {
     // Set up background sync
-    const syncInterval = backgroundSync.startPeriodicSync(queryClient)
+    let syncInterval
+    let visibilityHandler
     
-    // Listen for visibility changes
-    const handleVisibilityChange = () => {
-      backgroundSync.onVisibilityChange(queryClient)
-    }
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    
-    // Prefetch critical data immediately
-    if (networkAwarePrefetch.shouldPrefetch()) {
-      import('./lib/prefetchQueries').then(({ smartPrefetch }) => {
-        smartPrefetch.prefetchCritical(queryClient)
-      })
+    try {
+      syncInterval = backgroundSync.startPeriodicSync(queryClient)
+      
+      // Listen for visibility changes
+      visibilityHandler = () => {
+        backgroundSync.onVisibilityChange(queryClient)
+      }
+      
+      document.addEventListener('visibilitychange', visibilityHandler)
+      
+      // Prefetch critical data immediately with retry
+      if (networkAwarePrefetch.shouldPrefetch()) {
+        import('./lib/prefetchQueries').then(({ smartPrefetch }) => {
+          smartPrefetch.prefetchCritical(queryClient).catch(error => {
+            console.error('Critical prefetch failed:', error)
+            if (retryCount < 2) {
+              setTimeout(() => {
+                setRetryCount(prev => prev + 1)
+                smartPrefetch.prefetchCritical(queryClient)
+              }, 2000 * (retryCount + 1))
+            }
+          })
+        })
+      }
+    } catch (error) {
+      console.error('RouterWithPrefetch setup failed:', error)
     }
     
     return () => {
-      clearInterval(syncInterval)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      if (syncInterval) clearInterval(syncInterval)
+      if (visibilityHandler) {
+        document.removeEventListener('visibilitychange', visibilityHandler)
+      }
     }
-  }, [queryClient])
+  }, [queryClient, retryCount])
 
   return <RouterProvider router={router} />
 }
@@ -203,15 +248,26 @@ const router = createBrowserRouter([
     path: '/',
     element: (
       <Layout>
-        <Suspense fallback={<PageLoader message="Loading home page..." />}>
+        <Suspense 
+          fallback={
+            <Box textAlign="center" justifyContent={'center'} w={'99%'} h={'100vh'} display={'flex'} flexDirection={'column'}>
+              <Spinner size="xl" color="brand.500" mb={4} />
+              <Box fontSize="sm" color="gray.500">Loading Home...</Box>
+            </Box>
+          }
+        >
           <HomePage />
         </Suspense>
       </Layout>
     ),
     loader: async () => {
-      // Prefetch home page data
-      if (networkAwarePrefetch.shouldPrefetch()) {
-        await PREFETCH_STRATEGIES.home(queryClient)
+      try {
+        if (networkAwarePrefetch.shouldPrefetch()) {
+          await PREFETCH_STRATEGIES.home(queryClient)
+        }
+      } catch (error) {
+        console.error('Home loader failed:', error)
+        // Don't throw, let the component handle the error
       }
       return null
     }
@@ -220,7 +276,11 @@ const router = createBrowserRouter([
     path: '/auth',
     element: (
       <div>
-        <Suspense fallback={<PageLoader message="Loading authentication..." />}>
+        <Suspense fallback={
+          <Box textAlign="center" justifyContent={'center'} w={'99%'} h={'100vh'} display={'flex'} flexDirection={'column'}>
+              <Spinner size="xl" color="brand.500" mb={4} />
+            </Box>
+        }>
           <OAuth />
         </Suspense>
       </div>
@@ -230,7 +290,11 @@ const router = createBrowserRouter([
     path: '/auth/callback',
     element: (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Suspense fallback={<PageLoader message="Processing authentication..." />}>
+        <Suspense fallback={
+          <Box textAlign="center" justifyContent={'center'} w={'99%'} h={'100vh'} display={'flex'} flexDirection={'column'}>
+              <Spinner size="xl" color="brand.500" mb={4} />
+          </Box>
+        }>
           <AuthCallback />
         </Suspense>
       </div>
@@ -242,7 +306,11 @@ const router = createBrowserRouter([
       <div
         style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
       >
-        <Suspense fallback={<PageLoader message="Loading profile setup..." />}>
+        <Suspense fallback={
+          <Box textAlign="center" justifyContent={'center'} w={'99%'} h={'100vh'} display={'flex'} flexDirection={'column'}>
+              <Spinner size="xl" color="brand.500" mb={4} />
+            </Box>
+        }>
           <AuthCompleteProfile />
         </Suspense>
       </div>
@@ -260,15 +328,29 @@ const router = createBrowserRouter([
     path: '/menu',
     element: (
       <Layout>
-        <Suspense fallback={<PageLoader message="Loading menu..." />}>
+        <Suspense 
+          fallback={
+            <Box textAlign="center" justifyContent={'center'} w={'99%'} h={'100vh'} display={'flex'} flexDirection={'column'}>
+              <Spinner size="xl" color="brand.500" mb={4} />
+              <Box fontSize="sm" color="gray.500">Loading Menu...</Box>
+            </Box>
+          }
+        >
           <MenuPage />
         </Suspense>
       </Layout>
     ),
     loader: async () => {
-      // Prefetch menu data
-      if (networkAwarePrefetch.shouldPrefetch()) {
-        await PREFETCH_STRATEGIES.menu(queryClient)
+      try {
+        if (networkAwarePrefetch.shouldPrefetch()) {
+          // Use progressive loading for menu
+          await import('./lib/prefetchQueries').then(({ smartPrefetch }) => 
+            smartPrefetch.progressiveLoad(queryClient, 'menu')
+          )
+        }
+      } catch (error) {
+        console.error('Menu loader failed:', error)
+        // Don't throw, let the component handle the error
       }
       return null
     }
@@ -371,14 +453,7 @@ const router = createBrowserRouter([
           <JoinPlanPage />
         </Suspense>
       </Layout>
-    ),
-    loader: async () => {
-      // Prefetch join plan data
-      if (networkAwarePrefetch.shouldPrefetch()) {
-        await PREFETCH_STRATEGIES.joinPlan(queryClient)
-      }
-      return null
-    }
+    )
   },
   {
     path: '/checkout-plan',
@@ -388,14 +463,16 @@ const router = createBrowserRouter([
           <CheckoutPlan />
         </Suspense>
       </Layout>
-    ),
-    loader: async () => {
-      // Prefetch plan checkout data
-      if (networkAwarePrefetch.shouldPrefetch()) {
-        await PREFETCH_STRATEGIES.checkoutPlan(queryClient)
-      }
-      return null
-    }
+    )
+    // ,
+  //   loader: async () => {
+  //     // Prefetch plan checkout data
+  //     if (networkAwarePrefetch.shouldPrefetch()) {
+  //       await PREFETCH_STRATEGIES.checkoutPlan(queryClient)
+  //     }
+  //     return null
+  //   }
+  // 
   },
 ])
 
@@ -406,7 +483,7 @@ ReactDOM.createRoot(root).render(
     <I18nProvider>
       <DynamicThemeProvider>
         <QueryClientProvider client={queryClient}>
-          <ElementsProvider>
+          <ElementsProvider> {/* Single provider here */}
             <CartProvider>
               <AuthProvider>
                 <ChosenPlanProvider>

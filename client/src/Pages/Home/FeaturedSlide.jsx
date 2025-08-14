@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next'
 import { ItemsCarousel } from '../../Components/ItemsCarousel'
 import { motion } from 'framer-motion'
 import { FeaturedMealCard } from '../../Components/Cards'
+import { useEffect } from 'react'
 
 export const FeaturedMeals = ({ 
   featuredMeals, 
@@ -26,7 +27,12 @@ export const FeaturedMeals = ({
   spacing = 1,
 }) => {
   const { t } = useTranslation()
-
+  //Debug console
+  // useEffect(() => {
+  //   console.log('FeaturedMeals component mounted with props:', {
+  //     featuredMeals, visibleCount, autoPlay, transitionDuration, pauseOnHover, carouselBg, baseWidth, round, style, spacing
+  //   })
+  // }, [featuredMeals, visibleCount, autoPlay, transitionDuration, pauseOnHover, carouselBg, baseWidth, round, style, spacing])
   // Validate and transform data
   const validMeals = Array.isArray(featuredMeals) 
     ? featuredMeals.filter(meal => meal && meal.id && meal.name)

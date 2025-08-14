@@ -19,6 +19,7 @@ import {
   Stack,
   useBreakpointValue,
   Icon,
+  Badge,
 } from '@chakra-ui/react'
 import { useNavigate } from 'react-router'
 import { useAuthContext } from '../../Contexts/AuthContext'
@@ -33,7 +34,10 @@ export default function OAuth() {
     error, 
     logout,
     supabaseSession,
-    requiresCompletion 
+    requiresProfileCompletion,
+    pendingRedirect,
+    consumePendingRedirect,
+    clearPendingRedirect
   } = useAuthContext();
   
   const { t } = useTranslation();
@@ -60,11 +64,68 @@ export default function OAuth() {
     }
   };
 
+  // Enhanced redirect handling after successful authentication
+  useEffect(() => {
+    if (user && supabaseSession && !isLoading) {
+      const redirect = consumePendingRedirect();
+      
+      if (redirect) {
+        console.log('Processing pending redirect:', redirect);
+        
+        // Handle different redirect scenarios
+        switch (redirect.reason) {
+          case 'subscription_flow':
+            // Redirect to premium join with plan context
+            if (redirect.planId) {
+              navigate('/premium/join', { 
+                state: { 
+                  planId: redirect.planId,
+                  selectedTerm: redirect.selectedTerm,
+                  fromAuth: true 
+                } 
+              });
+            } else {
+              navigate('/premium/join', { state: { fromAuth: true } });
+            }
+            break;
+            
+          case 'profile_completion':
+            navigate('/complete-profile');
+            break;
+            
+          default:
+            // Generic redirect
+            navigate(redirect.path || '/account');
+        }
+        return;
+      }
+    }
+  }, [user, supabaseSession, isLoading, consumePendingRedirect, navigate]);
+
   const handleDashboardClick = () => {
-    if (requiresCompletion) {
+    if (requiresProfileCompletion()) {
       navigate('/complete-profile');
     } else {
       navigate('/account');
+    }
+  };
+
+  const handleContinueWithPendingAction = () => {
+    if (pendingRedirect?.reason === 'subscription_flow') {
+      if (pendingRedirect.planId) {
+        navigate('/premium/join', { 
+          state: { 
+            planId: pendingRedirect.planId,
+            selectedTerm: pendingRedirect.selectedTerm,
+            fromAuth: true 
+          } 
+        });
+      } else {
+        navigate('/premium/join', { state: { fromAuth: true } });
+      }
+      clearPendingRedirect();
+    } else {
+      handleDashboardClick();
     }
   };
 
@@ -73,12 +134,12 @@ export default function OAuth() {
     const timer = setTimeout(() => {
       if (isLoading) {
         console.error('Auth loading timeout');
-        setError(t('profile.timeoutError'));
+        // Don't set error here as it might interfere with the auth flow
       }
     }, 10000); // 10 second timeout
   
     return () => clearTimeout(timer);
-  }, [isLoading, t]);
+  }, [isLoading]);
 
   // Show loading state
   if (isLoading) {
@@ -103,8 +164,16 @@ export default function OAuth() {
                   {t('common.loading')}
                 </Text>
                 <Text fontSize="sm" color={textColor}>
-                  {t('common.pleaseWait')}
+                  {pendingRedirect ? t('auth.preparingRedirect') : t('common.pleaseWait')}
                 </Text>
+                {pendingRedirect && (
+                  <Badge colorScheme="blue" fontSize="xs">
+                    {pendingRedirect.reason === 'subscription_flow' 
+                      ? t('auth.continuingSubscription') 
+                      : t('auth.continuingProcess')
+                    }
+                  </Badge>
+                )}
               </VStack>
             </Box>
           </Center>
@@ -180,8 +249,35 @@ export default function OAuth() {
                 {t('common.welcome')}
               </Heading>
               <Text color={textColor} fontSize={{ base: 'sm', md: 'md' }}>
-                {t('profile.signInToContinue')}
+                {pendingRedirect?.reason === 'subscription_flow' 
+                  ? t('auth.signInToContinueSubscription')
+                  : t('profile.signInToContinue')
+                }
               </Text>
+              
+              {/* Show context about pending action */}
+              {pendingRedirect && (
+                <Badge 
+                  colorScheme={pendingRedirect.reason === 'subscription_flow' ? 'green' : 'blue'} 
+                  fontSize="xs"
+                  px={3}
+                  py={1}
+                  borderRadius="full"
+                >
+                  {pendingRedirect.reason === 'subscription_flow' && pendingRedirect.planId && 
+                    t('auth.continuingPlanSubscription')
+                  }
+                  {pendingRedirect.reason === 'subscription_flow' && !pendingRedirect.planId && 
+                    t('auth.continuingPremiumAccess')
+                  }
+                  {pendingRedirect.reason === 'profile_completion' && 
+                    t('auth.continuingProfileSetup')
+                  }
+                  {!pendingRedirect.reason && 
+                    t('auth.continuingProcess')
+                  }
+                </Badge>
+              )}
             </VStack>
             
             {/* Auth Component */}
@@ -257,6 +353,32 @@ export default function OAuth() {
                 <Text fontSize="lg" fontWeight="medium">
                   {t('profile.welcomeBack', { name: user.displayName || user.email })}
                 </Text>
+                
+                {/* Show pending action context */}
+                {pendingRedirect && (
+                  <Alert status="info" borderRadius="lg" mt={4}>
+                    <AlertIcon />
+                    <Box>
+                      <AlertTitle fontSize="md">
+                        {pendingRedirect.reason === 'subscription_flow' 
+                          ? t('auth.readyToContinueSubscription')
+                          : t('auth.readyToContinue')
+                        }
+                      </AlertTitle>
+                      <AlertDescription fontSize="sm">
+                        {pendingRedirect.reason === 'subscription_flow' && pendingRedirect.planId &&
+                          t('auth.continueSelectedPlanSubscription')
+                        }
+                        {pendingRedirect.reason === 'subscription_flow' && !pendingRedirect.planId &&
+                          t('auth.continuePremiumAccess')
+                        }
+                        {pendingRedirect.reason !== 'subscription_flow' &&
+                          t('auth.continueWhereYouLeftOff')
+                        }
+                      </AlertDescription>
+                    </Box>
+                  </Alert>
+                )}
               </VStack>
               
               {/* User Info */}
@@ -270,19 +392,19 @@ export default function OAuth() {
                     <Text as="span" fontWeight="bold">{t('profile.email')}:</Text> {user.email}
                   </Text>
                   <Text>
-                    <Text as="span" fontWeight="bold">{t('profile.name')}:</Text> {user.display_name || t('profile.notProvided')}
+                    <Text as="span" fontWeight="bold">{t('profile.name')}:</Text> {user.displayName || t('profile.notProvided')}
                   </Text>
                   <Text>
-                    <Text as="span" fontWeight="bold">{t('profile.role')}:</Text> {user.is_admin ? t('profile.administrator') : t('profile.user')}
+                    <Text as="span" fontWeight="bold">{t('profile.role')}:</Text> {user.isAdmin ? t('profile.administrator') : t('profile.user')}
                   </Text>
                   <Text>
-                    <Text as="span" fontWeight="bold">{t('profile.profileStatus')}:</Text> {user.profile_completed ? t('profile.complete') : t('profile.incomplete')}
+                    <Text as="span" fontWeight="bold">{t('profile.profileStatus')}:</Text> {user.profileCompleted ? t('profile.complete') : t('profile.incomplete')}
                   </Text>
                 </Stack>
               </Box>
               
               {/* Profile completion alert */}
-              {requiresCompletion && (
+              {requiresProfileCompletion() && !pendingRedirect && (
                 <Alert status="info" borderRadius="lg">
                   <AlertIcon />
                   <Box>
@@ -298,15 +420,37 @@ export default function OAuth() {
               
               {/* Action Buttons */}
               <VStack spacing={3}>
+                {/* Primary action based on pending redirect */}
                 <Button 
                   colorScheme="brand" 
-                  onClick={handleDashboardClick}
+                  onClick={handleContinueWithPendingAction}
                   size={buttonSize}
                   w="full"
                   borderRadius="lg"
                 >
-                  {requiresCompletion ? t('profile.completeProfile') : t('profile.goToDashboard')}
+                  {pendingRedirect?.reason === 'subscription_flow' 
+                    ? t('auth.continueSubscription')
+                    : requiresProfileCompletion() 
+                      ? t('profile.completeProfile') 
+                      : t('profile.goToDashboard')
+                  }
                 </Button>
+                
+                {/* Alternative action if there's a pending redirect */}
+                {pendingRedirect && (
+                  <Button 
+                    colorScheme="gray" 
+                    variant="outline"
+                    onClick={() => {
+                      clearPendingRedirect();
+                      handleDashboardClick();
+                    }}
+                    size="sm"
+                    w="full"
+                  >
+                    {t('auth.goToDashboardInstead')}
+                  </Button>
+                )}
                 
                 <Button 
                   colorScheme="red" 

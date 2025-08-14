@@ -3,14 +3,25 @@ import { supabase } from "../../supabaseClient";
 export const plansAPI = {
   // Public endpoints - no authentication required
   async listPlans(queryParams = {}) {
-    const { data, error } = await supabase
-      .from('plans')
-      .select('*')
-      .match(queryParams);
-    
-    if (error) throw error;
-    return data;
-  },
+  // Create a safe query by only allowing specific, known parameters
+  const safeParams = {};
+  const allowedParams = ['is_active', 'is_featured', 'sort_order'];
+  
+  // Filter queryParams to only include allowed parameters
+  Object.keys(queryParams).forEach(key => {
+    if (allowedParams.includes(key)) {
+      safeParams[key] = queryParams[key];
+    }
+  });
+
+  const { data, error } = await supabase
+    .from('plans')
+    .select('*')
+    .match(safeParams); // Use filtered params
+  
+  if (error) throw error;
+  return data;
+},
 
   async getPlanById(planId) {
     const { data, error } = await supabase

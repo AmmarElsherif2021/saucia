@@ -1,59 +1,368 @@
-// src/Contexts/OptimizedElementsContext.jsx
-import { createContext, useContext, useMemo } from 'react';
-import { useQuery, useQueries } from '@tanstack/react-query';
+import { createContext, useContext, useMemo, useCallback, useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { 
+  useItemsQuery, 
+  useMealsQuery, 
+  usePlansQuery, 
+  useFeaturedMealsQuery,
+  elementsKeys 
+} from '../Hooks/useElementsQuery';
 import { itemsAPI } from '../API/itemAPI';
 import { mealsAPI } from '../API/mealAPI';
 import { plansAPI } from '../API/planAPI';
-import { useItemsQuery, useMealsQuery, usePlansQuery } from '../Hooks/useElementsQuery';
 
 const ElementsContext = createContext();
 
-// Query configurations with different cache strategies
-const QUERY_CONFIGS = {
-  items: {
-    staleTime: 15 * 60 * 1000, // 15 minutes - items change rarely
-    gcTime: 60 * 60 * 1000, // 1 hour
-  },
-  meals: {
-    staleTime: 5 * 60 * 1000, // 5 minutes - meals change more frequently
-    gcTime: 30 * 60 * 1000, // 30 minutes
-  },
-  plans: {
-    staleTime: 30 * 60 * 1000, // 30 minutes - plans are very stable
-    gcTime: 2 * 60 * 60 * 1000, // 2 hours
-  },
-};
-
 export const ElementsProvider = ({ children }) => {
-  const itemsQuery = useItemsQuery();
-  const mealsQuery = useMealsQuery();
-  const plansQuery = usePlansQuery();
+  const queryClient = useQueryClient();
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [initializationError, setInitializationError] = useState(null);
+  
+  // Enhanced query options with better error handling
+  const queryOptions = {
+    retry: (failureCount, error) => {
+      if (error?.status >= 400 && error?.status < 500) return false;
+      return failureCount < 2;
+    },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+  };
+  
+  const itemsQuery = useItemsQuery(queryOptions);
+  const mealsQuery = useMealsQuery(queryOptions);
+  const plansQuery = usePlansQuery(queryOptions);
+  const featuredMealsQuery = useFeaturedMealsQuery(queryOptions);
 
-  const contextValue = useMemo(() => {
-    const items = itemsQuery.data || [];
-    const meals = mealsQuery.data || [];
-    const plans = plansQuery.data || [];
-
-    // Compute derived data
-    const featuredMeals = meals.filter(meal => meal.is_featured);
-    const saladItems = items.filter(item => item.category !== 'salad-fruits');
+  // Track initialization state
+  useEffect(() => {
+    const hasData = itemsQuery.data && mealsQuery.data && plansQuery.data;
+    const hasError = itemsQuery.error || mealsQuery.error || plansQuery.error;
+    const isLoading = itemsQuery.isLoading || mealsQuery.isLoading || plansQuery.isLoading;
     
-    return {
-      items,
-      meals,
-      plans,
-      featuredMeals,
-      saladItems,
-      isRefetching: itemsQuery.isFetching || mealsQuery.isFetching,
-      isLoading: itemsQuery.isLoading || mealsQuery.isLoading,
-      error: itemsQuery.error || mealsQuery.error,
-      refetchAll: () => {
-        itemsQuery.refetch();
-        mealsQuery.refetch();
-        plansQuery.refetch();
+    if (hasError && !isLoading) {
+      setInitializationError(hasError);
+      setIsInitialized(true); // Set to true to stop loading state
+    } else if (hasData && !isLoading) {
+      setInitializationError(null);
+      setIsInitialized(true);
+    }
+  }, [
+    itemsQuery.data, mealsQuery.data, plansQuery.data,
+    itemsQuery.error, mealsQuery.error, plansQuery.error,
+    itemsQuery.isLoading, mealsQuery.isLoading, plansQuery.isLoading
+  ]);
+
+  // Safely extract data with fallbacks
+  const items = useMemo(() => {
+    try {
+      return Array.isArray(itemsQuery.data) ? itemsQuery.data : [];
+    } catch (error) {
+      console.error('Error processing items data:', error);
+      return [];
+    }
+  }, [itemsQuery.data]);
+
+  const meals = useMemo(() => {
+    try {
+      return Array.isArray(mealsQuery.data) ? mealsQuery.data : [];
+    } catch (error) {
+      console.error('Error processing meals data:', error);
+      return [];
+    }
+  }, [mealsQuery.data]);
+
+  const plans = useMemo(() => {
+    try {
+      return Array.isArray(plansQuery.data) ? plansQuery.data : [];
+    } catch (error) {
+      console.error('Error processing plans data:', error);
+      return [];
+    }
+  }, [plansQuery.data]);
+
+  const featuredMeals = useMemo(() => {
+    try {
+      if (Array.isArray(featuredMealsQuery.data)) {
+        return featuredMealsQuery.data;
       }
-    };
-  }, [itemsQuery, mealsQuery, plansQuery]);
+      return meals.filter(meal => meal && meal.is_featured);
+    } catch (error) {
+      console.error('Error processing featured meals:', error);
+      return [];
+    }
+  }, [featuredMealsQuery.data, meals]);
+
+  // Derived data with safety checks
+  const saladItems = useMemo(() => {
+    try {
+      return items.filter(item => 
+        item && 
+        item.is_available && 
+        item.category !== 'salad-fruits'
+      );
+    } catch (error) {
+      console.error('Error filtering salad items:', error);
+      return [];
+    }
+  }, [items]);
+
+  const fruitItems = useMemo(() => {
+    try {
+      return items.filter(item => 
+        item && 
+        item.is_available && 
+        item.category === 'salad-fruits'
+      );
+    } catch (error) {
+      console.error('Error filtering fruit items:', error);
+      return [];
+    }
+  }, [items]);
+
+  const availableMeals = useMemo(() => {
+    try {
+      return meals.filter(meal => meal && meal.is_available);
+    } catch (error) {
+      console.error('Error filtering available meals:', error);
+      return [];
+    }
+  }, [meals]);
+
+  const availablePlans = useMemo(() => {
+    try {
+      return plans.filter(plan => plan && plan.is_available);
+    } catch (error) {
+      console.error('Error filtering available plans:', error);
+      return [];
+    }
+  }, [plans]);
+
+  const categories = useMemo(() => {
+    try {
+      const categorySet = new Set();
+      items.forEach(item => {
+        if (item && item.category) {
+          categorySet.add(item.category);
+        }
+      });
+      return Array.from(categorySet);
+    } catch (error) {
+      console.error('Error processing categories:', error);
+      return [];
+    }
+  }, [items]);
+
+  const mealSections = useMemo(() => {
+    try {
+      const sections = {};
+      
+      availableMeals.forEach(meal => {
+        if (!meal || !meal.id) return;
+        
+        const sectionName = (meal.section || 'Other')
+          .toString()
+          .trim()
+          .replace(/\s+/g, ' ')
+          .replace(/['"]/g, '');
+          
+        if (!sections[sectionName]) {
+          sections[sectionName] = {
+            name: sectionName,
+            name_arabic: meal.section_arabic || sectionName,
+            meals: []
+          };
+        }
+        sections[sectionName].meals.push(meal);
+      });
+
+      return Object.values(sections);
+    } catch (error) {
+      console.error('Error processing meal sections:', error);
+      return [];
+    }
+  }, [availableMeals]);
+
+  // Loading and error states
+  const isLoading = itemsQuery.isLoading || mealsQuery.isLoading || plansQuery.isLoading;
+  const isFetching = itemsQuery.isFetching || mealsQuery.isFetching || plansQuery.isFetching;
+  const error = initializationError || itemsQuery.error || mealsQuery.error || plansQuery.error;
+  
+  // Set initialization state based on query statuses
+  useEffect(() => {
+  const queries = [
+    itemsQuery, 
+    mealsQuery, 
+    plansQuery,
+    featuredMealsQuery
+  ];
+
+  // Check if any query is still loading
+  const isLoading = queries.some(q => q.isLoading);
+  
+  // Check if we have any errors
+  const errors = queries.filter(q => q.error);
+  
+  if (!isLoading) {
+    if (errors.length > 0) {
+      setInitializationError(errors[0].error);
+    }
+    setIsInitialized(true);
+  }
+}, [
+  itemsQuery.status, 
+  mealsQuery.status, 
+  plansQuery.status,
+  featuredMealsQuery.status
+]);
+  // Enhanced refetch functions with error handling
+  const refetchAll = useCallback(async () => {
+    try {
+      const results = await Promise.allSettled([
+        itemsQuery.refetch(),
+        mealsQuery.refetch(),
+        plansQuery.refetch(),
+        featuredMealsQuery.refetch()
+      ]);
+      
+      const failures = results.filter(result => result.status === 'rejected');
+      if (failures.length > 0) {
+        console.error('Some refetch operations failed:', failures);
+      }
+      
+      return results;
+    } catch (error) {
+      console.error('Refetch all failed:', error);
+      throw error;
+    }
+  }, [itemsQuery, mealsQuery, plansQuery, featuredMealsQuery]);
+
+  const refetchItems = useCallback(async () => {
+    try {
+      return await itemsQuery.refetch();
+    } catch (error) {
+      console.error('Refetch items failed:', error);
+      throw error;
+    }
+  }, [itemsQuery]);
+
+  const refetchMeals = useCallback(async () => {
+    try {
+      return await mealsQuery.refetch();
+    } catch (error) {
+      console.error('Refetch meals failed:', error);
+      throw error;
+    }
+  }, [mealsQuery]);
+
+  const refetchPlans = useCallback(async () => {
+    try {
+      return await plansQuery.refetch();
+    } catch (error) {
+      console.error('Refetch plans failed:', error);
+      throw error;
+    }
+  }, [plansQuery]);
+
+  // Enhanced prefetch with timeout and error handling
+  const prefetchRelatedData = useCallback(async (dataType) => {
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Prefetch timeout')), 10000)
+    );
+
+    try {
+      const prefetchPromise = (async () => {
+        switch (dataType) {
+          case 'menu':
+            await Promise.all([
+              queryClient.prefetchQuery({
+                queryKey: elementsKeys.items(),
+                queryFn: itemsAPI.listItems,
+                staleTime: 15 * 60 * 1000,
+              }),
+              queryClient.prefetchQuery({
+                queryKey: elementsKeys.meals(),
+                queryFn: () => mealsAPI.getMeals(),
+                staleTime: 5 * 60 * 1000,
+              })
+            ]);
+            break;
+            
+          case 'premium':
+            await queryClient.prefetchQuery({
+              queryKey: elementsKeys.plans(),
+              queryFn: plansAPI.listPlans,
+              staleTime: 30 * 60 * 1000,
+            });
+            break;
+            
+          case 'featured':
+            await queryClient.prefetchQuery({
+              queryKey: elementsKeys.featured('meals'),
+              queryFn: () => mealsAPI.getMeals({ is_featured: true }),
+              staleTime: 10 * 60 * 1000,
+            });
+            break;
+            
+          default:
+            console.warn(`Unknown prefetch data type: ${dataType}`);
+        }
+      })();
+
+      await Promise.race([prefetchPromise, timeoutPromise]);
+    } catch (error) {
+      console.error(`Prefetch failed for ${dataType}:`, error);
+      throw error;
+    }
+  }, [queryClient]);
+
+  const contextValue = useMemo(() => ({
+    // Data
+    items,
+    meals,
+    plans,
+    featuredMeals,
+    saladItems,
+    fruitItems,
+    availableMeals,
+    availablePlans,
+    categories,
+    mealSections,
+    
+    // State
+    isLoading,
+    isFetching,
+    elementsLoading: isLoading,
+    isInitialized,
+    error,
+    
+    // Actions
+    refetchAll,
+    refetchItems,
+    refetchMeals,
+    refetchPlans,
+    prefetchRelatedData,
+  }), [
+    items,
+    meals,
+    plans,
+    featuredMeals,
+    saladItems,
+    fruitItems,
+    availableMeals,
+    availablePlans,
+    categories,
+    mealSections,
+    isLoading,
+    isFetching,
+    isInitialized,
+    error,
+    refetchAll,
+    refetchItems,
+    refetchMeals,
+    refetchPlans,
+    prefetchRelatedData,
+  ]);
 
   return (
     <ElementsContext.Provider value={contextValue}>
@@ -70,25 +379,46 @@ export const useElements = () => {
   return context;
 };
 
-// Selective hooks for specific data (optional - for better performance)
+// Enhanced hooks with better error handling
 export const useElementsItems = () => {
-  const { items, itemsLoading, refetchItems } = useElements();
-  return { items, loading: itemsLoading, refetch: refetchItems };
+  const { items, saladItems, fruitItems, isLoading, refetchItems, error } = useElements();
+  return { 
+    items, 
+    saladItems, 
+    fruitItems, 
+    loading: isLoading, 
+    refetch: refetchItems,
+    error
+  };
 };
 
 export const useElementsMeals = () => {
-  const { meals, featuredMeals, offersMeals, signatureSalads, mealsLoading, refetchMeals } = useElements();
-  return { 
+  const { 
     meals, 
+    availableMeals, 
     featuredMeals, 
-    offersMeals, 
-    signatureSalads, 
-    loading: mealsLoading, 
-    refetch: refetchMeals 
+    mealSections, 
+    isLoading, 
+    refetchMeals,
+    error
+  } = useElements();
+  return { 
+    meals,
+    availableMeals,
+    featuredMeals, 
+    mealSections,
+    loading: isLoading, 
+    refetch: refetchMeals,
+    error
   };
 };
 
 export const useElementsPlans = () => {
-  const { plans, plansLoading, refetchPlans } = useElements();
-  return { plans, loading: plansLoading, refetch: refetchPlans };
+  const { plans, availablePlans, isLoading, refetchPlans } = useElements();
+  return { 
+    plans, 
+    availablePlans, 
+    loading: isLoading, 
+    refetch: refetchPlans 
+  };
 };
