@@ -3,25 +3,44 @@ import { supabase } from '../../supabaseClient';
 
 const ChosenPlanContext = createContext();
 
-// Date calculation utilities
+// FIXED: Date calculation utilities
 const calculateDeliveryDate = (startDate, mealIndex) => {
   const date = new Date(startDate);
-  let validDays = 0;
   
+  // FIXED: Check if start date is a valid delivery day (not Friday or Saturday)
   const startDayOfWeek = date.getDay();
-  if (startDayOfWeek !== 5 && startDayOfWeek !== 6) {
-    validDays = 1;
+  const isStartDateValid = startDayOfWeek !== 5 && startDayOfWeek !== 6;
+  
+  // If start date is valid and we want the first meal
+  if (isStartDateValid && mealIndex === 0) {
+    return new Date(date); // Return start date for first meal
   }
   
-  while (validDays <= mealIndex) {
+  // If start date is not valid, move to next valid day first
+  if (!isStartDateValid) {
+    while (date.getDay() === 5 || date.getDay() === 6) {
+      date.setDate(date.getDate() + 1);
+    }
+    // If we want the first meal and start date was invalid
+    if (mealIndex === 0) {
+      return new Date(date);
+    }
+  }
+  
+  // Count valid days until we reach the desired meal index
+  let currentMealIndex = 0; // We've already handled meal 0 above
+  
+  while (currentMealIndex < mealIndex) {
     date.setDate(date.getDate() + 1);
     const dayOfWeek = date.getDay();
     
+    // Skip Fridays (5) and Saturdays (6)
     if (dayOfWeek !== 5 && dayOfWeek !== 6) {
-      validDays++;
+      currentMealIndex++;
     }
   }
-  return date;
+  
+  return new Date(date);
 };
 
 const calculateSubscriptionEndDate = (startDate, totalMeals) => {
@@ -29,6 +48,27 @@ const calculateSubscriptionEndDate = (startDate, totalMeals) => {
   
   const endDate = calculateDeliveryDate(startDate, totalMeals - 1);
   return endDate.toISOString().split('T')[0];
+};
+
+// NEW: Helper function to generate delivery schedule
+const generateDeliverySchedule = (startDate, totalMeals) => {
+  if (!startDate || !totalMeals) return [];
+  
+  const schedule = [];
+  for (let i = 0; i < totalMeals; i++) {
+    const deliveryDate = calculateDeliveryDate(startDate, i);
+    schedule.push({
+      mealIndex: i,
+      date: deliveryDate.toISOString().split('T')[0],
+      dayName: deliveryDate.toLocaleDateString('en-US', { weekday: 'long' }),
+      formattedDate: deliveryDate.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+      })
+    });
+  }
+  return schedule;
 };
 
 export const ChosenPlanProvider = ({ children }) => {
@@ -73,31 +113,32 @@ export const ChosenPlanProvider = ({ children }) => {
 
     const startDate = currentData.start_date || new Date().toISOString().split('T')[0];
     const endDate = calculateSubscriptionEndDate(startDate, totalMeals);
-    const deliveryDays = [];
-    for (let i = 0; i < totalMeals; i++) {
-      const deliveryDate = calculateDeliveryDate(startDate, i);
-      deliveryDays.push(deliveryDate.toISOString().split('T')[0]);
-    }
+    
+    // IMPROVED: Generate complete delivery schedule
+    const deliverySchedule = generateDeliverySchedule(startDate, totalMeals);
+    const deliveryDays = deliverySchedule.map(day => day.date);
+
     return {
       plan_id: plan.id,
       total_meals: totalMeals,
       price_per_meal: pricePerMeal,
       start_date: startDate,
       end_date: endDate,
-      delivery_days: deliveryDays
+      delivery_days: deliveryDays,
+      delivery_schedule: deliverySchedule // NEW: Full schedule with formatted dates
     };
   }, []);
   
   // Fetch additives function
   const fetchPlanAdditives = useCallback(async (additiveIds) => {
     if (!additiveIds || additiveIds.length === 0) return [];
-    
+    console.log(`Additives from chosenPlanContext: ${additiveIds}`);
     try {
       const { data } = await supabase
         .from('items')
         .select('*')
         .in('id', additiveIds)
-        .eq('is_additive', true);
+        .eq('is_available', true);
       
       return data || [];
     } catch (error) {
@@ -128,32 +169,30 @@ export const ChosenPlanProvider = ({ children }) => {
         }
       }
       
-      // Recalculate end date if needed
-      if ((updates.start_date || updates.total_meals) && merged.total_meals) {
+      // IMPROVED: Recalculate delivery schedule if dates or meals change
+      if ((updates.start_date || updates.total_meals) && merged.total_meals && merged.start_date) {
         const newEndDate = calculateSubscriptionEndDate(merged.start_date, merged.total_meals);
-        if (newEndDate) {
-          merged.end_date = newEndDate;
-        }
+        const deliverySchedule = generateDeliverySchedule(merged.start_date, merged.total_meals);
+        const deliveryDays = deliverySchedule.map(day => day.date);
+        
+        merged.end_date = newEndDate;
+        merged.delivery_days = deliveryDays;
+        merged.delivery_schedule = deliverySchedule;
       }
-      const deliveryDays = [];
-      for (let i = 0; i < merged.total_meals; i++) {
-        const deliveryDate = calculateDeliveryDate(merged.start_date, i);
-        deliveryDays.push(deliveryDate.toISOString().split('T')[0]);
-      }
-      merged.delivery_days = deliveryDays;
+      
       return merged;
     });
   }, [calculateDerivedValues]);
 
   // Set selected plan with additives fetch
   const setSelectedPlan = useCallback(async (plan) => {
-  const newAdditives = plan?.additives?.length 
-    ? await fetchPlanAdditives(plan.additives)
-    : [];
+    const newAdditives = plan?.additives?.length 
+      ? await fetchPlanAdditives(plan.additives)
+      : [];
 
-  updateSubscriptionData({ 
-    plan,
-    additives: [...subscriptionData.additives, ...newAdditives],
+    updateSubscriptionData({ 
+      plan,
+      additives: [...subscriptionData.additives, ...newAdditives],
       ...((!subscriptionData.selected_term && plan?.medium_term_meals > 0) && { 
         selected_term: 'medium' 
       })
@@ -263,7 +302,7 @@ export const ChosenPlanProvider = ({ children }) => {
 
   // Get API payload
   const getSubscriptionPayload = useCallback((userId) => {
-    const { selected_term, plan, ...apiData } = subscriptionData;
+    const { selected_term, plan, delivery_schedule, ...apiData } = subscriptionData;
     return {
       user_id: userId,
       ...apiData,
@@ -307,21 +346,50 @@ export const ChosenPlanProvider = ({ children }) => {
     });
   }, []);
 
-  // Get delivery schedule
+  // IMPROVED: Get delivery schedule with meal mapping
   const getDeliverySchedule = useCallback(() => {
     if (!subscriptionData.start_date || !subscriptionData.total_meals) return [];
     
-    const schedule = [];
-    for (let i = 0; i < subscriptionData.total_meals; i++) {
-      const deliveryDate = calculateDeliveryDate(subscriptionData.start_date, i);
-      schedule.push({
-        mealIndex: i + 1,
-        date: deliveryDate.toISOString().split('T')[0],
-        dayName: deliveryDate.toLocaleDateString('en-US', { weekday: 'long' })
-      });
+    return subscriptionData.delivery_schedule || generateDeliverySchedule(
+      subscriptionData.start_date, 
+      subscriptionData.total_meals
+    );
+  }, [subscriptionData.start_date, subscriptionData.total_meals, subscriptionData.delivery_schedule]);
+
+  // NEW: Get delivery schedule with meal assignments
+  const getDeliveryScheduleWithMeals = useCallback((meals = []) => {
+    const schedule = getDeliverySchedule();
+    return schedule.map((day, index) => ({
+      ...day,
+      meal: meals[index] || null,
+      hasMeal: !!meals[index]
+    }));
+  }, [getDeliverySchedule]);
+
+  // NEW: Get next delivery date
+  const getNextDeliveryDate = useCallback(() => {
+    const schedule = getDeliverySchedule();
+    const today = new Date().toISOString().split('T')[0];
+    
+    return schedule.find(day => day.date >= today)?.date || null;
+  }, [getDeliverySchedule]);
+
+  // NEW: Check if delivery falls on weekend (should not happen with fixed logic)
+  const validateDeliverySchedule = useCallback(() => {
+    const schedule = getDeliverySchedule();
+    const weekendDeliveries = schedule.filter(day => {
+      const date = new Date(day.date);
+      const dayOfWeek = date.getDay();
+      return dayOfWeek === 5 || dayOfWeek === 6; // Friday or Saturday
+    });
+    
+    if (weekendDeliveries.length > 0) {
+      console.warn('Weekend deliveries detected:', weekendDeliveries);
+      return false;
     }
-    return schedule;
-  }, [subscriptionData.start_date, subscriptionData.total_meals]);
+    
+    return true;
+  }, [getDeliverySchedule]);
 
   // Context value
   const contextValue = {
@@ -348,9 +416,14 @@ export const ChosenPlanProvider = ({ children }) => {
     initializeFromSubscription,
     resetSubscriptionData,
     getDeliverySchedule,
+    getDeliveryScheduleWithMeals, // NEW
+    getNextDeliveryDate, // NEW
+    validateDeliverySchedule, // NEW
     chosenPlan: subscriptionData.plan,
     selectedTerm: subscriptionData.selected_term,
     subscriptionStatus: subscriptionData.status,
+    // NEW: Direct access to delivery schedule
+    deliverySchedule: subscriptionData.delivery_schedule || [],
   };
 
   return (

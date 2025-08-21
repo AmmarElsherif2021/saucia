@@ -20,8 +20,17 @@ import {
   Image,
   useDisclosure,
   useBreakpointValue,
+  Container,
+  Card,
+  CardBody,
+  Icon,
+  InputGroup,
+  InputLeftElement,
+  Skeleton,
+  SkeletonText,
+  useColorModeValue,
+  useTheme,
 } from '@chakra-ui/react'
-//import MapModal from './MapModal'
 import { useTranslation } from 'react-i18next'
 import { useI18nContext } from '../../Contexts/I18nContext'
 import { useNavigate } from 'react-router-dom'
@@ -44,6 +53,7 @@ import { useChosenPlanContext } from '../../Contexts/ChosenPlanContext'
 
 //Map
 const MapModal = lazy(() => import('./MapModal'));
+
 // Date calculation utilities - moved outside component for better performance
 const calculateDeliveryDate = (startDate, mealIndex) => {
   const date = new Date(startDate);
@@ -61,73 +71,131 @@ const calculateDeliveryDate = (startDate, mealIndex) => {
     
     // Skip Fridays (5) and Saturdays (6)
     if (dayOfWeek !== 5 && dayOfWeek !== 6) {
-      ////console.log(`Day calculated ${dayOfWeek}`)
       validDays++;
     }
   }
   return date;
 }
 
-// Memoized Section Component
-const Section = ({ title, children, bgColor, titleColor, icon }) => {
+// Enhanced Section Component with clean outlined design
+const Section = ({ title, children, bgColor = 'brand', titleColor, icon, isLoading = false }) => {
   const { colorMode } = useColorMode()
-  const padding = useBreakpointValue({ base: 3, md: 6 })
-  const borderRadius = useBreakpointValue({ base: '25px', md: '45px' })
+  const theme = useTheme()
+  const padding = useBreakpointValue({ base: 4, md: 5 })
+  const borderRadius = useBreakpointValue({ base: 'lg', md: 'xl' })
+
+  // Method 1: Use useColorModeValue for proper color resolution (Recommended)
+  const cardBg = useColorModeValue(`${bgColor}.200`, 'gray.700')
+  const cardBorder = useColorModeValue(`${bgColor}.400`, 'gray.600')
+  const iconBg = useColorModeValue(`${bgColor}.100`, 'gray.600')
+  const iconBorder = useColorModeValue(`${bgColor}.200`, 'gray.500')
+  const headingColor = titleColor || useColorModeValue(`${bgColor}.700`, 'white')
+
+  // Method 2: Alternative using theme object (for more control)
+  const getColor = (colorKey, shade) => {
+    try {
+      return theme.colors[colorKey]?.[shade] || `${colorKey}.${shade}`
+    } catch (e) {
+      return `${colorKey}.${shade}`
+    }
+  }
+
+  // Method 3: Manual color resolution function
+  const resolveColor = (colorString) => {
+    const [colorName, shade] = colorString.split('.')
+    return theme.colors[colorName]?.[shade] || colorString
+  }
+  
+  if (isLoading) {
+    return (
+      <Card 
+        h="400px"
+        borderRadius={borderRadius}
+        overflow="hidden"
+        position="relative"
+        bg={useColorModeValue(`${bgColor}.100`, 'gray.700')}
+        border="2px solid"
+        borderColor={useColorModeValue(`${bgColor}.200`, 'gray.600')}
+        boxShadow="none"
+      >
+        <CardBody p={padding}>
+          <Skeleton height="40px" mb={4} borderRadius="md" />
+          <SkeletonText noOfLines={6} spacing="4" skeletonHeight="16px" />
+        </CardBody>
+      </Card>
+    )
+  }
 
   return (
-    <Box
-      bg={colorMode === 'dark' ? 'gray.700' : `${bgColor}.300`}
-      borderWidth="3px"
-      borderColor={colorMode === 'dark' ? 'gray.600' : `${bgColor}.500`}
+    <Card
       position="relative"
       overflow="hidden"
-      height="100%"
+      height="fit-content"
+      minHeight={{ base: '300px', md: '400px' }}
       borderRadius={borderRadius}
-      p={padding}
-      minHeight={{ base: 'auto', md: '85vh' }}
-      my={{ base: 4, md: 20 }}
+      bg={cardBg}
+      boxShadow="none"
+      border="2px solid"
+      borderColor={cardBorder}
+      transition="all 0.2s ease"
     >
-      <Box position="relative" zIndex="1">
-        <Flex align="center" mb={5}>
+      <CardBody p={padding}>
+        <Flex align="center" mb={5} gap={3}>
           {icon && (
-            <Box
-              as="img"
-              src={icon}
-              alt={`${title} icon`}
-              boxSize={{ base: "32px", md: "48px" }}
-              mx={2}
-              borderRadius="50%"
-              p={1}
-              bg="whiteAlpha.900"
-            />
+            <Flex
+              align="center"
+              justify="center"
+              boxSize={{ base: "36px", md: "40px" }}
+              borderRadius="10px"
+              bg={iconBg}
+              border="1px solid"
+              borderColor={iconBorder}
+            >
+              <Image
+                src={icon}
+                alt={`${title} icon`}
+                boxSize={{ base: "18px", md: "20px" }}
+              />
+            </Flex>
           )}
           <Heading 
-            size={{ base: "sm", md: "md" }} 
-            color={titleColor || 'brand.900'}
+            size={{ base: "md", md: "lg" }} 
+            color={headingColor}
+            fontWeight="600"
           >
             {title}
           </Heading>
         </Flex>
         {children}
-      </Box>
-    </Box>
+      </CardBody>
+    </Card>
   )
 }
-
-// Memoized Payment Method Inputs Component
+// Enhanced Payment Method Inputs Component with clean styling
 const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
   const inputProps = useMemo(() => ({
-    variant: "ghost",
-    bg: colorMode === 'dark' ? 'gray.800' : 'brand.200',
-    focusBorderColor: "brand.500"
+    variant: "outline",
+    bg: colorMode === 'dark' ? 'gray.700' : 'white',
+    borderWidth: "2px",
+    borderColor: colorMode === 'dark' ? 'gray.500' : 'brand.300',
+    focusBorderColor: "brand.500",
+    _hover: {
+      borderColor: colorMode === 'dark' ? 'gray.400' : 'brand.400'
+    },
+    _focus: {
+      bg: 'transparent',
+      borderColor: 'brand.500',
+    }
   }), [colorMode]);
 
   switch (paymentMethod) {
     case 'credit-card':
       return (
-        <Stack spacing={3} maxW={{ base: "100%", md: "90%" }}>
+        <Stack spacing={4} maxW={{ base: "100%", md: "90%" }}>
           <FormControl>
-            <FormLabel fontSize={{ base: "xs", md: "sm" }}>{t('checkout.cardNumber')}</FormLabel>
+            <FormLabel fontSize={{ base: "sm", md: "md" }} fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>
+              {t('checkout.cardNumber')}
+            </FormLabel>
             <Input
               placeholder={t('checkout.cardNumberPlaceholder')}
               maxLength={19}
@@ -137,7 +205,9 @@ const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
 
           <Flex gap={4} direction={{ base: 'column', sm: 'row' }}>
             <FormControl>
-              <FormLabel fontSize={{ base: "xs", md: "sm" }}>{t('checkout.expiryDate')}</FormLabel>
+              <FormLabel fontSize={{ base: "sm", md: "md" }} fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>
+                {t('checkout.expiryDate')}
+              </FormLabel>
               <Input
                 placeholder={t('checkout.expiryDatePlaceholder')}
                 maxLength={5}
@@ -146,7 +216,9 @@ const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
             </FormControl>
 
             <FormControl>
-              <FormLabel fontSize={{ base: "xs", md: "sm" }}>CVV</FormLabel>
+              <FormLabel fontSize={{ base: "sm", md: "md" }} fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>
+                CVV
+              </FormLabel>
               <Input 
                 placeholder="123" 
                 maxLength={3} 
@@ -157,29 +229,53 @@ const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
           </Flex>
 
           <FormControl>
-            <FormLabel fontSize={{ base: "xs", md: "sm" }}>{t('checkout.nameOnCard')}</FormLabel>
+            <FormLabel fontSize={{ base: "sm", md: "md" }} fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'brand.700'}>
+              {t('checkout.nameOnCard')}
+            </FormLabel>
             <Input 
               placeholder={t('checkout.cardholderNamePlaceholder')}
               {...inputProps}
             />
           </FormControl>
 
-          <Checkbox colorScheme="brand" mt={2} fontSize={{ base: "sm", md: "md" }}>
-            {t('checkout.saveThisCardForFuturePayments')}
-          </Checkbox>
+          <Box
+            p={3}
+            borderRadius="md"
+            bg={colorMode === 'dark' ? 'gray.600' : 'gray.50'}
+            border="1px solid"
+            borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.200'}
+          >
+            <Checkbox colorScheme="brand" fontSize={{ base: "sm", md: "md" }}>
+              {t('checkout.saveThisCardForFuturePayments')}
+            </Checkbox>
+          </Box>
         </Stack>
       )
 
     case 'paypal':
       return (
         <VStack spacing={4} align="stretch" maxW={{ base: "100%", md: "90%" }}>
-          <Alert status="info" borderRadius="md">
-            <AlertIcon />
-            <Text fontSize={{ base: "sm", md: "md" }}>
+          <Alert 
+            status="info" 
+            borderRadius="md" 
+            bg="blue.50" 
+            borderColor="blue.200"
+            borderWidth="1px"
+            variant="subtle"
+          >
+            <AlertIcon color="blue.500" />
+            <Text fontSize={{ base: "sm", md: "md" }} color="blue.700">
               {t('checkout.paypalRedirectMessage')}
             </Text>
           </Alert>
-          <Button colorScheme="brand" leftIcon={<Text>PayPal</Text>} width="full">
+          <Button 
+            colorScheme="blue" 
+            leftIcon={<Text fontWeight="bold">PayPal</Text>} 
+            width="full"
+            size="md"
+            borderRadius="md"
+            variant="outline"
+          >
             {t('checkout.continueWithPayPal')}
           </Button>
         </VStack>
@@ -192,7 +288,14 @@ const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
       
       return (
         <VStack spacing={4} align="stretch" maxW={{ base: "100%", md: "90%" }}>
-          <Alert status="info" borderRadius="md">
+          <Alert 
+            status="info" 
+            borderRadius="md"
+            bg={colorMode === 'dark' ? 'gray.600' : 'gray.50'}
+            borderColor={colorMode === 'dark' ? 'gray.500' : 'gray.200'}
+            borderWidth="1px"
+            variant="subtle"
+          >
             <AlertIcon />
             <Text fontSize={{ base: "sm", md: "md" }}>
               {t('checkout.completePaymentWith', { method: methodName })}
@@ -201,7 +304,9 @@ const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
           <Button 
             colorScheme={isApplePay ? 'blackAlpha' : 'brand'} 
             width="full"
-            size={{ base: "md", md: "lg" }}
+            size="md"
+            borderRadius="md"
+            variant="outline"
           >
             {t('checkout.payWith', { method: methodName })}
           </Button>
@@ -235,9 +340,7 @@ const CheckoutPlan = () => {
   // Responsive breakpoint hooks
   const gridColumns = useBreakpointValue({ 
     base: 1, 
-    sm: 1, 
-    md: 2, 
-    lg: 3,
+    lg: 2,
     xl: 3 
   })
   const { currentLanguage } = useI18nContext()
@@ -326,11 +429,19 @@ const CheckoutPlan = () => {
 
   // Memoized form input props
   const inputProps = useMemo(() => ({
-    variant: "ghost",
-    bg: colorMode === 'dark' ? 'gray.800' : 'brand.200',
+    variant: "outline",
+    bg: colorMode === 'dark' ? 'gray.700' : 'white',
+    borderWidth: "2px",
+    borderColor: colorMode === 'dark' ? 'gray.500' : 'gray.300',
     focusBorderColor: "brand.500",
-    maxW: { base: '100%', md: '85%' },
-    size: { base: 'sm', md: 'md' }
+    size: { base: 'md', md: 'md' },
+    _hover: {
+      borderColor: colorMode === 'dark' ? 'gray.400' : 'brand.400'
+    },
+    _focus: {
+      bg: 'transparent',
+      borderColor: 'brand.500',
+    }
   }), [colorMode]);
 
   // Event handlers with useCallback for optimization
@@ -449,164 +560,233 @@ const CheckoutPlan = () => {
   // Early return after all hooks have been called
   if (!subscriptionData) {
     return (
-      <Box p={4} textAlign="center">
-        <Text>Loading subscription data...</Text>
+      <Box
+        minHeight="100vh"
+        bg={colorMode === 'dark' ? 'gray.800' : 'none'}
+        p={4}
+      >
+        <Container maxW="7xl" py={8}>
+          <SimpleGrid columns={gridColumns} spacing={6}>
+            <Section isLoading />
+            <Section isLoading />
+            <Section isLoading />
+          </SimpleGrid>
+        </Container>
       </Box>
     );
   }
 
   return (
     <Box
-      p={{ base: 2, sm: 3, md: 4, lg: 6 }}
-      bg={colorMode === 'dark' ? 'gray.800' : 'gray.50'}
       minHeight="100vh"
+      bg={colorMode === 'dark' ? 'gray.800' : 'none'}
     >
-      <SimpleGrid
-        columns={gridColumns} 
-        spacing={{ base: 3, md: 4 }}
-        gap={{ base: 4, md: 6 }}
-      >
-        {/* Billing Information */}
-        <Section title={t('checkout.billingInformation')} bgColor="teal" icon={saladIcon}>
-          <Stack spacing={{ base: 3, md: 4 }}>
-            <FormControl isRequired>
-              <FormLabel fontSize={{ base: 'xs', sm: 'sm' }}>{t('checkout.fullName')}</FormLabel>
-              <Input
-                placeholder={t('checkout.enterYourFullName')}
-                value={billingInfo.fullName}
-                onChange={(e) => handleBillingInfoChange('fullName', e.target.value)}
-                {...inputProps}
-              />
-            </FormControl>
-
-            <FormControl isRequired>
-              <FormLabel fontSize={{ base: 'xs', sm: 'sm' }}>{t('checkout.emailAddress')}</FormLabel>
-              <Input
-                type="email"
-                placeholder={t('checkout.yourEmailAddress')}
-                value={billingInfo.email}
-                onChange={(e) => handleBillingInfoChange('email', e.target.value)}
-                {...inputProps}
-              />
-            </FormControl>
-
-            <FormControl>
-              <FormLabel fontSize={{ base: 'xs', sm: 'sm' }}>{t('checkout.phoneNumber')}</FormLabel>
-              <Input
-                placeholder={t('checkout.yourPhoneNumber')}
-                value={billingInfo.phoneNumber}
-                onChange={(e) => handleBillingInfoChange('phoneNumber', e.target.value)}
-                {...inputProps}
-              />
-            </FormControl>
-
-            <FormControl isRequired>
-              <FormLabel fontSize={{ base: 'xs', sm: 'sm' }}>{t('checkout.deliveryAddress')}</FormLabel>
-              <Flex 
-                alignItems="center" 
-                flexDirection={{ base: 'column', sm: 'row' }}
-                gap={2}
-                width="100%"
-              >
-                <Input
-                  placeholder={t('checkout.enterDeliveryAddress')}
-                  variant="outlined"
-                  bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
-                  focusBorderColor="brand.500"
-                  flex="1"
-                  size={{ base: 'sm', md: 'md' }}
-                  value={billingInfo.deliveryAddress}
-                  onChange={handleAddressInputChange}
-                />
-                <Button 
-                  onClick={onOpenMap}
-                  size={{ base: 'sm', md: 'md' }}
-                  minW={{ base: 'auto', sm: '60px' }}
-                  p={{ base: 2, md: 3 }}
-                >
-                  <Image src={locationPin} alt="Location Pin" boxSize={{ base: "20px", md: "30px" }} />
-                </Button>
-              </Flex>
-              
-              <Suspense fallback={<div>Loading...</div>}>
-                      <MapModal
-                      isOpen={isMapOpen}
-                      onClose={onCloseMap}
-                      onSelectLocation={handleSelectLocation}
-                    />
-              </Suspense>
-            </FormControl>
-
-            <Checkbox 
-              colorScheme="brand" 
-              mt={2}
-              fontSize={{ base: "sm", md: "md" }}
-            >
-              {t('checkout.sendMePlanUpdatesAndNotifications')}
-            </Checkbox>
-          </Stack>
-        </Section>
-
-        {/* Payment Details */}
-        <Section title={t('checkout.paymentDetails')} bgColor="secondary" icon={paymentIcon}>
-          <FormControl mb={4}>
-            <FormLabel fontSize={{ base: 'xs', sm: 'sm' }}>{t('checkout.paymentMethod')}</FormLabel>
-            <Select
-              placeholder={t('checkout.selectPaymentMethod')}
-              focusBorderColor="secondary.500"
-              bg={colorMode === 'dark' ? 'gray.800' : 'secondary.100'}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-              value={paymentMethod}
-              size={{ base: 'sm', md: 'md' }}
-            >
-              <option value="credit-card">Credit Card</option>
-              <option value="paypal">PayPal</option>
-              <option value="apple-pay">Apple Pay</option>
-              <option value="google-pay">Google Pay</option>
-            </Select>
-          </FormControl>
-
-          <PaymentMethodInputs paymentMethod={paymentMethod} t={t} colorMode={colorMode} />
-        </Section>
-
-        {/* Subscription Summary */}
-        <Section title={t('checkout.subscriptionSummary')} bgColor="brand" icon={orderIcon}>
-          <SubscriptionSummary />
-          <Button
-            colorScheme="brand"
-            size={{ base: 'sm', md: 'md' }}
-            width="full"
-            onClick={handleOpenConfirmation}
-            isLoading={isSubmitting}
-            loadingText={t('checkout.processing')}
-            isDisabled={!userAddresses || !isSubscriptionValid}
-            mt={4}
+      <Container maxW="7xl" py={{ base: 4, md: 8 }}>
+        <VStack spacing={6} mb={8}>
+          <Heading
+            size="xl"
+            textAlign="center"
+            color={colorMode === 'dark' ? 'white' : 'brand.700'}
+            fontWeight="600"
           >
-            {t('checkout.completeSubscription')}
-          </Button>
-        </Section>
-      </SimpleGrid>
+            {t('checkout.completeYourOrder') || 'Complete Your Order'}
+          </Heading>
+          <Text
+            fontSize="md"
+            color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}
+            textAlign="center"
+            maxW="2xl"
+          >
+            {t('checkout.reviewAndConfirm') || 'Review your subscription details and complete your order'}
+          </Text>
+        </VStack>
 
-      {/* ConfirmPlanModal */}
-      {isConfirmationOpen && (
-        <ConfirmPlanModal
-          isOpen={isConfirmationOpen}
-          onClose={onCloseConfirmation}
-          selectedMeals={selectedMealObjects}  
-          handleAddSignatureSalad={handleAddSignatureSalad} 
-          handleRemoveMeal={handleRemoveMeal}
-          handleConfirmSubscription={handleConfirmSubscription}
-          userPlan={userAddresses}
-          signatureSalads={signatureSalads}
-          startDate={startDate}
-          formattedEndDate={formattedEndDate}
-          isSubmitting={isSubmitting}
-          t={t}
-          MealPlanCard={MealPlanCard}
-          today={today}
-          calculateDeliveryDate={calculateDeliveryDate}
-        />
-      )}
+        <SimpleGrid
+          columns={gridColumns} 
+          spacing={6}
+          gap={6}
+        >
+          {/* Billing Information */}
+          <Section title={t('checkout.billingInformation')} bgColor="teal" icon={saladIcon}>
+            <Stack spacing={4}>
+              <FormControl isRequired>
+                <FormLabel fontSize="sm" fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'brand.700'}>
+                  {t('checkout.fullName')}
+                </FormLabel>
+                <Input
+                  borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.300'}
+                  placeholder={t('checkout.enterYourFullName')}
+                  value={billingInfo.fullName}
+                  onChange={(e) => handleBillingInfoChange('fullName', e.target.value)}
+                  {...inputProps}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel fontSize="sm" fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'brand.700'}>
+                  {t('checkout.emailAddress')}
+                </FormLabel>
+                <Input
+                  type="email"
+                  placeholder={t('checkout.yourEmailAddress')}
+                  value={billingInfo.email}
+                  onChange={(e) => handleBillingInfoChange('email', e.target.value)}
+                  borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.300'}
+                  {...inputProps}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel fontSize="sm" fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'brand.700'}>
+                  {t('checkout.phoneNumber')}
+                </FormLabel>
+                <Input
+                  placeholder={t('checkout.yourPhoneNumber')}
+                  value={billingInfo.phoneNumber}
+                  onChange={(e) => handleBillingInfoChange('phoneNumber', e.target.value)}
+                  borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.300'}
+                  {...inputProps}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel fontSize="sm" fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'brand.700'}>
+                  {t('checkout.deliveryAddress')}
+                </FormLabel>
+                <Flex 
+                  alignItems="stretch" 
+                  gap={3}
+                  width="100%"
+                >
+                  <Input
+                    placeholder={t('checkout.enterDeliveryAddress')}
+                    flex="1"
+                    value={billingInfo.deliveryAddress}
+                    onChange={handleAddressInputChange}
+                    borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.300'}
+                    {...inputProps}
+                  />
+                  <Button 
+                    onClick={onOpenMap}
+                    size="md"
+                    minW="50px"
+                    bg={colorMode === 'dark' ? 'gray.600' : 'gray.50'}
+                    border="2px solid"
+                    borderColor={colorMode === 'dark' ? 'gray.500' : 'gray.300'}
+                    _hover={{
+                      bg: colorMode === 'dark' ? 'gray.500' : 'gray.100'
+                    }}
+                  >
+                    <Image src={locationPin} alt="Location Pin" boxSize="20px" />
+                  </Button>
+                </Flex>
+                
+                <Suspense fallback={<div>Loading...</div>}>
+                  <MapModal
+                    isOpen={isMapOpen}
+                    onClose={onCloseMap}
+                    onSelectLocation={handleSelectLocation}
+                  />
+                </Suspense>
+              </FormControl>
+
+              <Box
+                p={3}
+                borderRadius="md"
+                bg={colorMode === 'dark' ? 'gray.600' : 'gray.50'}
+                border="1px solid"
+                borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.200'}
+              >
+                <Checkbox 
+                  colorScheme="brand" 
+                  fontSize="sm"
+                >
+                  {t('checkout.sendMePlanUpdatesAndNotifications')}
+                </Checkbox>
+              </Box>
+            </Stack>
+          </Section>
+
+          {/* Payment Details */}
+          <Section title={t('checkout.paymentDetails')} bgColor="secondary" icon={paymentIcon}>
+            <VStack spacing={5} align="stretch">
+              <FormControl>
+                <FormLabel fontSize="sm" fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>
+                  {t('checkout.paymentMethod')}
+                </FormLabel>
+                <Select
+                  placeholder={t('checkout.selectPaymentMethod')}
+                  focusBorderColor="secondary.500"
+                  bg={colorMode === 'dark' ? 'gray.700' : 'white'}
+                  borderWidth="2px"
+                  borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.300'}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  value={paymentMethod}
+                  size="md"
+                  _hover={{
+                    borderColor: colorMode === 'dark' ? 'gray.400' : 'brand.400'
+                  }}
+                >
+                  <option value="credit-card">Credit Card</option>
+                  <option value="paypal">PayPal</option>
+                  <option value="apple-pay">Apple Pay</option>
+                  <option value="google-pay">Google Pay</option>
+                </Select>
+              </FormControl>
+
+              <PaymentMethodInputs paymentMethod={paymentMethod} t={t} colorMode={colorMode} />
+            </VStack>
+          </Section>
+
+          {/* Subscription Summary */}
+          <Section title={t('checkout.subscriptionSummary')} bgColor="brand" icon={orderIcon}>
+            <SubscriptionSummary />
+            <Button
+              colorScheme="brand"
+              size="md"
+              width="full"
+              onClick={handleOpenConfirmation}
+              isLoading={isSubmitting}
+              loadingText={t('checkout.processing')}
+              isDisabled={!userAddresses || !isSubscriptionValid}
+              mt={5}
+              borderRadius="md"
+              fontWeight="500"
+              variant="solid"
+              _hover={{
+                transform: 'translateY(-1px)',
+              }}
+              _active={{
+                transform: 'translateY(0)'
+              }}
+              transition="all 0.2s"
+            >
+              {t('checkout.completeSubscription')}
+            </Button>
+          </Section>
+        </SimpleGrid>
+
+        {/* ConfirmPlanModal */}
+        {isConfirmationOpen && (
+          <ConfirmPlanModal
+            isOpen={isConfirmationOpen}
+            onClose={onCloseConfirmation}
+            selectedMeals={selectedMealObjects}  
+            handleAddSignatureSalad={handleAddSignatureSalad} 
+            handleRemoveMeal={handleRemoveMeal}
+            handleConfirmSubscription={handleConfirmSubscription}
+            userPlan={userAddresses}
+            signatureSalads={signatureSalads}
+            startDate={startDate}
+            formattedEndDate={formattedEndDate}
+            isSubmitting={isSubmitting}
+            t={t}
+            MealPlanCard={MealPlanCard}
+            today={today}
+            calculateDeliveryDate={calculateDeliveryDate}
+          />
+        )}
+      </Container>
     </Box>
   )
 }

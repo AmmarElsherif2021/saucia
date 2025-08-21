@@ -18,6 +18,8 @@ import {
   Skeleton,
   Alert,
   AlertIcon,
+  Card,
+  CardBody,
 } from '@chakra-ui/react'
 import { useAuthContext } from '../../../Contexts/AuthContext'
 import { 
@@ -30,6 +32,7 @@ import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useState } from 'react'
 import { useI18nContext } from '../../../Contexts/I18nContext'
+
 const CommonQuestions = ({ onComplete }) => {
   const {currentLanguage}=useI18nContext();
   const isArabic = currentLanguage === 'ar';
@@ -91,12 +94,6 @@ const CommonQuestions = ({ onComplete }) => {
 
    // Initialize form with user data
   useEffect(() => {
-    //console.log('Initializing form with user data...');
-    //console.log('User Profile:', userProfile);
-    //console.log('Health Profile:', healthProfile);
-    //console.log('User Dietary Preferences:', userDietaryPreferences);
-    //console.log('User Allergies:', userAllergies);
-    
     if (userProfile || healthProfile || userDietaryPreferences || userAllergies) {
       setFormData({
         age: userProfile?.age?.toString() || '',
@@ -145,7 +142,6 @@ const CommonQuestions = ({ onComplete }) => {
     e.preventDefault()
     setFormError(null)
     setIsSubmitting(true)
-    //console.log('Submitting form data:', formData);
 
     try {
       if (!user?.id) throw new Error('User not authenticated')
@@ -162,12 +158,6 @@ const CommonQuestions = ({ onComplete }) => {
         activity_level: formData.healthProfile.activityLevel,
         fitness_goal: formData.healthProfile.fitnessGoal
       }
-
-      //console.log('Preparing to update:');
-      //console.log('Profile Data:', profileData);
-      //console.log('Health Data:', healthData);
-      //console.log('Dietary Preferences:', formData.healthProfile.dietaryPreferences);
-      //console.log('Allergies:', formData.healthProfile.allergies);
 
       // Prepare bulk data for allergies and preferences
       const allergiesData = formData.healthProfile.allergies.map(allergyId => ({
@@ -186,8 +176,6 @@ const CommonQuestions = ({ onComplete }) => {
         bulkUpdateAllergies(allergiesData),
         bulkUpdatePreferences(preferencesData)
       ]);
-
-      //console.log('Profile updated successfully');
 
       toast({
         title: t('profile.profileUpdated'),
@@ -222,9 +210,10 @@ const CommonQuestions = ({ onComplete }) => {
                   allergiesError || preferencesError
 
   // Theme variables
-  const bgColor = { light: 'secondary.400', dark: 'gray.800' }
-  const borderColor = { light: 'brand.200', dark: 'gray.700' }
+  const bgColor = { light: 'white', dark: 'gray.800' }
+  const borderColor = { light: 'brand.300', dark: 'brand.500' }
   const inputBg = { light: 'white', dark: 'gray.700' }
+  const cardBg = { light: 'brand.100', dark: 'gray.700' }
 
   if (hasError) {
     return (
@@ -241,221 +230,232 @@ const CommonQuestions = ({ onComplete }) => {
   }
 
   return (
-    <Box
+    <Card 
       maxW="800px"
       mx="auto"
       mt={8}
       p={[4, 6]}
-      borderWidth="2px"
-      borderRadius="lg"
-      bg={bgColor[colorMode]}
+      variant="outlined"
+      bg={cardBg[colorMode]}
+      borderWidth={2}
       borderColor={borderColor[colorMode]}
     >
-      <form onSubmit={handleSubmit}>
-        <VStack spacing={5} align="stretch">
-          <Heading as="h2" size="lg" mb={4} color="brand.700">
-            {t('premium.healthProfile')}
-          </Heading>
+      <CardBody>
+        <form onSubmit={handleSubmit}>
+          <VStack spacing={6} align="stretch">
+            <Heading as="h2" size="lg" mb={2} color="brand.700" textAlign={isArabic ? "right" : "left"}>
+              {t('premium.healthProfile')}
+            </Heading>
 
-          {formError && (
-            <Alert status="error" borderRadius="md">
-              <AlertIcon />
-              {formError}
-            </Alert>
-          )}
+            {formError && (
+              <Alert status="error" borderRadius="md">
+                <AlertIcon />
+                {formError}
+              </Alert>
+            )}
 
-          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
-            {/* Age */}
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
+              {/* Age */}
+              <FormControl>
+                <FormLabel color="brand.800">{t('premium.age')}</FormLabel>
+                {isLoading ? (
+                  <Skeleton height="40px" borderRadius="md" />
+                ) : (
+                  <Input
+                    type="number"
+                    name="age"
+                    value={formData.age}
+                    onChange={handleChange}
+                    placeholder={t('premium.yourAge')}
+                    min="10"
+                    max="100"
+                    bg={inputBg[colorMode]}
+                    borderColor="brand.300"
+                    _focus={{ borderColor: 'brand.500', boxShadow: '0 0 0 1px var(--chakra-colors-brand-500)' }}
+                  />
+                )}
+              </FormControl>
+
+              {/* Gender */}
+              <FormControl>
+                <FormLabel color="brand.800">{t('premium.gender')}</FormLabel>
+                {isLoading ? (
+                  <Skeleton height="40px" borderRadius="md" />
+                ) : (
+                  <Select
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleChange}
+                    placeholder={t('premium.selectGender')}
+                    bg={inputBg[colorMode]}
+                    borderColor="brand.300"
+                    _focus={{ borderColor: 'brand.500', boxShadow: '0 0 0 1px var(--chakra-colors-brand-500)' }}
+                  >
+                    <option value="male">{t('premium.male')}</option>
+                    <option value="female">{t('premium.female')}</option>
+                    <option value="other">{t('premium.other')}</option>
+                    <option value="prefer-not-to-say">{t('premium.preferNotToSay')}</option>
+                  </Select>
+                )}
+              </FormControl>
+
+              {/* Height */}
+              <FormControl>
+                <FormLabel color="brand.800">{t('premium.heightCm')}</FormLabel>
+                {isLoading ? (
+                  <Skeleton height="40px" borderRadius="md" />
+                ) : (
+                  <Input
+                    type="number"
+                    name="height"
+                    value={formData.healthProfile.height}
+                    onChange={handleChange}
+                    placeholder={t('premium.yourHeight')}
+                    min="100"
+                    max="250"
+                    bg={inputBg[colorMode]}
+                    borderColor="brand.300"
+                    _focus={{ borderColor: 'brand.500', boxShadow: '0 0 0 1px var(--chakra-colors-brand-500)' }}
+                  />
+                )}
+              </FormControl>
+
+              {/* Weight */}
+              <FormControl>
+                <FormLabel color="brand.800">{t('premium.weightKg')}</FormLabel>
+                {isLoading ? (
+                  <Skeleton height="40px" borderRadius="md" />
+                ) : (
+                  <Input
+                    type="number"
+                    name="weight"
+                    value={formData.healthProfile.weight}
+                    onChange={handleChange}
+                    placeholder={t('premium.yourWeight')}
+                    min="30"
+                    max="200"
+                    bg={inputBg[colorMode]}
+                    borderColor="brand.300"
+                    _focus={{ borderColor: 'brand.500', boxShadow: '0 0 0 1px var(--chakra-colors-brand-500)' }}
+                  />
+                )}
+              </FormControl>
+            </SimpleGrid>
+
+            {/* Activity Level */}
             <FormControl>
-              <FormLabel>{t('premium.age')}</FormLabel>
+              <FormLabel color="brand.800">{t('premium.activityLevel')}</FormLabel>
               {isLoading ? (
-                <Skeleton height="40px" borderRadius="md" />
+                <Skeleton height="120px" borderRadius="md" />
               ) : (
-                <Input
-                  type="number"
-                  name="age"
-                  value={formData.age}
-                  onChange={handleChange}
-                  placeholder={t('premium.yourAge')}
-                  min="10"
-                  max="100"
-                  bg={inputBg[colorMode]}
-                />
+                <RadioGroup
+                  value={formData.healthProfile.activityLevel}
+                  onChange={value => handleChange({ target: { name: 'activityLevel', value } })}
+                >
+                  <Stack direction="column" spacing={3}>
+                    <Radio value="sedentary" colorScheme="brand">{t('premium.sedentary')}</Radio>
+                    <Radio value="lightly_active" colorScheme="brand">{t('premium.lightlyActive')}</Radio>
+                    <Radio value="moderately_active" colorScheme="brand">{t('premium.moderatelyActive')}</Radio>
+                    <Radio value="very_active" colorScheme="brand">{t('premium.veryActive')}</Radio>
+                    <Radio value="extremely_active" colorScheme="brand">{t('premium.extremelyActive')}</Radio>
+                  </Stack>
+                </RadioGroup>
               )}
             </FormControl>
 
-            {/* Gender */}
+            {/* Fitness Goal */}
             <FormControl>
-              <FormLabel>{t('premium.gender')}</FormLabel>
+              <FormLabel color="brand.800">{t('premium.fitnessGoal')}</FormLabel>
               {isLoading ? (
                 <Skeleton height="40px" borderRadius="md" />
               ) : (
                 <Select
-                  name="gender"
-                  value={formData.gender}
+                  name="fitnessGoal"
+                  value={formData.healthProfile.fitnessGoal}
                   onChange={handleChange}
-                  placeholder={t('premium.selectGender')}
+                  placeholder={t('premium.selectFitnessGoal')}
                   bg={inputBg[colorMode]}
+                  borderColor="brand.300"
+                  _focus={{ borderColor: 'brand.500', boxShadow: '0 0 0 1px var(--chakra-colors-brand-500)' }}
                 >
-                  <option value="male">{t('premium.male')}</option>
-                  <option value="female">{t('premium.female')}</option>
-                  <option value="other">{t('premium.other')}</option>
-                  <option value="prefer-not-to-say">{t('premium.preferNotToSay')}</option>
+                  <option value="weight-loss">{t('premium.weightLoss')}</option>
+                  <option value="weight-gain">{t('premium.weightGain')}</option>
+                  <option value="maintenance">{t('premium.maintenance')}</option>
+                  <option value="muscle-gain">{t('premium.muscleGain')}</option>
+                  <option value="improve-fitness">{t('premium.improveFitness')}</option>
                 </Select>
               )}
             </FormControl>
 
-            {/* Height */}
+            {/* Dietary Preferences */}
             <FormControl>
-              <FormLabel>{t('premium.heightCm')}</FormLabel>
-              {isLoading ? (
-                <Skeleton height="40px" borderRadius="md" />
+              <FormLabel color="brand.800">{t('premium.dietaryPreferences')}</FormLabel>
+              {isLoading || availablePreferences.length === 0 ? (
+                <Skeleton height="100px" borderRadius="md" />
               ) : (
-                <Input
-                  type="number"
-                  name="height"
-                  value={formData.healthProfile.height}
-                  onChange={handleChange}
-                  placeholder={t('premium.yourHeight')}
-                  min="100"
-                  max="250"
-                  bg={inputBg[colorMode]}
-                />
+                <Wrap spacing={3}>
+                  {availablePreferences.map(pref => (
+                    <WrapItem key={pref.id}>
+                      <Button
+                        size="sm"
+                        variant={
+                          formData.healthProfile.dietaryPreferences.includes(pref.id)
+                            ? 'solid' 
+                            : 'outline'
+                        }
+                        colorScheme="brand"
+                        onClick={() => toggleSelection('dietaryPreferences', pref.id)}
+                      >
+                        {isArabic?pref.name_arabic:pref.name}
+                      </Button>
+                    </WrapItem>
+                  ))}
+                </Wrap>
               )}
             </FormControl>
 
-            {/* Weight */}
+            {/* Allergies */}
             <FormControl>
-              <FormLabel>{t('premium.weightKg')}</FormLabel>
-              {isLoading ? (
-                <Skeleton height="40px" borderRadius="md" />
+              <FormLabel color="brand.800">{t('premium.allergies')}</FormLabel>
+              {isLoading || availableAllergies.length === 0 ? (
+                <Skeleton height="100px" borderRadius="md" />
               ) : (
-                <Input
-                  type="number"
-                  name="weight"
-                  value={formData.healthProfile.weight}
-                  onChange={handleChange}
-                  placeholder={t('premium.yourWeight')}
-                  min="30"
-                  max="200"
-                  bg={inputBg[colorMode]}
-                />
+                <Wrap spacing={3}>
+                  {availableAllergies.map(allergy => (
+                    <WrapItem key={allergy.id}>
+                      <Button
+                        size="sm"
+                        variant={
+                          formData.healthProfile.allergies.includes(allergy.id)
+                            ? 'solid' 
+                            : 'outline'
+                        }
+                        colorScheme="red"
+                        onClick={() => toggleSelection('allergies', allergy.id)}
+                      >
+                        {isArabic?allergy.name_arabic:allergy.name}
+                      </Button>
+                    </WrapItem>
+                  ))}
+                </Wrap>
               )}
             </FormControl>
-          </SimpleGrid>
 
-          {/* Activity Level */}
-          <FormControl>
-            <FormLabel>{t('premium.activityLevel')}</FormLabel>
-            {isLoading ? (
-              <Skeleton height="120px" borderRadius="md" />
-            ) : (
-              <RadioGroup
-                value={formData.healthProfile.activityLevel}
-                onChange={value => handleChange({ target: { name: 'activityLevel', value } })}
-              >
-                <Stack direction="column" spacing={3}>
-                  <Radio value="sedentary">{t('premium.sedentary')}</Radio>
-                  <Radio value="lightly_active">{t('premium.lightlyActive')}</Radio>
-                  <Radio value="moderately_active">{t('premium.moderatelyActive')}</Radio>
-                  <Radio value="very_active">{t('premium.veryActive')}</Radio>
-                  <Radio value="extremely_active">{t('premium.extremelyActive')}</Radio>
-                </Stack>
-              </RadioGroup>
-            )}
-          </FormControl>
-
-          {/* Fitness Goal */}
-          <FormControl>
-            <FormLabel>{t('premium.fitnessGoal')}</FormLabel>
-            {isLoading ? (
-              <Skeleton height="40px" borderRadius="md" />
-            ) : (
-              <Select
-                name="fitnessGoal"
-                value={formData.healthProfile.fitnessGoal}
-                onChange={handleChange}
-                placeholder={t('premium.selectFitnessGoal')}
-                bg={inputBg[colorMode]}
-              >
-                <option value="weight-loss">{t('premium.weightLoss')}</option>
-                <option value="weight-gain">{t('premium.weightGain')}</option>
-                <option value="maintenance">{t('premium.maintenance')}</option>
-                <option value="muscle-gain">{t('premium.muscleGain')}</option>
-                <option value="improve-fitness">{t('premium.improveFitness')}</option>
-              </Select>
-            )}
-          </FormControl>
-
-          {/* Dietary Preferences */}
-          <FormControl>
-            <FormLabel>{t('premium.dietaryPreferences')}</FormLabel>
-            {isLoading || availablePreferences.length === 0 ? (
-              <Skeleton height="100px" borderRadius="md" />
-            ) : (
-              <Wrap spacing={3}>
-                {availablePreferences.map(pref => (
-                  <WrapItem key={pref.id}>
-                    <Button
-                      size="sm"
-                      variant={
-                        formData.healthProfile.dietaryPreferences.includes(pref.id)
-                          ? 'solid' 
-                          : 'outline'
-                      }
-                      colorScheme="brand"
-                      onClick={() => toggleSelection('dietaryPreferences', pref.id)}
-                    >
-                      {isArabic?pref.name_arabic:pref.name}
-                    </Button>
-                  </WrapItem>
-                ))}
-              </Wrap>
-            )}
-          </FormControl>
-
-          {/* Allergies */}
-          <FormControl>
-            <FormLabel>{t('premium.allergies')}</FormLabel>
-            {isLoading || availableAllergies.length === 0 ? (
-              <Skeleton height="100px" borderRadius="md" />
-            ) : (
-              <Wrap spacing={3}>
-                {availableAllergies.map(allergy => (
-                  <WrapItem key={allergy.id}>
-                    <Button
-                      size="sm"
-                      variant={
-                        formData.healthProfile.allergies.includes(allergy.id)
-                          ? 'solid' 
-                          : 'outline'
-                      }
-                      colorScheme="red"
-                      onClick={() => toggleSelection('allergies', allergy.id)}
-                    >
-                      {isArabic?allergy.name_arabic:allergy.name}
-                    </Button>
-                  </WrapItem>
-                ))}
-              </Wrap>
-            )}
-          </FormControl>
-
-          <Button
-            type="submit"
-            colorScheme="brand"
-            size="lg"
-            mt={6}
-            isLoading={isSubmitting}
-            loadingText={t('premium.saving')}
-            isDisabled={isLoading}
-
-          >
-            {t('premium.saveHealthProfile')}
-          </Button>
-        </VStack>
-      </form>
-    </Box>
+            <Button
+              type="submit"
+              colorScheme="brand"
+              size="lg"
+              mt={4}
+              isLoading={isSubmitting}
+              loadingText={t('premium.saving')}
+              isDisabled={isLoading}
+            >
+              {t('premium.saveHealthProfile')}
+            </Button>
+          </VStack>
+        </form>
+      </CardBody>
+    </Card>
   )
 }
 

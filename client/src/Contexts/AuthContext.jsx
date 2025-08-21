@@ -1,3 +1,4 @@
+// Enhanced AuthContext.jsx - Better redirect handling
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../supabaseClient.jsx';
 import { userAPI } from '../API/userAPI.jsx';
@@ -7,34 +8,19 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   // Core auth state only (identity + session)
   const [user, setUser] = useState(null);
-  /* expected user example:
-  {id: 'e0...', 
-       email: 'a...@gmail.com', 
-       displayName: 'am...', 
-      avatarUrl: "https://l...",
-      profileCompleted: false
-      }
-  */
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [supabaseSession, setSupabaseSession] = useState(null);
   const [initialSessionProcessed, setInitialSessionProcessed] = useState(false);
   
-  // Enhanced redirect handling instead of simple isJoiningPremium
+  // Enhanced redirect handling with better persistence
   const [pendingRedirect, setPendingRedirect] = useState(null);
-  /* pendingRedirect structure:
-  {
-    path: '/premium/join',
-    planId: 'plan_123',
-    selectedTerm: 'medium',
-    timestamp: Date.now(),
-    reason: 'subscription_flow' // or 'profile_completion', etc.
-  }
-  */
 
   // Unified auth change handler
   const handleAuthChange = useCallback(async (event, session) => {
     console.groupCollapsed(`Auth Event: ${event}`);
+    console.log('Session:', session);
+    console.log('Pending redirect:', pendingRedirect);
     console.groupEnd();
     
     try {
@@ -51,8 +37,8 @@ export const AuthProvider = ({ children }) => {
           email: session.user.email,
           displayName: session.user.user_metadata?.full_name || '',
           avatarUrl: session.user.user_metadata?.avatar_url || '',
-          isAdmin: false, // Will be updated via profile query
-          profileCompleted: false, // Will be updated via profile query
+          isAdmin: false,
+          profileCompleted: session.user.user_metadata?.profile_completed ?? false,
         });
         
         setError(null);
@@ -63,14 +49,20 @@ export const AuthProvider = ({ children }) => {
       console.error('Error handling auth state change:', error);
       setError(error.message);
     }
-  }, [supabaseSession]);
+  }, [supabaseSession, pendingRedirect]);
  
   // Reset all auth state
   const resetAuthState = useCallback(() => {
     setSupabaseSession(null);
     setUser(null);
     setError(null);
-    setPendingRedirect(null); // Clear any pending redirects on logout
+    setPendingRedirect(null);
+    // Clear localStorage as well
+    try {
+      localStorage.removeItem('auth_pending_redirect');
+    } catch (e) {
+      console.warn('Could not clear redirect from localStorage:', e);
+    }
   }, []);
 
   // Initialize authentication state
@@ -115,6 +107,100 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe();
   }, [handleAuthChange, initialSessionProcessed]);
 
+  // Enhanced redirect management with validation
+  const setPendingRedirectAfterAuth = useCallback((redirectData) => {
+    if (!redirectData || typeof redirectData !== 'object') {
+      console.warn('Invalid redirect data provided:', redirectData);
+      return;
+    }
+
+    const redirect = {
+      path: redirectData.path || '/premium/join',
+      reason: redirectData.reason || 'subscription_flow',
+      timestamp: Date.now(),
+      ...redirectData
+    };
+    
+    console.log('Setting pending redirect:', redirect);
+    
+    // Store in both state and localStorage for persistence
+    setPendingRedirect(redirect);
+    try {
+      localStorage.setItem('auth_pending_redirect', JSON.stringify(redirect));
+    } catch (e) {
+      console.warn('Could not store redirect in localStorage:', e);
+    }
+  }, []);
+
+  const clearPendingRedirect = useCallback(() => {
+    console.log('Clearing pending redirect');
+    setPendingRedirect(null);
+    try {
+      localStorage.removeItem('auth_pending_redirect');
+    } catch (e) {
+      console.warn('Could not clear redirect from localStorage:', e);
+    }
+  }, []);
+
+  const consumePendingRedirect = useCallback(() => {
+    let redirect = pendingRedirect;
+    
+    // If no redirect in state, try localStorage
+    if (!redirect) {
+      try {
+        const storedRedirect = localStorage.getItem('auth_pending_redirect');
+        if (storedRedirect) {
+          redirect = JSON.parse(storedRedirect);
+        }
+      } catch (e) {
+        console.warn('Could not parse stored redirect:', e);
+        localStorage.removeItem('auth_pending_redirect');
+        return null;
+      }
+    }
+    
+    if (redirect) {
+      // Validate redirect is not too old (30 minutes)
+      const maxAge = 30 * 60 * 1000;
+      if (Date.now() - redirect.timestamp > maxAge) {
+        console.log('Redirect expired, clearing');
+        clearPendingRedirect();
+        return null;
+      }
+      
+      console.log('Consuming pending redirect:', redirect);
+      clearPendingRedirect();
+      return redirect;
+    }
+    
+    return null;
+  }, [pendingRedirect, clearPendingRedirect]);
+
+  // Initialize pending redirect from localStorage on mount
+  useEffect(() => {
+    try {
+      const storedRedirect = localStorage.getItem('auth_pending_redirect');
+      if (storedRedirect && !pendingRedirect) {
+        const redirect = JSON.parse(storedRedirect);
+        
+        // Check if redirect is not too old (1 minute)
+        const maxAge = 60 * 1000;
+        if (Date.now() - redirect.timestamp < maxAge) {
+          console.log('Restoring pending redirect from localStorage:', redirect);
+          //{path: '/premium/join', reason: 'subscription_flow', timestamp: 1755689404384, planId: 1, planTitle: 'Protein Salad Plan'}
+          setPendingRedirect(redirect);
+        } else {
+          // Clear expired redirect
+          console.log('Clearing expired redirect from localStorage');
+          localStorage.removeItem('auth_pending_redirect');
+        }
+      }
+    } catch (e) {
+      console.warn('Could not load redirect from localStorage:', e);
+      localStorage.removeItem('auth_pending_redirect');
+    }
+  }, []); // Empty dependency array - only run on mount
+
   // Profile completion - updates core user state
   const completeProfile = useCallback(async (profileData) => {
     try {
@@ -140,6 +226,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
       });
       if (error) throw error;
     } catch (error) {
@@ -154,62 +243,6 @@ export const AuthProvider = ({ children }) => {
       if (error) throw error;
     } catch (error) {
       setError(error.message);
-    }
-  }, []);
-
-  // Enhanced redirect management
-  const setPendingRedirectAfterAuth = useCallback((redirectData) => {
-    const redirect = {
-      ...redirectData,
-      timestamp: Date.now()
-    };
-    
-    // Store in both state and localStorage for persistence across page reloads
-    setPendingRedirect(redirect);
-    try {
-      localStorage.setItem('auth_pending_redirect', JSON.stringify(redirect));
-    } catch (e) {
-      console.warn('Could not store redirect in localStorage:', e);
-    }
-  }, []);
-
-  const clearPendingRedirect = useCallback(() => {
-    setPendingRedirect(null);
-    try {
-      localStorage.removeItem('auth_pending_redirect');
-    } catch (e) {
-      console.warn('Could not clear redirect from localStorage:', e);
-    }
-  }, []);
-
-  const consumePendingRedirect = useCallback(() => {
-    const redirect = pendingRedirect;
-    if (redirect) {
-      clearPendingRedirect();
-      return redirect;
-    }
-    return null;
-  }, [pendingRedirect, clearPendingRedirect]);
-
-  // Initialize pending redirect from localStorage on mount
-  useEffect(() => {
-    try {
-      const storedRedirect = localStorage.getItem('auth_pending_redirect');
-      if (storedRedirect) {
-        const redirect = JSON.parse(storedRedirect);
-        
-        // Check if redirect is not too old (e.g., 30 minutes)
-        const maxAge = 30 * 60 * 1000; // 30 minutes
-        if (Date.now() - redirect.timestamp < maxAge) {
-          setPendingRedirect(redirect);
-        } else {
-          // Clear expired redirect
-          localStorage.removeItem('auth_pending_redirect');
-        }
-      }
-    } catch (e) {
-      console.warn('Could not load redirect from localStorage:', e);
-      localStorage.removeItem('auth_pending_redirect');
     }
   }, []);
 

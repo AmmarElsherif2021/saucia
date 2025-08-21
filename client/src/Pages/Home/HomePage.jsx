@@ -10,7 +10,8 @@ import { ScrollingBadgesTrail } from '../../Components/Navbar/ScrollingBadgesTra
 import { mealsAPI } from '../../API/mealAPI'
 import { useElements } from '../../Contexts/ElementsContext'
 import { smartPrefetch } from '../../lib/prefetchQueries'
-
+import { useAuthContext } from '../../Contexts/AuthContext'
+import { useNavigate } from 'react-router'
 // Loading component for better UX
 const FeaturedMealsLoading = () => (
   <Center h="300px">
@@ -42,7 +43,6 @@ const FeaturedMealsError = ({ error, onRetry }) => (
 // In HomePage.jsx, update the FeaturedMealsSection component:
 const FeaturedMealsSection = ({ sectionRef }) => {
   const { featuredMeals, elementsLoading, elementsError, refetchMeals } = useElements();
-
   if (elementsLoading) {
     return <FeaturedMealsLoading />;
   }
@@ -67,7 +67,8 @@ const FeaturedMealsSection = ({ sectionRef }) => {
 const HomePage = () => {
   const { colorMode } = useColorMode()
   const queryClient = useQueryClient()
-  
+  const { pendingRedirect} = useAuthContext();
+  const navigate = useNavigate();
   // Create refs for all sections
   const sectionRefs = {
     'about us': useRef(null),
@@ -76,7 +77,21 @@ const HomePage = () => {
   }
 
   const { scrollToSection } = useScrollNavigation(sectionRefs)
+  // Initial Redirection Logic
+  useEffect(() => {
+    const handleInitialRedirect = async () => {
+      if (pendingRedirect) {
+        console.log('Handling initial redirect:', pendingRedirect);
+        // Scroll to the section if it exists
+        navigate(pendingRedirect.path || '/');
+      } else {
+        // Default to hero section
+        scrollToSection('hero');
+      }
+    };
 
+    handleInitialRedirect();
+  }, []);
   // Predictive prefetching for likely next pages
   useEffect(() => {
     const prefetchTimer = setTimeout(() => {

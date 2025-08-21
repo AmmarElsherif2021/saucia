@@ -418,7 +418,8 @@ export const PremiumPage = () => {
         plan: plan,
         plan_id: plan.id,
         status: 'pending',
-        start_date: new Date().toISOString().split('T')[0],
+        // Set start_date to tomorrow
+        start_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         selected_term: null,
         consumed_meals: 0,
         meals: [],
@@ -585,7 +586,7 @@ export const PremiumPage = () => {
         {/* Available Plans Section */}
         {explorePlans && (
           <Fade in={explorePlans}>
-            <Box bg="warning.100" p={6} borderRadius="xl" ref={plansContainerRef}>
+            <Box bg="brand.50" p={6} borderRadius="xl" ref={plansContainerRef}>
               <Heading as="h2" size="md" mb={6}>
                 {t('premium.availablePremiumPlans')}
               </Heading>

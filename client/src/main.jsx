@@ -485,12 +485,14 @@ ReactDOM.createRoot(root).render(
         <QueryClientProvider client={queryClient}>
           <ElementsProvider> {/* Single provider here */}
             <CartProvider>
+              <ChosenPlanProvider>
               <AuthProvider>
-                <ChosenPlanProvider>
+                
                   <RouterWithPrefetch router={router} queryClient={queryClient} />
                   {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}
-                </ChosenPlanProvider>
+                
               </AuthProvider>
+              </ChosenPlanProvider>
             </CartProvider>
           </ElementsProvider>
         </QueryClientProvider>
