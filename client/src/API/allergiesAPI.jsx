@@ -7,34 +7,30 @@ export const allergiesAPI = {
       .from('allergies')
       .select('*')
       .order('name');
-    //console.log(`Allergies fetched from Supabase: ${data?.length} allergies`);
+    
     if (error) throw error;
-    return data;
+    return data || [];
   },
 
   async getAllergyById(id) {
     const { data, error } = await supabase
       .from('allergies')
       .select('*')
-      .eq('id', id)
-      .single();
+      .eq('id', id);
     
     if (error) throw error;
-    return data;
+    return data?.[0] || null;
   },
 
   // User-specific endpoints
   async getUserAllergies(userId) {
     const { data, error } = await supabase
       .from('user_allergies')
-      .select(`
-        *,
-        allergy:allergies(*)
-      `)
+      .select(`*, allergy:allergies(*)`)
       .eq('user_id', userId);
     
     if (error) throw error;
-    return data;
+    return data || [];
   },
 
   async addUserAllergy(userId, allergyData) {
@@ -45,32 +41,22 @@ export const allergiesAPI = {
         allergy_id: allergyData.allergy_id,
         severity_override: allergyData.severity_override
       })
-      .select(`
-        *,
-        allergy:allergies(*)
-      `)
-      .single();
+      .select(`*, allergy:allergies(*)`);
     
     if (error) throw error;
-    return data;
+    return data?.[0] || null;
   },
 
   async updateUserAllergy(userId, allergyId, severityData) {
     const { data, error } = await supabase
       .from('user_allergies')
-      .update({
-        severity_override: severityData.severity_override
-      })
+      .update({ severity_override: severityData.severity_override })
       .eq('user_id', userId)
       .eq('allergy_id', allergyId)
-      .select(`
-        *,
-        allergy:allergies(*)
-      `)
-      .single();
+      .select(`*, allergy:allergies(*)`);
     
     if (error) throw error;
-    return data;
+    return data?.[0] || null;
   },
 
   async removeUserAllergy(userId, allergyId) {
@@ -79,36 +65,35 @@ export const allergiesAPI = {
       .delete()
       .eq('user_id', userId)
       .eq('allergy_id', allergyId)
-      .select()
-      .single();
+      .select();
     
     if (error) throw error;
-    return data;
+    return data?.[0] || null;
   },
 
   // Cross-table operations
   async getMealsWithAllergies(allergyIds) {
+    if (!allergyIds.length) return [];
+    
     const { data, error } = await supabase
       .from('meal_allergies')
-      .select(`
-        meal:meals(*)
-      `)
+      .select(`meal:meals(*)`)
       .in('allergy_id', allergyIds);
     
     if (error) throw error;
-    return data.map(item => item.meal);
+    return data?.map(item => item.meal) || [];
   },
 
   async getItemsWithAllergies(allergyIds) {
+    if (!allergyIds.length) return [];
+    
     const { data, error } = await supabase
       .from('item_allergies')
-      .select(`
-        item:items(*)
-      `)
+      .select(`item:items(*)`)
       .in('allergy_id', allergyIds);
     
     if (error) throw error;
-    return data.map(item => item.item);
+    return data?.map(item => item.item) || [];
   },
 
   async getUserSafeMeals(userId) {
@@ -120,7 +105,7 @@ export const allergiesAPI = {
     
     if (userError) throw userError;
     
-    if (!userAllergies.length) {
+    if (!userAllergies?.length) {
       // If no allergies, return all available meals
       const { data, error } = await supabase
         .from('meals')
@@ -128,7 +113,7 @@ export const allergiesAPI = {
         .eq('is_available', true);
       
       if (error) throw error;
-      return data;
+      return data || [];
     }
     
     const allergyIds = userAllergies.map(ua => ua.allergy_id);
@@ -141,7 +126,7 @@ export const allergiesAPI = {
     
     if (mealsError) throw mealsError;
     
-    const unsafeMealIds = mealsWithAllergies.map(ma => ma.meal_id);
+    const unsafeMealIds = mealsWithAllergies?.map(ma => ma.meal_id) || [];
     
     const { data, error } = await supabase
       .from('meals')
@@ -150,7 +135,7 @@ export const allergiesAPI = {
       .not('id', 'in', `(${unsafeMealIds.join(',')})`);
     
     if (error) throw error;
-    return data;
+    return data || [];
   },
 
   async getUserSafeItems(userId) {
@@ -162,7 +147,7 @@ export const allergiesAPI = {
     
     if (userError) throw userError;
     
-    if (!userAllergies.length) {
+    if (!userAllergies?.length) {
       // If no allergies, return all available items
       const { data, error } = await supabase
         .from('items')
@@ -170,7 +155,7 @@ export const allergiesAPI = {
         .eq('is_available', true);
       
       if (error) throw error;
-      return data;
+      return data || [];
     }
     
     const allergyIds = userAllergies.map(ua => ua.allergy_id);
@@ -183,7 +168,7 @@ export const allergiesAPI = {
     
     if (itemsError) throw itemsError;
     
-    const unsafeItemIds = itemsWithAllergies.map(ia => ia.item_id);
+    const unsafeItemIds = itemsWithAllergies?.map(ia => ia.item_id) || [];
     
     const { data, error } = await supabase
       .from('items')
@@ -192,7 +177,7 @@ export const allergiesAPI = {
       .not('id', 'in', `(${unsafeItemIds.join(',')})`);
     
     if (error) throw error;
-    return data;
+    return data || [];
   },
 
   // Bulk operations
@@ -216,13 +201,10 @@ export const allergiesAPI = {
             severity_override: allergy.severity_override
           }))
         )
-        .select(`
-          *,
-          allergy:allergies(*)
-        `);
+        .select(`*, allergy:allergies(*)`);
       
       if (error) throw error;
-      return data;
+      return data || [];
     }
     
     return [];

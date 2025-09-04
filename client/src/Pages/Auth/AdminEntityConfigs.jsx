@@ -120,6 +120,17 @@ export const useEntityConfigs = () => {
         { key: 'protein_g', label: t('admin.Protein (g)'), render: (value) => value || 0 },
         { key: 'carbs_g', label: t('admin.Carbs (g)'), render: (value) => value || 0 },
         { key: 'ingredients', label: t('admin.Ingredients'), truncate: true },
+        { key: 'description', label: t('admin.description'), truncate: true },
+        { key: 'description_arabic', label: t('admin.description_arabic'), truncate: true },
+        {
+          key: 'is_featured',
+          label: t('admin.featured'),
+          render: value => (
+            <Badge colorScheme={value ? 'green' : 'red'}>
+              {value ? t('admin.Yes') : t('admin.No')}
+            </Badge>
+          )
+        },
         {
           key: 'is_available',
           label: t('admin.Available'),

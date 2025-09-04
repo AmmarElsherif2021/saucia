@@ -59,7 +59,6 @@ const CommonQuestions = ({ onComplete }) => {
   
   // Fetch dietary preferences and allergies
   const { 
-    addPreference,
     bulkUpdatePreferences,
     dietaryPreferences: availablePreferences,
     userDietaryPreferences,
@@ -68,7 +67,6 @@ const CommonQuestions = ({ onComplete }) => {
   } = useUserDietaryPreferences()
   
   const { 
-    addAllergy,
     bulkUpdateAllergies,
     allergies: availableAllergies,
     userAllergies,
@@ -92,13 +90,15 @@ const CommonQuestions = ({ onComplete }) => {
     },
   })
 
-   // Initialize form with user data
+  // Initialize form with user data
   useEffect(() => {
     if (userProfile || healthProfile || userDietaryPreferences || userAllergies) {
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         age: userProfile?.age?.toString() || '',
         gender: userProfile?.gender || '',
         healthProfile: {
+          ...prev.healthProfile,
           // Map userDietaryPreferences to IDs
           dietaryPreferences: userDietaryPreferences?.map(p => p.preference_id) || [],
           // Map userAllergies to IDs
@@ -108,7 +108,7 @@ const CommonQuestions = ({ onComplete }) => {
           activityLevel: healthProfile?.activity_level || 'moderately-active',
           fitnessGoal: healthProfile?.fitness_goal || 'maintenance',
         },
-      })
+      }))
     }
   }, [userProfile, healthProfile, userDietaryPreferences, userAllergies])
 
@@ -146,36 +146,63 @@ const CommonQuestions = ({ onComplete }) => {
     try {
       if (!user?.id) throw new Error('User not authenticated')
 
-      // Prepare data
-      const profileData = {
-        age: formData.age ? parseInt(formData.age) : null,
-        gender: formData.gender
+      // Step 1: Update user profile first
+      const profileData = {}
+      if (formData.age && formData.age !== userProfile?.age?.toString()) {
+        profileData.age = parseInt(formData.age)
+      }
+      if (formData.gender && formData.gender !== userProfile?.gender) {
+        profileData.gender = formData.gender
       }
 
-      const healthData = {
-        height_cm: formData.healthProfile.height ? parseInt(formData.healthProfile.height) : null,
-        weight_kg: formData.healthProfile.weight ? parseInt(formData.healthProfile.weight) : null,
-        activity_level: formData.healthProfile.activityLevel,
-        fitness_goal: formData.healthProfile.fitnessGoal
+      if (Object.keys(profileData).length > 0) {
+        await updateProfile(profileData)
       }
 
-      // Prepare bulk data for allergies and preferences
-      const allergiesData = formData.healthProfile.allergies.map(allergyId => ({
-        allergy_id: allergyId,
-        severity_override: 1
-      }));
+      // Step 2: Update health profile (this will create if it doesn't exist)
+      const healthData = {}
+      const heightValue = formData.healthProfile.height ? parseInt(formData.healthProfile.height) : null
+      const weightValue = formData.healthProfile.weight ? parseInt(formData.healthProfile.weight) : null
+      
+      if (heightValue !== healthProfile?.height_cm) {
+        healthData.height_cm = heightValue
+      }
+      if (weightValue !== healthProfile?.weight_kg) {
+        healthData.weight_kg = weightValue
+      }
+      if (formData.healthProfile.activityLevel !== healthProfile?.activity_level) {
+        healthData.activity_level = formData.healthProfile.activityLevel
+      }
+      if (formData.healthProfile.fitnessGoal !== healthProfile?.fitness_goal) {
+        healthData.fitness_goal = formData.healthProfile.fitnessGoal
+      }
 
-      const preferencesData = formData.healthProfile.dietaryPreferences.map(prefId => ({
-        preference_id: prefId
-      }));
+      if (Object.keys(healthData).length > 0) {
+        await updateHealthProfile(healthData)
+      }
 
-      // Update profile and health data, and bulk update allergies and preferences
-      await Promise.all([
-        updateProfile(profileData),
-        updateHealthProfile(healthData),
-        bulkUpdateAllergies(allergiesData),
-        bulkUpdatePreferences(preferencesData)
-      ]);
+      // Step 3: Update allergies (only if there are changes)
+      const currentAllergyIds = userAllergies?.map(a => a.allergy_id) || []
+      const newAllergyIds = formData.healthProfile.allergies
+      
+      if (JSON.stringify(currentAllergyIds.sort()) !== JSON.stringify(newAllergyIds.sort())) {
+        const allergiesData = newAllergyIds.map(allergyId => ({
+          allergy_id: allergyId,
+          severity_override: 1
+        }))
+        await bulkUpdateAllergies(allergiesData)
+      }
+
+      // Step 4: Update dietary preferences (only if there are changes)
+      const currentPrefIds = userDietaryPreferences?.map(p => p.preference_id) || []
+      const newPrefIds = formData.healthProfile.dietaryPreferences
+      
+      if (JSON.stringify(currentPrefIds.sort()) !== JSON.stringify(newPrefIds.sort())) {
+        const preferencesData = newPrefIds.map(prefId => ({
+          preference_id: prefId
+        }))
+        await bulkUpdatePreferences(preferencesData)
+      }
 
       toast({
         title: t('profile.profileUpdated'),
@@ -188,10 +215,11 @@ const CommonQuestions = ({ onComplete }) => {
       navigate('/checkout-plan')
     } catch (error) {
       console.error('Update error:', error)
-      setFormError(error.message || t('premium.errorUpdatingProfile'))
+      const errorMessage = error.message || t('premium.errorUpdatingProfile')
+      setFormError(errorMessage)
       toast({
         title: t('premium.error'),
-        description: error.message || t('premium.errorUpdatingProfile'),
+        description: errorMessage,
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -201,8 +229,8 @@ const CommonQuestions = ({ onComplete }) => {
     }
   }
 
-  // Loading states
-    const isLoading = isLoadingProfile || isLoadingHealth || 
+  // Loading states - wait for all critical data to load
+  const isLoading = isLoadingProfile || isLoadingHealth || 
                    isLoadingAllergies || isLoadingPreferences
 
   // Error states
@@ -390,7 +418,7 @@ const CommonQuestions = ({ onComplete }) => {
             {/* Dietary Preferences */}
             <FormControl>
               <FormLabel color="brand.800">{t('premium.dietaryPreferences')}</FormLabel>
-              {isLoading || availablePreferences.length === 0 ? (
+              {isLoading || !availablePreferences || availablePreferences.length === 0 ? (
                 <Skeleton height="100px" borderRadius="md" />
               ) : (
                 <Wrap spacing={3}>
@@ -406,7 +434,7 @@ const CommonQuestions = ({ onComplete }) => {
                         colorScheme="brand"
                         onClick={() => toggleSelection('dietaryPreferences', pref.id)}
                       >
-                        {isArabic?pref.name_arabic:pref.name}
+                        {isArabic ? pref.name_arabic : pref.name}
                       </Button>
                     </WrapItem>
                   ))}
@@ -417,7 +445,7 @@ const CommonQuestions = ({ onComplete }) => {
             {/* Allergies */}
             <FormControl>
               <FormLabel color="brand.800">{t('premium.allergies')}</FormLabel>
-              {isLoading || availableAllergies.length === 0 ? (
+              {isLoading || !availableAllergies || availableAllergies.length === 0 ? (
                 <Skeleton height="100px" borderRadius="md" />
               ) : (
                 <Wrap spacing={3}>
@@ -433,7 +461,7 @@ const CommonQuestions = ({ onComplete }) => {
                         colorScheme="red"
                         onClick={() => toggleSelection('allergies', allergy.id)}
                       >
-                        {isArabic?allergy.name_arabic:allergy.name}
+                        {isArabic ? allergy.name_arabic : allergy.name}
                       </Button>
                     </WrapItem>
                   ))}

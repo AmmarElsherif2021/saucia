@@ -169,8 +169,8 @@ export const Navbar = () => {
         minW="200px !important" 
         h={navHeight}
         zIndex={1000}
-        borderBottom="1px"
-        borderColor={borderColor}
+        borderBottom="none"
+        
         backdropFilter="blur(12px)"
         WebkitBackdropFilter="blur(12px)" 
       >

@@ -130,8 +130,9 @@ const MealDeliveryCalendar = ({ subscriptionData, mealDesigns, saladItems, t }) 
         isComplete: isDesignComplete,
         isEmpty: !isDesignComplete
       });
-    }
-    
+    };
+    //c.filter
+    console.log('Delivery Schedule:', schedule);
     return schedule;
   }, [subscriptionData, mealDesigns, currentLanguage, isMobile]);
 
@@ -252,7 +253,7 @@ const MealDeliveryCalendar = ({ subscriptionData, mealDesigns, saladItems, t }) 
         </Box>
         <Box>
           <Text fontSize="sm" fontWeight="bold" color="green.500">
-            {deliverySchedule.filter(d => d.isComplete).length}
+            {deliverySchedule?.filter(d => d.isComplete).length}
           </Text>
           <Text fontSize="2xs" color="gray.600">
             {t('checkout.readyDeliveries')}
@@ -260,7 +261,7 @@ const MealDeliveryCalendar = ({ subscriptionData, mealDesigns, saladItems, t }) 
         </Box>
         <Box>
           <Text fontSize="sm" fontWeight="bold" color="orange.500">
-            {deliverySchedule.filter(d => d.isEmpty).length}
+            {deliverySchedule?.filter(d => d.isEmpty).length}
           </Text>
           <Text fontSize="2xs" color="gray.600">
             {t('checkout.pendingDeliveries')}
@@ -389,9 +390,9 @@ const ConfirmPlanModal = ({
         delivery_days: subscriptionData.delivery_days,
         auto_renewal: false,
         payment_method_id: null,
-        custom_meals: subscriptionData.meals,
+        meals: subscriptionData.meals,
       }
-
+      console.log('Creating subscription with data:', subscription)
       await createSubscription(subscription)
       
       toast({

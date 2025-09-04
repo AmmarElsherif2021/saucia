@@ -156,6 +156,7 @@ const Layout = ({ children }) => {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
+        overflowX:'hidden'
       }}
     >
       <Navbar />

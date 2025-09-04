@@ -1,0 +1,120 @@
+/* FloatingShapesLayout.css */
+
+
+.container {
+  background-color: aquamarine;
+  width: 100%;
+  min-width: 350px;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  padding: 20px;
+  align-items: center;
+  justify-content: center;
+}
+
+.shape-wrapper {
+  position: absolute;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  will-change: transform, opacity;
+}
+
+.shape-wrapper:hover {
+  z-index: 20;
+}
+
+.shape-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.icon-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.icon-image {
+  object-fit: contain;
+}
+
+.loading-container {
+  width: 35vw;
+  min-width: 350px;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: conic-gradient(#0000 10%, #4FD1C5);
+  animation: spin 1.2s infinite linear;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner-inner {
+  width: 40px;
+  height: 40px;
+  background: #2d3748;
+  border-radius: 50%;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  color: #a0aec0;
+  font-size: 0.875rem;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .container, .loading-container {
+    width: 47vw;
+  }
+  
+  .shape-wrapper {
+    transform: scale(0.6);
+  }
+}
+
+@media (max-width: 768px) {
+  .container, .loading-container {
+    width: 90vw;
+  }
+  
+  .shape-wrapper {
+    transform: scale(0.6);
+  }
+}
+
+@media (max-width: 480px) {
+  .shape-wrapper {
+    transform: scale(0.25);
+  }
+}

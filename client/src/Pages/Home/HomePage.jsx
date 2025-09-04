@@ -12,6 +12,8 @@ import { useElements } from '../../Contexts/ElementsContext'
 import { smartPrefetch } from '../../lib/prefetchQueries'
 import { useAuthContext } from '../../Contexts/AuthContext'
 import { useNavigate } from 'react-router'
+import Intro from './Intro'
+import FloatingShapesLayout from './Hero/FloatingShapesLayout'
 // Loading component for better UX
 const FeaturedMealsLoading = () => (
   <Center h="300px">
@@ -108,17 +110,21 @@ const HomePage = () => {
       px={2} 
       bg={colorMode === "dark" ? "teal.800" : "none"}
       minH="100vh"
+      overflowX={'hidden'}
+      ref={sectionRefs.hero}
     >
       <ScrollingBadgesTrail />
       
       {/* Hero section - always renders immediately */}
-      <Box ref={sectionRefs.hero}>
+      <Box overflowX={'hidden'}>
         <Hero />
       </Box>
-      
+      <Intro />
       {/* Featured meals section - with its own loading state */}
-      <FeaturedMealsSection sectionRef={sectionRefs.features} />
       
+      {/* 
+      <FeaturedMealsSection sectionRef={sectionRefs.features} />
+      */}
       {/* About section - static content */}
       <Box ref={sectionRefs['about us']}>
         <AboutPage />

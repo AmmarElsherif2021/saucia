@@ -174,23 +174,23 @@ const MenuPage = () => {
     isInitialized
   } = useElements()
   //Debug console for all used input data and states
-  useEffect(() => {
-    console.log('MenuPage data $$$$$$$$$$$ :', {
-      meals,
-      fruitItems,
-      saladItems,
-      elementsLoading,
-      elementsError,
-      isInitialized,
-      userMenuFiltering,
-      sections,
-      selectiveItems,
-      hasError,
-      expandedIndex,
-      currentLanguage,
-      initialLoadAttempted
-    })
-  }, [meals, fruitItems, saladItems, elementsLoading, elementsError, isInitialized, userMenuFiltering, sections, selectiveItems, hasError, expandedIndex, currentLanguage])
+  // useEffect(() => {
+  //   console.log('MenuPage data $$$$$$$$$$$ :', {
+  //     meals,
+  //     fruitItems,
+  //     saladItems,
+  //     elementsLoading,
+  //     elementsError,
+  //     isInitialized,
+  //     userMenuFiltering,
+  //     sections,
+  //     selectiveItems,
+  //     hasError,
+  //     expandedIndex,
+  //     currentLanguage,
+  //     initialLoadAttempted
+  //   })
+  // }, [meals, fruitItems, saladItems, elementsLoading, elementsError, isInitialized, userMenuFiltering, sections, selectiveItems, hasError, expandedIndex, currentLanguage])
   // Track if we have attempted initial load
   const [initialLoadAttempted, setInitialLoadAttempted] = useState(false)
 

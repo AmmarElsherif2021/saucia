@@ -5,11 +5,10 @@ const fetchSingle = async (table, query) => {
   const { data, error } = await supabase
     .from(table)
     .select(query?.select || '*')
-    .eq(query?.field, query?.value)
-    .single();
+    .eq(query?.field, query?.value);
   
   if (error && error.code !== 'PGRST116') throw error;
-  return data;
+  return data?.[0] || null;
 };
 
 const fetchList = async (table, query) => {
@@ -31,11 +30,10 @@ const createRecord = async (table, recordData) => {
   const { data, error } = await supabase
     .from(table)
     .insert([recordData])
-    .select()
-    .single();
+    .select();
 
   if (error) throw error;
-  return data;
+  return data?.[0] || null;
 };
 
 const updateRecord = async (table, id, updateData) => {
@@ -43,11 +41,10 @@ const updateRecord = async (table, id, updateData) => {
     .from(table)
     .update(updateData)
     .eq('id', id)
-    .select()
-    .single();
+    .select();
 
   if (error) throw error;
-  return data;
+  return data?.[0] || null;
 };
 
 const deleteRecord = async (table, id) => {
@@ -81,7 +78,6 @@ export const userAPI = {
       timezone: userData.timezone || 'Asia/Riyadh',
       account_status: userData.account_status || 'active',
       last_login: new Date().toISOString(),
-      
     };
 
     return createRecord('user_profiles', profileData);
@@ -136,26 +132,37 @@ export const userAPI = {
   },
 
   async createOrUpdateHealthProfile(userId, healthData) {
-    const healthProfileData = {
-      user_id: userId,
-      fitness_goal: healthData.fitness_goal,
-      height_cm: healthData.height_cm,
-      weight_kg: healthData.weight_kg,
-      activity_level: healthData.activity_level || 'moderately_active',
-      target_calories: healthData.target_calories,
-      target_protein: healthData.target_protein,
-      updated_at: new Date().toISOString(),
-    };
+  // First ensure user profile exists
+  const existingProfile = await this.getUserProfile(userId);
+  if (!existingProfile) {
+    // Create basic user profile first
+    await this.createUserProfile({
+      id: userId,
+      email: '', // Will be updated later
+      display_name: '',
+      profile_completed: false
+    });
+  }
 
-    const { data, error } = await supabase
-      .from('user_health_profiles')
-      .upsert(healthProfileData, { onConflict: 'user_id' })
-      .select()
-      .single();
+  const healthProfileData = {
+    user_id: userId,
+    fitness_goal: healthData.fitness_goal,
+    height_cm: healthData.height_cm,
+    weight_kg: healthData.weight_kg,
+    activity_level: healthData.activity_level || 'moderately_active',
+    target_calories: healthData.target_calories,
+    target_protein: healthData.target_protein,
+    updated_at: new Date().toISOString(),
+  };
 
-    if (error) throw error;
-    return data;
-  },
+  const { data, error } = await supabase
+    .from('user_health_profiles')
+    .upsert(healthProfileData, { onConflict: 'user_id' })
+    .select();
+
+  if (error) throw error;
+  return data?.[0] || null;
+},
 
   // User Addresses Management
   async getUserAddresses(userId) {
@@ -174,7 +181,6 @@ export const userAPI = {
       country: addressData.country || 'SA',
       is_default: addressData.is_default || false,
       delivery_instructions: addressData.delivery_instructions,
-      
     };
 
     return createRecord('user_addresses', newAddress);
@@ -204,7 +210,6 @@ export const userAPI = {
       ...paymentData,
       is_default: paymentData.is_default || false,
       is_verified: paymentData.is_verified || false,
-      
     };
 
     return createRecord('user_payment_methods', newPaymentMethod);
@@ -225,28 +230,31 @@ export const userAPI = {
 
   // User Subscriptions Management
   async getUserActiveSubscription(userId) {
-    return fetchSingle('user_subscriptions', {
-    field: 'user_id',
-    value: userId,
-    select: `*,
-      plans (
-        id,
-        title,
-        title_arabic,
-        description,
-        description_arabic,
-        price_per_meal,
-        duration_days,
-        kcal,
-        protein,
-        carb,
-        avatar_url
-      )`,
-    orderBy: 'created_at' 
-  });
+    const subscriptions = await fetchList('user_subscriptions', {
+      field: 'user_id',
+      value: userId,
+      select: `*,
+        plans (
+          id,
+          title,
+          title_arabic,
+          description,
+          description_arabic,
+          price_per_meal,
+          duration_days,
+          kcal,
+          protein,
+          carb,
+          avatar_url
+        )`,
+      orderBy: 'created_at' 
+    });
+    
+    return subscriptions?.[0] || null;
   },
 
   async createUserSubscription(userId, subscriptionData) {
+    console.log('Creating subscription for user:', userId, subscriptionData);
     const newSubscription = {
       user_id: userId,
       ...subscriptionData,
@@ -255,7 +263,6 @@ export const userAPI = {
       delivery_days: subscriptionData.delivery_days || [1, 2, 3, 4, 5],
       auto_renewal: subscriptionData.auto_renewal || false,
       consumed_meals: subscriptionData.consumed_meals || 0,
-      
     };
 
     return createRecord('user_subscriptions', newSubscription);
@@ -477,7 +484,6 @@ export const userAPI = {
       rating: reviewData.rating,
       review_text: reviewData.review_text,
       is_published: reviewData.is_published !== false,
-      
     };
 
     return createRecord('meal_reviews', newReview);
@@ -560,7 +566,6 @@ export const userAPI = {
         };
         
         const createdProfile = await this.createUserProfile(newProfileData);
-        //console.log('Created new user profile for:', userId);
         return createdProfile;
       } else {
         // Update existing profile if needed
@@ -574,7 +579,6 @@ export const userAPI = {
         
         if (Object.keys(updates).length > 0) {
           const updatedProfile = await this.updateUserProfile(userId, updates);
-          //console.log('Updated user profile for:', userId);
           return updatedProfile;
         }
         
@@ -631,17 +635,17 @@ export const userAPI = {
       ]);
 
       return {
-        profile,
-        health,
-        addresses,
-        paymentMethods,
-        subscriptions,
-        allergies,
-        dietaryPreferences,
-        favoriteMeals,
-        favoriteItems,
-        reviews,
-        orders
+        profile: profile || null,
+        health: health || null,
+        addresses: addresses || [],
+        paymentMethods: paymentMethods || [],
+        subscriptions: subscriptions || null,
+        allergies: allergies || [],
+        dietaryPreferences: dietaryPreferences || [],
+        favoriteMeals: favoriteMeals || [],
+        favoriteItems: favoriteItems || [],
+        reviews: reviews || [],
+        orders: orders || []
       };
     } catch (error) {
       console.error('Error fetching complete user data:', error);
@@ -649,4 +653,3 @@ export const userAPI = {
     }
   }
 };
-// user_allergies.created_at

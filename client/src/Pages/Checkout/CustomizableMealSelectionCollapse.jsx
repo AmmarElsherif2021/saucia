@@ -64,11 +64,17 @@ const CustomizableMealSelectionCollapse = ({
   maxSelections = 8,
   mealIndex = 0 // Added index to identify which meal this belongs to
 }) => {
-  const [selectedItems, setSelectedItems] = useState(initialSelectedItems)
+  // FIX: Initialize as object instead of array
+  const [selectedItems, setSelectedItems] = useState(initialSelectedItems || {})
   const [groupedItems, setGroupedItems] = useState({})
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0)
   const { allergies } = useUserAllergies()
-  const userAllergies = allergies?.map(allergy => allergy?.name?.toLowerCase()) || []
+  
+  // FIX: Safely handle allergies array
+  const userAllergies = Array.isArray(allergies) 
+    ? allergies.map(allergy => allergy?.name?.toLowerCase()).filter(Boolean)
+    : []
+  
   const toast = useToast()
   const { colorMode } = useColorMode()
 
@@ -85,7 +91,11 @@ const CustomizableMealSelectionCollapse = ({
 
   useEffect(() => {
     if (isOpen) {
-      setSelectedItems(initialSelectedItems)
+      // FIX: Ensure initialSelectedItems is always an object
+      const safeInitialItems = initialSelectedItems && typeof initialSelectedItems === 'object' 
+        ? initialSelectedItems 
+        : {}
+      setSelectedItems(safeInitialItems)
       setCurrentCategoryIndex(0)
       
       // Group items by section with safety check
@@ -106,8 +116,12 @@ const CustomizableMealSelectionCollapse = ({
 
   const isItemRestricted = (item) => {
     if (!item?.allergens || !userAllergies?.length) return false
-    return item.allergens.some((allergen) => {
-      const allergenName = allergen.en?.toLowerCase() || ''
+    
+    // FIX: Safely handle allergens array
+    const itemAllergens = Array.isArray(item.allergens) ? item.allergens : []
+    
+    return itemAllergens.some((allergen) => {
+      const allergenName = allergen?.en?.toLowerCase() || ''
       return userAllergies.some(userAllergy => 
         userAllergy.includes(allergenName))
     })
@@ -119,27 +133,29 @@ const CustomizableMealSelectionCollapse = ({
   }
 
   const handleSelectItem = (item) => {
-    if (isItemRestricted(item)) return
+    if (isItemRestricted(item)) return;
 
     setSelectedItems(prev => {
-      const newItems = { ...prev }
+      // Remove any previously selected item from the same category
+      const categoryItems = groupedItems[item.category] || [];
+      const newSelected = { ...prev };
       
-      const isCurrentlySelected = !!newItems[item.id]
-      
-      if (isCurrentlySelected) {
-        delete newItems[item.id]
+      // Remove other items from same category
+      categoryItems.forEach(categoryItem => {
+        if (categoryItem.id !== item.id) {
+          delete newSelected[categoryItem.id];
+        }
+      });
+
+      // Toggle selection for current item
+      if (prev[item.id]) {
+        delete newSelected[item.id];
       } else {
-        const categoryItems = groupedItems[item.category] || []
-        categoryItems.forEach(categoryItem => {
-          if (newItems[categoryItem.id]) {
-            delete newItems[categoryItem.id]
-          }
-        })
-        newItems[item.id] = 1
+        newSelected[item.id] = 1; // Set quantity to 1
       }
-      
-      return newItems
-    })
+
+      return newSelected;
+    });
   }
 
   const calculateTotalItems = () => {
@@ -215,7 +231,10 @@ const CustomizableMealSelectionCollapse = ({
   };
 
   const handleCancel = () => {
-    setSelectedItems(initialSelectedItems);
+    const safeInitialItems = initialSelectedItems && typeof initialSelectedItems === 'object' 
+      ? initialSelectedItems 
+      : {}
+    setSelectedItems(safeInitialItems);
     onClose(mealIndex);
   };
 

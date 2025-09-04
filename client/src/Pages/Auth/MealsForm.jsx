@@ -135,10 +135,12 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
   };
 
   // Handle switch change
-  const handleSwitchChange = (e) => {
+  const handleSwitchAvailablityChange = (e) => {
     setFormData(prev => ({ ...prev, is_available: e.target.checked }));
   };
-
+  const handleSwitchFeaturingChange = (e) => {
+    setFormData(prev => ({ ...prev, is_featured: e.target.checked }));
+  };
   // Handle image upload
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -326,6 +328,31 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
           </FormControl>
         </SimpleGrid>
 
+         {/* description Fields */}
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+          <FormControl>
+            <FormLabel>Description (English)</FormLabel>
+            <Textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Enter description in English"
+              rows={3}
+            />
+          </FormControl>
+          
+          <FormControl>
+            <FormLabel>description (Arabic)</FormLabel>
+            <Textarea
+              name="description_arabic"
+              value={formData.description_arabic}
+              onChange={handleChange}
+              placeholder="List description in Arabic"
+              rows={3}
+            />
+          </FormControl>
+        </SimpleGrid>
+
         {/* Is Available Switch */}
         <FormControl display="flex" alignItems="center">
           <FormLabel htmlFor="is-available-switch" mb="0">
@@ -335,11 +362,23 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit }) => {
             id="is-available-switch"
             name="is_available"
             isChecked={formData.is_available}
-            onChange={handleSwitchChange}
+            onChange={handleSwitchAvailablityChange}
             colorScheme="green"
           />
         </FormControl>
-
+         {/* Is Featured Switch */}
+        <FormControl display="flex" alignItems="center">
+          <FormLabel htmlFor="is-featured-switch" mb="0">
+            Is Featured
+          </FormLabel>
+          <Switch
+            id="is-featured-switch"
+            name="is_featured"
+            isChecked={formData.is_featured}
+            onChange={handleSwitchFeaturingChange}
+            colorScheme="green"
+          />
+        </FormControl>
         {/* Nutritional Info */}
         <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
           <FormControl>

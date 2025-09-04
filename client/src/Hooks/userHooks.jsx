@@ -17,7 +17,12 @@ export const useUserProfile = () => {
     queryKey: ['userProfile', user?.id],
     queryFn: () => userAPI.getUserProfile(user.id),
     enabled: !!user?.id,
-    staleTime: 1000 * 60 * 5 // 5 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: (failureCount, error) => {
+      // Don't retry if it's a "no rows" error - that's expected for new users
+      if (error?.code === 'PGRST116') return false;
+      return failureCount < 3;
+    }
   });
 
   // Add updateUserProfile mutation
@@ -46,20 +51,29 @@ export const useUserProfile = () => {
   };
 };
 
-// 2. User Health Profile Hook
+// 2. User Health Profile Hook 
 export const useHealthProfile = () => {
   const { user } = useAuthContext();
   const queryClient = useQueryClient();
 
   const healthProfileQuery = useQuery({
     queryKey: ['healthProfile', user?.id],
-    queryFn: () => userAPI.getUserHealthProfile(user.id),
-    enabled: !!user?.id
+    queryFn: () => {
+      if (!user?.id) throw new Error('User not authenticated');
+      return userAPI.getUserHealthProfile(user.id);
+    },
+    enabled: !!user?.id,
+    retry: (failureCount, error) => {
+      if (error?.code === 'PGRST116') return false;
+      return failureCount < 3;
+    }
   });
 
-  // Add update mutation for healthProfile
   const updateHealthProfile = useMutation({
-    mutationFn: (data) => userAPI.createOrUpdateHealthProfile(user.id, data),
+    mutationFn: (data) => {
+      if (!user?.id) throw new Error('User not authenticated');
+      return userAPI.createOrUpdateHealthProfile(user.id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['healthProfile', user.id]);
     }
@@ -107,6 +121,7 @@ export const useUserAddresses = () => {
     deleteAddress: deleteMutation.mutateAsync
   };
 };
+
 // 6. User Allergies Hook
 export const useUserAllergies = () => {
     const { user } = useAuthContext();
@@ -312,7 +327,3 @@ export const useUserAllergies = () => {
       refetch: ordersQuery.refetch
     };
   };
-  
-
-  
-

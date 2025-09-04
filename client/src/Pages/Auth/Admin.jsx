@@ -69,6 +69,7 @@ import {
   FaArrowCircleUp as UploadIcon, 
   FaSearch as SearchIcon 
 } from 'react-icons/fa'
+import MealDeliveryDashboard from './DailySceduleDashboard.jsx';
 
 // Reusable EntitySection component
 const EntitySection = ({ 
@@ -536,7 +537,9 @@ const Admin = () => {
           icon={<FaUtensils size={20} />}
         />
       </Grid>
-      
+          <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
+          <MealDeliveryDashboard/>
+          </Box>
       {/* Recent Activity Section */}
       <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
         <SectionHeading title={t('admin.sections.recent_activity', { defaultValue: "Recent Activity" })} />

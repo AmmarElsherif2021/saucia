@@ -9,32 +9,28 @@ export const dietaryPreferencesAPI = {
       .order('name');
     
     if (error) throw error;
-    return data;
+    return data || [];
   },
 
   async getDietaryPreferenceById(id) {
     const { data, error } = await supabase
       .from('dietary_preferences')
       .select('*')
-      .eq('id', id)
-      .single();
+      .eq('id', id);
     
     if (error) throw error;
-    return data;
+    return data?.[0] || null;
   },
 
   // User-specific endpoints
   async getUserDietaryPreferences(userId) {
     const { data, error } = await supabase
       .from('user_dietary_preferences')
-      .select(`
-        *,
-        preference:dietary_preferences(*)
-      `)
+      .select(`*, preference:dietary_preferences(*)`)
       .eq('user_id', userId);
     
     if (error) throw error;
-    return data;
+    return data || [];
   },
 
   async addUserDietaryPreference(userId, preferenceData) {
@@ -44,14 +40,10 @@ export const dietaryPreferencesAPI = {
         user_id: userId,
         preference_id: preferenceData.preference_id
       })
-      .select(`
-        *,
-        preference:dietary_preferences(*)
-      `)
-      .single();
+      .select(`*, preference:dietary_preferences(*)`);
     
     if (error) throw error;
-    return data;
+    return data?.[0] || null;
   },
 
   async removeUserDietaryPreference(userId, preferenceId) {
@@ -60,25 +52,30 @@ export const dietaryPreferencesAPI = {
       .delete()
       .eq('user_id', userId)
       .eq('preference_id', preferenceId)
-      .select()
-      .single();
+      .select();
     
     if (error) throw error;
-    return data;
+    return data?.[0] || null;
   },
 
   // Cross-table operations
   async getMealsForPreferences(preferenceIds) {
-    // This would depend on how preferences are linked to meals
-    // Assuming meals have boolean flags for dietary preferences
+    if (!preferenceIds.length) {
+      const { data, error } = await supabase
+        .from('meals')
+        .select('*')
+        .eq('is_available', true);
+      
+      if (error) throw error;
+      return data || [];
+    }
+
     let query = supabase
       .from('meals')
       .select('*')
       .eq('is_available', true);
 
-    // Apply preference filters based on common dietary preferences
     preferenceIds.forEach(id => {
-      // This is a simplified example - you'd need to map preference IDs to meal columns
       if (id === 1) query = query.eq('is_vegetarian', true);
       if (id === 2) query = query.eq('is_vegan', true);
       if (id === 3) query = query.eq('is_gluten_free', true);
@@ -88,7 +85,7 @@ export const dietaryPreferencesAPI = {
     const { data, error } = await query;
     
     if (error) throw error;
-    return data;
+    return data || [];
   },
 
   async getUserCompatibleMeals(userId) {
@@ -100,7 +97,7 @@ export const dietaryPreferencesAPI = {
     
     if (prefError) throw prefError;
     
-    if (!userPreferences.length) {
+    if (!userPreferences?.length) {
       // If no preferences, return all available meals
       const { data, error } = await supabase
         .from('meals')
@@ -108,7 +105,7 @@ export const dietaryPreferencesAPI = {
         .eq('is_available', true);
       
       if (error) throw error;
-      return data;
+      return data || [];
     }
     
     const preferenceIds = userPreferences.map(up => up.preference_id);
@@ -130,7 +127,7 @@ export const dietaryPreferencesAPI = {
     const { data, error } = await query;
     
     if (error) throw error;
-    return data;
+    return data || [];
   },
 
   async getFilteredMenuForUser(userId, filters = {}) {
@@ -140,18 +137,18 @@ export const dietaryPreferencesAPI = {
         .from('user_allergies')
         .select('allergy_id')
         .eq('user_id', userId),
-      // supabase
-      //   .from('user_dietary_preferences')
-      //   .select('preference_id')
-      //   .eq('user_id', userId)
+      supabase
+        .from('user_dietary_preferences')
+        .select('preference_id')
+        .eq('user_id', userId)
     ]);
 
     if (userAllergies.error) throw userAllergies.error;
-    //if (userPreferences.error) throw userPreferences.error;
+    if (userPreferences.error) throw userPreferences.error;
 
     // Get unsafe meals (containing user's allergies)
     let unsafeMealIds = [];
-    if (userAllergies.data.length > 0) {
+    if (userAllergies.data?.length > 0) {
       const allergyIds = userAllergies.data.map(ua => ua.allergy_id);
       const { data: mealsWithAllergies, error: mealsError } = await supabase
         .from('meal_allergies')
@@ -159,12 +156,12 @@ export const dietaryPreferencesAPI = {
         .in('allergy_id', allergyIds);
       
       if (mealsError) throw mealsError;
-      unsafeMealIds = mealsWithAllergies.map(ma => ma.meal_id);
+      unsafeMealIds = mealsWithAllergies?.map(ma => ma.meal_id) || [];
     }
 
     // Get unsafe items (containing user's allergies)
     let unsafeItemIds = [];
-    if (userAllergies.data.length > 0) {
+    if (userAllergies.data?.length > 0) {
       const allergyIds = userAllergies.data.map(ua => ua.allergy_id);
       const { data: itemsWithAllergies, error: itemsError } = await supabase
         .from('item_allergies')
@@ -172,7 +169,7 @@ export const dietaryPreferencesAPI = {
         .in('allergy_id', allergyIds);
       
       if (itemsError) throw itemsError;
-      unsafeItemIds = itemsWithAllergies.map(ia => ia.item_id);
+      unsafeItemIds = itemsWithAllergies?.map(ia => ia.item_id) || [];
     }
 
     // Build meals query
@@ -187,7 +184,7 @@ export const dietaryPreferencesAPI = {
     }
 
     // Apply dietary preference filters
-    if (userPreferences.data.length > 0) {
+    if (userPreferences.data?.length > 0) {
       const preferenceIds = userPreferences.data.map(up => up.preference_id);
       preferenceIds.forEach(id => {
         if (id === 1) mealsQuery = mealsQuery.eq('is_vegetarian', true);
@@ -237,8 +234,8 @@ export const dietaryPreferencesAPI = {
     if (itemsResult.error) throw itemsResult.error;
 
     return {
-      meals: mealsResult.data,
-      items: itemsResult.data
+      meals: mealsResult.data || [],
+      items: itemsResult.data || []
     };
   },
 
@@ -262,13 +259,10 @@ export const dietaryPreferencesAPI = {
             preference_id: preference.preference_id
           }))
         )
-        .select(`
-          *,
-          preference:dietary_preferences(*)
-        `);
+        .select(`*, preference:dietary_preferences(*)`);
       
       if (error) throw error;
-      return data;
+      return data || [];
     }
     
     return [];

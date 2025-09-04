@@ -4,6 +4,7 @@ import keepWeightPlanImage from '../assets/premium/keepWeight.png'
 import loseWeightPlanImage from '../assets/premium/loseWeight.png'
 import dailyMealPlanImage from '../assets/premium/dailymealplan.png'
 import saladsPlanImage from '../assets/premium/proteinsaladplan.png'
+import mealPlaceHolder from '../assets/menu/defaultMeal.jpg'
 import { useEffect, useState, useCallback } from 'react'
 import {
     Box,
@@ -29,7 +30,8 @@ import {
   useDisclosure,
   ScaleFade,
   Divider,
-  useColorModeValue
+  useColorModeValue,
+  Spinner
 } from '@chakra-ui/react'
 import cartIcon from '../assets/cartIcon2.svg'
 import { StarIcon, MinusIcon, AddIcon, InfoIcon } from '@chakra-ui/icons'
@@ -47,11 +49,13 @@ import { t } from 'i18next'
 const EnhancedImage = ({ 
   src, 
   alt, 
-  fallback = '/placeholder-food.jpg',
+  fallback = unknownDefaultImage,
   width,
   height,
   borderRadius = 'md',
   objectFit = 'cover',
+  onLoad,
+  onError,
   ...props 
 }) => {
   const [imageState, setImageState] = useState({
@@ -66,7 +70,8 @@ const EnhancedImage = ({
       hasError: false,
       isLoaded: true
     });
-  }, []);
+    onLoad?.();
+  }, [onLoad]);
 
   const handleError = useCallback(() => {
     setImageState({
@@ -74,7 +79,8 @@ const EnhancedImage = ({
       hasError: true,
       isLoaded: false
     });
-  }, []);
+    onError?.();
+  }, [onError]);
 
   return (
     <Box position="relative" width={width} height={height} {...props}>
@@ -106,7 +112,6 @@ const EnhancedImage = ({
     </Box>
   );
 };
-
 // Enhanced Star Rating Component
 const StarRating = ({ rating = 0, rating_count = 0, size = "sm", showCount = true }) => {
   const { colorMode } = useColorMode();
@@ -187,7 +192,7 @@ const PriceDisplay = ({ base_price, is_discount_active, discount_percentage = 0,
         color="brand.800"
         lineHeight="2.2"
       >
-        {typeof price === 'number' ? price.toFixed(2) : 'N/A'}{t('common.currency')}
+        {typeof price === 'number' ? price.toFixed(2) : 'N/A'}{' '}{t('common.currency')}
       </Text>
       {is_discount_active && discount_percentage > 0 && (
         <Text
@@ -196,7 +201,7 @@ const PriceDisplay = ({ base_price, is_discount_active, discount_percentage = 0,
           textDecoration="line-through"
           lineHeight="1"
         >
-          {base_price.toFixed(2)}{t('common.currency')}
+          {base_price.toFixed(2)}{' '}{t('common.currency')}
         </Text>
       )}
     </VStack>
@@ -208,6 +213,7 @@ export const MinimalMealCard = ({ meal, onClick }) => {
   const { colorMode } = useColorMode();
   const { t } = useTranslation();
   const { currentLanguage } = useI18nContext();
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   const isArabic = currentLanguage === 'ar';
   const displayName = isArabic && meal.name_arabic ? meal.name_arabic : meal.name;
@@ -221,7 +227,9 @@ export const MinimalMealCard = ({ meal, onClick }) => {
 
   return (
     <Box
-     as={Button}
+      as={Button}
+      display="flex"
+      flexDirection="column"
       bg={cardBg}
       borderWidth="2px"
       borderColor={borderColor}
@@ -231,15 +239,17 @@ export const MinimalMealCard = ({ meal, onClick }) => {
       transition="all 0.3s ease"
       _hover={{
         transform: 'translateY(-4px)',
-       borderColor: 'brand.600',
+        borderColor: 'brand.600',
         bg: hoverBg,
       }}
       onClick={() => onClick?.(meal)}
       position="relative"
       height="100%"
       minH="250px"
+      w="300px"
       px={0}
       py={0}
+      opacity={imageLoaded ? 1 : 0.8}
     >
       {/* Discount Badge */}
       {meal.is_discount_active && meal.discount_percentage > 0 && (
@@ -260,13 +270,15 @@ export const MinimalMealCard = ({ meal, onClick }) => {
       )}
 
       {/* Image Section */}
-      <Box position="relative" h={'100%'} w={'100%'}>
+      <Box position="relative" h="200px" w="100%" flex="0 0 auto">
         <EnhancedImage
           src={meal.image_url}
           alt={displayName}
           height="100%"
           width="100%"
           borderRadius="none"
+          onLoad={() => setImageLoaded(true)}
+          onError={() => setImageLoaded(true)} // Still set loaded even on error
         />
         
         {/* Quick Info Overlay */}
@@ -276,7 +288,10 @@ export const MinimalMealCard = ({ meal, onClick }) => {
           left="0"
           right="0"
           bg="rgba(0,0,0,0.5)"
-          p="3"
+          p="1"
+          m={2}
+          borderRadius={'md'}
+          w={"fit-content"}
         >
           <Flex justify="space-between" align="flex-end">
             <StarRating 
@@ -295,17 +310,17 @@ export const MinimalMealCard = ({ meal, onClick }) => {
       </Box>
 
       {/* Content Section */}
-     <VStack
-        p="1"
+      <VStack
+        flex="1"
+        p={4}
         spacing="1"
         bg="transparent"
         justify="space-between"
         align="stretch"
-        h="100%" // ensure full height is used within its grid cell
+        overflow="hidden"
       >
-
         {/* Title and Category Section */}
-        <VStack spacing="1" align="stretch" h="50%">
+        <VStack p={2} spacing="1" align="start">
           <Heading
             pt={1}
             size="lg"
@@ -314,10 +329,9 @@ export const MinimalMealCard = ({ meal, onClick }) => {
             bg="rgba(0,0,0,0.7)"
             noOfLines={3}
             lineHeight={1}
-            w="100%" // full width
+            maxW="250px"
             whiteSpace="normal"
             wordBreak="break-word"
-            h="70%" // 70% of the section height
           >
             {displayName}
           </Heading>
@@ -333,20 +347,21 @@ export const MinimalMealCard = ({ meal, onClick }) => {
         </VStack>
 
         {/* Description */}
-        <Box h="5%">
+        <Box>
           <Text
             fontSize="xs"
             color={colorMode === 'dark' ? 'gray.400' : 'gray.600'}
             noOfLines={2}
             lineHeight="1.4"
             minH="2.8em"
+            maxW={'250px'}
           >
             {displayDescription}
           </Text>
         </Box>
 
         {/* Dietary Badges */}
-        <Box h="15%">
+        <Box>
           <DietaryBadges meal={meal} size="xs" />
         </Box>
 
@@ -355,7 +370,6 @@ export const MinimalMealCard = ({ meal, onClick }) => {
           justify="space-between"
           align="center"
           py="2"
-          h="30%" // enough space for the price + button
           mt="auto"
         >
           <PriceDisplay
@@ -374,13 +388,12 @@ export const MinimalMealCard = ({ meal, onClick }) => {
           />
         </Flex>
       </VStack>
-
     </Box>
   );
 };
 
 // Enhanced Full Meal Card with Add to Cart Modal
-export const MealCard = ({ meal, isModal = false, onClose }) => {
+export const MealCard = ({ meal, isModal = false, onClose}) => {
   const { colorMode } = useColorMode();
   const { t } = useTranslation();
   const { currentLanguage } = useI18nContext();
@@ -399,7 +412,7 @@ export const MealCard = ({ meal, isModal = false, onClose }) => {
     addToCart({
       id: meal.id,
       name: displayName,
-      price: meal.price,
+      price: meal.base_price,
       image: meal.image_url,
       qty: quantity
     });
@@ -416,7 +429,7 @@ export const MealCard = ({ meal, isModal = false, onClose }) => {
       {/* Image Section */}
       <Box position="relative">
         <EnhancedImage
-          src={meal.image_url}
+          src={meal.image_url|| mealPlaceHolder}
           alt={displayName}
           height={imageHeight}
           borderRadius="lg"
@@ -555,7 +568,7 @@ export const MealCard = ({ meal, isModal = false, onClose }) => {
 
               {/* Total Price */}
               <Text fontSize="lg" fontWeight="bold" color="secondary.800">
-                {t('checkout.total')}: {(meal.price * quantity).toFixed(2)} {t('common.currency')}
+                {t('checkout.total')}: {(meal.base_price * quantity).toFixed(2)} {t('common.currency')}
               </Text>
 
               {/* Add to Cart Button */}
@@ -624,7 +637,7 @@ export const MealCardWithModal = ({ meal }) => {
 };
 
 
-const AddToCartModal = ({
+export const AddToCartModal = ({
   isOpen,
   onClose,
   name,
@@ -1438,9 +1451,7 @@ export const PlanCard = ({ plan }) => {
             alignItems="center"
             justifyContent="center"
           >
-            <Text color="gray.500" fontSize="lg">
-              Image unavailable
-            </Text>
+            <Spinner color='brand.300'/>
           </Box>
         }
       />
