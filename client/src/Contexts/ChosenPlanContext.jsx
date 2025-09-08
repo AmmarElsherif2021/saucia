@@ -302,12 +302,14 @@ export const ChosenPlanProvider = ({ children }) => {
 
   // Get API payload
   const getSubscriptionPayload = useCallback((userId) => {
-    const { selected_term, plan, delivery_schedule, ...apiData } = subscriptionData;
-    return {
-      user_id: userId,
-      ...apiData,
-    };
-  }, [subscriptionData]);
+  const { selected_term, plan, delivery_schedule, next_delivery_meal, ...apiData } = subscriptionData;
+  return {
+    user_id: userId,
+    ...apiData,
+    // Ensure we're only sending fields that exist in user_subscriptions table
+    meals: JSON.stringify(subscriptionData.meals) // Convert array to JSON string if needed
+  };
+}, [subscriptionData]);
 
   // Initialize subscription from existing data
   const initializeFromSubscription = useCallback((subscriptionData, planData) => {

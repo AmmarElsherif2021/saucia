@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useAdminFunctions } from '../../Hooks/useAdminFunctions';
+import { useItems } from '../../Hooks/useItems';
 import {
   Box,
   Grid,
@@ -16,120 +19,488 @@ import {
   ModalCloseButton,
   Divider,
   Card,
-  CardBody,
   CardHeader,
+  CardBody,
   Heading,
   Input,
   Textarea,
   Button,
   IconButton,
-  useColorModeValue,
   Flex,
   Avatar,
   Tag,
   TagLabel,
-  Progress,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel
+  Select,
+  Spinner,
+  Alert,
+  AlertIcon,
 } from '@chakra-ui/react';
-import { FiClock, FiUser, FiMapPin, FiInfo, FiPlus, FiSearch } from 'react-icons/fi';
+import { FiClock, FiUser, FiMapPin, FiInfo, FiPlus, FiSearch, FiPhone, FiActivity, FiCalendar, FiCreditCard, FiPause, FiPlay } from 'react-icons/fi';
 
-// Sample data structure (replace with your actual data from API)
-const sampleDeliveries = [
-  {
-    id: '1',
-    userId: 'user1',
-    userName: 'Ahmed Mohammed',
-    userAvatar: 'https://bit.ly/dan-abramov',
-    deliveryTime: '12:00',
-    meals: [
-      {
-        id: 'meal1',
-        name: 'Grilled Chicken',
-        items: ['Chicken Breast', 'Rice', 'Vegetables'],
-        specialInstructions: 'No spices please'
-      }
-    ],
-    address: '123 Main St, Riyadh',
-    status: 'pending',
-    phone: '+966 50 123 4567',
-    customerNotes: 'Please ring the bell twice', // Changed from notes to customerNotes
-    adminNotes: '' // Added for admin notes
-  },
-  {
-    id: '2',
-    userId: 'user2',
-    userName: 'Sara Ali',
-    userAvatar: 'https://bit.ly/sage-adebayo',
-    deliveryTime: '12:30',
-    meals: [
-      {
-        id: 'meal2',
-        name: 'Vegetarian Platter',
-        items: ['Falafel', 'Hummus', 'Salad', 'Pita Bread'],
-        specialInstructions: 'Extra hummus on the side'
-      }
-    ],
-    address: '456 Oak Ave, Riyadh',
-    status: 'preparing',
-    phone: '+966 55 987 6543',
-    customerNotes: 'Leave at front door if no answer', // Changed from notes to customerNotes
-    adminNotes: 'Customer called to confirm address' // Added for admin notes
-  },
-  {
-    id: '3',
-    userId: 'user3',
-    userName: 'Mohammed Hassan',
-    userAvatar: 'https://bit.ly/prosper-baba',
-    deliveryTime: '12:00', // Same time as first delivery
-    meals: [
-      {
-        id: 'meal3',
-        name: 'Beef Shawarma',
-        items: ['Beef', 'Garlic Sauce', 'Pickles', 'Fries'],
-        specialInstructions: 'No pickles'
-      },
-      {
-        id: 'meal4',
-        name: 'Fattoush Salad',
-        items: ['Lettuce', 'Tomato', 'Cucumber', 'Pita Chips'],
-        specialInstructions: 'Dressing on the side'
-      }
-    ],
-    address: '789 Palm St, Riyadh',
-    status: 'ready',
-    phone: '+966 54 555 1234',
-    customerNotes: 'Gate code: 1234', // Changed from notes to customerNotes
-    adminNotes: 'VIP customer - handle with care' // Added for admin notes
-  }
-];
+const TIME_SLOTS = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'];
 
-const timeSlots = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'];
+const STATUS_CONFIG = {
+  scheduled: { color: 'gray', bg: 'gray.50', label: 'scheduled' },
+  preparing: { color: 'yellow', bg: 'yellow.50', label: 'preparing' },
+  ready: { color: 'green', bg: 'green.50', label: 'ready' },
+  delivered: { color: 'blue', bg: 'blue.50', label: 'delivered' },
+  cancelled: { color: 'red', bg: 'red.50', label: 'cancelled' },
+};
+
+const SUBSCRIPTION_STATUS_CONFIG = {
+  active: { color: 'green', label: 'active' },
+  pending: { color: 'yellow', label: 'pending' },
+  cancelled: { color: 'red', label: 'cancelled' },
+  expired: { color: 'gray', label: 'expired' },
+  paused: { color: 'orange', label: 'paused' },
+};
+
+// Helper function to process meal items from subscription data
+const processMealItems = (mealData, allItems) => {
+  if (!mealData || !Array.isArray(mealData) || !allItems) return [];
+  
+  return mealData.map((meal, mealIndex) => {
+    const mealItems = [];
+    
+    // Process each item in the meal object
+    Object.entries(meal).forEach(([itemId, quantity]) => {
+      const numericItemId = parseInt(itemId);
+      const item = allItems.find(item => item.id === numericItemId);
+      
+      if (item && quantity > 0) {
+        mealItems.push({
+          id: numericItemId,
+          name: item.name,
+          name_arabic: item.name_arabic,
+          category: item.category,
+          quantity: quantity,
+          price: item.price,
+          calories: item.calories,
+          protein_g: item.protein_g,
+          carbs_g: item.carbs_g,
+          fat_g: item.fat_g,
+        });
+      }
+    });
+    
+    return {
+      id: `meal-${mealIndex}`,
+      name: `Meal ${mealIndex + 1}`,
+      items: mealItems,
+      special_instructions: '',
+      total_calories: mealItems.reduce((sum, item) => sum + (item.calories * item.quantity), 0),
+      total_protein: mealItems.reduce((sum, item) => sum + (item.protein_g * item.quantity), 0),
+      total_carbs: mealItems.reduce((sum, item) => sum + (item.carbs_g * item.quantity), 0),
+      total_fat: mealItems.reduce((sum, item) => sum + (item.fat_g * item.quantity), 0),
+    };
+  });
+};
+
+// REFORMED: Generate deliveries with ONE MEAL per delivery based on delivery_days and meals array
+const generateDeliveriesFromSubscriptions = (subscriptions, deliveryRecords = [], allItems) => {
+  if (!subscriptions || !Array.isArray(subscriptions) || !allItems) return [];
+  
+  const deliveries = [];
+  
+  subscriptions.forEach(subscription => {
+    // Get delivery records for this subscription
+    const subscriptionDeliveryRecords = deliveryRecords.filter(
+      record => record.subscription_id === subscription.id
+    );
+
+    // Process meals for this subscription
+    const processedMeals = processMealItems(subscription.meals, allItems);
+    
+    // If we have delivery records from the view, use them (these should be one meal per record)
+    if (subscriptionDeliveryRecords.length > 0) {
+      subscriptionDeliveryRecords.forEach(deliveryRecord => {
+        const deliveryDate = deliveryRecord.delivery_date.split('T')[0];
+        const deliveryTime = subscription.preferred_delivery_time 
+          ? subscription.preferred_delivery_time.substring(0, 5) 
+          : '12:00';
+        
+        // Find the corresponding meal from the processed meals
+        // This assumes deliveryRecord.next_delivery_meal contains the meal data
+        const mealForDelivery = deliveryRecord.next_delivery_meal 
+          ? [processMealFromData(deliveryRecord.next_delivery_meal, allItems)]
+          : [processedMeals[0]]; // fallback to first meal if no specific meal data
+        
+        deliveries.push({
+          id: deliveryRecord.next_delivery_id || deliveryRecord.id,
+          delivery_record_id: deliveryRecord.id,
+          user_profile: {
+            id: subscription.user_profiles.id,
+            display_name: subscription.user_profiles.display_name,
+            email: subscription.user_profiles.email,
+            phone_number: subscription.user_profiles.phone_number || 'N/A',
+            avatar_url: subscription.user_profiles.avatar_url || '',
+            notes: subscription.user_profiles.notes || 'No special notes',
+          },
+          subscription: {
+            ...subscription,
+            status: subscription.is_paused ? 'paused' : subscription.status,
+          },
+          delivery_date: deliveryDate,
+          delivery_time: deliveryTime,
+          delivery_address: subscription.delivery_address || `Delivery Address`,
+          meals: mealForDelivery, // ONE MEAL per delivery
+          status: deliveryRecord.next_delivery_status || 'scheduled',
+          admin_notes: '',
+          meals_count: 1, // Always 1 meal per delivery
+        });
+      });
+    } else if (subscription.delivery_days && Array.isArray(subscription.delivery_days) && processedMeals.length > 0) {
+      // Reformed fallback logic: Create one delivery per day with ONE meal
+      // Distribute meals across delivery days
+      subscription.delivery_days.forEach((deliveryDay, dayIndex) => {
+        const deliveryDate = new Date(deliveryDay).toISOString().split('T')[0];
+        const deliveryTime = subscription.preferred_delivery_time 
+          ? subscription.preferred_delivery_time.substring(0, 5) 
+          : '12:00';
+        
+        // Calculate which meal this delivery should contain
+        // Option 1: Cycle through meals (if you have 5 meals and 20 days, each meal appears 4 times)
+        const mealIndex = dayIndex % processedMeals.length;
+        const mealForThisDelivery = processedMeals[mealIndex];
+        
+        // Determine delivery status based on date
+        const today = new Date().toISOString().split('T')[0];
+        const deliveryDateObj = new Date(deliveryDate);
+        const todayObj = new Date(today);
+        
+        let status = 'scheduled';
+        if (deliveryDateObj < todayObj) {
+          status = 'delivered';
+        } else if (deliveryDateObj.getTime() === todayObj.getTime()) {
+          status = 'preparing';
+        }
+        
+        deliveries.push({
+          id: `${subscription.id}-delivery-${dayIndex}`,
+          delivery_record_id: null, // No delivery record exists
+          user_profile: {
+            id: subscription.user_profiles.id,
+            display_name: subscription.user_profiles.display_name,
+            email: subscription.user_profiles.email,
+            phone_number: subscription.user_profiles.phone_number || 'N/A',
+            avatar_url: subscription.user_profiles.avatar_url || '',
+            notes: subscription.user_profiles.notes || 'No special notes',
+          },
+          subscription: {
+            ...subscription,
+            status: subscription.is_paused ? 'paused' : subscription.status,
+          },
+          delivery_date: deliveryDate,
+          delivery_time: deliveryTime,
+          delivery_address: subscription.delivery_address || `Delivery Address`,
+          meals: [mealForThisDelivery], // ONE MEAL per delivery
+          status: status,
+          admin_notes: '',
+          meals_count: 1, // Always 1 meal per delivery
+        });
+      });
+    }
+  });
+  
+  return deliveries.sort((a, b) => a.delivery_date.localeCompare(b.delivery_date));
+};
+
+// Helper function to process a single meal from delivery record data
+const processMealFromData = (mealData, allItems) => {
+  if (!mealData || !allItems) return null;
+  
+  const mealItems = [];
+  
+  // Process the meal data (assuming it's in the same format as subscription.meals)
+  Object.entries(mealData).forEach(([itemId, quantity]) => {
+    const numericItemId = parseInt(itemId);
+    const item = allItems.find(item => item.id === numericItemId);
+    
+    if (item && quantity > 0) {
+      mealItems.push({
+        id: numericItemId,
+        name: item.name,
+        name_arabic: item.name_arabic,
+        category: item.category,
+        quantity: quantity,
+        price: item.price,
+        calories: item.calories,
+        protein_g: item.protein_g,
+        carbs_g: item.carbs_g,
+        fat_g: item.fat_g,
+      });
+    }
+  });
+  
+  return {
+    id: `meal-single`,
+    name: `Daily Meal`,
+    items: mealItems,
+    special_instructions: '',
+    total_calories: mealItems.reduce((sum, item) => sum + (item.calories * item.quantity), 0),
+    total_protein: mealItems.reduce((sum, item) => sum + (item.protein_g * item.quantity), 0),
+    total_carbs: mealItems.reduce((sum, item) => sum + (item.carbs_g * item.quantity), 0),
+    total_fat: mealItems.reduce((sum, item) => sum + (item.fat_g * item.quantity), 0),
+  };
+};
+// Reusable components
+const DeliveryBubble = ({ delivery, onClick }) => {
+  const { t } = useTranslation();
+  const statusConfig = STATUS_CONFIG[delivery.status] || STATUS_CONFIG.scheduled;
+  const subscriptionStatusConfig = SUBSCRIPTION_STATUS_CONFIG[delivery.subscription.status] || SUBSCRIPTION_STATUS_CONFIG.active;
+  
+  return (
+    <Box
+      bg={statusConfig.bg}
+      p={3}
+      borderRadius="lg"
+      border="2px"
+      borderColor={`${statusConfig.color}.200`}
+      cursor="pointer"
+      _hover={{ 
+        shadow: "lg", 
+        transform: "translateY(-1px)",
+        borderColor: `${statusConfig.color}.300`
+      }}
+      onClick={() => onClick(delivery)}
+      minW="180px"
+      maxW="220px"
+      transition="all 0.2s"
+    >
+      <VStack spacing={2} align="start">
+        <HStack justify="space-between" w="full">
+          <Badge colorScheme={statusConfig.color} size="sm">
+            {t(`admin.${statusConfig.label}`)}
+          </Badge>
+          <Badge colorScheme={subscriptionStatusConfig.color} size="sm">
+            {t(`admin.${subscriptionStatusConfig.label}`)}
+          </Badge>
+        </HStack>
+        
+        <Text fontWeight="bold" fontSize="sm" noOfLines={1}>
+          {delivery.user_profile.display_name}
+        </Text>
+        
+        <HStack spacing={1}>
+          <FiPhone size="12" />
+          <Text fontSize="xs" color="gray.700">
+            {delivery.user_profile.phone_number}
+          </Text>
+        </HStack>
+
+        <HStack spacing={1}>
+          <FiCalendar size="12" />
+          <Text fontSize="xs" color="gray.700">
+            {delivery.delivery_date}
+          </Text>
+        </HStack>
+
+        <HStack spacing={1}>
+          <FiCreditCard size="12" />
+          <Text fontSize="xs" color="gray.700">
+            {t('admin.meals')}: {delivery.subscription.consumed_meals}/{delivery.subscription.total_meals}
+          </Text>
+        </HStack>
+
+        <Text fontSize="xs" color="blue.600" fontWeight="medium">
+          {delivery.meals_count} {t('admin.meal')} {t('admin.with')} {delivery.meals.reduce((sum, meal) => sum + meal.items.length, 0)} {t('admin.items')}
+        </Text>
+
+        {delivery.delivery_record_id && (
+          <Text fontSize="xs" color="purple.600" fontWeight="medium">
+            {t('admin.recordId')}: {delivery.delivery_record_id.substring(0, 8)}...
+          </Text>
+        )}
+      </VStack>
+    </Box>
+  );
+};
+
+const KitchenQueueItem = ({ delivery, onClick }) => {
+  const { t } = useTranslation();
+  const statusConfig = STATUS_CONFIG[delivery.status] || STATUS_CONFIG.scheduled;
+  const subscriptionStatusConfig = SUBSCRIPTION_STATUS_CONFIG[delivery.subscription.status] || SUBSCRIPTION_STATUS_CONFIG.active;
+  
+  return (
+    <Box
+      p={4}
+      border="2px"
+      borderColor={`${statusConfig.color}.200`}
+      borderRadius="lg"
+      cursor="pointer"
+      onClick={() => onClick(delivery)}
+      bg="white"
+      _hover={{ shadow: "md", borderColor: `${statusConfig.color}.300` }}
+      transition="all 0.2s"
+    >
+      <HStack justify="space-between" mb={2}>
+        <HStack>
+          <FiActivity size="14" />
+          <Text fontWeight="bold" fontSize="sm">
+            {delivery.delivery_record_id ? `${t('admin.record')} #${delivery.delivery_record_id.substring(0, 8)}...` : `${t('admin.legacy')} #${delivery.id.substring(0, 8)}...`}
+          </Text>
+        </HStack>
+        <VStack spacing={0} align="end">
+          <Badge colorScheme={statusConfig.color} size="sm">
+            {t(`admin.${statusConfig.label}`)}
+          </Badge>
+          <Badge colorScheme={subscriptionStatusConfig.color} size="sm">
+            {t(`admin.${subscriptionStatusConfig.label}`)}
+          </Badge>
+          <Text fontSize="xs" color="gray.600">
+            {delivery.delivery_time}
+          </Text>
+        </VStack>
+      </HStack>
+      
+      <VStack align="stretch" spacing={2}>
+        {delivery.meals.map((meal, index) => (
+          <Box key={meal.id} bg="gray.50" p={2} borderRadius="md">
+            <HStack justify="space-between">
+              <Text fontWeight="medium" fontSize="sm">
+                {meal.name} ({meal.items.length} {t('admin.items')})
+              </Text>
+              <Tag size="sm" colorScheme="blue">
+                <TagLabel>{meal.total_calories} {t('admin.cal')}</TagLabel>
+              </Tag>
+            </HStack>
+            <Text fontSize="xs" color="gray.600" mt={1}>
+              {meal.items.map(item => `${item.name} (${item.quantity}x)`).join(', ')}
+            </Text>
+          </Box>
+        ))}
+        
+        <Text fontSize="xs" color="gray.600">
+          {t('admin.for')}: {delivery.user_profile.display_name}
+        </Text>
+        
+        <HStack justify="space-between">
+          <Text fontSize="xs" color="gray.600">
+            {t('admin.date')}: {delivery.delivery_date}
+          </Text>
+          <Text fontSize="xs" color="gray.600">
+            {t('admin.progress')}: {delivery.subscription.consumed_meals}/{delivery.subscription.total_meals}
+          </Text>
+        </HStack>
+        
+        <HStack justify="space-between">
+          <Text fontSize="xs" color="purple.600">
+            {t('admin.mealsInDelivery')}: {delivery.meals_count}
+          </Text>
+          {delivery.delivery_record_id && (
+            <Badge colorScheme="purple" size="sm">{t('admin.tracked')}</Badge>
+          )}
+        </HStack>
+      </VStack>
+    </Box>
+  );
+};
 
 const MealDeliveryDashboard = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [deliveries, setDeliveries] = useState(sampleDeliveries);
+  const { t } = useTranslation();
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [deliveries, setDeliveries] = useState([]);
+  const [deliveryRecords, setDeliveryRecords] = useState([]);
   const [selectedDelivery, setSelectedDelivery] = useState(null);
   const [newAdminNote, setNewAdminNote] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const { isOpen, onOpen, onClose } = useDisclosure();
+  
+  // API Hooks
+  const { useGetAllSubscriptions } = useAdminFunctions();
+  const { items, fetchItems, loading: itemsLoading } = useItems();
+  
+  // Fetch data
+  const { data: subscriptions, isLoading: isLoadingSubscriptions, error: subscriptionsError } = useGetAllSubscriptions();
 
-  // Filter deliveries based on search query
-  const filteredDeliveries = deliveries.filter(delivery => 
-    delivery.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    delivery.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    delivery.meals.some(meal => meal.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  // NEW: Mock function to fetch delivery records (replace with actual API call)
+  const fetchDeliveryRecords = async () => {
+    // This should be replaced with actual API call to fetch next_delivery_records
+    // For now, returning empty array as placeholder
+    return [];
+  };
+
+  // Load items and delivery records on component mount
+  useEffect(() => {
+    fetchItems();
+    fetchDeliveryRecords().then(setDeliveryRecords);
+  }, [fetchItems]);
+
+  // Process subscriptions when data changes
+  useEffect(() => {
+    if (subscriptions && items && items.length > 0) {
+      const processedDeliveries = generateDeliveriesFromSubscriptions(subscriptions, deliveryRecords, items);
+      setDeliveries(processedDeliveries);
+      console.log("Processed deliveries with delivery records:", processedDeliveries);
+    }
+  }, [subscriptions, items, deliveryRecords]);
+
+  // Loading and error states
+  if (isLoadingSubscriptions || itemsLoading) {
+    return (
+      <Box p={6} bg="gray.50" minH="100vh">
+        <VStack spacing={4} align="center" justify="center" minH="50vh">
+          <Spinner size="xl" color="blue.500" />
+          <Text>{t('admin.loadingDashboard')}</Text>
+        </VStack>
+      </Box>
+    );
+  }
+
+  if (subscriptionsError) {
+    return (
+      <Box p={6} bg="gray.50" minH="100vh">
+        <Alert status="error">
+          <AlertIcon />
+          {t('admin.errorLoadingSubscriptions')}: {subscriptionsError.message}
+        </Alert>
+      </Box>
+    );
+  }
+
+  // Get date range for display
+  const getDateRange = () => {
+    const dates = deliveries.map(d => d.delivery_date);
+    const minDate = dates.length ? dates.reduce((a, b) => a < b ? a : b) : selectedDate;
+    const maxDate = dates.length ? dates.reduce((a, b) => a > b ? a : b) : selectedDate;
+    return { minDate, maxDate };
+  };
+
+  const { minDate, maxDate } = getDateRange();
+
+  // Filter deliveries for the selected date
+  const deliveriesForSelectedDate = deliveries.filter(
+    delivery => delivery.delivery_date === selectedDate
   );
 
-  // Group deliveries by time slot
-  const deliveriesByTime = timeSlots.map(time => ({
-    time,
-    deliveries: filteredDeliveries.filter(d => d.deliveryTime === time)
-  }));
+  // Utility functions
+  const getCurrentTime = () => {
+    const now = new Date();
+    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+  };
 
+  const filterDeliveries = (deliveries, query) => {
+    if (!query) return deliveries;
+    
+    return deliveries.filter(delivery => 
+      delivery.user_profile.display_name.toLowerCase().includes(query.toLowerCase()) ||
+      delivery.user_profile.phone_number.includes(query) ||
+      delivery.user_profile.email.toLowerCase().includes(query.toLowerCase()) ||
+      delivery.meals.some(meal => 
+        meal.items.some(item => item.name.toLowerCase().includes(query.toLowerCase()))
+      ) ||
+      delivery.subscription.status.toLowerCase().includes(query.toLowerCase())
+    );
+  };
+
+  const groupDeliveriesByTime = (deliveries) => {
+    return TIME_SLOTS.map(time => ({
+      time,
+      deliveries: deliveries.filter(d => d.delivery_time === time)
+    }));
+  };
+
+  // Event handlers
   const handleDeliveryClick = (delivery) => {
     setSelectedDelivery(delivery);
     setNewAdminNote('');
@@ -137,278 +508,457 @@ const MealDeliveryDashboard = () => {
   };
 
   const addAdminNote = () => {
-    if (newAdminNote.trim() && selectedDelivery) {
-      const updatedDeliveries = deliveries.map(delivery => {
-        if (delivery.id === selectedDelivery.id) {
-          return {
-            ...delivery,
-            adminNotes: delivery.adminNotes ? `${delivery.adminNotes}\n${new Date().toLocaleString()}: ${newAdminNote}` 
-                                          : `${new Date().toLocaleString()}: ${newAdminNote}`
-          };
-        }
-        return delivery;
-      });
-      setDeliveries(updatedDeliveries);
-      setSelectedDelivery(updatedDeliveries.find(d => d.id === selectedDelivery.id));
-      setNewAdminNote('');
+    if (!newAdminNote.trim() || !selectedDelivery) return;
+
+    const timestamp = new Date().toLocaleString('en-CA', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    const noteToAdd = `${timestamp}: ${newAdminNote}`;
+    
+    const updatedDeliveries = deliveries.map(delivery => {
+      if (delivery.id === selectedDelivery.id) {
+        return {
+          ...delivery,
+          admin_notes: delivery.admin_notes 
+            ? `${delivery.admin_notes}\n${noteToAdd}` 
+            : noteToAdd
+        };
+      }
+      return delivery;
+    });
+    
+    setDeliveries(updatedDeliveries);
+    setSelectedDelivery(updatedDeliveries.find(d => d.id === selectedDelivery.id));
+    setNewAdminNote('');
+  };
+
+  // NEW: Update delivery record status
+  const updateDeliveryStatus = (deliveryId, newStatus) => {
+    const updatedDeliveries = deliveries.map(delivery => {
+      if (delivery.id === deliveryId) {
+        return {
+          ...delivery,
+          status: newStatus
+        };
+      }
+      return delivery;
+    });
+    
+    setDeliveries(updatedDeliveries);
+    if (selectedDelivery && selectedDelivery.id === deliveryId) {
+      setSelectedDelivery(updatedDeliveries.find(d => d.id === deliveryId));
+    }
+    
+    // Here you would also call API to update the delivery record status
+    // updateDeliveryRecordStatus(deliveryId, newStatus);
+  };
+
+  const updateSubscriptionStatus = (deliveryId, newStatus) => {
+    const updatedDeliveries = deliveries.map(delivery => {
+      if (delivery.id === deliveryId) {
+        return {
+          ...delivery,
+          subscription: {
+            ...delivery.subscription,
+            status: newStatus,
+            is_paused: newStatus === 'paused',
+            paused_at: newStatus === 'paused' ? new Date().toISOString() : delivery.subscription.paused_at,
+            resume_date: newStatus === 'paused' ? null : delivery.subscription.resume_date
+          }
+        };
+      }
+      return delivery;
+    });
+    
+    setDeliveries(updatedDeliveries);
+    if (selectedDelivery && selectedDelivery.id === deliveryId) {
+      setSelectedDelivery(updatedDeliveries.find(d => d.id === deliveryId));
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending': return 'gray';
-      case 'preparing': return 'yellow';
-      case 'ready': return 'green';
-      case 'delivered': return 'blue';
-      case 'cancelled': return 'red';
-      default: return 'gray';
-    }
-  };
-
-  // Get current time for highlighting
-  const getCurrentTime = () => {
-    const now = new Date();
-    return `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
-  };
-
+  // Data processing
+  const filteredDeliveries = filterDeliveries(deliveriesForSelectedDate, searchQuery);
+  const deliveriesByTime = groupDeliveriesByTime(filteredDeliveries);
   const currentTime = getCurrentTime();
+  const kitchenQueue = filteredDeliveries
+    .filter(d => ['scheduled', 'preparing', 'ready'].includes(d.status))
+    .sort((a, b) => a.delivery_time.localeCompare(b.delivery_time));
 
   return (
-    <Box p={5}>
-      <VStack spacing={5} align="stretch">
-        <Heading size="lg" mb={5}>Meal Delivery Schedule</Heading>
-        
-        {/* Date selector and search */}
-        <HStack>
-          <Input
-            type="date"
-            value={selectedDate.toISOString().split('T')[0]}
-            onChange={(e) => setSelectedDate(new Date(e.target.value))}
-            maxW="200px"
-          />
-          <HStack flex={1}>
+    <Box p={6} bg="gray.50" minH="100vh">
+      <VStack spacing={6} align="stretch">
+        {/* Header */}
+        <Flex justify="space-between" align="center">
+          <Heading size="xl" color="gray.800">
+            {t('admin.kitchenDeliveryDashboard')}
+          </Heading>
+          <HStack>
             <Input
-              placeholder="Search customers, addresses, or meals..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              maxW="400px"
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              min={minDate}
+              max={maxDate}
+              maxW="200px"
+              bg="white"
             />
-            <IconButton aria-label="Search" icon={<FiSearch />} />
+            <HStack>
+              <Input
+                placeholder={t('admin.searchPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                maxW="350px"
+                bg="white"
+              />
+              <IconButton 
+                aria-label={t('admin.search')} 
+                icon={<FiSearch />} 
+                colorScheme="blue"
+                variant="ghost"
+              />
+            </HStack>
           </HStack>
+        </Flex>
+
+        {/* Summary Stats */}
+        <HStack spacing={4}>
+          <Badge colorScheme="blue" p={2}>
+            {t('admin.totalSubscriptions')}: {subscriptions?.length || 0}
+          </Badge>
+          <Badge colorScheme="green" p={2}>
+            {t('admin.totalDeliveries')}: {deliveries.length}
+          </Badge>
+          <Badge colorScheme="orange" p={2}>
+            {t('admin.todaysDeliveries')}: {deliveriesForSelectedDate.length}
+          </Badge>
+          <Badge colorScheme="red" p={2}>
+            {t('admin.kitchenQueue')}: {kitchenQueue.length}
+          </Badge>
+          <Badge colorScheme="purple" p={2}>
+            {t('admin.trackedRecords')}: {deliveries.filter(d => d.delivery_record_id).length}
+          </Badge>
         </HStack>
 
-        <Grid templateColumns="3fr 1fr" gap={6}>
-          {/* Main Schedule */}
-          <GridItem>
-            <Box
-              border="1px"
-              borderColor="gray.200"
-              borderRadius="md"
-              overflow="hidden"
-            >
-              {/* Time slots header */}
-              <Grid templateColumns="100px 1fr" gap={0}>
-                <GridItem bg="gray.50" p={2} borderRight="1px" borderColor="gray.200">
-                  <Text fontWeight="bold">Time</Text>
-                </GridItem>
-                <GridItem 
-                  bg="gray.50" 
-                  p={2} 
-                  borderRight="1px" 
-                  borderColor="gray.200"
-                  textAlign="center"
-                >
-                  <Text fontWeight="bold">Deliveries</Text>
-                </GridItem>
-              </Grid>
+        {/* Date Navigation */}
+        <HStack justify="center" spacing={4}>
+          <Button 
+            size="sm" 
+            onClick={() => {
+              const prevDate = new Date(selectedDate);
+              prevDate.setDate(prevDate.getDate() - 1);
+              setSelectedDate(prevDate.toISOString().split('T')[0]);
+            }}
+            isDisabled={selectedDate <= minDate}
+          >
+            {t('admin.previousDay')}
+          </Button>
+          <Text fontWeight="bold" color="gray.700">
+            {t('admin.showing')}: {new Date(selectedDate).toLocaleDateString('en-US', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </Text>
+          <Button 
+            size="sm" 
+            onClick={() => {
+              const nextDate = new Date(selectedDate);
+              nextDate.setDate(nextDate.getDate() + 1);
+              setSelectedDate(nextDate.toISOString().split('T')[0]);
+            }}
+            isDisabled={selectedDate >= maxDate}
+          >
+            {t('admin.nextDay')}
+          </Button>
+        </HStack>
 
-              {/* Delivery rows */}
-              {deliveriesByTime.map(({ time, deliveries }) => (
-                <Grid 
-                  key={time}
-                  templateColumns="100px 1fr" 
-                  gap={0}
-                  minH="80px"
-                  borderBottom="1px"
-                  borderColor="gray.100"
-                >
-                  <GridItem 
-                    p={2} 
-                    borderRight="1px" 
-                    borderColor="gray.200"
-                    position="relative"
-                  >
-                    <Text>{time}</Text>
-                    {currentTime >= time && currentTime < timeSlots[timeSlots.indexOf(time) + 1] && (
-                      <Box
-                        position="absolute"
-                        top={0}
-                        left={0}
-                        right={0}
-                        bottom={0}
-                        bg="blue.100"
-                        opacity={0.3}
-                        zIndex={1}
-                      />
-                    )}
+        <Grid templateColumns="1fr 400px" gap={6}>
+          {/* Main Schedule Grid */}
+          <Card>
+            <CardHeader>
+              <Heading size="lg">{t('admin.deliveryScheduleFor')} {selectedDate}</Heading>
+              <Text fontSize="sm" color="gray.600" mt={1}>
+                {filteredDeliveries.length} {t('admin.deliveriesScheduled')}
+              </Text>
+            </CardHeader>
+            <CardBody p={0}>
+              <Box maxH="75vh" overflowY="auto">
+                {/* Header */}
+                <Grid templateColumns="120px 1fr" bg="gray.100" borderBottom="2px" borderColor="gray.200">
+                  <GridItem p={4} borderRight="1px" borderColor="gray.300">
+                    <Text fontWeight="bold" color="gray.700">{t('admin.timeSlot')}</Text>
                   </GridItem>
-                  
-                  <GridItem 
-                    p={2} 
-                    borderRight="1px" 
-                    borderColor="gray.200"
-                  >
-                    <HStack spacing={3} align="start" flexWrap="wrap">
-                      {deliveries.map(delivery => (
-                        <Box
-                          key={delivery.id}
-                          bg="white"
-                          p={3}
-                          borderRadius="md"
-                          border="1px"
-                          borderColor="gray.200"
-                          cursor="pointer"
-                          _hover={{ shadow: "md" }}
-                          onClick={() => handleDeliveryClick(delivery)}
-                          minW="200px"
-                          flex="1"
-                          maxW="300px"
-                        >
-                          <HStack justify="space-between">
-                            <Badge colorScheme={getStatusColor(delivery.status)}>
-                              {delivery.status}
-                            </Badge>
-                            <Text fontSize="sm">{delivery.meals.length} meal(s)</Text>
-                          </HStack>
-                          <Text fontWeight="medium" mt={1}>{delivery.userName}</Text>
-                          <Text fontSize="sm" color="gray.600" mt={1}>
-                            {delivery.address}
-                          </Text>
-                        </Box>
-                      ))}
-                    </HStack>
+                  <GridItem p={4}>
+                    <Text fontWeight="bold" color="gray.700">{t('admin.deliveries')}</Text>
                   </GridItem>
                 </Grid>
-              ))}
-            </Box>
-          </GridItem>
 
-          {/* Sidebar - Queue and Notes */}
-          <GridItem>
-            <VStack spacing={5} align="stretch">
-              {/* Delivery Queue */}
-              <Card>
-                <CardHeader>
-                  <Heading size="md">Delivery Queue</Heading>
-                </CardHeader>
-                <CardBody>
-                  <VStack align="stretch" spacing={3}>
-                    {filteredDeliveries
-                      .sort((a, b) => a.deliveryTime.localeCompare(b.deliveryTime))
-                      .map(delivery => (
-                        <Box 
-                          key={delivery.id} 
-                          p={3} 
-                          border="1px" 
-                          borderColor="gray.200" 
-                          borderRadius="md"
-                          cursor="pointer"
-                          onClick={() => handleDeliveryClick(delivery)}
-                        >
-                          <HStack justify="space-between">
-                            <Badge colorScheme={getStatusColor(delivery.status)}>
-                              {delivery.status}
-                            </Badge>
-                            <Text fontSize="sm">{delivery.deliveryTime}</Text>
-                          </HStack>
-                          <Text fontWeight="medium" mt={1}>{delivery.userName}</Text>
-                          <Text fontSize="sm" color="gray.600">
-                            {delivery.meals.length} meal(s) • {delivery.address}
-                          </Text>
-                        </Box>
-                      ))}
-                  </VStack>
-                </CardBody>
-              </Card>
+                {/* Time Slot Rows */}
+                {deliveriesByTime.map(({ time, deliveries }) => {
+                  const isCurrentTime = currentTime >= time && currentTime < TIME_SLOTS[TIME_SLOTS.indexOf(time) + 1];
+                  
+                  return (
+                    <Grid 
+                      key={time}
+                      templateColumns="120px 1fr" 
+                      minH="100px"
+                      borderBottom="1px"
+                      borderColor="gray.200"
+                      bg={isCurrentTime ? "blue.50" : "white"}
+                    >
+                      <GridItem 
+                        p={4} 
+                        borderRight="1px" 
+                        borderColor="gray.200"
+                        display="flex"
+                        alignItems="center"
+                      >
+                        <VStack spacing={1} align="start">
+                          <Text fontWeight="bold" fontSize="lg">{time}</Text>
+                          {isCurrentTime && (
+                            <Badge colorScheme="blue" size="sm">{t('admin.current')}</Badge>
+                          )}
+                        </VStack>
+                      </GridItem>
+                      
+                      <GridItem p={4}>
+                        <Flex gap={3} flexWrap="wrap" align="start">
+                          {deliveries.map(delivery => (
+                            <DeliveryBubble
+                              key={delivery.id}
+                              delivery={delivery}
+                              onClick={handleDeliveryClick}
+                            />
+                          ))}
+                          {deliveries.length === 0 && (
+                            <Text color="gray.400" fontSize="sm" fontStyle="italic">
+                              {t('admin.noDeliveriesScheduled')}
+                            </Text>
+                          )}
+                        </Flex>
+                      </GridItem>
+                    </Grid>
+                  );
+                })}
+              </Box>
+            </CardBody>
+          </Card>
 
-              {/* Admin Notes */}
-              <Card>
-                <CardHeader>
-                  <Heading size="md">Admin Notes</Heading>
-                </CardHeader>
-                <CardBody>
-                  <VStack align="stretch" spacing={3}>
-                    <Textarea
-                      placeholder="Add an admin note..."
-                      value={newAdminNote}
-                      onChange={(e) => setNewAdminNote(e.target.value)}
+          {/* Kitchen Queue Sidebar */}
+          <VStack spacing={6} align="stretch">
+            <Card>
+              <CardHeader>
+                <HStack>
+                  <FiActivity />
+                  <Heading size="md">{t('admin.kitchenQueueFor')} {selectedDate}</Heading>
+                  <Badge colorScheme="orange">{kitchenQueue.length}</Badge>
+                </HStack>
+              </CardHeader>
+              <CardBody>
+                <VStack align="stretch" spacing={3} maxH="60vh" overflowY="auto">
+                  {kitchenQueue.map(delivery => (
+                    <KitchenQueueItem
+                      key={delivery.id}
+                      delivery={delivery}
+                      onClick={handleDeliveryClick}
                     />
-                    <Button leftIcon={<FiPlus />} onClick={addAdminNote} isDisabled={!newAdminNote.trim()}>
-                      Add Note
-                    </Button>
-                  </VStack>
-                </CardBody>
-              </Card>
-            </VStack>
-          </GridItem>
+                  ))}
+                  {kitchenQueue.length === 0 && (
+                    <Text color="gray.500" textAlign="center" py={8}>
+                      {t('admin.allCaughtUp')}
+                    </Text>
+                  )}
+                </VStack>
+              </CardBody>
+            </Card>
+
+            {/* Quick Notes */}
+            <Card>
+              <CardHeader>
+                <Heading size="md">{t('admin.quickAdminNote')}</Heading>
+              </CardHeader>
+              <CardBody>
+                <VStack spacing={3}>
+                  <Textarea
+                    placeholder={t('admin.addGeneralNote')}
+                    value={newAdminNote}
+                    onChange={(e) => setNewAdminNote(e.target.value)}
+                    resize="vertical"
+                  />
+                  <Button 
+                    leftIcon={<FiPlus />} 
+                    onClick={addAdminNote} 
+                    isDisabled={!newAdminNote.trim() || !selectedDelivery}
+                    colorScheme="blue"
+                    size="sm"
+                    w="full"
+                  >
+                    {t('admin.addNoteToOrder')}
+                  </Button>
+                </VStack>
+              </CardBody>
+            </Card>
+          </VStack>
         </Grid>
       </VStack>
 
       {/* Delivery Detail Modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
-        <ModalOverlay />
+        <ModalOverlay bg="blackAlpha.600" />
         <ModalContent>
-          <ModalHeader>Delivery Details</ModalHeader>
+          <ModalHeader bg="blue.50" borderTopRadius="md">
+            <HStack>
+              <Text>
+                {selectedDelivery?.delivery_record_id 
+                  ? `${t('admin.deliveryRecord')} #${selectedDelivery.delivery_record_id.substring(0, 8)}...`
+                  : `${t('admin.legacyOrder')} #${selectedDelivery?.id.substring(0, 8)}...`
+                }
+              </Text>
+              {selectedDelivery && (
+                <Badge colorScheme={STATUS_CONFIG[selectedDelivery.status]?.color || 'gray'}>
+                  {t(`admin.${STATUS_CONFIG[selectedDelivery.status]?.label || selectedDelivery.status}`)}
+                </Badge>
+              )}
+              {selectedDelivery && (
+                <Badge colorScheme={SUBSCRIPTION_STATUS_CONFIG[selectedDelivery.subscription.status]?.color || 'gray'}>
+                  {t(`admin.${SUBSCRIPTION_STATUS_CONFIG[selectedDelivery.subscription.status]?.label || selectedDelivery.subscription.status}`)}
+                </Badge>
+              )}
+            </HStack>
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
             {selectedDelivery && (
-              <VStack spacing={4} align="stretch">
+              <VStack spacing={5} align="stretch">
                 {/* Customer Info */}
-                <HStack spacing={3}>
-                  <Avatar src={selectedDelivery.userAvatar} name={selectedDelivery.userName} />
-                  <Box>
-                    <Text fontWeight="bold">{selectedDelivery.userName}</Text>
-                    <Text fontSize="sm" color="gray.600">{selectedDelivery.phone}</Text>
-                  </Box>
-                  <Badge ml="auto" colorScheme={getStatusColor(selectedDelivery.status)}>
-                    {selectedDelivery.status}
-                  </Badge>
-                </HStack>
+                <Box p={4} bg="gray.50" borderRadius="md">
+                  <VStack spacing={4}>
+                    <Avatar 
+                      src={selectedDelivery.user_profile.avatar_url} 
+                      name={selectedDelivery.user_profile.display_name}
+                      size="md"
+                    />
+                    <VStack align="start" spacing={1}>
+                      <Text fontWeight="bold" fontSize="lg">
+                        {selectedDelivery.user_profile.display_name}
+                      </Text>
+                      <HStack>
+                        <FiPhone size="14" />
+                        <Text fontSize="sm" color="gray.600">
+                          {selectedDelivery.user_profile.phone_number}
+                        </Text>
+                      </HStack>
+                      <Text fontSize="sm" color="gray.600">
+                        {selectedDelivery.user_profile.email}
+                      </Text>
+                    </VStack>
+                  </VStack>
+                </Box>
 
-                <Divider />
+                {/* NEW: Delivery Record Info */}
+                {selectedDelivery.delivery_record_id && (
+                  <Box p={4} bg="purple.50" borderRadius="md">
+                    <Heading size="sm" mb={3}>{t('admin.deliveryRecordDetails')}</Heading>
+                    <Grid templateColumns="1fr 1fr" gap={3}>
+                      <VStack align="start" spacing={1}>
+                        <Text fontSize="sm"><strong>{t('admin.recordId')}:</strong> {selectedDelivery.delivery_record_id.substring(0, 8)}...</Text>
+                        <Text fontSize="sm"><strong>{t('admin.status')}:</strong> {t(`admin.${selectedDelivery.status}`)}</Text>
+                        <Text fontSize="sm"><strong>{t('admin.mealsCount')}:</strong> {selectedDelivery.meals_count}</Text>
+                      </VStack>
+                      <VStack align="start" spacing={1}>
+                        <Text fontSize="sm"><strong>{t('admin.deliveryDate')}:</strong> {selectedDelivery.delivery_date}</Text>
+                        <Text fontSize="sm"><strong>{t('admin.deliveryTime')}:</strong> {selectedDelivery.delivery_time}</Text>
+                        <Text fontSize="sm"><strong>{t('admin.tracking')}:</strong> {t('admin.fullRecordTracking')}</Text>
+                      </VStack>
+                    </Grid>
+                  </Box>
+                )}
+
+                {/* Subscription Info */}
+                <Box p={4} bg="blue.50" borderRadius="md">
+                  <Heading size="sm" mb={3}>{t('admin.subscriptionDetails')}</Heading>
+                  <Grid templateColumns="1fr 1fr" gap={3}>
+                    <VStack align="start" spacing={1}>
+                      <Text fontSize="sm"><strong>{t('admin.plan')}:</strong> {selectedDelivery.subscription.plans?.title || 'N/A'}</Text>
+                      <Text fontSize="sm"><strong>{t('admin.status')}:</strong> {t(`admin.${selectedDelivery.subscription.status}`)}</Text>
+                      <Text fontSize="sm"><strong>{t('admin.start')}:</strong> {selectedDelivery.subscription.start_date}</Text>
+                      <Text fontSize="sm"><strong>{t('admin.end')}:</strong> {selectedDelivery.subscription.end_date || 'N/A'}</Text>
+                      <Text fontSize="sm"><strong>{t('admin.pricePerMeal')}:</strong> ${selectedDelivery.subscription.price_per_meal}</Text>
+                    </VStack>
+                    <VStack align="start" spacing={1}>
+                      <Text fontSize="sm"><strong>{t('admin.meals')}:</strong> {selectedDelivery.subscription.consumed_meals}/{selectedDelivery.subscription.total_meals}</Text>
+                      <Text fontSize="sm"><strong>{t('admin.autoRenewal')}:</strong> {selectedDelivery.subscription.auto_renewal ? t('admin.yes') : t('admin.no')}</Text>
+                      <Text fontSize="sm"><strong>{t('admin.deliveryDays')}:</strong> {selectedDelivery.subscription.delivery_days?.length || 0} {t('admin.scheduled')}</Text>
+                      <Text fontSize="sm"><strong>{t('admin.remainingMeals')}:</strong> {selectedDelivery.subscription.total_meals - selectedDelivery.subscription.consumed_meals}</Text>
+                    </VStack>
+                  </Grid>
+                  
+                  {selectedDelivery.subscription.is_paused && (
+                    <Box mt={3} p={2} bg="orange.100" borderRadius="md">
+                      <Text fontSize="sm" fontWeight="bold">{t('admin.subscriptionPaused')}</Text>
+                      <Text fontSize="sm">{t('admin.reason')}: {selectedDelivery.subscription.pause_reason || t('admin.noReasonProvided')}</Text>
+                      <Text fontSize="sm">{t('admin.resumeDate')}: {selectedDelivery.subscription.resume_date?.split('T')[0] || t('admin.notSpecified')}</Text>
+                    </Box>
+                  )}
+                </Box>
 
                 {/* Delivery Info */}
-                <Box>
+                <HStack spacing={6}>
                   <HStack>
                     <FiClock />
-                    <Text>Delivery Time: {selectedDelivery.deliveryTime}</Text>
+                    <Text fontWeight="medium">{t('admin.delivery')}: {selectedDelivery.delivery_time}</Text>
                   </HStack>
-                  <HStack mt={2}>
+                  <Text fontSize="sm" color="gray.600">
+                    {t('admin.date')}: {selectedDelivery.delivery_date}
+                  </Text>
+                  <HStack>
                     <FiMapPin />
-                    <Text>{selectedDelivery.address}</Text>
+                    <Text fontSize="sm" color="gray.600">
+                      {selectedDelivery.delivery_address}
+                    </Text>
                   </HStack>
-                </Box>
+                </HStack>
 
                 <Divider />
 
                 {/* Meals */}
                 <Box>
-                  <Text fontWeight="bold" mb={2}>Meals</Text>
+                  <Text fontWeight="bold" mb={3}>{t('admin.mealDetails')} ({selectedDelivery.meals_count} {t('admin.mealsInThisDelivery')})</Text>
                   <VStack align="stretch" spacing={3}>
                     {selectedDelivery.meals.map(meal => (
-                      <Box key={meal.id} p={3} border="1px" borderColor="gray.200" borderRadius="md">
-                        <Text fontWeight="medium">{meal.name}</Text>
-                        <VStack align="stretch" mt={2} spacing={1}>
-                          {meal.items.map((item, index) => (
-                            <Text key={index} fontSize="sm">• {item}</Text>
+                      <Box key={meal.id} p={4} border="2px" borderColor="gray.200" borderRadius="md">
+                        <HStack justify="space-between" mb={3}>
+                          <Text fontWeight="bold">{meal.name}</Text>
+                          <Tag colorScheme="blue" size="sm">
+                            {meal.total_calories} {t('admin.cal')}
+                          </Tag>
+                        </HStack>
+                        
+                        <VStack align="stretch" spacing={2}>
+                          {meal.items.map(item => (
+                            <HStack key={item.id} justify="space-between">
+                              <Text fontSize="sm">
+                                {item.name} ({item.quantity}x)
+                              </Text>
+                              <Text fontSize="sm" color="gray.600">
+                                {item.calories * item.quantity} {t('admin.cal')}
+                              </Text>
+                            </HStack>
                           ))}
                         </VStack>
-                        {meal.specialInstructions && (
-                          <Box mt={2}>
-                            <Text fontSize="sm" fontWeight="medium">Special Instructions:</Text>
-                            <Text fontSize="sm">{meal.specialInstructions}</Text>
-                          </Box>
-                        )}
+                        
+                        <HStack justify="space-between" mt={3} pt={3} borderTop="1px" borderColor="gray.200">
+                          <Text fontSize="sm" fontWeight="medium">{t('admin.totalMacros')}:</Text>
+                          <Text fontSize="sm" color="gray.600">
+                            {t('admin.protein')}: {meal.total_protein}g | {t('admin.carbs')}: {meal.total_carbs}g | {t('admin.fat')}: {meal.total_fat}g
+                          </Text>
+                        </HStack>
                       </Box>
                     ))}
                   </VStack>
@@ -416,36 +966,81 @@ const MealDeliveryDashboard = () => {
 
                 <Divider />
 
-                {/* Customer Notes */}
-                <Box>
-                  <HStack>
-                    <FiInfo />
-                    <Text fontWeight="bold">Customer Notes</Text>
-                  </HStack>
-                  <Text mt={2} whiteSpace="pre-wrap">{selectedDelivery.customerNotes || 'No customer notes'}</Text>
-                </Box>
-
-                <Divider />
-
                 {/* Admin Notes */}
                 <Box>
-                  <HStack>
-                    <FiInfo />
-                    <Text fontWeight="bold">Admin Notes</Text>
-                  </HStack>
-                  <Text mt={2} whiteSpace="pre-wrap">{selectedDelivery.adminNotes || 'No admin notes'}</Text>
-                  
-                  <VStack align="stretch" spacing={3} mt={4}>
-                    <Textarea
-                      placeholder="Add an admin note..."
-                      value={newAdminNote}
-                      onChange={(e) => setNewAdminNote(e.target.value)}
-                    />
-                    <Button leftIcon={<FiPlus />} onClick={addAdminNote} isDisabled={!newAdminNote.trim()}>
-                      Add Note
-                    </Button>
-                  </VStack>
+                  <Text fontWeight="bold" mb={2}>{t('admin.adminNotes')}</Text>
+                  <Textarea
+                    value={newAdminNote}
+                    onChange={(e) => setNewAdminNote(e.target.value)}
+                    placeholder={t('admin.addNewNote')}
+                    resize="vertical"
+                    mb={2}
+                  />
+                  <Button 
+                    leftIcon={<FiPlus />} 
+                    onClick={addAdminNote} 
+                    isDisabled={!newAdminNote.trim()}
+                    colorScheme="blue"
+                    size="sm"
+                    mb={3}
+                  >
+                    {t('admin.addNote')}
+                  </Button>
+                  {selectedDelivery.admin_notes && (
+                    <Box p={3} bg="gray.50" borderRadius="md">
+                      <Text whiteSpace="pre-wrap" fontSize="sm">
+                        {selectedDelivery.admin_notes}
+                      </Text>
+                    </Box>
+                  )}
                 </Box>
+
+                {/* Action Buttons */}
+                <HStack spacing={3} justify="center" pt={4}>
+                  <Select
+                    value={selectedDelivery.status}
+                    onChange={(e) => updateDeliveryStatus(selectedDelivery.id, e.target.value)}
+                    maxW="200px"
+                  >
+                    <option value="scheduled">{t('admin.scheduled')}</option>
+                    <option value="preparing">{t('admin.preparing')}</option>
+                    <option value="ready">{t('admin.ready')}</option>
+                    <option value="delivered">{t('admin.delivered')}</option>
+                    <option value="cancelled">{t('admin.cancelled')}</option>
+                  </Select>
+                  
+                  <Select
+                    value={selectedDelivery.subscription.status}
+                    onChange={(e) => updateSubscriptionStatus(selectedDelivery.id, e.target.value)}
+                    maxW="200px"
+                  >
+                    <option value="active">{t('admin.active')}</option>
+                    <option value="pending">{t('admin.pending')}</option>
+                    <option value="cancelled">{t('admin.cancelled')}</option>
+                    <option value="expired">{t('admin.expired')}</option>
+                    <option value="paused">{t('admin.paused')}</option>
+                  </Select>
+                  
+                  {selectedDelivery.subscription.is_paused ? (
+                    <Button 
+                      leftIcon={<FiPlay />} 
+                      colorScheme="green" 
+                      size="sm"
+                      onClick={() => updateSubscriptionStatus(selectedDelivery.id, 'active')}
+                    >
+                      {t('admin.resume')}
+                    </Button>
+                  ) : (
+                    <Button 
+                      leftIcon={<FiPause />} 
+                      colorScheme="orange" 
+                      size="sm"
+                      onClick={() => updateSubscriptionStatus(selectedDelivery.id, 'paused')}
+                    >
+                      {t('admin.pause')}
+                    </Button>
+                  )}
+                </HStack>
               </VStack>
             )}
           </ModalBody>

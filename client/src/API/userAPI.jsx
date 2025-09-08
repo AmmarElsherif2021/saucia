@@ -228,30 +228,33 @@ export const userAPI = {
     return deleteRecord('user_payment_methods', paymentMethodId);
   },
 
-  // User Subscriptions Management
-  async getUserActiveSubscription(userId) {
-    const subscriptions = await fetchList('user_subscriptions', {
-      field: 'user_id',
-      value: userId,
-      select: `*,
-        plans (
-          id,
-          title,
-          title_arabic,
-          description,
-          description_arabic,
-          price_per_meal,
-          duration_days,
-          kcal,
-          protein,
-          carb,
-          avatar_url
-        )`,
-      orderBy: 'created_at' 
-    });
-    
-    return subscriptions?.[0] || null;
-  },
+ // subscription fetch to use the view
+async getUserActiveSubscription(userId) {
+  const { data, error } = await supabase
+    .from('subscription_with_next_delivery')
+    .select(`
+      *,
+      plans (
+        id,
+        title,
+        title_arabic,
+        description,
+        description_arabic,
+        price_per_meal,
+        duration_days,
+        kcal,
+        protein,
+        carb,
+        avatar_url
+      )
+    `)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  if (error) throw error;
+  return data?.[0] || null;
+},
 
   async createUserSubscription(userId, subscriptionData) {
     console.log('Creating subscription for user:', userId, subscriptionData);
