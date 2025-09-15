@@ -619,81 +619,257 @@ export const adminAPI = {
   },
 
   // ===== SUBSCRIPTION MANAGEMENT =====
-  //create subscription
-  async createSubscription(subscriptionData) {
-    return createRecord('user_subscriptions', {
-      ...subscriptionData,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-   });
- },
- //Get subscription details
- async getSubscriptionDetails(subscriptionId) {
+async getAllSubscriptions(options = {}) {
+  const query = {
+    select: `
+      id,
+      user_id,
+      plan_id,
+      status,
+      start_date,
+      end_date,
+      price_per_meal,
+      total_meals,
+      consumed_meals,
+      delivery_address_id,
+      preferred_delivery_time,
+      auto_renewal,
+      payment_method_id,
+      meals,
+      next_delivery_meal,
+      created_at,
+      updated_at,
+      user_profiles(id, display_name, email),
+      plans(id, title, title_arabic)
+    `,
+    orderBy: options.orderBy || 'created_at',
+    ascending: options.ascending || false,
+    limit: options.limit || 50
+  };
+
+  if (options.status) {
+    query.filters = [{ field: 'status', value: options.status }];
+  }
+
+  return fetchList('user_subscriptions', query);
+},
+
+// Get subscription details with related data
+async getSubscriptionDetails(subscriptionId) {
   const subscription = await fetchSingle('user_subscriptions', {
     field: 'id',
     value: subscriptionId,
-    select: `*,
-             user_profiles(id, display_name, email),
-             plans(id, title, title_arabic)`
+    select: `
+      *,
+      user_profiles(id, display_name, email, phone_number),
+      plans(id, title, title_arabic),
+      user_addresses!delivery_address_id(*)
+    `
   });
 
-  // Fetch meal details
-  const mealsDetails = await Promise.all(
-    (subscription.meals || []).map(mealId =>
-      fetchSingle('meals', { field: 'id', value: mealId })
-    )
-  );
+  if (!subscription) return null;
 
-  // Fetch additive details
-  const additivesDetails = await Promise.all(
-    (subscription.additives || []).map(itemId =>
-      fetchSingle('items', { field: 'id', value: itemId })
-    )
-  );
+  // Get meal details from the meals jsonb array
+  let mealsDetails = [];
+  if (subscription.meals && Array.isArray(subscription.meals)) {
+    const { data: meals, error } = await supabase
+      .from('meals')
+      .select('id, name, name_arabic, image_url, calories, protein')
+      .in('id', subscription.meals);
+    
+    if (!error) {
+      mealsDetails = meals;
+    }
+  }
+
+  // Get related orders
+  const orders = await fetchList('orders', {
+    field: 'subscription_id',
+    value: subscriptionId,
+    select: `
+      id, order_number, status, payment_status, total_amount, 
+      scheduled_delivery_date, actual_delivery_date, created_at
+    `,
+    orderBy: 'created_at',
+    ascending: false,
+    limit: 10
+  });
 
   return {
     ...subscription,
     mealsDetails,
-    additivesDetails
+    orders,
+    remainingMeals: subscription.total_meals - subscription.consumed_meals,
+    progressPercentage: Math.round((subscription.consumed_meals / subscription.total_meals) * 100)
   };
-}
-,
- // Get all subscriptions
-  async getAllSubscriptions(options = {}) {
-    const query = {
-      select: `
-        *,
-        user_profiles(id, display_name, email),
-        plans(id, title, title_arabic)
-      `,
-      orderBy: options.orderBy || 'created_at',
-      ascending: options.ascending || false,
-      limit: options.limit || 50
-    };
+},
 
-    if (options.status) {
-      query.filters = [{ field: 'status', value: options.status }];
+// Create subscription with proper validation
+async createSubscription(subscriptionData) {
+  // Validate required fields
+  const requiredFields = ['user_id', 'plan_id', 'start_date', 'price_per_meal', 'total_meals', 'meals'];
+  for (const field of requiredFields) {
+    if (!subscriptionData[field]) {
+      throw new Error(`Missing required field: ${field}`);
     }
+  }
 
-    return fetchList('user_subscriptions', query);
-  },
+  // Ensure meals is a valid jsonb array
+  if (!Array.isArray(subscriptionData.meals) || subscriptionData.meals.length === 0) {
+    throw new Error('Meals must be a non-empty array');
+  }
 
-  // Update subscription status
-  async updateSubscriptionStatus(subscriptionId, status) {
-    return updateRecord('user_subscriptions', subscriptionId, {
-      status: status,
+  const newSubscription = {
+    ...subscriptionData,
+    consumed_meals: 0,
+    next_delivery_meal: 0,
+    auto_renewal: subscriptionData.auto_renewal || false,
+    preferred_delivery_time: subscriptionData.preferred_delivery_time || '12:00:00',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+
+  return createRecord('user_subscriptions', newSubscription);
+},
+
+// Update subscription
+async updateSubscription(subscriptionId, updateData) {
+  // Remove fields that don't exist in schema
+  const { 
+    next_delivery_status, 
+    next_delivery_date, 
+    delivery_history, 
+    is_paused,
+    delivery_days,
+    ...validData 
+  } = updateData;
+
+  const dataToUpdate = {
+    ...validData,
+    updated_at: new Date().toISOString()
+  };
+
+  return updateRecord('user_subscriptions', subscriptionId, dataToUpdate);
+},
+
+// Update subscription status
+async updateSubscriptionStatus(subscriptionId, status) {
+  const validStatuses = ['pending', 'active', 'paused', 'cancelled', 'completed'];
+  if (!validStatuses.includes(status)) {
+    throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+  }
+
+  const updateData = {
+    status: status,
+    updated_at: new Date().toISOString()
+  };
+
+  // Set end_date when completing or cancelling
+  if (status === 'completed' || status === 'cancelled') {
+    updateData.end_date = new Date().toISOString().split('T')[0]; // Date only
+  }
+
+  return updateRecord('user_subscriptions', subscriptionId, updateData);
+},
+
+// Progress subscription to next meal
+async progressToNextMeal(subscriptionId) {
+  const subscription = await fetchSingle('user_subscriptions', {
+    field: 'id',
+    value: subscriptionId
+  });
+
+  if (!subscription) {
+    throw new Error('Subscription not found');
+  }
+
+  if (subscription.consumed_meals >= subscription.total_meals) {
+    throw new Error('Subscription already completed');
+  }
+
+  const mealsArray = subscription.meals || [];
+  const nextMealIndex = (subscription.next_delivery_meal + 1) % mealsArray.length;
+  
+  return updateRecord('user_subscriptions', subscriptionId, {
+    consumed_meals: subscription.consumed_meals + 1,
+    next_delivery_meal: nextMealIndex,
+    status: subscription.consumed_meals + 1 >= subscription.total_meals ? 'completed' : subscription.status,
+    end_date: subscription.consumed_meals + 1 >= subscription.total_meals ? 
+      new Date().toISOString().split('T')[0] : subscription.end_date,
+    updated_at: new Date().toISOString()
+  });
+},
+
+// Update subscription meals
+async updateSubscriptionMeals(subscriptionId, meals) {
+  if (!Array.isArray(meals) || meals.length === 0) {
+    throw new Error('Meals must be a non-empty array');
+  }
+
+  return updateRecord('user_subscriptions', subscriptionId, {
+    meals: meals,
+    next_delivery_meal: 0, // Reset to first meal
+    updated_at: new Date().toISOString()
+  });
+},
+
+// Get subscription analytics
+async getSubscriptionAnalytics() {
+  const [
+    totalSubscriptions,
+    activeSubscriptions,
+    completedSubscriptions,
+    cancelledSubscriptions,
+    pendingSubscriptions
+  ] = await Promise.all([
+    supabase.from('user_subscriptions').select('id', { count: 'exact' }),
+    supabase.from('user_subscriptions').select('id', { count: 'exact' }).eq('status', 'active'),
+    supabase.from('user_subscriptions').select('id', { count: 'exact' }).eq('status', 'completed'),
+    supabase.from('user_subscriptions').select('id', { count: 'exact' }).eq('status', 'cancelled'),
+    supabase.from('user_subscriptions').select('id', { count: 'exact' }).eq('status', 'pending')
+  ]);
+
+  return {
+    total: totalSubscriptions.count || 0,
+    active: activeSubscriptions.count || 0,
+    completed: completedSubscriptions.count || 0,
+    cancelled: cancelledSubscriptions.count || 0,
+    pending: pendingSubscriptions.count || 0
+  };
+},
+
+// Get subscriptions requiring attention (low remaining meals)
+async getSubscriptionsNeedingAttention(threshold = 2) {
+  const { data, error } = await supabase
+    .from('user_subscriptions')
+    .select(`
+      *,
+      user_profiles(id, display_name, email),
+      plans(id, title, title_arabic)
+    `)
+    .eq('status', 'active')
+    .lt('total_meals - consumed_meals', threshold)
+    .order('total_meals - consumed_meals', { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+},
+
+// Bulk operations
+async bulkUpdateSubscriptions(subscriptionIds, updateData) {
+  const { next_delivery_status, next_delivery_date, delivery_history, ...validData } = updateData;
+  
+  const { error } = await supabase
+    .from('user_subscriptions')
+    .update({
+      ...validData,
       updated_at: new Date().toISOString()
-    });
-  },
+    })
+    .in('id', subscriptionIds);
 
-  // Update subscription
-  async updateSubscription(subscriptionId, updateData) {
-    return updateRecord('user_subscriptions', subscriptionId, {
-      ...updateData,
-      updated_at: new Date().toISOString()
-    });
-  },
-
+  if (error) throw error;
+  return { success: true, updatedCount: subscriptionIds.length };
+},
   // ===== ORDER MANAGEMENT =====
 
   // Get all orders
@@ -1006,4 +1182,426 @@ export const adminAPI = {
       value: userId
     });
   },
+
+  // ===== DELIVERY MANAGEMENT =====
+
+/**
+ * Get subscription with detailed delivery information
+ * @param {string} subscriptionId - Subscription ID
+ * @returns {Object} Subscription with delivery details
+ */
+async getSubscriptionDeliveryDetails(subscriptionId) {
+  const { data, error } = await supabase
+    .from('user_subscriptions')
+    .select(`
+      *,
+      user_profiles(id, display_name, email, phone_number),
+      plans(id, title, title_arabic),
+      user_addresses!delivery_address_id(*)
+    `)
+    .eq('id', subscriptionId)
+    .single();
+
+  if (error) throw error;
+
+  // Parse delivery history if it exists
+  const deliveryHistory = data.delivery_history || [];
+  
+  // Get meal details for current delivery
+  let nextDeliveryMealDetails = [];
+  if (data.meals && data.meals.length > 0) {
+    const { data: meals, error: mealsError } = await supabase
+      .from('meals')
+      .select('id, name, name_arabic, image_url, calories, protein')
+      .in('id', data.meals);
+    
+    if (!mealsError) {
+      nextDeliveryMealDetails = meals;
+    }
+  }
+
+  return {
+    ...data,
+    deliveryHistory,
+    nextDeliveryMealDetails,
+    remainingMeals: data.total_meals - data.consumed_meals
+  };
+},
+
+/**
+ * Update next delivery date and recalculate delivery schedule
+ * @param {string} subscriptionId - Subscription ID
+ * @param {string} newDeliveryDate - New delivery date (ISO string)
+ * @returns {Object} Updated subscription
+ */
+async updateNextDeliveryDate(subscriptionId, newDeliveryDate) {
+  const { data, error } = await supabase
+    .from('user_subscriptions')
+    .update({
+      next_delivery_date: newDeliveryDate,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', subscriptionId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+},
+
+/**
+ * Update delivery address for subscription
+ * @param {string} subscriptionId - Subscription ID
+ * @param {string} addressId - New address ID
+ * @returns {Object} Updated subscription
+ */
+async updateDeliveryAddress(subscriptionId, addressId) {
+  const { data, error } = await supabase
+    .from('user_subscriptions')
+    .update({
+      delivery_address_id: addressId,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', subscriptionId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+},
+
+/**
+ * Reschedule failed delivery
+ * @param {string} subscriptionId - Subscription ID
+ * @param {string} newDeliveryDate - New delivery date
+ * @param {string} reason - Reason for rescheduling
+ * @returns {Object} Updated subscription
+ */
+async rescheduleFailedDelivery(subscriptionId, newDeliveryDate, reason = '') {
+  // First add the failed delivery to history
+  await this.addDeliveryToHistory(subscriptionId, null, 0, 'failed', reason);
+  
+  const { data, error } = await supabase
+    .from('user_subscriptions')
+    .update({
+      next_delivery_date: newDeliveryDate,
+      next_delivery_status: 'scheduled',
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', subscriptionId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+},
+
+/**
+ * Mark delivery as completed and update consumption
+ * @param {string} subscriptionId - Subscription ID
+ * @param {number} mealsDelivered - Number of meals delivered
+ * @param {string} deliveryNotes - Optional delivery notes
+ * @returns {Object} Updated subscription
+ */
+async completeDelivery(subscriptionId, mealsDelivered = null, deliveryNotes = '') {
+  // Get current subscription details
+  const { data: subscription, error: fetchError } = await supabase
+    .from('user_subscriptions')
+    .select('*')
+    .eq('id', subscriptionId)
+    .single();
+
+  if (fetchError) throw fetchError;
+
+  const mealsToAdd = mealsDelivered || subscription.next_delivery_meals || 1;
+  const deliveryDate = subscription.next_delivery_date || new Date().toISOString();
+
+  // Add to delivery history
+  await this.addDeliveryToHistory(
+    subscriptionId,
+    deliveryDate,
+    mealsToAdd,
+    'delivered',
+    deliveryNotes
+  );
+
+  // Update subscription
+  const { data, error } = await supabase
+    .from('user_subscriptions')
+    .update({
+      consumed_meals: Math.min(subscription.consumed_meals + mealsToAdd, subscription.total_meals),
+      next_delivery_status: 'delivered',
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', subscriptionId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+},
+
+/**
+ * Add entry to delivery history
+ * @param {string} subscriptionId - Subscription ID
+ * @param {string} deliveryDate - Delivery date
+ * @param {number} mealsCount - Number of meals
+ * @param {string} status - Delivery status
+ * @param {string} notes - Optional notes
+ * @returns {Object} Success response
+ */
+async addDeliveryToHistory(subscriptionId, deliveryDate, mealsCount, status, notes = '') {
+  // Get current delivery history
+  const { data: subscription, error: fetchError } = await supabase
+    .from('user_subscriptions')
+    .select('delivery_history')
+    .eq('id', subscriptionId)
+    .single();
+
+  if (fetchError) throw fetchError;
+
+  const currentHistory = subscription.delivery_history || [];
+  const newEntry = {
+    id: crypto.randomUUID(),
+    delivery_date: deliveryDate,
+    meals_count: mealsCount,
+    status,
+    notes,
+    created_at: new Date().toISOString()
+  };
+
+  const updatedHistory = [...currentHistory, newEntry];
+
+  const { error } = await supabase
+    .from('user_subscriptions')
+    .update({
+      delivery_history: updatedHistory,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', subscriptionId);
+
+  if (error) throw error;
+  return { success: true, entry: newEntry };
+},
+
+/**
+ * Get delivery history for subscription
+ * @param {string} subscriptionId - Subscription ID
+ * @param {number} limit - Number of records to return
+ * @returns {Array} Delivery history entries
+ */
+async getDeliveryHistory(subscriptionId, limit = 50) {
+  const { data, error } = await supabase
+    .from('user_subscriptions')
+    .select('delivery_history')
+    .eq('id', subscriptionId)
+    .single();
+
+  if (error) throw error;
+
+  const history = data.delivery_history || [];
+  return history
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, limit);
+},
+
+/**
+ * Skip next delivery
+ * @param {string} subscriptionId - Subscription ID
+ * @param {string} reason - Reason for skipping
+ * @returns {Object} Updated subscription
+ */
+async skipNextDelivery(subscriptionId, reason = '') {
+  // Add skip entry to history
+  await this.addDeliveryToHistory(
+    subscriptionId,
+    null,
+    0,
+    'skipped',
+    reason
+  );
+
+  // Calculate next delivery date (assuming weekly deliveries)
+  const { data: subscription, error: fetchError } = await supabase
+    .from('user_subscriptions')
+    .select('delivery_days, preferred_delivery_time')
+    .eq('id', subscriptionId)
+    .single();
+
+  if (fetchError) throw fetchError;
+
+  // Use existing function to calculate next delivery
+  let nextDeliveryDate = null;
+  if (subscription.delivery_days && subscription.delivery_days.length > 0) {
+    // Call the database function to calculate next delivery
+    const { data: nextDate, error: calcError } = await supabase
+      .rpc('get_next_delivery_date_with_time', {
+        delivery_days: subscription.delivery_days,
+        preferred_time: subscription.preferred_delivery_time
+      });
+
+    if (!calcError) {
+      nextDeliveryDate = nextDate;
+    }
+  }
+
+  const { data, error } = await supabase
+    .from('user_subscriptions')
+    .update({
+      next_delivery_date: nextDeliveryDate,
+      next_delivery_status: nextDeliveryDate ? 'scheduled' : null,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', subscriptionId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+},
+
+/**
+ * Pause subscription
+ * @param {string} subscriptionId - Subscription ID
+ * @param {string} reason - Reason for pausing
+ * @param {string} resumeDate - Optional resume date
+ * @returns {Object} Updated subscription
+ */
+async pauseSubscription(subscriptionId, reason, resumeDate = null) {
+  const { data, error } = await supabase
+    .from('user_subscriptions')
+    .update({
+      is_paused: true,
+      paused_at: new Date().toISOString(),
+      pause_reason: reason,
+      resume_date: resumeDate,
+      next_delivery_date: null,
+      next_delivery_status: null,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', subscriptionId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+},
+
+/**
+ * Resume subscription
+ * @param {string} subscriptionId - Subscription ID
+ * @returns {Object} Updated subscription
+ */
+async resumeSubscription(subscriptionId) {
+  const { data, error } = await supabase
+    .from('user_subscriptions')
+    .update({
+      is_paused: false,
+      paused_at: null,
+      pause_reason: null,
+      resume_date: null,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', subscriptionId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  
+  // Trigger recalculation of next delivery (handled by trigger)
+  return data;
+},
+
+/**
+ * Get subscriptions with upcoming deliveries
+ * @param {number} daysAhead - Number of days to look ahead
+ * @returns {Array} Subscriptions with upcoming deliveries
+ */
+async getUpcomingDeliveries(daysAhead = 7) {
+  const endDate = new Date();
+  endDate.setDate(endDate.getDate() + daysAhead);
+
+  const { data, error } = await supabase
+    .from('user_subscriptions')
+    .select(`
+      *,
+      user_profiles(id, display_name, email, phone_number),
+      user_addresses!delivery_address_id(*)
+    `)
+    .not('next_delivery_date', 'is', null)
+    .lte('next_delivery_date', endDate.toISOString())
+    .eq('status', 'active')
+    .eq('is_paused', false)
+    .order('next_delivery_date', { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+},
+
+/**
+ * Get overdue deliveries
+ * @returns {Array} Overdue subscriptions
+ */
+async getOverdueDeliveries() {
+  const now = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from('user_subscriptions')
+    .select(`
+      *,
+      user_profiles(id, display_name, email, phone_number),
+      user_addresses!delivery_address_id(*)
+    `)
+    .not('next_delivery_date', 'is', null)
+    .lt('next_delivery_date', now)
+    .in('next_delivery_status', ['scheduled', 'in_transit'])
+    .eq('status', 'active')
+    .order('next_delivery_date', { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+},
+
+/**
+ * Bulk update delivery status
+ * @param {Array} subscriptionIds - Array of subscription IDs
+ * @param {string} status - New delivery status
+ * @returns {Object} Bulk update result
+ */
+async bulkUpdateDeliveryStatus(subscriptionIds, status) {
+  const { data, error } = await supabase
+    .from('user_subscriptions')
+    .update({
+      next_delivery_status: status,
+      updated_at: new Date().toISOString()
+    })
+    .in('id', subscriptionIds)
+    .select();
+
+  if (error) throw error;
+  return { success: true, updatedCount: data.length, subscriptions: data };
+},
+
+/**
+ * Update subscription meals for next delivery
+ * @param {string} subscriptionId - Subscription ID
+ * @param {Array} mealIds - Array of meal IDs
+ * @param {number} mealsCount - Number of meals for next delivery
+ * @returns {Object} Updated subscription
+ */
+async updateNextDeliveryMeals(subscriptionId, mealIds, mealsCount) {
+  const { data, error } = await supabase
+    .from('user_subscriptions')
+    .update({
+      meals: mealIds,
+      next_delivery_meals: mealsCount,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', subscriptionId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
 };

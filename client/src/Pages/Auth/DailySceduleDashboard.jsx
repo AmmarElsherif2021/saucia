@@ -1,7 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAdminFunctions } from '../../Hooks/useAdminFunctions';
-import { useItems } from '../../Hooks/useItems';
+import { 
+  useAdminSubscription,
+  useUpcomingDeliveries,
+  useSubscriptionAnalytics,
+  useSubscriptionList,
+  useSubscriptionOrders 
+} from '../../Hooks/useAdminSubscription';
 import {
   Box,
   Grid,
@@ -23,6 +28,8 @@ import {
   CardBody,
   Heading,
   Input,
+  InputGroup,
+  InputLeftElement,
   Textarea,
   Button,
   IconButton,
@@ -34,1020 +41,1399 @@ import {
   Spinner,
   Alert,
   AlertIcon,
+  useColorModeValue,
+  Container,
+  SimpleGrid,
+  Progress,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  useToast,
+  AspectRatio,
+  Image,
+  Icon,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  StatArrow,
+  StatGroup,
+  Wrap,
+  WrapItem,
+  Center,
+  Tooltip,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuItemOption,
+  MenuGroup,
+  MenuOptionGroup,
+  MenuDivider,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  FormControl,
+  FormLabel,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+  useBreakpointValue,
+  Drawer,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  DrawerHeader,
+  DrawerBody,
+  DrawerFooter,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverHeader,
+  PopoverBody,
+  PopoverFooter,
+  PopoverArrow,
+  PopoverCloseButton,
+  PopoverAnchor,
+  Portal,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  Skeleton,
+  SkeletonCircle,
+  SkeletonText,
+  Switch,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+  Stack,
+  Link,
+  Square,
+  Circle,
+  List,
+  ListItem,
+  ListIcon,
+  OrderedList,
+  UnorderedList,
+  Icon as ChakraIcon,
 } from '@chakra-ui/react';
-import { FiClock, FiUser, FiMapPin, FiInfo, FiPlus, FiSearch, FiPhone, FiActivity, FiCalendar, FiCreditCard, FiPause, FiPlay } from 'react-icons/fi';
+import { PlusSquareIcon, InfoIcon, ChevronDownIcon, ChevronRightIcon } from '@chakra-ui/icons';
+import {
+  FiClock,
+  FiUser,
+  FiMapPin,
+  FiInfo,
+  FiPlus,
+  FiSearch,
+  FiPhone,
+  FiActivity,
+  FiCalendar,
+  FiCreditCard,
+  FiPause,
+  FiPlay,
+  FiTruck,
+  FiPackage,
+  FiCheckCircle,
+  FiAlertCircle,
+  FiEdit,
+  FiMoreVertical,
+  FiFilter,
+  FiRefreshCw,
+  FiBarChart2,
+  FiHome,
+  FiShoppingBag,
+  FiHeart,
+  FiSmile,
+  FiSave,
+  FiX,
+  FiMenu,
+  FiChevronLeft,
+  FiChevronRight,
+  FiBell,
+  FiSettings,
+  FiLogOut,
+  FiMail,
+  FiMessageSquare,
+  FiStar,
+  FiAward,
+  FiTrendingUp,
+  FiDollarSign,
+  FiUsers,
+  FiBox,
+  FiShoppingCart,
+  FiLayers,
+  FiDatabase,
+  FiServer,
+  FiCpu,
+  FiGlobe,
+  FiAnchor,
+  FiArchive,
+  FiAirplay,
+  FiAlertTriangle,
+  FiBookmark,
+  FiBriefcase,
+  FiCamera,
+  FiCoffee,
+  FiCompass,
+  FiDownload,
+  FiEye,
+  FiFlag,
+  FiGitBranch,
+  FiGift,
+  FiGrid,
+  FiHeadphones,
+  FiKey,
+  FiLifeBuoy,
+  FiLock,
+  FiMic,
+  FiMoon,
+  FiPaperclip,
+  FiPieChart,
+  FiPrinter,
+  FiRadio,
+  FiRepeat,
+  FiScissors,
+  FiShuffle,
+  FiSidebar,
+  FiSliders,
+  FiTag,
+  FiTarget,
+  FiThermometer,
+  FiThumbsUp,
+  FiTrash,
+  FiTrash2,
+  FiVideo,
+  FiWifi,
+  FiWind,
+  FiZap,
+  FiZoomIn,
+  FiZoomOut,
+} from 'react-icons/fi';
 
+// ===== CONSTANTS AND CONFIGURATIONS =====
 const TIME_SLOTS = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'];
 
-const STATUS_CONFIG = {
-  scheduled: { color: 'gray', bg: 'gray.50', label: 'scheduled' },
-  preparing: { color: 'yellow', bg: 'yellow.50', label: 'preparing' },
-  ready: { color: 'green', bg: 'green.50', label: 'ready' },
-  delivered: { color: 'blue', bg: 'blue.50', label: 'delivered' },
-  cancelled: { color: 'red', bg: 'red.50', label: 'cancelled' },
+const STATUS_CONFIGS = {
+  order: {
+    pending: { color: 'orange', bg: 'orange.50', label: 'pending', icon: FiClock },
+    active: { color: 'teal', bg: 'teal.50', label: 'active', icon: FiPackage },
+    confirmed: { color: 'teal', bg: 'teal.50', label: 'confirmed', icon: FiPackage },
+    preparing: { color: 'orange', bg: 'orange.50', label: 'preparing', icon: FiPackage },
+    out_for_delivery: { color: 'purple', bg: 'purple.50', label: 'out_for_delivery', icon: FiTruck },
+    delivered: { color: 'green', bg: 'green.50', label: 'delivered', icon: FiCheckCircle },
+    cancelled: { color: 'red', bg: 'red.50', label: 'cancelled', icon: FiAlertCircle },
+    failed: { color: 'red', bg: 'red.50', label: 'failed', icon: FiAlertCircle },
+  },
+  delivery: {
+    pending: { color: 'blue', bg: 'blue.50', label: 'pending', icon: FiClock },
+    confirmed: { color: 'orange', bg: 'orange.50', label: 'confirmed', icon: FiPackage },
+    preparing: { color: 'orange', bg: 'orange.50', label: 'preparing', icon: FiPackage },
+    delivered: { color: 'green', bg: 'green.50', label: 'delivered', icon: FiCheckCircle },
+    cancelled: { color: 'red', bg: 'red.50', label: 'cancelled', icon: FiAlertCircle },
+    failed: { color: 'red', bg: 'red.50', label: 'failed', icon: FiAlertCircle },
+  },
+  subscription: {
+    active: { color: 'green', label: 'active', icon: FiCheckCircle },
+    pending: { color: 'yellow', label: 'pending', icon: FiClock },
+    cancelled: { color: 'red', label: 'cancelled', icon: FiAlertCircle },
+    paused: { color: 'orange', label: 'paused', icon: FiPause },
+    completed: { color: 'purple', label: 'completed', icon: FiCheckCircle },
+  }
 };
 
-const SUBSCRIPTION_STATUS_CONFIG = {
-  active: { color: 'green', label: 'active' },
-  pending: { color: 'yellow', label: 'pending' },
-  cancelled: { color: 'red', label: 'cancelled' },
-  expired: { color: 'gray', label: 'expired' },
-  paused: { color: 'orange', label: 'paused' },
-};
-
-// Helper function to process meal items from subscription data
-const processMealItems = (mealData, allItems) => {
-  if (!mealData || !Array.isArray(mealData) || !allItems) return [];
+// ===== UTILITY FUNCTIONS =====
+const transformOrderData = (orderData) => {
+  if (!orderData) return [];
   
-  return mealData.map((meal, mealIndex) => {
-    const mealItems = [];
+  // Debugging: Log the raw order data
+  console.log('Raw order data:', orderData);
+  
+  return orderData.map(order => {
+    const subscriptionData = order.user_subscriptions || {};
+    const userProfile = subscriptionData.user_profiles || {};
+    const userAddress = subscriptionData.user_addresses || {};
     
-    // Process each item in the meal object
-    Object.entries(meal).forEach(([itemId, quantity]) => {
-      const numericItemId = parseInt(itemId);
-      const item = allItems.find(item => item.id === numericItemId);
-      
-      if (item && quantity > 0) {
-        mealItems.push({
-          id: numericItemId,
-          name: item.name,
-          name_arabic: item.name_arabic,
-          category: item.category,
-          quantity: quantity,
-          price: item.price,
-          calories: item.calories,
-          protein_g: item.protein_g,
-          carbs_g: item.carbs_g,
-          fat_g: item.fat_g,
-        });
-      }
-    });
+    // Debugging: Log order items for this order
+    console.log(`Order #${order.order_number} items:`, order.order_items);
     
+    const baseData = {
+      id: order.id,
+      order_number: order.order_number,
+      status: order.status,
+      payment_status: order.payment_status,
+      total_amount: order.total_amount,
+      scheduled_delivery_date: order.scheduled_delivery_date,
+      actual_delivery_date: order.actual_delivery_date,
+      delivery_instructions: order.delivery_instructions,
+      subscription_meal_index: order.subscription_meal_index,
+      created_at: order.created_at,
+      order_items: order.order_items || [], // Add order items
+      subscription: {
+        id: subscriptionData.id,
+        user_id: subscriptionData.user_id,
+        status: subscriptionData.status,
+      },
+      user_profile: {
+        id: userProfile.id,
+        display_name: userProfile.display_name || 'Unknown',
+        email: userProfile.email || '',
+        phone_number: userProfile.phone_number || 'N/A',
+      },
+      delivery_address: userAddress ? 
+        `${userAddress.address_line1 || ''}${userAddress.address_line2 ? ', ' + userAddress.address_line2 : ''}, ${userAddress.city || ''}`.trim() : 
+        'Address not available',
+      delivery_date: order.scheduled_delivery_date ? 
+        new Date(order.scheduled_delivery_date).toISOString().split('T')[0] : 
+        'N/A',
+      delivery_time: order.scheduled_delivery_date ? 
+        new Date(order.scheduled_delivery_date).toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        }) : 'N/A',
+    };
+
+    // Add type-specific data
     return {
-      id: `meal-${mealIndex}`,
-      name: `Meal ${mealIndex + 1}`,
-      items: mealItems,
-      special_instructions: '',
-      total_calories: mealItems.reduce((sum, item) => sum + (item.calories * item.quantity), 0),
-      total_protein: mealItems.reduce((sum, item) => sum + (item.protein_g * item.quantity), 0),
-      total_carbs: mealItems.reduce((sum, item) => sum + (item.carbs_g * item.quantity), 0),
-      total_fat: mealItems.reduce((sum, item) => sum + (item.fat_g * item.quantity), 0),
+      ...baseData,
+      subscription: {
+        ...baseData.subscription,
+        consumed_meals: subscriptionData.consumed_meals || 0,
+        total_meals: subscriptionData.total_meals || 0,
+        start_date: subscriptionData.start_date,
+        end_date: subscriptionData.end_date,
+        remaining_meals: (subscriptionData.total_meals || 0) - (subscriptionData.consumed_meals || 0),
+        meals: subscriptionData.meals || [],
+      }
     };
   });
 };
-
-// REFORMED: Generate deliveries with ONE MEAL per delivery based on delivery_days and meals array
-const generateDeliveriesFromSubscriptions = (subscriptions, deliveryRecords = [], allItems) => {
-  if (!subscriptions || !Array.isArray(subscriptions) || !allItems) return [];
-  
-  const deliveries = [];
-  
-  subscriptions.forEach(subscription => {
-    // Get delivery records for this subscription
-    const subscriptionDeliveryRecords = deliveryRecords.filter(
-      record => record.subscription_id === subscription.id
-    );
-
-    // Process meals for this subscription
-    const processedMeals = processMealItems(subscription.meals, allItems);
-    
-    // If we have delivery records from the view, use them (these should be one meal per record)
-    if (subscriptionDeliveryRecords.length > 0) {
-      subscriptionDeliveryRecords.forEach(deliveryRecord => {
-        const deliveryDate = deliveryRecord.delivery_date.split('T')[0];
-        const deliveryTime = subscription.preferred_delivery_time 
-          ? subscription.preferred_delivery_time.substring(0, 5) 
-          : '12:00';
-        
-        // Find the corresponding meal from the processed meals
-        // This assumes deliveryRecord.next_delivery_meal contains the meal data
-        const mealForDelivery = deliveryRecord.next_delivery_meal 
-          ? [processMealFromData(deliveryRecord.next_delivery_meal, allItems)]
-          : [processedMeals[0]]; // fallback to first meal if no specific meal data
-        
-        deliveries.push({
-          id: deliveryRecord.next_delivery_id || deliveryRecord.id,
-          delivery_record_id: deliveryRecord.id,
-          user_profile: {
-            id: subscription.user_profiles.id,
-            display_name: subscription.user_profiles.display_name,
-            email: subscription.user_profiles.email,
-            phone_number: subscription.user_profiles.phone_number || 'N/A',
-            avatar_url: subscription.user_profiles.avatar_url || '',
-            notes: subscription.user_profiles.notes || 'No special notes',
-          },
-          subscription: {
-            ...subscription,
-            status: subscription.is_paused ? 'paused' : subscription.status,
-          },
-          delivery_date: deliveryDate,
-          delivery_time: deliveryTime,
-          delivery_address: subscription.delivery_address || `Delivery Address`,
-          meals: mealForDelivery, // ONE MEAL per delivery
-          status: deliveryRecord.next_delivery_status || 'scheduled',
-          admin_notes: '',
-          meals_count: 1, // Always 1 meal per delivery
-        });
-      });
-    } else if (subscription.delivery_days && Array.isArray(subscription.delivery_days) && processedMeals.length > 0) {
-      // Reformed fallback logic: Create one delivery per day with ONE meal
-      // Distribute meals across delivery days
-      subscription.delivery_days.forEach((deliveryDay, dayIndex) => {
-        const deliveryDate = new Date(deliveryDay).toISOString().split('T')[0];
-        const deliveryTime = subscription.preferred_delivery_time 
-          ? subscription.preferred_delivery_time.substring(0, 5) 
-          : '12:00';
-        
-        // Calculate which meal this delivery should contain
-        // Option 1: Cycle through meals (if you have 5 meals and 20 days, each meal appears 4 times)
-        const mealIndex = dayIndex % processedMeals.length;
-        const mealForThisDelivery = processedMeals[mealIndex];
-        
-        // Determine delivery status based on date
-        const today = new Date().toISOString().split('T')[0];
-        const deliveryDateObj = new Date(deliveryDate);
-        const todayObj = new Date(today);
-        
-        let status = 'scheduled';
-        if (deliveryDateObj < todayObj) {
-          status = 'delivered';
-        } else if (deliveryDateObj.getTime() === todayObj.getTime()) {
-          status = 'preparing';
-        }
-        
-        deliveries.push({
-          id: `${subscription.id}-delivery-${dayIndex}`,
-          delivery_record_id: null, // No delivery record exists
-          user_profile: {
-            id: subscription.user_profiles.id,
-            display_name: subscription.user_profiles.display_name,
-            email: subscription.user_profiles.email,
-            phone_number: subscription.user_profiles.phone_number || 'N/A',
-            avatar_url: subscription.user_profiles.avatar_url || '',
-            notes: subscription.user_profiles.notes || 'No special notes',
-          },
-          subscription: {
-            ...subscription,
-            status: subscription.is_paused ? 'paused' : subscription.status,
-          },
-          delivery_date: deliveryDate,
-          delivery_time: deliveryTime,
-          delivery_address: subscription.delivery_address || `Delivery Address`,
-          meals: [mealForThisDelivery], // ONE MEAL per delivery
-          status: status,
-          admin_notes: '',
-          meals_count: 1, // Always 1 meal per delivery
-        });
-      });
-    }
-  });
-  
-  return deliveries.sort((a, b) => a.delivery_date.localeCompare(b.delivery_date));
-};
-
-// Helper function to process a single meal from delivery record data
-const processMealFromData = (mealData, allItems) => {
-  if (!mealData || !allItems) return null;
-  
-  const mealItems = [];
-  
-  // Process the meal data (assuming it's in the same format as subscription.meals)
-  Object.entries(mealData).forEach(([itemId, quantity]) => {
-    const numericItemId = parseInt(itemId);
-    const item = allItems.find(item => item.id === numericItemId);
-    
-    if (item && quantity > 0) {
-      mealItems.push({
-        id: numericItemId,
-        name: item.name,
-        name_arabic: item.name_arabic,
-        category: item.category,
-        quantity: quantity,
-        price: item.price,
-        calories: item.calories,
-        protein_g: item.protein_g,
-        carbs_g: item.carbs_g,
-        fat_g: item.fat_g,
-      });
-    }
-  });
-  
-  return {
-    id: `meal-single`,
-    name: `Daily Meal`,
-    items: mealItems,
-    special_instructions: '',
-    total_calories: mealItems.reduce((sum, item) => sum + (item.calories * item.quantity), 0),
-    total_protein: mealItems.reduce((sum, item) => sum + (item.protein_g * item.quantity), 0),
-    total_carbs: mealItems.reduce((sum, item) => sum + (item.carbs_g * item.quantity), 0),
-    total_fat: mealItems.reduce((sum, item) => sum + (item.fat_g * item.quantity), 0),
-  };
-};
-// Reusable components
-const DeliveryBubble = ({ delivery, onClick }) => {
-  const { t } = useTranslation();
-  const statusConfig = STATUS_CONFIG[delivery.status] || STATUS_CONFIG.scheduled;
-  const subscriptionStatusConfig = SUBSCRIPTION_STATUS_CONFIG[delivery.subscription.status] || SUBSCRIPTION_STATUS_CONFIG.active;
+// ===== REUSABLE COMPONENTS =====
+// ===== REUSABLE MODAL COMPONENTS =====
+const BaseModal = ({ isOpen, onClose, title, icon, children, size = "xl" }) => {
+  const isMobile = useBreakpointValue({ base: true, md: false });
   
   return (
-    <Box
-      bg={statusConfig.bg}
-      p={3}
-      borderRadius="lg"
-      border="2px"
-      borderColor={`${statusConfig.color}.200`}
-      cursor="pointer"
-      _hover={{ 
-        shadow: "lg", 
-        transform: "translateY(-1px)",
-        borderColor: `${statusConfig.color}.300`
-      }}
-      onClick={() => onClick(delivery)}
-      minW="180px"
-      maxW="220px"
-      transition="all 0.2s"
-    >
-      <VStack spacing={2} align="start">
-        <HStack justify="space-between" w="full">
-          <Badge colorScheme={statusConfig.color} size="sm">
-            {t(`admin.${statusConfig.label}`)}
-          </Badge>
-          <Badge colorScheme={subscriptionStatusConfig.color} size="sm">
-            {t(`admin.${subscriptionStatusConfig.label}`)}
-          </Badge>
-        </HStack>
-        
-        <Text fontWeight="bold" fontSize="sm" noOfLines={1}>
-          {delivery.user_profile.display_name}
-        </Text>
-        
-        <HStack spacing={1}>
-          <FiPhone size="12" />
-          <Text fontSize="xs" color="gray.700">
-            {delivery.user_profile.phone_number}
-          </Text>
-        </HStack>
-
-        <HStack spacing={1}>
-          <FiCalendar size="12" />
-          <Text fontSize="xs" color="gray.700">
-            {delivery.delivery_date}
-          </Text>
-        </HStack>
-
-        <HStack spacing={1}>
-          <FiCreditCard size="12" />
-          <Text fontSize="xs" color="gray.700">
-            {t('admin.meals')}: {delivery.subscription.consumed_meals}/{delivery.subscription.total_meals}
-          </Text>
-        </HStack>
-
-        <Text fontSize="xs" color="blue.600" fontWeight="medium">
-          {delivery.meals_count} {t('admin.meal')} {t('admin.with')} {delivery.meals.reduce((sum, meal) => sum + meal.items.length, 0)} {t('admin.items')}
-        </Text>
-
-        {delivery.delivery_record_id && (
-          <Text fontSize="xs" color="purple.600" fontWeight="medium">
-            {t('admin.recordId')}: {delivery.delivery_record_id.substring(0, 8)}...
-          </Text>
-        )}
-      </VStack>
-    </Box>
+    <Modal isOpen={isOpen} onClose={onClose} size={isMobile ? "full" : size}>
+      <ModalOverlay />
+      <ModalContent borderRadius={isMobile ? 0 : "md"} m={isMobile ? 0 : 4}>
+        <ModalHeader bg="blue.50" py={4}>
+          <Flex align="center">
+            <Icon as={icon} mr={2} />
+            <Text>{title}</Text>
+          </Flex>
+        </ModalHeader>
+        <ModalCloseButton size="lg" />
+        <ModalBody pb={6} pt={4}>
+          {children}
+        </ModalBody>
+      </ModalContent>
+    </Modal>
   );
 };
 
-const KitchenQueueItem = ({ delivery, onClick }) => {
-  const { t } = useTranslation();
-  const statusConfig = STATUS_CONFIG[delivery.status] || STATUS_CONFIG.scheduled;
-  const subscriptionStatusConfig = SUBSCRIPTION_STATUS_CONFIG[delivery.subscription.status] || SUBSCRIPTION_STATUS_CONFIG.active;
-  
+// Modal to show order items
+const OrderItemsModal = ({ isOpen, onClose, order, t }) => {
+  // Debugging: Log order items when modal opens
+  useEffect(() => {
+    if (isOpen && order) {
+      console.log('Order items:', order.order_items);
+      console.log('Order has items:', order.order_items?.length > 0);
+    }
+  }, [isOpen, order]);
+
   return (
-    <Box
-      p={4}
-      border="2px"
-      borderColor={`${statusConfig.color}.200`}
-      borderRadius="lg"
-      cursor="pointer"
-      onClick={() => onClick(delivery)}
-      bg="white"
-      _hover={{ shadow: "md", borderColor: `${statusConfig.color}.300` }}
-      transition="all 0.2s"
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`${t('admin.orderItems')} - Order #${order?.order_number}`}
+      icon={FiPackage}
     >
-      <HStack justify="space-between" mb={2}>
-        <HStack>
-          <FiActivity size="14" />
-          <Text fontWeight="bold" fontSize="sm">
-            {delivery.delivery_record_id ? `${t('admin.record')} #${delivery.delivery_record_id.substring(0, 8)}...` : `${t('admin.legacy')} #${delivery.id.substring(0, 8)}...`}
-          </Text>
-        </HStack>
-        <VStack spacing={0} align="end">
-          <Badge colorScheme={statusConfig.color} size="sm">
-            {t(`admin.${statusConfig.label}`)}
-          </Badge>
-          <Badge colorScheme={subscriptionStatusConfig.color} size="sm">
-            {t(`admin.${subscriptionStatusConfig.label}`)}
-          </Badge>
-          <Text fontSize="xs" color="gray.600">
-            {delivery.delivery_time}
-          </Text>
-        </VStack>
-      </HStack>
-      
-      <VStack align="stretch" spacing={2}>
-        {delivery.meals.map((meal, index) => (
-          <Box key={meal.id} bg="gray.50" p={2} borderRadius="md">
-            <HStack justify="space-between">
-              <Text fontWeight="medium" fontSize="sm">
-                {meal.name} ({meal.items.length} {t('admin.items')})
-              </Text>
-              <Tag size="sm" colorScheme="blue">
-                <TagLabel>{meal.total_calories} {t('admin.cal')}</TagLabel>
-              </Tag>
-            </HStack>
-            <Text fontSize="xs" color="gray.600" mt={1}>
-              {meal.items.map(item => `${item.name} (${item.quantity}x)`).join(', ')}
-            </Text>
-          </Box>
-        ))}
-        
-        <Text fontSize="xs" color="gray.600">
-          {t('admin.for')}: {delivery.user_profile.display_name}
+      <VStack spacing={4} align="stretch">
+        <Text fontWeight="semibold">
+          {t('admin.customer')}: {order?.user_profile?.display_name}
         </Text>
         
-        <HStack justify="space-between">
-          <Text fontSize="xs" color="gray.600">
-            {t('admin.date')}: {delivery.delivery_date}
-          </Text>
-          <Text fontSize="xs" color="gray.600">
-            {t('admin.progress')}: {delivery.subscription.consumed_meals}/{delivery.subscription.total_meals}
-          </Text>
-        </HStack>
-        
-        <HStack justify="space-between">
-          <Text fontSize="xs" color="purple.600">
-            {t('admin.mealsInDelivery')}: {delivery.meals_count}
-          </Text>
-          {delivery.delivery_record_id && (
-            <Badge colorScheme="purple" size="sm">{t('admin.tracked')}</Badge>
+        <Box>
+          <Text fontWeight="semibold" mb={2}>{t('admin.items')}:</Text>
+          {order?.order_items?.length > 0 ? (
+            <Table variant="simple" size="sm">
+              <Thead>
+                <Tr>
+                  <Th>{t('admin.item')}</Th>
+                  <Th>{t('admin.quantity')}</Th>
+                  <Th>{t('admin.price')}</Th>
+                  <Th>{t('admin.total')}</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {order.order_items.map((item) => (
+                  <Tr key={item.id}>
+                    <Td>
+                      <VStack align="start" spacing={0}>
+                        <Text fontWeight="medium">{item.name}</Text>
+                        {item.name_arabic && (
+                          <Text fontSize="sm" color="gray.600">
+                            {item.name_arabic}
+                          </Text>
+                        )}
+                        {item.category && (
+                          <Badge colorScheme="blue" fontSize="xs">
+                            {item.category}
+                          </Badge>
+                        )}
+                      </VStack>
+                    </Td>
+                    <Td>{item.quantity}</Td>
+                    <Td>${item.unit_price}</Td>
+                    <Td>${item.total_price}</Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          ) : (
+            <Text color="gray.500">{t('admin.noItems')}</Text>
           )}
-        </HStack>
+        </Box>
+        
+        <Box>
+          <Text fontWeight="semibold">{t('admin.orderTotal')}:</Text>
+          <Text fontSize="xl" fontWeight="bold">
+            ${order?.total_amount}
+          </Text>
+        </Box>
       </VStack>
-    </Box>
+    </BaseModal>
+  );
+};
+//status badge component
+const StatusBadge = ({ status, type = 'order', t }) => {
+  const config = STATUS_CONFIGS[type][status] || STATUS_CONFIGS[type].pending;
+  const StatusIcon = config.icon;
+  
+  return (
+    <Badge 
+      colorScheme={config.color} 
+      px={2} 
+      py={1} 
+      borderRadius="full"
+      fontSize="xs"
+    >
+      <HStack spacing={1}>
+        <StatusIcon size={12} />
+        <Text>{t(`admin.${config.label}`)}</Text>
+      </HStack>
+    </Badge>
   );
 };
 
-const MealDeliveryDashboard = () => {
-  const { t } = useTranslation();
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [deliveries, setDeliveries] = useState([]);
-  const [deliveryRecords, setDeliveryRecords] = useState([]);
-  const [selectedDelivery, setSelectedDelivery] = useState(null);
-  const [newAdminNote, setNewAdminNote] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const { isOpen, onOpen, onClose } = useDisclosure();
+const StatusMenu = ({ currentStatus, onStatusChange, type = 'order', t }) => {
+  const config = STATUS_CONFIGS[type];
   
-  // API Hooks
-  const { useGetAllSubscriptions } = useAdminFunctions();
-  const { items, fetchItems, loading: itemsLoading } = useItems();
+  return (
+    <Menu>
+      <MenuButton as={Button} size="sm" rightIcon={<ChevronDownIcon />} variant="outline">
+        {t('admin.status')}
+      </MenuButton>
+      <MenuList>
+        {Object.keys(config).map((status) => (
+          <MenuItem
+            key={status}
+            onClick={() => onStatusChange(status)}
+            fontSize="sm"
+          >
+            {t(`admin.${config[status].label}`)}
+          </MenuItem>
+        ))}
+      </MenuList>
+    </Menu>
+  );
+};
+
+const DataTableRow = ({ data, onEdit, onStatusChange, type = 'order', isMobile, t, onViewItems }) => {
+  const config = STATUS_CONFIGS[type];
+  const statusConfig = config[data.status] || config.pending;
   
-  // Fetch data
-  const { data: subscriptions, isLoading: isLoadingSubscriptions, error: subscriptionsError } = useGetAllSubscriptions();
+  // Common elements for both mobile and desktop views
+  const renderCommonElements = () => (
+    <>
+      <Flex justify="space-between" align="start">
+        <VStack align="start" spacing={1}>
+          <Text fontWeight="semibold" fontSize="md">
+            {data.user_profile?.display_name}
+          </Text>
+          <Text fontSize="sm" color="gray.600">
+            {type === 'subscription' ? 'Subscription' : `Order #${data.order_number}`}
+          </Text>
+        </VStack>
+        <StatusBadge status={data.status} type={type} t={t} />
+      </Flex>
+      
+      <Divider />
+      
+      <SimpleGrid columns={2} spacing={2}>
+        {type !== 'subscription' && (
+          <>
+            <Box>
+              <Text fontSize="xs" color="gray.500">{t('admin.date')}</Text>
+              <Text fontSize="sm">{data.delivery_date}</Text>
+            </Box>
+            <Box>
+              <Text fontSize="xs" color="gray.500">{t('admin.time')}</Text>
+              <Text fontSize="sm">{data.delivery_time}</Text>
+            </Box>
+            <Box>
+              <Text fontSize="xs" color="gray.500">{t('admin.paymentStatus')}</Text>
+              <Text fontSize="sm">{data.payment_status}</Text>
+            </Box>
+          </>
+        )}
+        <Box>
+          <Text fontSize="xs" color="gray.500">
+            {type === 'subscription' ? t('admin.meals') : t('admin.amount')}
+          </Text>
+          <Text fontSize="sm">
+            {type === 'subscription' 
+              ? `${data.consumed_meals}/${data.total_meals}`
+              : `$${data.total_amount}`
+            }
+          </Text>
+        </Box>
+      </SimpleGrid>
+      
+      {type !== 'subscription' && (
+        <Box>
+          <Text fontSize="xs" color="gray.500">{t('admin.address')}</Text>
+          <Text fontSize="sm" noOfLines={2}>{data.delivery_address}</Text>
+        </Box>
+      )}
+      
+      {type === 'subscription' && (
+        <Progress 
+          value={(data.consumed_meals / data.total_meals) * 100} 
+          size="sm" 
+          colorScheme="blue" 
+          borderRadius="full"
+        />
+      )}
+    </>
+  );
 
-  // NEW: Mock function to fetch delivery records (replace with actual API call)
-  const fetchDeliveryRecords = async () => {
-    // This should be replaced with actual API call to fetch next_delivery_records
-    // For now, returning empty array as placeholder
-    return [];
-  };
+  // Action buttons for both mobile and desktop
+  const renderActionButtons = () => (
+    <HStack spacing={2} justify="flex-end">
+      {(type === 'order' || type === 'delivery') && (
+        <IconButton
+          icon={<FiPackage />}
+          size="sm"
+          onClick={() => onViewItems(data)}
+          aria-label="View order items"
+          variant="outline"
+        />
+      )}
+      <IconButton
+        icon={<FiEdit />}
+        size="sm"
+        onClick={() => onEdit(data)}
+        aria-label={`Edit ${type}`}
+        variant="outline"
+      />
+      <StatusMenu 
+        currentStatus={data.status} 
+        onStatusChange={(status) => onStatusChange(data.id, status)}
+        type={type}
+        t={t}
+      />
+    </HStack>
+  );
 
-  // Load items and delivery records on component mount
-  useEffect(() => {
-    fetchItems();
-    fetchDeliveryRecords().then(setDeliveryRecords);
-  }, [fetchItems]);
-
-  // Process subscriptions when data changes
-  useEffect(() => {
-    if (subscriptions && items && items.length > 0) {
-      const processedDeliveries = generateDeliveriesFromSubscriptions(subscriptions, deliveryRecords, items);
-      setDeliveries(processedDeliveries);
-      console.log("Processed deliveries with delivery records:", processedDeliveries);
-    }
-  }, [subscriptions, items, deliveryRecords]);
-
-  // Loading and error states
-  if (isLoadingSubscriptions || itemsLoading) {
+  if (isMobile) {
     return (
-      <Box p={6} bg="gray.50" minH="100vh">
-        <VStack spacing={4} align="center" justify="center" minH="50vh">
-          <Spinner size="xl" color="blue.500" />
-          <Text>{t('admin.loadingDashboard')}</Text>
+      <Box borderWidth="1px" borderRadius="lg" p={4} mb={4} boxShadow="sm">
+        <VStack align="stretch" spacing={3}>
+          {renderCommonElements()}
+          {renderActionButtons()}
         </VStack>
       </Box>
     );
   }
-
-  if (subscriptionsError) {
-    return (
-      <Box p={6} bg="gray.50" minH="100vh">
-        <Alert status="error">
-          <AlertIcon />
-          {t('admin.errorLoadingSubscriptions')}: {subscriptionsError.message}
-        </Alert>
-      </Box>
-    );
-  }
-
-  // Get date range for display
-  const getDateRange = () => {
-    const dates = deliveries.map(d => d.delivery_date);
-    const minDate = dates.length ? dates.reduce((a, b) => a < b ? a : b) : selectedDate;
-    const maxDate = dates.length ? dates.reduce((a, b) => a > b ? a : b) : selectedDate;
-    return { minDate, maxDate };
-  };
-
-  const { minDate, maxDate } = getDateRange();
-
-  // Filter deliveries for the selected date
-  const deliveriesForSelectedDate = deliveries.filter(
-    delivery => delivery.delivery_date === selectedDate
+  
+  // Desktop view
+  return (
+    <Tr _hover={{ bg: 'gray.50' }}>
+      <Td>
+        <HStack spacing={3}>
+          <Avatar size="sm" name={data.user_profile?.display_name} />
+          <Box>
+            <Text fontWeight="medium">{data.user_profile?.display_name}</Text>
+            <Text fontSize="sm" color="gray.600">{data.user_profile?.phone_number}</Text>
+          </Box>
+        </HStack>
+      </Td>
+      
+      {type !== 'subscription' && (
+        <Td>
+          <Text fontWeight="medium">#{data.order_number}</Text>
+        </Td>
+      )}
+      
+      {type !== 'subscription' && (
+        <Td maxW="200px">
+          <Text noOfLines={2} fontSize="sm">
+            {data.delivery_address}
+          </Text>
+        </Td>
+      )}
+      
+      {type !== 'subscription' && (
+        <Td>
+          <Text>{data.delivery_date}</Text>
+          <Text fontSize="sm" color="gray.600">{data.delivery_time}</Text>
+        </Td>
+      )}
+      
+      <Td>
+        <StatusBadge status={data.status} type={type} t={t} />
+      </Td>
+      
+      {type === 'subscription' ? (
+        <>
+          <Td>{data.start_date}</Td>
+          <Td>{data.end_date || 'N/A'}</Td>
+          <Td>
+            <HStack spacing={2}>
+              <Text fontSize="sm">
+                {data.consumed_meals}/{data.total_meals}
+              </Text>
+              <Progress 
+                value={(data.consumed_meals / data.total_meals) * 100} 
+                size="sm" 
+                width="80px" 
+                colorScheme="blue" 
+                borderRadius="full"
+              />
+            </HStack>
+          </Td>
+        </>
+      ) : (
+        <>
+          <Td>
+            <Text fontSize="sm">{data.payment_status}</Text>
+          </Td>
+          <Td>
+            <Text fontWeight="semibold">${data.total_amount}</Text>
+          </Td>
+        </>
+      )}
+      
+      <Td>
+        {renderActionButtons()}
+      </Td>
+    </Tr>
   );
+};
 
-  // Utility functions
-  const getCurrentTime = () => {
-    const now = new Date();
-    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-  };
 
-  const filterDeliveries = (deliveries, query) => {
-    if (!query) return deliveries;
+const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
+  const toast = useToast();
+  const { updateSubscription, updateDeliveryStatus } = useAdminSubscription();
+  const [formData, setFormData] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (data) {
+      if (type === 'subscription') {
+        setFormData({
+          consumed_meals: data.consumed_meals || 0,
+          total_meals: data.total_meals || 0,
+          status: data.status || 'active',
+          start_date: data.start_date || '',
+          end_date: data.end_date || '',
+        });
+      } else {
+        setFormData({
+          delivery_date: data.delivery_date,
+          delivery_time: data.delivery_time || '12:00',
+          delivery_instructions: data.delivery_instructions || '',
+          status: data.status,
+        });
+      }
+    }
+  }, [data, type]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
     
-    return deliveries.filter(delivery => 
-      delivery.user_profile.display_name.toLowerCase().includes(query.toLowerCase()) ||
-      delivery.user_profile.phone_number.includes(query) ||
-      delivery.user_profile.email.toLowerCase().includes(query.toLowerCase()) ||
-      delivery.meals.some(meal => 
-        meal.items.some(item => item.name.toLowerCase().includes(query.toLowerCase()))
-      ) ||
-      delivery.subscription.status.toLowerCase().includes(query.toLowerCase())
-    );
+    try {
+      if (type === 'subscription') {
+        await updateSubscription(data.id, formData);
+      } else {
+        // Format the scheduled_delivery_date for delivery/order
+        const scheduled_delivery_date = new Date(`${formData.delivery_date}T${formData.delivery_time}:00`);
+        await updateDeliveryStatus(data.id, {
+          scheduled_delivery_date: scheduled_delivery_date.toISOString(),
+          delivery_instructions: formData.delivery_instructions,
+          status: formData.status,
+        });
+      }
+      
+      toast({
+        title: t('admin.success'),
+        description: type === 'subscription' ? t('admin.subscriptionUpdated') : t('admin.deliveryUpdated'),
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      onSave();
+      onClose();
+    } catch (error) {
+      toast({
+        title: t('admin.error'),
+        description: error.message || t('admin.updateFailed'),
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const groupDeliveriesByTime = (deliveries) => {
-    return TIME_SLOTS.map(time => ({
-      time,
-      deliveries: deliveries.filter(d => d.delivery_time === time)
+  const handleChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
     }));
   };
 
-  // Event handlers
-  const handleDeliveryClick = (delivery) => {
-    setSelectedDelivery(delivery);
-    setNewAdminNote('');
-    onOpen();
-  };
-
-  const addAdminNote = () => {
-    if (!newAdminNote.trim() || !selectedDelivery) return;
-
-    const timestamp = new Date().toLocaleString('en-CA', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-    
-    const noteToAdd = `${timestamp}: ${newAdminNote}`;
-    
-    const updatedDeliveries = deliveries.map(delivery => {
-      if (delivery.id === selectedDelivery.id) {
-        return {
-          ...delivery,
-          admin_notes: delivery.admin_notes 
-            ? `${delivery.admin_notes}\n${noteToAdd}` 
-            : noteToAdd
-        };
-      }
-      return delivery;
-    });
-    
-    setDeliveries(updatedDeliveries);
-    setSelectedDelivery(updatedDeliveries.find(d => d.id === selectedDelivery.id));
-    setNewAdminNote('');
-  };
-
-  // NEW: Update delivery record status
-  const updateDeliveryStatus = (deliveryId, newStatus) => {
-    const updatedDeliveries = deliveries.map(delivery => {
-      if (delivery.id === deliveryId) {
-        return {
-          ...delivery,
-          status: newStatus
-        };
-      }
-      return delivery;
-    });
-    
-    setDeliveries(updatedDeliveries);
-    if (selectedDelivery && selectedDelivery.id === deliveryId) {
-      setSelectedDelivery(updatedDeliveries.find(d => d.id === deliveryId));
-    }
-    
-    // Here you would also call API to update the delivery record status
-    // updateDeliveryRecordStatus(deliveryId, newStatus);
-  };
-
-  const updateSubscriptionStatus = (deliveryId, newStatus) => {
-    const updatedDeliveries = deliveries.map(delivery => {
-      if (delivery.id === deliveryId) {
-        return {
-          ...delivery,
-          subscription: {
-            ...delivery.subscription,
-            status: newStatus,
-            is_paused: newStatus === 'paused',
-            paused_at: newStatus === 'paused' ? new Date().toISOString() : delivery.subscription.paused_at,
-            resume_date: newStatus === 'paused' ? null : delivery.subscription.resume_date
-          }
-        };
-      }
-      return delivery;
-    });
-    
-    setDeliveries(updatedDeliveries);
-    if (selectedDelivery && selectedDelivery.id === deliveryId) {
-      setSelectedDelivery(updatedDeliveries.find(d => d.id === deliveryId));
-    }
-  };
-
-  // Data processing
-  const filteredDeliveries = filterDeliveries(deliveriesForSelectedDate, searchQuery);
-  const deliveriesByTime = groupDeliveriesByTime(filteredDeliveries);
-  const currentTime = getCurrentTime();
-  const kitchenQueue = filteredDeliveries
-    .filter(d => ['scheduled', 'preparing', 'ready'].includes(d.status))
-    .sort((a, b) => a.delivery_time.localeCompare(b.delivery_time));
-
   return (
-    <Box p={6} bg="gray.50" minH="100vh">
-      <VStack spacing={6} align="stretch">
-        {/* Header */}
-        <Flex justify="space-between" align="center">
-          <Heading size="xl" color="gray.800">
-            {t('admin.kitchenDeliveryDashboard')}
-          </Heading>
-          <HStack>
-            <Input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              min={minDate}
-              max={maxDate}
-              maxW="200px"
-              bg="white"
-            />
-            <HStack>
-              <Input
-                placeholder={t('admin.searchPlaceholder')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                maxW="350px"
-                bg="white"
-              />
-              <IconButton 
-                aria-label={t('admin.search')} 
-                icon={<FiSearch />} 
-                colorScheme="blue"
-                variant="ghost"
-              />
-            </HStack>
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`${type === 'subscription' ? t('admin.editSubscription') : t('admin.editDelivery')} - ${data?.user_profile?.display_name}`}
+      icon={FiEdit}
+    >
+      <form onSubmit={handleSubmit}>
+        <VStack spacing={4} align="stretch">
+          {type === 'subscription' ? (
+            <>
+              <FormControl>
+                <FormLabel fontWeight="semibold">{t('admin.status')}</FormLabel>
+                <Select
+                  value={formData.status}
+                  onChange={(e) => handleChange('status', e.target.value)}
+                  size="md"
+                  focusBorderColor="blue.500"
+                >
+                  {Object.keys(STATUS_CONFIGS.subscription).map(status => (
+                    <option key={status} value={status}>
+                      {t(`admin.${status}`)}
+                    </option>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={4}>
+                <FormControl>
+                  <FormLabel fontWeight="semibold">{t('admin.totalMeals')}</FormLabel>
+                  <NumberInput
+                    value={formData.total_meals}
+                    onChange={(value) => handleChange('total_meals', parseInt(value) || 0)}
+                    min={0}
+                  >
+                    <NumberInputField focusBorderColor="blue.500" />
+                    <NumberInputStepper>
+                      <NumberIncrementStepper />
+                      <NumberDecrementStepper />
+                    </NumberInputStepper>
+                  </NumberInput>
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel fontWeight="semibold">{t('admin.consumedMeals')}</FormLabel>
+                  <NumberInput
+                    value={formData.consumed_meals}
+                    onChange={(value) => handleChange('consumed_meals', parseInt(value) || 0)}
+                    min={0}
+                    max={formData.total_meals}
+                  >
+                    <NumberInputField focusBorderColor="blue.500" />
+                    <NumberInputStepper>
+                      <NumberIncrementStepper />
+                      <NumberDecrementStepper />
+                    </NumberInputStepper>
+                  </NumberInput>
+                </FormControl>
+              </SimpleGrid>
+
+              <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={4}>
+                <FormControl>
+                  <FormLabel fontWeight="semibold">{t('admin.startDate')}</FormLabel>
+                  <Input
+                    type="date"
+                    value={formData.start_date}
+                    onChange={(e) => handleChange('start_date', e.target.value)}
+                    focusBorderColor="blue.500"
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel fontWeight="semibold">{t('admin.endDate')}</FormLabel>
+                  <Input
+                    type="date"
+                    value={formData.end_date}
+                    onChange={(e) => handleChange('end_date', e.target.value)}
+                    focusBorderColor="blue.500"
+                  />
+                </FormControl>
+              </SimpleGrid>
+            </>
+          ) : (
+            <>
+              <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={4}>
+                <FormControl>
+                  <FormLabel fontWeight="semibold">{t('admin.deliveryDate')}</FormLabel>
+                  <Input
+                    type="date"
+                    value={formData.delivery_date}
+                    onChange={(e) => handleChange('delivery_date', e.target.value)}
+                    focusBorderColor="blue.500"
+                  />
+                </FormControl>
+                
+                <FormControl>
+                  <FormLabel fontWeight="semibold">{t('admin.deliveryTime')}</FormLabel>
+                  <Select
+                    value={formData.delivery_time}
+                    onChange={(e) => handleChange('delivery_time', e.target.value)}
+                    focusBorderColor="blue.500"
+                  >
+                    {TIME_SLOTS.map(time => (
+                      <option key={time} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+              </SimpleGrid>
+              
+              <FormControl>
+                <FormLabel fontWeight="semibold">{t('admin.status')}</FormLabel>
+                <Select
+                  value={formData.status}
+                  onChange={(e) => handleChange('status', e.target.value)}
+                  focusBorderColor="blue.500"
+                >
+                  {Object.keys(STATUS_CONFIGS.delivery).map(status => (
+                    <option key={status} value={status}>
+                      {t(`admin.${STATUS_CONFIGS.delivery[status].label}`)}
+                    </option>
+                  ))}
+                </Select>
+              </FormControl>
+              
+              <FormControl>
+                <FormLabel fontWeight="semibold">{t('admin.deliveryInstructions')}</FormLabel>
+                <Textarea
+                  value={formData.delivery_instructions}
+                  onChange={(e) => handleChange('delivery_instructions', e.target.value)}
+                  placeholder={t('admin.addInstructions')}
+                  rows={3}
+                  focusBorderColor="blue.500"
+                />
+              </FormControl>
+            </>
+          )}
+          
+          <HStack spacing={3} justify="flex-end" pt={4}>
+            <Button
+              leftIcon={<FiX />}
+              onClick={onClose}
+              variant="outline"
+              size="md"
+            >
+              {t('admin.cancel')}
+            </Button>
+            <Button
+              leftIcon={<FiSave />}
+              colorScheme="blue"
+              type="submit"
+              isLoading={loading}
+              loadingText={t('admin.saving')}
+              size="md"
+            >
+              {t('admin.saveChanges')}
+            </Button>
           </HStack>
-        </Flex>
+        </VStack>
+      </form>
+    </BaseModal>
+  );
+};
+// ===== MAIN DASHBOARD COMPONENT =====
+const AdminSubscriptionDashboard = () => {
+  const { t } = useTranslation();
+  const toast = useToast();
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState('order');
+   const [selectedOrderForItems, setSelectedOrderForItems] = useState(null);
+  const [isItemsModalOpen, setIsItemsModalOpen] = useState(false);
+  const { 
+    data: deliveryData, 
+    isLoading: deliveriesLoading, 
+    error: deliveriesError,
+    refetch: refetchDeliveries 
+  } = useUpcomingDeliveries(selectedDate);
+  
+  const { 
+    data: subscriptionData, 
+    isLoading: subscriptionsLoading, 
+    error: subscriptionsError,
+    refetch: refetchSubscriptions 
+  } = useSubscriptionList();
+  
+  const { 
+    data: analyticsData, 
+    isLoading: analyticsLoading, 
+    error: analyticsError 
+  } = useSubscriptionAnalytics();
+  
+  const { 
+    data: subscriptionOrderData, 
+    isLoading: subscriptionOrdersLoading, 
+    error: subscriptionOrdersError,
+    refetch: refetchSubscriptionOrders 
+  } = useSubscriptionOrders();
 
-        {/* Summary Stats */}
-        <HStack spacing={4}>
-          <Badge colorScheme="blue" p={2}>
-            {t('admin.totalSubscriptions')}: {subscriptions?.length || 0}
-          </Badge>
-          <Badge colorScheme="green" p={2}>
-            {t('admin.totalDeliveries')}: {deliveries.length}
-          </Badge>
-          <Badge colorScheme="orange" p={2}>
-            {t('admin.todaysDeliveries')}: {deliveriesForSelectedDate.length}
-          </Badge>
-          <Badge colorScheme="red" p={2}>
-            {t('admin.kitchenQueue')}: {kitchenQueue.length}
-          </Badge>
-          <Badge colorScheme="purple" p={2}>
-            {t('admin.trackedRecords')}: {deliveries.filter(d => d.delivery_record_id).length}
-          </Badge>
-        </HStack>
+  const { updateDeliveryStatus, updateSubscriptionStatus, updateOrderStatus } = useAdminSubscription();
+  
+  const transformedDeliveries = useMemo(() => transformOrderData(deliveryData, 'delivery'), [deliveryData]);
+  const transformedSubscriptionOrders = useMemo(() => transformOrderData(subscriptionOrderData), [subscriptionOrderData]);
+  
+  const filteredData = useMemo(() => {
+    const dataToFilter = modalType === 'subscription' ? subscriptionData : 
+                        modalType === 'order' ? transformedSubscriptionOrders : 
+                        transformedDeliveries;
+    
+    if (!dataToFilter) return [];
+    
+    return dataToFilter.filter(item => {
+      const matchesSearch = searchQuery === '' || 
+        item.user_profile?.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.order_number && item.order_number.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [transformedDeliveries, subscriptionData, transformedSubscriptionOrders, searchQuery, statusFilter, modalType]);
+  
+  //handlers
+  const handleViewOrderItems = (order) => {
+    setSelectedOrderForItems(order);
+    setIsItemsModalOpen(true);
+  };
 
-        {/* Date Navigation */}
-        <HStack justify="center" spacing={4}>
-          <Button 
-            size="sm" 
-            onClick={() => {
-              const prevDate = new Date(selectedDate);
-              prevDate.setDate(prevDate.getDate() - 1);
-              setSelectedDate(prevDate.toISOString().split('T')[0]);
-            }}
-            isDisabled={selectedDate <= minDate}
-          >
-            {t('admin.previousDay')}
-          </Button>
-          <Text fontWeight="bold" color="gray.700">
-            {t('admin.showing')}: {new Date(selectedDate).toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </Text>
-          <Button 
-            size="sm" 
-            onClick={() => {
-              const nextDate = new Date(selectedDate);
-              nextDate.setDate(nextDate.getDate() + 1);
-              setSelectedDate(nextDate.toISOString().split('T')[0]);
-            }}
-            isDisabled={selectedDate >= maxDate}
-          >
-            {t('admin.nextDay')}
-          </Button>
-        </HStack>
+  const handleStatusChange = async (itemId, newStatus, type) => {
+    try {
+      if (type === 'subscription') {
+        await updateSubscriptionStatus(itemId, newStatus);
+        refetchSubscriptions();
+        toast({
+          title: t('admin.success'),
+          description: t('admin.subscriptionStatusUpdated'),
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        await updateOrderStatus(itemId, newStatus);
+        if (type === 'delivery') refetchDeliveries();
+        else refetchSubscriptionOrders();
+        toast({
+          title: t('admin.success'),
+          description: t('admin.orderStatusUpdated'),
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: t('admin.error'),
+        description: error.message || t('admin.updateFailed'),
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+  
+  const handleEditItem = (item, type) => {
+    setSelectedItem(item);
+    setModalType(type);
+    setIsModalOpen(true);
+  };
+  
+  const handleSaveItem = () => {
+    if (modalType === 'subscription') refetchSubscriptions();
+    else if (modalType === 'delivery') refetchDeliveries();
+    else refetchSubscriptionOrders();
+    setIsModalOpen(false);
+  };
 
-        <Grid templateColumns="1fr 400px" gap={6}>
-          {/* Main Schedule Grid */}
-          <Card>
-            <CardHeader>
-              <Heading size="lg">{t('admin.deliveryScheduleFor')} {selectedDate}</Heading>
-              <Text fontSize="sm" color="gray.600" mt={1}>
-                {filteredDeliveries.length} {t('admin.deliveriesScheduled')}
-              </Text>
-            </CardHeader>
-            <CardBody p={0}>
-              <Box maxH="75vh" overflowY="auto">
-                {/* Header */}
-                <Grid templateColumns="120px 1fr" bg="gray.100" borderBottom="2px" borderColor="gray.200">
-                  <GridItem p={4} borderRight="1px" borderColor="gray.300">
-                    <Text fontWeight="bold" color="gray.700">{t('admin.timeSlot')}</Text>
-                  </GridItem>
-                  <GridItem p={4}>
-                    <Text fontWeight="bold" color="gray.700">{t('admin.deliveries')}</Text>
-                  </GridItem>
-                </Grid>
-
-                {/* Time Slot Rows */}
-                {deliveriesByTime.map(({ time, deliveries }) => {
-                  const isCurrentTime = currentTime >= time && currentTime < TIME_SLOTS[TIME_SLOTS.indexOf(time) + 1];
+  const isMobile = useBreakpointValue({ base: true, md: false });
+  const bgColor = useColorModeValue('gray.50', 'gray.900');
+  const cardBg = useColorModeValue('white', 'gray.800');
+  
+  if (deliveriesError || subscriptionsError || analyticsError) {
+    return (
+      <Alert status="error" borderRadius="md">
+        <AlertIcon />
+        <Box>
+          <Text fontWeight="bold">{t('admin.errorLoading')}</Text>
+          <Text>{deliveriesError?.message || subscriptionsError?.message || analyticsError?.message}</Text>
+        </Box>
+      </Alert>
+    );
+  }
+  
+  return (
+    <Box bg={bgColor} minH="100vh">
+      <Box p={{ base: 4, md: 6 }} maxW="100%">
+        <VStack spacing={6} align="stretch">
+          {/* Header */}
+          <Box>
+            <Heading as="h1" size="xl" mb={2}>
+              {t('admin.dashboard')}
+            </Heading>
+            <Breadcrumb separator={<ChevronRightIcon color="gray.500" />} fontSize="sm">
+              <BreadcrumbItem>
+                <BreadcrumbLink href="#">{t('admin.home')}</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbItem isCurrentPage>
+                <BreadcrumbLink href="#">{t('admin.subscriptionManagement')}</BreadcrumbLink>
+              </BreadcrumbItem>
+            </Breadcrumb>
+          </Box>
+          
+          {/* Analytics Cards */}
+          {!analyticsLoading && analyticsData && (
+            <SimpleGrid columns={{ base: 1, sm: 2, md: 4 }} spacing={4}>
+              <Card bg={cardBg} borderRadius="lg" boxShadow="sm">
+                <CardBody>
+                  <Stat>
+                    <StatLabel fontSize="sm" color="gray.600">{t('admin.totalSubscriptions')}</StatLabel>
+                    <StatNumber fontSize="2xl">{analyticsData.total_subscriptions}</StatNumber>
+                    <StatHelpText>
+                      <StatArrow type="increase" />
+                      {analyticsData.month_growth}% {t('admin.fromLastMonth')}
+                    </StatHelpText>
+                  </Stat>
+                </CardBody>
+              </Card>
+              
+              <Card bg={cardBg} borderRadius="lg" boxShadow="sm">
+                <CardBody>
+                  <Stat>
+                    <StatLabel fontSize="sm" color="gray.600">{t('admin.activeSubscriptions')}</StatLabel>
+                    <StatNumber fontSize="2xl">{analyticsData.active_subscriptions}</StatNumber>
+                    <StatHelpText>
+                      <StatArrow type="increase" />
+                      {analyticsData.active_growth}% {t('admin.fromLastMonth')}
+                    </StatHelpText>
+                  </Stat>
+                </CardBody>
+              </Card>
+              
+              <Card bg={cardBg} borderRadius="lg" boxShadow="sm">
+                <CardBody>
+                  <Stat>
+                    <StatLabel fontSize="sm" color="gray.600">{t('admin.todayDeliveries')}</StatLabel>
+                    <StatNumber fontSize="2xl">{analyticsData.today_deliveries}</StatNumber>
+                    <StatHelpText>
+                      <StatArrow type="decrease" />
+                      {analyticsData.delivery_completion_rate}% {t('admin.completed')}
+                    </StatHelpText>
+                  </Stat>
+                </CardBody>
+              </Card>
+              
+              <Card bg={cardBg} borderRadius="lg" boxShadow="sm">
+                <CardBody>
+                  <Stat>
+                    <StatLabel fontSize="sm" color="gray.600">{t('admin.revenue')}</StatLabel>
+                    <StatNumber fontSize="2xl">${analyticsData.monthly_revenue}</StatNumber>
+                    <StatHelpText>
+                      <StatArrow type="increase" />
+                      {analyticsData.revenue_growth}% {t('admin.fromLastMonth')}
+                    </StatHelpText>
+                  </Stat>
+                </CardBody>
+              </Card>
+            </SimpleGrid>
+          )}
+          
+          {/* Filters and Controls */}
+          <Card bg={cardBg} borderRadius="lg" boxShadow="sm">
+            <CardBody>
+              <VStack spacing={4} align="stretch">
+                <Flex direction={{ base: 'column', md: 'row' }} gap={4}>
+                  <InputGroup maxW={{ base: '100%', md: '300px' }}>
+                    <InputLeftElement pointerEvents="none">
+                      <FiSearch color="gray.300" />
+                    </InputLeftElement>
+                    <Input
+                      placeholder={t('admin.searchPlaceholder')}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </InputGroup>
                   
-                  return (
-                    <Grid 
-                      key={time}
-                      templateColumns="120px 1fr" 
-                      minH="100px"
-                      borderBottom="1px"
-                      borderColor="gray.200"
-                      bg={isCurrentTime ? "blue.50" : "white"}
+                  <Select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    maxW={{ base: '100%', md: '200px' }}
+                  >
+                    <option value="all">{t('admin.allStatuses')}</option>
+                    {Object.keys(STATUS_CONFIGS.delivery).map(status => (
+                      <option key={status} value={status}>
+                        {t(`admin.${STATUS_CONFIGS.delivery[status].label}`)}
+                      </option>
+                    ))}
+                  </Select>
+                  
+                  <Input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    maxW={{ base: '100%', md: '200px' }}
+                  />
+                  
+                  <Button
+                    leftIcon={<FiRefreshCw />}
+                    onClick={() => {
+                      refetchDeliveries();
+                      refetchSubscriptions();
+                      refetchSubscriptionOrders();
+                    }}
+                    variant="outline"
+                    ml={{ md: 'auto' }}
+                  >
+                    {t('admin.refresh')}
+                  </Button>
+                </Flex>
+                
+                <Flex gap={2} overflowX="auto" py={2}>
+                  {Object.keys(STATUS_CONFIGS.delivery).map(status => (
+                    <Button
+                      key={status}
+                      size="sm"
+                      variant={statusFilter === status ? "solid" : "outline"}
+                      colorScheme={STATUS_CONFIGS.delivery[status].color}
+                      onClick={() => setStatusFilter(statusFilter === status ? 'all' : status)}
+                      leftIcon={STATUS_CONFIGS.delivery[status].icon}
                     >
-                      <GridItem 
-                        p={4} 
-                        borderRight="1px" 
-                        borderColor="gray.200"
-                        display="flex"
-                        alignItems="center"
-                      >
-                        <VStack spacing={1} align="start">
-                          <Text fontWeight="bold" fontSize="lg">{time}</Text>
-                          {isCurrentTime && (
-                            <Badge colorScheme="blue" size="sm">{t('admin.current')}</Badge>
-                          )}
-                        </VStack>
-                      </GridItem>
-                      
-                      <GridItem p={4}>
-                        <Flex gap={3} flexWrap="wrap" align="start">
-                          {deliveries.map(delivery => (
-                            <DeliveryBubble
-                              key={delivery.id}
-                              delivery={delivery}
-                              onClick={handleDeliveryClick}
-                            />
-                          ))}
-                          {deliveries.length === 0 && (
-                            <Text color="gray.400" fontSize="sm" fontStyle="italic">
-                              {t('admin.noDeliveriesScheduled')}
-                            </Text>
-                          )}
-                        </Flex>
-                      </GridItem>
-                    </Grid>
-                  );
-                })}
-              </Box>
+                      {t(`admin.${STATUS_CONFIGS.delivery[status].label}`)} ({filteredData.filter(d => d.status === status).length})
+                    </Button>
+                  ))}
+                </Flex>
+              </VStack>
             </CardBody>
           </Card>
-
-          {/* Kitchen Queue Sidebar */}
-          <VStack spacing={6} align="stretch">
-            <Card>
-              <CardHeader>
-                <HStack>
-                  <FiActivity />
-                  <Heading size="md">{t('admin.kitchenQueueFor')} {selectedDate}</Heading>
-                  <Badge colorScheme="orange">{kitchenQueue.length}</Badge>
+          
+          {/* Main Content Tabs */}
+          <Tabs variant="enclosed" colorScheme="blue" isLazy onChange={(index) => {
+            const types = ['order', 'delivery', 'subscription', 'analytics'];
+            setModalType(types[index]);
+          }}>
+            <TabList>
+              <Tab>
+                <HStack spacing={2}>
+                  <FiShoppingBag />
+                  <Text>{t('admin.subscriptionOrders')}</Text>
+                  <Badge colorScheme="blue" borderRadius="full" fontSize="xs">
+                    {transformedSubscriptionOrders.length}
+                  </Badge>
                 </HStack>
-              </CardHeader>
-              <CardBody>
-                <VStack align="stretch" spacing={3} maxH="60vh" overflowY="auto">
-                  {kitchenQueue.map(delivery => (
-                    <KitchenQueueItem
-                      key={delivery.id}
-                      delivery={delivery}
-                      onClick={handleDeliveryClick}
-                    />
-                  ))}
-                  {kitchenQueue.length === 0 && (
-                    <Text color="gray.500" textAlign="center" py={8}>
-                      {t('admin.allCaughtUp')}
-                    </Text>
-                  )}
-                </VStack>
-              </CardBody>
-            </Card>
-
-            {/* Quick Notes */}
-            <Card>
-              <CardHeader>
-                <Heading size="md">{t('admin.quickAdminNote')}</Heading>
-              </CardHeader>
-              <CardBody>
-                <VStack spacing={3}>
-                  <Textarea
-                    placeholder={t('admin.addGeneralNote')}
-                    value={newAdminNote}
-                    onChange={(e) => setNewAdminNote(e.target.value)}
-                    resize="vertical"
-                  />
-                  <Button 
-                    leftIcon={<FiPlus />} 
-                    onClick={addAdminNote} 
-                    isDisabled={!newAdminNote.trim() || !selectedDelivery}
-                    colorScheme="blue"
-                    size="sm"
-                    w="full"
-                  >
-                    {t('admin.addNoteToOrder')}
-                  </Button>
-                </VStack>
-              </CardBody>
-            </Card>
-          </VStack>
-        </Grid>
-      </VStack>
-
-      {/* Delivery Detail Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="xl">
-        <ModalOverlay bg="blackAlpha.600" />
-        <ModalContent>
-          <ModalHeader bg="blue.50" borderTopRadius="md">
-            <HStack>
-              <Text>
-                {selectedDelivery?.delivery_record_id 
-                  ? `${t('admin.deliveryRecord')} #${selectedDelivery.delivery_record_id.substring(0, 8)}...`
-                  : `${t('admin.legacyOrder')} #${selectedDelivery?.id.substring(0, 8)}...`
-                }
-              </Text>
-              {selectedDelivery && (
-                <Badge colorScheme={STATUS_CONFIG[selectedDelivery.status]?.color || 'gray'}>
-                  {t(`admin.${STATUS_CONFIG[selectedDelivery.status]?.label || selectedDelivery.status}`)}
-                </Badge>
-              )}
-              {selectedDelivery && (
-                <Badge colorScheme={SUBSCRIPTION_STATUS_CONFIG[selectedDelivery.subscription.status]?.color || 'gray'}>
-                  {t(`admin.${SUBSCRIPTION_STATUS_CONFIG[selectedDelivery.subscription.status]?.label || selectedDelivery.subscription.status}`)}
-                </Badge>
-              )}
-            </HStack>
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
-            {selectedDelivery && (
-              <VStack spacing={5} align="stretch">
-                {/* Customer Info */}
-                <Box p={4} bg="gray.50" borderRadius="md">
-                  <VStack spacing={4}>
-                    <Avatar 
-                      src={selectedDelivery.user_profile.avatar_url} 
-                      name={selectedDelivery.user_profile.display_name}
-                      size="md"
-                    />
-                    <VStack align="start" spacing={1}>
-                      <Text fontWeight="bold" fontSize="lg">
-                        {selectedDelivery.user_profile.display_name}
-                      </Text>
-                      <HStack>
-                        <FiPhone size="14" />
-                        <Text fontSize="sm" color="gray.600">
-                          {selectedDelivery.user_profile.phone_number}
-                        </Text>
-                      </HStack>
-                      <Text fontSize="sm" color="gray.600">
-                        {selectedDelivery.user_profile.email}
-                      </Text>
-                    </VStack>
-                  </VStack>
-                </Box>
-
-                {/* NEW: Delivery Record Info */}
-                {selectedDelivery.delivery_record_id && (
-                  <Box p={4} bg="purple.50" borderRadius="md">
-                    <Heading size="sm" mb={3}>{t('admin.deliveryRecordDetails')}</Heading>
-                    <Grid templateColumns="1fr 1fr" gap={3}>
-                      <VStack align="start" spacing={1}>
-                        <Text fontSize="sm"><strong>{t('admin.recordId')}:</strong> {selectedDelivery.delivery_record_id.substring(0, 8)}...</Text>
-                        <Text fontSize="sm"><strong>{t('admin.status')}:</strong> {t(`admin.${selectedDelivery.status}`)}</Text>
-                        <Text fontSize="sm"><strong>{t('admin.mealsCount')}:</strong> {selectedDelivery.meals_count}</Text>
-                      </VStack>
-                      <VStack align="start" spacing={1}>
-                        <Text fontSize="sm"><strong>{t('admin.deliveryDate')}:</strong> {selectedDelivery.delivery_date}</Text>
-                        <Text fontSize="sm"><strong>{t('admin.deliveryTime')}:</strong> {selectedDelivery.delivery_time}</Text>
-                        <Text fontSize="sm"><strong>{t('admin.tracking')}:</strong> {t('admin.fullRecordTracking')}</Text>
-                      </VStack>
-                    </Grid>
-                  </Box>
-                )}
-
-                {/* Subscription Info */}
-                <Box p={4} bg="blue.50" borderRadius="md">
-                  <Heading size="sm" mb={3}>{t('admin.subscriptionDetails')}</Heading>
-                  <Grid templateColumns="1fr 1fr" gap={3}>
-                    <VStack align="start" spacing={1}>
-                      <Text fontSize="sm"><strong>{t('admin.plan')}:</strong> {selectedDelivery.subscription.plans?.title || 'N/A'}</Text>
-                      <Text fontSize="sm"><strong>{t('admin.status')}:</strong> {t(`admin.${selectedDelivery.subscription.status}`)}</Text>
-                      <Text fontSize="sm"><strong>{t('admin.start')}:</strong> {selectedDelivery.subscription.start_date}</Text>
-                      <Text fontSize="sm"><strong>{t('admin.end')}:</strong> {selectedDelivery.subscription.end_date || 'N/A'}</Text>
-                      <Text fontSize="sm"><strong>{t('admin.pricePerMeal')}:</strong> ${selectedDelivery.subscription.price_per_meal}</Text>
-                    </VStack>
-                    <VStack align="start" spacing={1}>
-                      <Text fontSize="sm"><strong>{t('admin.meals')}:</strong> {selectedDelivery.subscription.consumed_meals}/{selectedDelivery.subscription.total_meals}</Text>
-                      <Text fontSize="sm"><strong>{t('admin.autoRenewal')}:</strong> {selectedDelivery.subscription.auto_renewal ? t('admin.yes') : t('admin.no')}</Text>
-                      <Text fontSize="sm"><strong>{t('admin.deliveryDays')}:</strong> {selectedDelivery.subscription.delivery_days?.length || 0} {t('admin.scheduled')}</Text>
-                      <Text fontSize="sm"><strong>{t('admin.remainingMeals')}:</strong> {selectedDelivery.subscription.total_meals - selectedDelivery.subscription.consumed_meals}</Text>
-                    </VStack>
-                  </Grid>
-                  
-                  {selectedDelivery.subscription.is_paused && (
-                    <Box mt={3} p={2} bg="orange.100" borderRadius="md">
-                      <Text fontSize="sm" fontWeight="bold">{t('admin.subscriptionPaused')}</Text>
-                      <Text fontSize="sm">{t('admin.reason')}: {selectedDelivery.subscription.pause_reason || t('admin.noReasonProvided')}</Text>
-                      <Text fontSize="sm">{t('admin.resumeDate')}: {selectedDelivery.subscription.resume_date?.split('T')[0] || t('admin.notSpecified')}</Text>
-                    </Box>
-                  )}
-                </Box>
-
-                {/* Delivery Info */}
-                <HStack spacing={6}>
-                  <HStack>
-                    <FiClock />
-                    <Text fontWeight="medium">{t('admin.delivery')}: {selectedDelivery.delivery_time}</Text>
-                  </HStack>
-                  <Text fontSize="sm" color="gray.600">
-                    {t('admin.date')}: {selectedDelivery.delivery_date}
-                  </Text>
-                  <HStack>
-                    <FiMapPin />
-                    <Text fontSize="sm" color="gray.600">
-                      {selectedDelivery.delivery_address}
-                    </Text>
-                  </HStack>
+              </Tab>
+              <Tab>
+                <HStack spacing={2}>
+                  <FiTruck />
+                  <Text>{t('admin.deliveries')}</Text>
+                  <Badge colorScheme="blue" borderRadius="full" fontSize="xs">
+                    {transformedDeliveries.length}
+                  </Badge>
                 </HStack>
-
-                <Divider />
-
-                {/* Meals */}
-                <Box>
-                  <Text fontWeight="bold" mb={3}>{t('admin.mealDetails')} ({selectedDelivery.meals_count} {t('admin.mealsInThisDelivery')})</Text>
-                  <VStack align="stretch" spacing={3}>
-                    {selectedDelivery.meals.map(meal => (
-                      <Box key={meal.id} p={4} border="2px" borderColor="gray.200" borderRadius="md">
-                        <HStack justify="space-between" mb={3}>
-                          <Text fontWeight="bold">{meal.name}</Text>
-                          <Tag colorScheme="blue" size="sm">
-                            {meal.total_calories} {t('admin.cal')}
-                          </Tag>
-                        </HStack>
-                        
-                        <VStack align="stretch" spacing={2}>
-                          {meal.items.map(item => (
-                            <HStack key={item.id} justify="space-between">
-                              <Text fontSize="sm">
-                                {item.name} ({item.quantity}x)
-                              </Text>
-                              <Text fontSize="sm" color="gray.600">
-                                {item.calories * item.quantity} {t('admin.cal')}
-                              </Text>
-                            </HStack>
-                          ))}
-                        </VStack>
-                        
-                        <HStack justify="space-between" mt={3} pt={3} borderTop="1px" borderColor="gray.200">
-                          <Text fontSize="sm" fontWeight="medium">{t('admin.totalMacros')}:</Text>
-                          <Text fontSize="sm" color="gray.600">
-                            {t('admin.protein')}: {meal.total_protein}g | {t('admin.carbs')}: {meal.total_carbs}g | {t('admin.fat')}: {meal.total_fat}g
-                          </Text>
-                        </HStack>
-                      </Box>
+              </Tab>
+              <Tab>
+                <HStack spacing={2}>
+                  <FiUsers />
+                  <Text>{t('admin.subscriptions')}</Text>
+                  <Badge colorScheme="blue" borderRadius="full" fontSize="xs">
+                    {subscriptionData?.length || 0}
+                  </Badge>
+                </HStack>
+              </Tab>
+              <Tab>
+                <HStack spacing={2}>
+                  <FiBarChart2 />
+                  <Text>{t('admin.analytics')}</Text>
+                </HStack>
+              </Tab>
+            </TabList>
+            
+            <TabPanels>
+              {/* Subscription Orders Tab */}
+              <TabPanel px={0}>
+                {subscriptionOrdersLoading ? (
+                  <VStack spacing={4} align="stretch">
+                    {[1, 2, 3].map(i => (
+                      <Card key={i} bg={cardBg} borderRadius="lg" boxShadow="sm">
+                        <CardBody>
+                          <Skeleton height="20px" mb={4} />
+                          <SkeletonText noOfLines={3} spacing={3} />
+                        </CardBody>
+                      </Card>
                     ))}
                   </VStack>
-                </Box>
+                ) : filteredData.length === 0 ? (
+                  <Center py={10}>
+                    <VStack spacing={4}>
+                      <Icon as={FiShoppingBag} boxSize={12} color="gray.400" />
+                      <Text color="gray.500">{t('admin.noSubscriptionOrders')}</Text>
+                    </VStack>
+                  </Center>
+                ) : isMobile ? (
+                  <VStack spacing={4} align="stretch">
+                    {filteredData.map(item => (
+                      <DataTableRow
+                        key={item.id}
+                        data={item}
+                        onEdit={(item) => handleEditItem(item, 'order')}
+                        onStatusChange={(id, status) => handleStatusChange(id, status, 'order')}
+                        type="order"
+                        isMobile={isMobile}
+                        t={t}
+                        onViewItems={handleViewOrderItems}
 
-                <Divider />
+                      />
+                    ))}
+                  </VStack>
+                ) : (
+                  <Box overflowX="auto">
+                    <Table variant="simple" size="md">
+                      <Thead>
+                        <Tr>
+                          <Th>{t('admin.customer')}</Th>
+                          <Th>{t('admin.order')}</Th>
+                          <Th>{t('admin.address')}</Th>
+                          <Th>{t('admin.dateTime')}</Th>
+                          <Th>{t('admin.status')}</Th>
+                          <Th>{t('admin.paymentStatus')}</Th>
+                          <Th>{t('admin.amount')}</Th>
+                          <Th>{t('admin.actions')}</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {filteredData.map(item => (
+                          <DataTableRow
+                            key={item.id}
+                            data={item}
+                            onEdit={(item) => handleEditItem(item, 'order')}
+                            onStatusChange={(id, status) => handleStatusChange(id, status, 'order')}
+                            type="order"
+                            isMobile={isMobile}
+                            t={t}
+                            onViewItems={handleViewOrderItems}
+                          />
+                        ))}
+                      </Tbody>
+                    </Table>
+                  </Box>
+                )}
+              </TabPanel>
+              
+              {/* Deliveries Tab */}
+              <TabPanel px={0}>
+                {deliveriesLoading ? (
+                  <VStack spacing={4} align="stretch">
+                    {[1, 2, 3].map(i => (
+                      <Card key={i} bg={cardBg} borderRadius="lg" boxShadow="sm">
+                        <CardBody>
+                          <Skeleton height="20px" mb={4} />
+                          <SkeletonText noOfLines={3} spacing={3} />
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </VStack>
+                ) : filteredData.length === 0 ? (
+                  <Center py={10}>
+                    <VStack spacing={4}>
+                      <Icon as={FiPackage} boxSize={12} color="gray.400" />
+                      <Text color="gray.500">{t('admin.noDeliveries')}</Text>
+                    </VStack>
+                  </Center>
+                ) : isMobile ? (
+                  <VStack spacing={4} align="stretch">
+                    {filteredData.map(item => (
+                      <DataTableRow
+                        key={item.id}
+                        data={item}
+                        onEdit={(item) => handleEditItem(item, 'delivery')}
+                        onStatusChange={(id, status) => handleStatusChange(id, status, 'delivery')}
+                        type="delivery"
+                        isMobile={isMobile}
+                        t={t}
+                      />
+                    ))}
+                  </VStack>
+                ) : (
+                  <Box overflowX="auto">
+                    <Table variant="simple" size="md">
+                      <Thead>
+                        <Tr>
+                          <Th>{t('admin.customer')}</Th>
+                          <Th>{t('admin.order')}</Th>
+                          <Th>{t('admin.address')}</Th>
+                          <Th>{t('admin.dateTime')}</Th>
+                          <Th>{t('admin.status')}</Th>
+                          <Th>{t('admin.amount')}</Th>
+                          <Th>{t('admin.actions')}</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {filteredData.map(item => (
+                          <DataTableRow
+                            key={item.id}
+                            data={item}
+                            onEdit={(item) => handleEditItem(item, 'delivery')}
+                            onStatusChange={(id, status) => handleStatusChange(id, status, 'delivery')}
+                            type="delivery"
+                            isMobile={isMobile}
+                            t={t}
+                            onViewItems={handleViewOrderItems}
 
-                {/* Admin Notes */}
-                <Box>
-                  <Text fontWeight="bold" mb={2}>{t('admin.adminNotes')}</Text>
-                  <Textarea
-                    value={newAdminNote}
-                    onChange={(e) => setNewAdminNote(e.target.value)}
-                    placeholder={t('admin.addNewNote')}
-                    resize="vertical"
-                    mb={2}
-                  />
-                  <Button 
-                    leftIcon={<FiPlus />} 
-                    onClick={addAdminNote} 
-                    isDisabled={!newAdminNote.trim()}
-                    colorScheme="blue"
-                    size="sm"
-                    mb={3}
-                  >
-                    {t('admin.addNote')}
-                  </Button>
-                  {selectedDelivery.admin_notes && (
-                    <Box p={3} bg="gray.50" borderRadius="md">
-                      <Text whiteSpace="pre-wrap" fontSize="sm">
-                        {selectedDelivery.admin_notes}
-                      </Text>
-                    </Box>
-                  )}
-                </Box>
+                          />
+                        ))}
+                      </Tbody>
+                    </Table>
+                  </Box>
+                )}
+              </TabPanel>
+              
+              {/* Subscriptions Tab */}
+              <TabPanel px={0}>
+                {subscriptionsLoading ? (
+                  <VStack spacing={4} align="stretch">
+                    {[1, 2, 3].map(i => (
+                      <Card key={i} bg={cardBg} borderRadius="lg" boxShadow="sm">
+                        <CardBody>
+                          <Skeleton height="20px" mb={4} />
+                          <SkeletonText noOfLines={3} spacing={3} />
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </VStack>
+                ) : filteredData.length === 0 ? (
+                  <Center py={10}>
+                    <VStack spacing={4}>
+                      <Icon as={FiUsers} boxSize={12} color="gray.400" />
+                      <Text color="gray.500">{t('admin.noSubscriptions')}</Text>
+                    </VStack>
+                  </Center>
+                ) : isMobile ? (
+                  <VStack spacing={4} align="stretch">
+                    {filteredData.map(item => (
+                      <DataTableRow
+                        key={item.id}
+                        data={item}
+                        onEdit={(item) => handleEditItem(item, 'subscription')}
+                        onStatusChange={(id, status) => handleStatusChange(id, status, 'subscription')}
+                        type="subscription"
+                        isMobile={isMobile}
+                        t={t}
+                        onViewItems={handleViewOrderItems}
 
-                {/* Action Buttons */}
-                <HStack spacing={3} justify="center" pt={4}>
-                  <Select
-                    value={selectedDelivery.status}
-                    onChange={(e) => updateDeliveryStatus(selectedDelivery.id, e.target.value)}
-                    maxW="200px"
-                  >
-                    <option value="scheduled">{t('admin.scheduled')}</option>
-                    <option value="preparing">{t('admin.preparing')}</option>
-                    <option value="ready">{t('admin.ready')}</option>
-                    <option value="delivered">{t('admin.delivered')}</option>
-                    <option value="cancelled">{t('admin.cancelled')}</option>
-                  </Select>
-                  
-                  <Select
-                    value={selectedDelivery.subscription.status}
-                    onChange={(e) => updateSubscriptionStatus(selectedDelivery.id, e.target.value)}
-                    maxW="200px"
-                  >
-                    <option value="active">{t('admin.active')}</option>
-                    <option value="pending">{t('admin.pending')}</option>
-                    <option value="cancelled">{t('admin.cancelled')}</option>
-                    <option value="expired">{t('admin.expired')}</option>
-                    <option value="paused">{t('admin.paused')}</option>
-                  </Select>
-                  
-                  {selectedDelivery.subscription.is_paused ? (
-                    <Button 
-                      leftIcon={<FiPlay />} 
-                      colorScheme="green" 
-                      size="sm"
-                      onClick={() => updateSubscriptionStatus(selectedDelivery.id, 'active')}
-                    >
-                      {t('admin.resume')}
-                    </Button>
-                  ) : (
-                    <Button 
-                      leftIcon={<FiPause />} 
-                      colorScheme="orange" 
-                      size="sm"
-                      onClick={() => updateSubscriptionStatus(selectedDelivery.id, 'paused')}
-                    >
-                      {t('admin.pause')}
-                    </Button>
-                  )}
-                </HStack>
-              </VStack>
-            )}
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+                      />
+                    ))}
+                  </VStack>
+                ) : (
+                  <Box overflowX="auto">
+                    <Table variant="simple" size="md">
+                      <Thead>
+                        <Tr>
+                          <Th>{t('admin.customer')}</Th>
+                          <Th>{t('admin.plan')}</Th>
+                          <Th>{t('admin.status')}</Th>
+                          <Th>{t('admin.startDate')}</Th>
+                          <Th>{t('admin.endDate')}</Th>
+                          <Th>{t('admin.meals')}</Th>
+                          <Th>{t('admin.actions')}</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {filteredData.map(item => (
+                          <DataTableRow
+                            key={item.id}
+                            data={item}
+                            onEdit={(item) => handleEditItem(item, 'subscription')}
+                            onStatusChange={(id, status) => handleStatusChange(id, status, 'subscription')}
+                            type="subscription"
+                            isMobile={isMobile}
+                            t={t}
+                            onViewItems={handleViewOrderItems}
+
+                          />
+                        ))}
+                      </Tbody>
+                    </Table>
+                  </Box>
+                )}
+              </TabPanel>
+              
+              {/* Analytics Tab */}
+              <TabPanel>
+                <Text color="gray.500" textAlign="center" py={10}>
+                  {t('admin.analyticsComingSoon')}
+                </Text>
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
+        </VStack>
+      </Box>
+      
+      {/* Modal */}
+      <EditModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        data={selectedItem}
+        onSave={handleSaveItem}
+        type={modalType}
+        t={t}
+      />
+      <OrderItemsModal
+        isOpen={isItemsModalOpen}
+        onClose={() => setIsItemsModalOpen(false)}
+        order={selectedOrderForItems}
+        t={t}
+      />
     </Box>
   );
 };
 
-export default MealDeliveryDashboard;
+export default AdminSubscriptionDashboard;

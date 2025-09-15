@@ -13,7 +13,7 @@ WITH cols AS (
   JOIN pg_namespace n ON c.relnamespace = n.oid
   LEFT JOIN pg_attrdef ad ON a.attrelid = ad.adrelid AND a.attnum = ad.adnum
   WHERE n.nspname = 'public'
-    AND c.relname = 'subscription_with_next_delivery '
+    AND c.relname = 'user_subscriptions'
     AND a.attnum > 0
     AND NOT a.attisdropped
   ORDER BY a.attnum
@@ -26,12 +26,12 @@ pk AS (
   JOIN pg_namespace n   ON c.relnamespace = n.oid
   JOIN pg_attribute col ON col.attrelid = c.oid AND col.attnum = ANY(con.conkey)
   WHERE n.nspname = 'public'
-    AND c.relname = 'subscription_with_next_delivery '
+    AND c.relname = 'user_subscriptions'
     AND con.contype = 'p'
   GROUP BY con.conname
 )
 SELECT
-  'CREATE TABLE public.subscription_with_next_delivery  (' || chr(10) ||
+  'CREATE TABLE public.user_subscriptions (' || chr(10) ||
   string_agg(
     '    ' || column_name || ' ' || data_type ||
     CASE
@@ -73,7 +73,7 @@ FROM pg_constraint con
 JOIN pg_class      c  ON con.conrelid = c.oid
 JOIN pg_namespace  n  ON c.relnamespace = n.oid
 WHERE n.nspname = 'public'
-  AND c.relname = 'subscription_with_next_delivery ';
+  AND c.relname = 'user_subscriptions';
 
 /* -------------------------------------------------
    3️⃣  Indexes (including primary‑key indexes)
@@ -91,7 +91,7 @@ JOIN pg_namespace n ON tbl_class.relnamespace = n.oid
 JOIN pg_attribute col ON col.attrelid = tbl_class.oid 
 JOIN LATERAL unnest(idx.indkey) WITH ORDINALITY AS idx_col(attnum, ord) ON col.attnum = idx_col.attnum
 WHERE n.nspname = 'public'
-  AND tbl_class.relname = 'subscription_with_next_delivery '
+  AND tbl_class.relname = 'user_subscriptions'
 GROUP BY n.nspname, idx_class.relname, idx_class.oid, idx.indisunique
 ORDER BY idx_class.relname;
 
@@ -103,7 +103,7 @@ WITH tbl AS (
     FROM pg_class c
     JOIN pg_namespace n ON c.relnamespace = n.oid
     WHERE n.nspname = 'public'
-      AND c.relname = 'subscription_with_next_delivery '
+      AND c.relname = 'user_subscriptions'
 )
 SELECT
     tg.tgname                     AS trigger_name,

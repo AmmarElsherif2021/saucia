@@ -1,29 +1,686 @@
 [
   {
-    "trigger_name": "trigger_delivery_completion_after",
-    "timing": "AFTER",
-    "event": "UPDATE",
-    "trigger_definition": "CREATE TRIGGER trigger_delivery_completion_after AFTER UPDATE ON public.user_subscriptions FOR EACH ROW WHEN ((old.next_delivery_status IS DISTINCT FROM new.next_delivery_status)) EXECUTE FUNCTION handle_delivery_completion()",
-    "function_schema": "public",
-    "function_name": "handle_delivery_completion",
-    "function_definition": "CREATE OR REPLACE FUNCTION public.handle_delivery_completion()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nDECLARE\r\n    v_next_delivery_date timestamp with time zone;\r\n    v_meal_delivery_info record;\r\nBEGIN\r\n    -- Check if delivery status changed to 'delivered'\r\n    IF TG_OP = 'UPDATE' AND \r\n       OLD.next_delivery_status != 'delivered' AND \r\n       NEW.next_delivery_status = 'delivered' THEN\r\n        \r\n        -- Add to delivery history\r\n        PERFORM add_delivery_to_history(\r\n            NEW.id,\r\n            OLD.next_delivery_date,\r\n            OLD.next_delivery_meals,\r\n            'delivered'\r\n        );\r\n        \r\n        -- Increment consumed meals\r\n        UPDATE user_subscriptions \r\n        SET consumed_meals = LEAST(consumed_meals + OLD.next_delivery_meals, total_meals)\r\n        WHERE id = NEW.id;\r\n        \r\n        RAISE NOTICE 'Delivery completed for subscription %, consumed meals updated', NEW.id;\r\n    END IF;\r\n    \r\n    RETURN NEW;\r\nEND;\r\n$function$\n"
+    "info_type": "function",
+    "table_name": "N/A",
+    "name": "handle_order_delivery",
+    "details": "function_def=CREATE OR REPLACE FUNCTION public.handle_order_delivery()  RETURNS trigger  LANGUAGE plpgsql AS $function$ BEGIN     -- When order status changes to 'delivered'     IF TG_OP = 'UPDATE' AND OLD.status != 'delivered' AND NEW.status = 'delivered' THEN         -- Set actual delivery date         NEW.actual_delivery_date := NOW();                  -- Update subscription consumed meals and next delivery meal index         IF NEW.subscription_id IS NOT NULL THEN             UPDATE user_subscriptions              SET                  consumed_meals = consumed_meals + 1,                 next_delivery_meal = (next_delivery_meal + 1) % jsonb_array_length(meals)             WHERE id = NEW.subscription_id;                          RAISE NOTICE 'Updated subscription % - incremented consumed meals and cycled delivery meal index',                  NEW.subscription_id;         END IF;     END IF;          RETURN NEW; END; $function$ "
   },
   {
-    "trigger_name": "trigger_subscription_lifecycle_before",
-    "timing": "BEFORE",
-    "event": "INSERT",
-    "trigger_definition": "CREATE TRIGGER trigger_subscription_lifecycle_before BEFORE INSERT OR UPDATE ON public.user_subscriptions FOR EACH ROW EXECUTE FUNCTION handle_subscription_lifecycle()",
-    "function_schema": "public",
-    "function_name": "handle_subscription_lifecycle",
-    "function_definition": "CREATE OR REPLACE FUNCTION public.handle_subscription_lifecycle()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nDECLARE\n    v_next_delivery_date      timestamp with time zone;\n    v_meal_delivery_info      RECORD;  -- will contain next_meal (jsonb) and meals_count (int)\n    v_status_changed          boolean := false;\n    v_preferred_time_changed  boolean := false;\n    v_delivery_days_changed   boolean := false;\nBEGIN\n    ------------------------------------------------------------------\n    -- 1️⃣ Detect what changed (INSERT vs UPDATE)\n    ------------------------------------------------------------------\n    IF TG_OP = 'UPDATE' THEN\n        v_status_changed          := (OLD.status <> NEW.status);\n        v_preferred_time_changed  := (OLD.preferred_delivery_time <> NEW.preferred_delivery_time);\n        v_delivery_days_changed   := (OLD.delivery_days IS DISTINCT FROM NEW.delivery_days);\n    ELSE\n        -- INSERT – treat as a status change so the rest of the logic runs\n        v_status_changed := true;\n    END IF;\n\n    ------------------------------------------------------------------\n    -- 2️⃣ Preferred‑delivery‑time change – delegate to helper function\n    ------------------------------------------------------------------\n    IF TG_OP = 'UPDATE' AND v_preferred_time_changed THEN\n        PERFORM update_delivery_times_for_preferred_time(NEW.id, NEW.preferred_delivery_time);\n        -- The helper may issue another UPDATE; the trigger will fire again but\n        -- the guard logic above prevents an endless loop.\n    END IF;\n\n    ------------------------------------------------------------------\n    -- 3️⃣ Main active‑subscription processing\n    ------------------------------------------------------------------\n    IF NEW.status = 'active'\n       AND NEW.delivery_days IS NOT NULL\n       AND array_length(NEW.delivery_days, 1) > 0\n       AND NEW.consumed_meals < NEW.total_meals\n       AND NOT NEW.is_paused THEN\n\n        -- 3a️⃣ Compute the next delivery date (respecting preferred time)\n        v_next_delivery_date := get_next_delivery_date_with_time(\n                                    NEW.delivery_days,\n                                    NEW.preferred_delivery_time\n                                );\n\n        -- 3b️⃣ Retrieve the *single* next‑meal JSONB and count via the SRF.\n        SELECT next_meal, meals_count\n        INTO v_meal_delivery_info\n        FROM calculate_next_meal_delivery(NEW)\n        LIMIT 1;  -- the SRF returns at most one row\n\n        IF NOT FOUND\n           OR v_meal_delivery_info.meals_count IS NULL\n           OR v_meal_delivery_info.meals_count = 0 THEN\n            -- No meals can be scheduled – clear delivery columns\n            NEW.next_delivery_date   := NULL;\n            NEW.next_delivery_meal   := NULL;   -- jsonb column\n            NEW.next_delivery_meals  := NULL;\n            NEW.next_delivery_status := NULL;\n        ELSE\n            -- A valid delivery can be scheduled\n            NEW.next_delivery_date   := v_next_delivery_date;\n            NEW.next_delivery_meal   := v_meal_delivery_info.next_meal;\n            NEW.next_delivery_meals  := v_meal_delivery_info.meals_count;\n            NEW.next_delivery_status := 'scheduled';\n            RAISE NOTICE\n                'Scheduled next delivery for subscription % on % with % meals',\n                NEW.id, v_next_delivery_date, v_meal_delivery_info.meals_count;\n        END IF;\n\n    ELSE\n        -- Inactive / paused / completed – clear fields\n        NEW.next_delivery_date   := NULL;\n        NEW.next_delivery_meal   := NULL;\n        NEW.next_delivery_meals  := NULL;\n        NEW.next_delivery_status := NULL;\n    END IF;\n\n    ------------------------------------------------------------------\n    -- 4️⃣ Completion handling – when all meals are consumed\n    ------------------------------------------------------------------\n    IF NEW.consumed_meals >= NEW.total_meals THEN\n        NEW.end_date := CURRENT_DATE;\n        NEW.next_delivery_date   := NULL;\n        NEW.next_delivery_meal   := NULL;\n        NEW.next_delivery_meals  := NULL;\n        NEW.next_delivery_status := NULL;\n        RAISE NOTICE 'Subscription % completed – all meals consumed', NEW.id;\n    END IF;\n\n    ------------------------------------------------------------------\n    -- 5️⃣ Touch the audit column\n    ------------------------------------------------------------------\n    NEW.updated_at := NOW();\n\n    RETURN NEW;\nEND;\n$function$\n"
+    "info_type": "function",
+    "table_name": "N/A",
+    "name": "handle_subscription_lifecycle",
+    "details": "function_def=CREATE OR REPLACE FUNCTION public.handle_subscription_lifecycle()  RETURNS trigger  LANGUAGE plpgsql AS $function$ DECLARE     v_orders_created integer;     v_existing_orders_count integer; BEGIN     RAISE NOTICE 'Trigger fired for subscription %. Operation: %. Status: % -> %',          NEW.id, TG_OP,          CASE WHEN TG_OP = 'UPDATE' THEN OLD.status ELSE 'N/A' END,         NEW.status;          -- Handle INSERT or status change to 'active'     IF (TG_OP = 'INSERT' AND NEW.status = 'active') OR         (TG_OP = 'UPDATE' AND OLD.status != 'active' AND NEW.status = 'active') THEN                  -- Check if orders already exist for this subscription         SELECT COUNT(*) INTO v_existing_orders_count          FROM orders          WHERE subscription_id = NEW.id;                  RAISE NOTICE 'Found % existing orders for subscription %', v_existing_orders_count, NEW.id;                  IF v_existing_orders_count = 0 THEN             BEGIN                 -- Create orders                 v_orders_created := create_orders_for_active_subscription(                     NEW.user_id,                     NEW.id,                     NEW.meals,                     NEW.price_per_meal,                     NEW.delivery_address_id                 );                                  RAISE NOTICE 'Created % orders for subscription %', v_orders_created, NEW.id;                              EXCEPTION WHEN OTHERS THEN                 RAISE NOTICE 'Error creating orders for subscription %: %', NEW.id, SQLERRM;                 -- Don't re-raise the exception to prevent blocking the subscription update             END;         ELSE             RAISE NOTICE 'Orders already exist (%) for subscription %, skipping creation',                  v_existing_orders_count, NEW.id;         END IF;     END IF;          -- Handle completion when all meals are consumed     IF NEW.consumed_meals >= NEW.total_meals THEN         IF NEW.status != 'completed' THEN             NEW.status := 'completed';             NEW.end_date := CURRENT_DATE;             RAISE NOTICE 'Subscription % completed - all meals consumed', NEW.id;         END IF;     END IF;          -- Update timestamp     NEW.updated_at := NOW();          RETURN NEW; END; $function$ "
   },
   {
-    "trigger_name": "trigger_update_timestamp_user_subscriptions",
-    "timing": "BEFORE",
-    "event": "UPDATE",
-    "trigger_definition": "CREATE TRIGGER trigger_update_timestamp_user_subscriptions BEFORE UPDATE ON public.user_subscriptions FOR EACH ROW EXECUTE FUNCTION update_timestamp()",
-    "function_schema": "public",
-    "function_name": "update_timestamp",
-    "function_definition": "CREATE OR REPLACE FUNCTION public.update_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    NEW.updated_at = NOW();\n    RETURN NEW;\nEND;\n$function$\n"
+    "info_type": "function",
+    "table_name": "N/A",
+    "name": "set_order_number",
+    "details": "function_def=CREATE OR REPLACE FUNCTION public.set_order_number()  RETURNS trigger  LANGUAGE plpgsql AS $function$ BEGIN     IF NEW.order_number IS NULL OR NEW.order_number = 0 THEN         NEW.order_number := nextval('order_number_seq');     END IF;     RETURN NEW; END; $function$ "
+  },
+  {
+    "info_type": "function",
+    "table_name": "N/A",
+    "name": "update_timestamp",
+    "details": "function_def=CREATE OR REPLACE FUNCTION public.update_timestamp()  RETURNS trigger  LANGUAGE plpgsql AS $function$ BEGIN     NEW.updated_at = NOW();     RETURN NEW; END; $function$ "
+  },
+  {
+    "info_type": "function",
+    "table_name": "N/A",
+    "name": "validate_subscription_before_save",
+    "details": "function_def=CREATE OR REPLACE FUNCTION public.validate_subscription_before_save()  RETURNS trigger  LANGUAGE plpgsql AS $function$ BEGIN     -- Only validate when status is active or when inserting with active status     IF NEW.status = 'active' THEN         PERFORM validate_subscription_data(NEW);     END IF;          RETURN NEW; END; $function$ "
+  },
+  {
+    "info_type": "check",
+    "table_name": "order_items",
+    "name": "order_items_quantity_check",
+    "details": "CHECK ((quantity > 0))"
+  },
+  {
+    "info_type": "check",
+    "table_name": "order_items",
+    "name": "order_items_total_price_check",
+    "details": "CHECK ((total_price >= (0)::numeric))"
+  },
+  {
+    "info_type": "check",
+    "table_name": "order_items",
+    "name": "order_items_unit_price_check",
+    "details": "CHECK ((unit_price >= (0)::numeric))"
+  },
+  {
+    "info_type": "check",
+    "table_name": "order_items",
+    "name": "valid_item_total",
+    "details": "CHECK ((total_price = (unit_price * (quantity)::numeric)))"
+  },
+  {
+    "info_type": "column",
+    "table_name": "order_items",
+    "name": "category",
+    "details": "pos=10; type=text; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "order_items",
+    "name": "created_at",
+    "details": "pos=11; type=timestamp with time zone; nullable=NO; default=now(); desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "order_items",
+    "name": "id",
+    "details": "pos=1; type=uuid; nullable=NO; default=uuid_generate_v4(); desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "order_items",
+    "name": "item_id",
+    "details": "pos=4; type=integer; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "order_items",
+    "name": "name",
+    "details": "pos=8; type=text; nullable=NO; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "order_items",
+    "name": "name_arabic",
+    "details": "pos=9; type=text; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "order_items",
+    "name": "order_id",
+    "details": "pos=2; type=uuid; nullable=NO; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "order_items",
+    "name": "order_meal_id",
+    "details": "pos=3; type=uuid; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "order_items",
+    "name": "quantity",
+    "details": "pos=5; type=integer; nullable=NO; default=1; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "order_items",
+    "name": "total_price",
+    "details": "pos=7; type=numeric; nullable=NO; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "order_items",
+    "name": "unit_price",
+    "details": "pos=6; type=numeric; nullable=NO; default=-; desc=-"
+  },
+  {
+    "info_type": "foreign_key",
+    "table_name": "order_items",
+    "name": "order_items_item_id_fkey",
+    "details": "FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE SET NULL"
+  },
+  {
+    "info_type": "foreign_key",
+    "table_name": "order_items",
+    "name": "order_items_order_id_fkey",
+    "details": "FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE"
+  },
+  {
+    "info_type": "foreign_key",
+    "table_name": "order_items",
+    "name": "order_items_order_meal_id_fkey",
+    "details": "FOREIGN KEY (order_meal_id) REFERENCES order_meals(id) ON DELETE CASCADE"
+  },
+  {
+    "info_type": "index",
+    "table_name": "order_items",
+    "name": "idx_order_items_meal_id",
+    "details": "CREATE INDEX idx_order_items_meal_id ON public.order_items USING btree (order_meal_id)"
+  },
+  {
+    "info_type": "index",
+    "table_name": "order_items",
+    "name": "idx_order_items_order_id",
+    "details": "CREATE INDEX idx_order_items_order_id ON public.order_items USING btree (order_id)"
+  },
+  {
+    "info_type": "index",
+    "table_name": "order_items",
+    "name": "order_items_pkey",
+    "details": "CREATE UNIQUE INDEX order_items_pkey ON public.order_items USING btree (id)"
+  },
+  {
+    "info_type": "primary_key",
+    "table_name": "order_items",
+    "name": "order_items_pkey",
+    "details": "PRIMARY KEY (id)"
+  },
+  {
+    "info_type": "check",
+    "table_name": "orders",
+    "name": "orders_delivery_fee_check",
+    "details": "CHECK ((delivery_fee >= (0)::numeric))"
+  },
+  {
+    "info_type": "check",
+    "table_name": "orders",
+    "name": "orders_discount_amount_check",
+    "details": "CHECK ((discount_amount >= (0)::numeric))"
+  },
+  {
+    "info_type": "check",
+    "table_name": "orders",
+    "name": "orders_loyalty_points_earned_check",
+    "details": "CHECK ((loyalty_points_earned >= 0))"
+  },
+  {
+    "info_type": "check",
+    "table_name": "orders",
+    "name": "orders_loyalty_points_used_check",
+    "details": "CHECK ((loyalty_points_used >= 0))"
+  },
+  {
+    "info_type": "check",
+    "table_name": "orders",
+    "name": "orders_payment_status_check",
+    "details": "CHECK ((payment_status = ANY (ARRAY['pending'::text, 'paid'::text, 'failed'::text, 'refunded'::text, 'partial_refund'::text])))"
+  },
+  {
+    "info_type": "check",
+    "table_name": "orders",
+    "name": "orders_subtotal_check",
+    "details": "CHECK ((subtotal >= (0)::numeric))"
+  },
+  {
+    "info_type": "check",
+    "table_name": "orders",
+    "name": "orders_tax_amount_check",
+    "details": "CHECK ((tax_amount >= (0)::numeric))"
+  },
+  {
+    "info_type": "check",
+    "table_name": "orders",
+    "name": "orders_total_amount_check",
+    "details": "CHECK ((total_amount >= (0)::numeric))"
+  },
+  {
+    "info_type": "check",
+    "table_name": "orders",
+    "name": "valid_total",
+    "details": "CHECK ((total_amount = (((subtotal + tax_amount) + delivery_fee) - discount_amount)))"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "actual_delivery_date",
+    "details": "pos=18; type=timestamp with time zone; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "contact_phone",
+    "details": "pos=20; type=text; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "coupon_code",
+    "details": "pos=22; type=text; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "created_at",
+    "details": "pos=26; type=timestamp with time zone; nullable=NO; default=now(); desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "delivery_address_id",
+    "details": "pos=15; type=uuid; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "delivery_driver_id",
+    "details": "pos=19; type=uuid; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "delivery_fee",
+    "details": "pos=8; type=numeric; nullable=NO; default=0; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "delivery_instructions",
+    "details": "pos=16; type=text; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "discount_amount",
+    "details": "pos=7; type=numeric; nullable=NO; default=0; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "id",
+    "details": "pos=1; type=uuid; nullable=NO; default=uuid_generate_v4(); desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "loyalty_points_earned",
+    "details": "pos=24; type=integer; nullable=YES; default=0; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "loyalty_points_used",
+    "details": "pos=23; type=integer; nullable=YES; default=0; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "order_number",
+    "details": "pos=4; type=integer; nullable=NO; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "paid_at",
+    "details": "pos=14; type=timestamp with time zone; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "payment_method",
+    "details": "pos=12; type=USER-DEFINED; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "payment_reference",
+    "details": "pos=13; type=text; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "payment_status",
+    "details": "pos=11; type=text; nullable=NO; default='pending'::text; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "scheduled_delivery_date",
+    "details": "pos=17; type=timestamp with time zone; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "special_instructions",
+    "details": "pos=21; type=text; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "status",
+    "details": "pos=10; type=USER-DEFINED; nullable=NO; default='pending'::order_status_enum; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "subscription_id",
+    "details": "pos=3; type=uuid; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "subscription_meal_index",
+    "details": "pos=25; type=integer; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "subtotal",
+    "details": "pos=5; type=numeric; nullable=NO; default=0; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "tax_amount",
+    "details": "pos=6; type=numeric; nullable=NO; default=0; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "total_amount",
+    "details": "pos=9; type=numeric; nullable=NO; default=0; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "updated_at",
+    "details": "pos=27; type=timestamp with time zone; nullable=NO; default=now(); desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "orders",
+    "name": "user_id",
+    "details": "pos=2; type=uuid; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "foreign_key",
+    "table_name": "orders",
+    "name": "orders_delivery_address_id_fkey",
+    "details": "FOREIGN KEY (delivery_address_id) REFERENCES user_addresses(id)"
+  },
+  {
+    "info_type": "foreign_key",
+    "table_name": "orders",
+    "name": "orders_subscription_id_fkey",
+    "details": "FOREIGN KEY (subscription_id) REFERENCES user_subscriptions(id) ON DELETE CASCADE"
+  },
+  {
+    "info_type": "foreign_key",
+    "table_name": "orders",
+    "name": "orders_user_id_fkey",
+    "details": "FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE"
+  },
+  {
+    "info_type": "index",
+    "table_name": "orders",
+    "name": "idx_orders_delivery_date",
+    "details": "CREATE INDEX idx_orders_delivery_date ON public.orders USING btree (scheduled_delivery_date) WHERE (scheduled_delivery_date IS NOT NULL)"
+  },
+  {
+    "info_type": "index",
+    "table_name": "orders",
+    "name": "idx_orders_number",
+    "details": "CREATE INDEX idx_orders_number ON public.orders USING btree (order_number)"
+  },
+  {
+    "info_type": "index",
+    "table_name": "orders",
+    "name": "idx_orders_payment_status",
+    "details": "CREATE INDEX idx_orders_payment_status ON public.orders USING btree (payment_status, paid_at) WHERE (payment_status = 'paid'::text)"
+  },
+  {
+    "info_type": "index",
+    "table_name": "orders",
+    "name": "idx_orders_status_created",
+    "details": "CREATE INDEX idx_orders_status_created ON public.orders USING btree (status, created_at DESC)"
+  },
+  {
+    "info_type": "index",
+    "table_name": "orders",
+    "name": "idx_orders_subscription",
+    "details": "CREATE INDEX idx_orders_subscription ON public.orders USING btree (subscription_id) WHERE (subscription_id IS NOT NULL)"
+  },
+  {
+    "info_type": "index",
+    "table_name": "orders",
+    "name": "idx_orders_user_created",
+    "details": "CREATE INDEX idx_orders_user_created ON public.orders USING btree (user_id, created_at DESC)"
+  },
+  {
+    "info_type": "index",
+    "table_name": "orders",
+    "name": "orders_order_number_key",
+    "details": "CREATE UNIQUE INDEX orders_order_number_key ON public.orders USING btree (order_number)"
+  },
+  {
+    "info_type": "index",
+    "table_name": "orders",
+    "name": "orders_pkey",
+    "details": "CREATE UNIQUE INDEX orders_pkey ON public.orders USING btree (id)"
+  },
+  {
+    "info_type": "primary_key",
+    "table_name": "orders",
+    "name": "orders_pkey",
+    "details": "PRIMARY KEY (id)"
+  },
+  {
+    "info_type": "trigger",
+    "table_name": "orders",
+    "name": "trigger_order_delivery",
+    "details": "trigger_def=CREATE TRIGGER trigger_order_delivery BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION handle_order_delivery(); function=handle_order_delivery"
+  },
+  {
+    "info_type": "trigger",
+    "table_name": "orders",
+    "name": "trigger_set_order_number",
+    "details": "trigger_def=CREATE TRIGGER trigger_set_order_number BEFORE INSERT ON public.orders FOR EACH ROW EXECUTE FUNCTION set_order_number(); function=set_order_number"
+  },
+  {
+    "info_type": "trigger",
+    "table_name": "orders",
+    "name": "trigger_update_timestamp_orders",
+    "details": "trigger_def=CREATE TRIGGER trigger_update_timestamp_orders BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION update_timestamp(); function=update_timestamp"
+  },
+  {
+    "info_type": "unique",
+    "table_name": "orders",
+    "name": "orders_order_number_key",
+    "details": "UNIQUE (order_number)"
+  },
+  {
+    "info_type": "check",
+    "table_name": "user_subscriptions",
+    "name": "consumed_not_exceed_total",
+    "details": "CHECK ((consumed_meals <= total_meals))"
+  },
+  {
+    "info_type": "check",
+    "table_name": "user_subscriptions",
+    "name": "user_subscriptions_consumed_meals_check",
+    "details": "CHECK ((consumed_meals >= 0))"
+  },
+  {
+    "info_type": "check",
+    "table_name": "user_subscriptions",
+    "name": "user_subscriptions_price_per_meal_check",
+    "details": "CHECK ((price_per_meal >= (0)::numeric))"
+  },
+  {
+    "info_type": "check",
+    "table_name": "user_subscriptions",
+    "name": "user_subscriptions_total_meals_check",
+    "details": "CHECK ((total_meals > 0))"
+  },
+  {
+    "info_type": "check",
+    "table_name": "user_subscriptions",
+    "name": "valid_end_date",
+    "details": "CHECK (((end_date IS NULL) OR (end_date > start_date)))"
+  },
+  {
+    "info_type": "check",
+    "table_name": "user_subscriptions",
+    "name": "valid_next_delivery_meal_index",
+    "details": "CHECK ((next_delivery_meal >= 0))"
+  },
+  {
+    "info_type": "column",
+    "table_name": "user_subscriptions",
+    "name": "auto_renewal",
+    "details": "pos=12; type=boolean; nullable=NO; default=false; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "user_subscriptions",
+    "name": "consumed_meals",
+    "details": "pos=9; type=integer; nullable=NO; default=0; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "user_subscriptions",
+    "name": "created_at",
+    "details": "pos=16; type=timestamp with time zone; nullable=NO; default=now(); desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "user_subscriptions",
+    "name": "delivery_address_id",
+    "details": "pos=10; type=uuid; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "user_subscriptions",
+    "name": "end_date",
+    "details": "pos=6; type=date; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "user_subscriptions",
+    "name": "id",
+    "details": "pos=1; type=uuid; nullable=NO; default=uuid_generate_v4(); desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "user_subscriptions",
+    "name": "meals",
+    "details": "pos=14; type=jsonb; nullable=NO; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "user_subscriptions",
+    "name": "next_delivery_meal",
+    "details": "pos=15; type=integer; nullable=NO; default=0; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "user_subscriptions",
+    "name": "payment_method_id",
+    "details": "pos=13; type=uuid; nullable=YES; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "user_subscriptions",
+    "name": "plan_id",
+    "details": "pos=3; type=integer; nullable=NO; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "user_subscriptions",
+    "name": "preferred_delivery_time",
+    "details": "pos=11; type=time without time zone; nullable=NO; default='12:00:00'::time without time zone; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "user_subscriptions",
+    "name": "price_per_meal",
+    "details": "pos=7; type=numeric; nullable=NO; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "user_subscriptions",
+    "name": "start_date",
+    "details": "pos=5; type=date; nullable=NO; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "user_subscriptions",
+    "name": "status",
+    "details": "pos=4; type=USER-DEFINED; nullable=NO; default='pending'::subscription_status_enum; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "user_subscriptions",
+    "name": "total_meals",
+    "details": "pos=8; type=integer; nullable=NO; default=-; desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "user_subscriptions",
+    "name": "updated_at",
+    "details": "pos=17; type=timestamp with time zone; nullable=NO; default=now(); desc=-"
+  },
+  {
+    "info_type": "column",
+    "table_name": "user_subscriptions",
+    "name": "user_id",
+    "details": "pos=2; type=uuid; nullable=NO; default=-; desc=-"
+  },
+  {
+    "info_type": "foreign_key",
+    "table_name": "user_subscriptions",
+    "name": "user_subscriptions_delivery_address_id_fkey",
+    "details": "FOREIGN KEY (delivery_address_id) REFERENCES user_addresses(id)"
+  },
+  {
+    "info_type": "foreign_key",
+    "table_name": "user_subscriptions",
+    "name": "user_subscriptions_payment_method_id_fkey",
+    "details": "FOREIGN KEY (payment_method_id) REFERENCES user_payment_methods(id)"
+  },
+  {
+    "info_type": "foreign_key",
+    "table_name": "user_subscriptions",
+    "name": "user_subscriptions_plan_id_fkey",
+    "details": "FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE CASCADE"
+  },
+  {
+    "info_type": "foreign_key",
+    "table_name": "user_subscriptions",
+    "name": "user_subscriptions_user_id_fkey",
+    "details": "FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE"
+  },
+  {
+    "info_type": "index",
+    "table_name": "user_subscriptions",
+    "name": "idx_subscriptions_next_delivery_meal",
+    "details": "CREATE INDEX idx_subscriptions_next_delivery_meal ON public.user_subscriptions USING btree (next_delivery_meal) WHERE (status = 'active'::subscription_status_enum)"
+  },
+  {
+    "info_type": "index",
+    "table_name": "user_subscriptions",
+    "name": "idx_subscriptions_status_active",
+    "details": "CREATE INDEX idx_subscriptions_status_active ON public.user_subscriptions USING btree (status) WHERE (status = 'active'::subscription_status_enum)"
+  },
+  {
+    "info_type": "index",
+    "table_name": "user_subscriptions",
+    "name": "idx_subscriptions_user_status",
+    "details": "CREATE INDEX idx_subscriptions_user_status ON public.user_subscriptions USING btree (user_id, status)"
+  },
+  {
+    "info_type": "index",
+    "table_name": "user_subscriptions",
+    "name": "user_subscriptions_pkey",
+    "details": "CREATE UNIQUE INDEX user_subscriptions_pkey ON public.user_subscriptions USING btree (id)"
+  },
+  {
+    "info_type": "primary_key",
+    "table_name": "user_subscriptions",
+    "name": "user_subscriptions_pkey",
+    "details": "PRIMARY KEY (id)"
+  },
+  {
+    "info_type": "trigger",
+    "table_name": "user_subscriptions",
+    "name": "trigger_subscription_lifecycle",
+    "details": "trigger_def=CREATE TRIGGER trigger_subscription_lifecycle BEFORE INSERT OR UPDATE ON public.user_subscriptions FOR EACH ROW EXECUTE FUNCTION handle_subscription_lifecycle(); function=handle_subscription_lifecycle"
+  },
+  {
+    "info_type": "trigger",
+    "table_name": "user_subscriptions",
+    "name": "trigger_update_timestamp_user_subscriptions",
+    "details": "trigger_def=CREATE TRIGGER trigger_update_timestamp_user_subscriptions BEFORE UPDATE ON public.user_subscriptions FOR EACH ROW EXECUTE FUNCTION update_timestamp(); function=update_timestamp"
+  },
+  {
+    "info_type": "trigger",
+    "table_name": "user_subscriptions",
+    "name": "trigger_validate_subscription",
+    "details": "trigger_def=CREATE TRIGGER trigger_validate_subscription BEFORE INSERT OR UPDATE ON public.user_subscriptions FOR EACH ROW EXECUTE FUNCTION validate_subscription_before_save(); function=validate_subscription_before_save"
   }
 ]

@@ -1,0 +1,378 @@
+erDiagram
+    %% Core User Management
+    user_profiles {
+        uuid id PK
+        text display_name
+        text phone_number
+        text email
+        text google_id
+        text avatar_url
+        boolean is_admin
+        integer loyalty_points
+        text language
+        integer age
+        text gender
+        text account_status
+        boolean phone_verified
+        boolean email_verified
+        boolean profile_completed
+        timestamp created_at
+        timestamp updated_at
+        timestamp last_login
+    }
+
+    user_addresses {
+        uuid id PK
+        uuid user_id FK
+        text label
+        text address_line1
+        text address_line2
+        text city
+        text country
+        geography location
+        boolean is_default
+        text delivery_instructions
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    user_payment_methods {
+        uuid id PK
+        uuid user_id FK
+        text type
+        text provider
+        text last_four
+        integer expiry_month
+        integer expiry_year
+        text cardholder_name
+        boolean is_default
+        boolean is_verified
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    user_health_profiles {
+        uuid user_id PK,FK
+        text fitness_goal
+        numeric height_cm
+        numeric weight_kg
+        text activity_level
+        integer target_calories
+        integer target_protein
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    user_notification_preferences {
+        uuid user_id PK,FK
+        boolean email_enabled
+        boolean sms_enabled
+        boolean push_enabled
+        boolean order_confirmations
+        boolean delivery_updates
+        boolean meal_reminders
+        boolean plan_updates
+        boolean promotional_emails
+        boolean promotional_sms
+        boolean weekly_reports
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% Allergies and Dietary Preferences
+    allergies {
+        integer id PK
+        text name
+        text name_arabic
+        integer severity_level
+        timestamp created_at
+    }
+
+    dietary_preferences {
+        integer id PK
+        text name
+        text name_arabic
+        text description
+        timestamp created_at
+    }
+
+    user_allergies {
+        uuid user_id PK,FK
+        integer allergy_id PK,FK
+        integer severity_override
+    }
+
+    user_dietary_preferences {
+        uuid user_id PK,FK
+        integer preference_id PK,FK
+    }
+
+    %% Food Items
+    items {
+        integer id PK
+        text name
+        text name_arabic
+        text description
+        text description_arabic
+        text category
+        text category_arabic
+        double_precision price
+        integer calories
+        integer protein_g
+        integer carbs_g
+        integer fat_g
+        integer max_free_per_meal
+        text image_url
+        boolean is_available
+        boolean is_additive
+        integer sort_order
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    item_allergies {
+        integer item_id PK,FK
+        integer allergy_id PK,FK
+    }
+
+    user_favorite_items {
+        uuid user_id PK,FK
+        integer item_id PK,FK
+        timestamp created_at
+    }
+
+    %% Meals
+    meals {
+        integer id PK
+        text name
+        text name_arabic
+        text description
+        text description_arabic
+        text section
+        text section_arabic
+        numeric base_price
+        integer calories
+        integer protein_g
+        integer carbs_g
+        integer fat_g
+        integer fiber_g
+        integer sugar_g
+        integer sodium_mg
+        text ingredients
+        text ingredients_arabic
+        text preparation_instructions
+        text image_url
+        text thumbnail_url
+        boolean is_premium
+        boolean is_vegetarian
+        boolean is_vegan
+        boolean is_gluten_free
+        boolean is_dairy_free
+        integer spice_level
+        integer prep_time_minutes
+        numeric rating
+        integer rating_count
+        boolean is_featured
+        numeric discount_percentage
+        timestamp discount_valid_until
+        boolean is_available
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    meal_items {
+        integer meal_id PK,FK
+        integer item_id PK,FK
+        boolean is_included
+        integer max_quantity
+    }
+
+    meal_allergies {
+        integer meal_id PK,FK
+        integer allergy_id PK,FK
+    }
+
+    user_favorite_meals {
+        uuid user_id PK,FK
+        integer meal_id PK,FK
+        timestamp created_at
+    }
+
+    meal_reviews {
+        uuid id PK
+        uuid user_id FK
+        integer meal_id FK
+        uuid order_id FK
+        integer rating
+        text review_text
+        boolean is_verified_purchase
+        boolean is_published
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% Plans and Subscriptions
+    plans {
+        integer id PK
+        text title
+        text title_arabic
+        text description
+        text description_arabic
+        numeric price_per_meal
+        integer short_term_meals
+        integer medium_term_meals
+        integer kcal
+        integer protein
+        integer carb
+        text avatar_url
+        boolean is_active
+        integer sort_order
+        bigint duration_days
+        integer[] additives
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    plan_meals {
+        uuid id PK
+        integer plan_id FK
+        integer meal_id FK
+        boolean is_substitutable
+        timestamp created_at
+    }
+
+    user_subscriptions {
+        uuid id PK
+        uuid user_id FK
+        integer plan_id FK
+        text status
+        date start_date
+        date end_date
+        numeric price_per_meal
+        integer total_meals
+        integer consumed_meals
+        uuid delivery_address_id FK
+        time preferred_delivery_time
+        boolean auto_renewal
+        uuid payment_method_id FK
+        boolean is_paused
+        timestamp paused_at
+        text pause_reason
+        timestamp resume_date
+        integer[] additives
+        timestamp[] delivery_days
+        json[] meals
+        timestamp next_delivery_date
+        text next_delivery_status
+        jsonb delivery_history
+        integer next_delivery_meals
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% Orders
+    orders {
+        uuid id PK
+        uuid user_id FK
+        uuid subscription_id FK
+        text order_number
+        numeric subtotal
+        numeric tax_amount
+        numeric discount_amount
+        numeric delivery_fee
+        numeric total_amount
+        text status
+        text payment_status
+        text payment_method
+        text payment_reference
+        timestamp paid_at
+        uuid delivery_address_id FK
+        text delivery_instructions
+        timestamp scheduled_delivery_date
+        timestamp actual_delivery_date
+        uuid delivery_driver_id FK
+        text contact_phone
+        text special_instructions
+        text coupon_code
+        integer loyalty_points_used
+        integer loyalty_points_earned
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    order_meals {
+        uuid id PK
+        uuid order_id FK
+        integer meal_id FK
+        integer quantity
+        numeric unit_price
+        numeric total_price
+        text name
+        text name_arabic
+        text description
+        integer calories
+        integer protein_g
+        integer carbs_g
+        integer fat_g
+        text customization_notes
+        timestamp created_at
+    }
+
+    order_items {
+        uuid id PK
+        uuid order_id FK
+        uuid order_meal_id FK
+        integer item_id FK
+        integer quantity
+        numeric unit_price
+        numeric total_price
+        text name
+        text name_arabic
+        text category
+        timestamp created_at
+    }
+
+    %% Relationships
+    user_profiles ||--o{ user_addresses : "has"
+    user_profiles ||--o{ user_payment_methods : "has"
+    user_profiles ||--o| user_health_profiles : "has"
+    user_profiles ||--o| user_notification_preferences : "has"
+    user_profiles ||--o{ user_allergies : "has"
+    user_profiles ||--o{ user_dietary_preferences : "has"
+    user_profiles ||--o{ user_favorite_items : "favorites"
+    user_profiles ||--o{ user_favorite_meals : "favorites"
+    user_profiles ||--o{ user_subscriptions : "subscribes"
+    user_profiles ||--o{ orders : "places"
+    user_profiles ||--o{ meal_reviews : "writes"
+
+    allergies ||--o{ user_allergies : "affects"
+    allergies ||--o{ item_allergies : "contained_in"
+    allergies ||--o{ meal_allergies : "contained_in"
+
+    dietary_preferences ||--o{ user_dietary_preferences : "follows"
+
+    items ||--o{ item_allergies : "contains"
+    items ||--o{ user_favorite_items : "favorited_by"
+    items ||--o{ meal_items : "used_in"
+    items ||--o{ order_items : "ordered_as"
+
+    meals ||--o{ meal_items : "contains"
+    meals ||--o{ meal_allergies : "contains"
+    meals ||--o{ user_favorite_meals : "favorited_by"
+    meals ||--o{ meal_reviews : "reviewed_as"
+    meals ||--o{ plan_meals : "included_in"
+    meals ||--o{ order_meals : "ordered_as"
+
+    plans ||--o{ plan_meals : "includes"
+    plans ||--o{ user_subscriptions : "subscribed_to"
+
+    user_subscriptions ||--o{ orders : "generates"
+    user_addresses ||--o{ user_subscriptions : "delivers_to"
+    user_addresses ||--o{ orders : "delivers_to"
+    user_payment_methods ||--o{ user_subscriptions : "paid_with"
+
+    orders ||--o{ order_meals : "contains"
+    orders ||--o{ order_items : "contains"
+    orders ||--o{ meal_reviews : "reviewed_from"
+
+    order_meals ||--o{ order_items : "customized_with"

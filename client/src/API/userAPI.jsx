@@ -263,7 +263,7 @@ async getUserActiveSubscription(userId) {
       ...subscriptionData,
       status: subscriptionData.status || 'pending',
       preferred_delivery_time: subscriptionData.preferred_delivery_time || '12:00',
-      delivery_days: subscriptionData.delivery_days || [1, 2, 3, 4, 5],
+      //delivery_days: subscriptionData.delivery_days || [1, 2, 3, 4, 5],
       auto_renewal: subscriptionData.auto_renewal || false,
       consumed_meals: subscriptionData.consumed_meals || 0,
     };

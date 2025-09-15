@@ -308,7 +308,7 @@ const Admin = () => {
   const mealsManager = useEntityManager('meals', adminFunctions)
   const plansManager = useEntityManager('plans', adminFunctions)
   const usersManager = useEntityManager('users', adminFunctions)
-  const ordersManager = useEntityManager('orders', adminFunctions)
+  //const ordersManager = useEntityManager('orders', adminFunctions)
   const subsManager = useEntityManager('subscriptions', adminFunctions)
   const allergiesManager = useEntityManager('allergies', adminFunctions)
   const dietaryManager = useEntityManager('dietaryPreferences', adminFunctions)
@@ -621,13 +621,6 @@ const Admin = () => {
         isTableScrollable={isTableScrollable}
       />
       
-      <EntitySection
-        entityType="orders"
-        data={orders}
-        isLoading={ordersLoading}
-        entityManager={ordersManager}
-        isTableScrollable={isTableScrollable}
-      />
       
       <EntitySection
         entityType="subscriptions"

@@ -364,46 +364,258 @@ const updateMealCompleteMutation = useMutation({
   });
 
   // ===== SUBSCRIPTION MANAGEMENT =====
-  // create subscription
-  const createSubscriptionMutation = useMutation({
-  mutationFn: (subscriptionData) => adminAPI.createSubscription(subscriptionData),
-  onSuccess: () => {
-    queryClient.invalidateQueries(['admin', 'subscriptions']);
-  }
-});
-// get subscription details
+
+  // ===== SUBSCRIPTION MANAGEMENT HOOKS =====
+
+// Get all subscriptions
+const useGetAllSubscriptions = (options = {}) => {
+  return useQuery({
+    queryKey: ['admin', 'subscriptions', options],
+    queryFn: () => adminAPI.getAllSubscriptions(options),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+// Get subscription details
 const useGetSubscriptionDetails = (subscriptionId) => {
   return useQuery({
     queryKey: ['admin', 'subscription', subscriptionId],
     queryFn: () => adminAPI.getSubscriptionDetails(subscriptionId),
-    enabled: !!subscriptionId
+    enabled: !!subscriptionId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
-  // Get all subscriptions
-  const useGetAllSubscriptions = (options = {}) => {
-    return useQuery({
-      queryKey: ['admin', 'subscriptions', options],
-      queryFn: () => adminAPI.getAllSubscriptions(options),
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    });
-  };
 
-  // Update subscription status
-  const updateSubscriptionStatusMutation = useMutation({
-    mutationFn: ({ subscriptionId, status }) => adminAPI.updateSubscriptionStatus(subscriptionId, status),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'subscriptions']);
-    }
+// Get subscription analytics
+const useGetSubscriptionAnalytics = () => {
+  return useQuery({
+    queryKey: ['admin', 'subscriptions', 'analytics'],
+    queryFn: () => adminAPI.getSubscriptionAnalytics(),
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
   });
+};
 
-  // Update subscription
-  const updateSubscriptionMutation = useMutation({
-    mutationFn: ({ subscriptionId, updateData }) => adminAPI.updateSubscription(subscriptionId, updateData),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'subscriptions']);
-    }
+// Get subscriptions needing attention
+const useGetSubscriptionsNeedingAttention = (threshold = 2) => {
+  return useQuery({
+    queryKey: ['admin', 'subscriptions', 'attention', threshold],
+    queryFn: () => adminAPI.getSubscriptionsNeedingAttention(threshold),
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 10 * 60 * 1000, // Check every 10 minutes
   });
+};
 
+// SUBSCRIPTION MUTATIONS
+
+// Create subscription
+const createSubscriptionMutation = useMutation({
+  mutationFn: (subscriptionData) => adminAPI.createSubscription(subscriptionData),
+  onSuccess: () => {
+    queryClient.invalidateQueries(['admin', 'subscriptions']);
+    queryClient.invalidateQueries(['admin', 'subscriptions', 'analytics']);
+  }
+});
+
+// Update subscription
+const updateSubscriptionMutation = useMutation({
+  mutationFn: ({ subscriptionId, updateData }) => 
+    adminAPI.updateSubscription(subscriptionId, updateData),
+  onSuccess: (_, { subscriptionId }) => {
+    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
+    queryClient.invalidateQueries(['admin', 'subscriptions']);
+  }
+});
+
+// Update subscription status
+const updateSubscriptionStatusMutation = useMutation({
+  mutationFn: ({ subscriptionId, status }) => 
+    adminAPI.updateSubscriptionStatus(subscriptionId, status),
+  onSuccess: (_, { subscriptionId }) => {
+    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
+    queryClient.invalidateQueries(['admin', 'subscriptions']);
+    queryClient.invalidateQueries(['admin', 'subscriptions', 'analytics']);
+  }
+});
+
+// Progress to next meal
+const progressToNextMealMutation = useMutation({
+  mutationFn: ({ subscriptionId }) => 
+    adminAPI.progressToNextMeal(subscriptionId),
+  onSuccess: (_, { subscriptionId }) => {
+    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
+    queryClient.invalidateQueries(['admin', 'subscriptions']);
+    queryClient.invalidateQueries(['admin', 'subscriptions', 'analytics']);
+  }
+});
+
+// Update subscription meals
+const updateSubscriptionMealsMutation = useMutation({
+  mutationFn: ({ subscriptionId, meals }) => 
+    adminAPI.updateSubscriptionMeals(subscriptionId, meals),
+  onSuccess: (_, { subscriptionId }) => {
+    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
+    queryClient.invalidateQueries(['admin', 'subscriptions']);
+  }
+});
+
+// Bulk update subscriptions
+const bulkUpdateSubscriptionsMutation = useMutation({
+  mutationFn: ({ subscriptionIds, updateData }) => 
+    adminAPI.bulkUpdateSubscriptions(subscriptionIds, updateData),
+  onSuccess: () => {
+    queryClient.invalidateQueries(['admin', 'subscriptions']);
+  }
+});
+
+  
+
+  // Adjust delivery status
+const updateSubscriptionDeliveryStatusMutation = useMutation({
+  mutationFn: ({ subscriptionId, status }) => 
+    adminAPI.updateSubscriptionDeliveryStatus(subscriptionId, status),
+  onSuccess: (result) => {
+    queryClient.invalidateQueries(['admin', 'subscriptions']);
+    // If you need to update specific subscription data
+    if (result && result.subscriptionId) {
+      queryClient.invalidateQueries(['admin', 'subscription', result.subscriptionId]);
+    };
+    console.log('Updated delivery status:', result);
+  }
+});
+// ===== DELIVERY MANAGEMENT QUERIES =====
+
+// Get subscription delivery details
+const useGetSubscriptionDeliveryDetails = (subscriptionId) => {
+  return useQuery({
+    queryKey: ['admin', 'subscription', subscriptionId, 'delivery'],
+    queryFn: () => adminAPI.getSubscriptionDeliveryDetails(subscriptionId),
+    enabled: !!subscriptionId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+};
+
+// Get upcoming deliveries
+const useGetUpcomingDeliveries = (daysAhead = 7) => {
+  return useQuery({
+    queryKey: ['admin', 'deliveries', 'upcoming', daysAhead],
+    queryFn: () => adminAPI.getUpcomingDeliveries(daysAhead),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // Auto-refresh every 5 minutes
+  });
+};
+
+// Get overdue deliveries
+const useGetOverdueDeliveries = () => {
+  return useQuery({
+    queryKey: ['admin', 'deliveries', 'overdue'],
+    queryFn: () => adminAPI.getOverdueDeliveries(),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchInterval: 2 * 60 * 1000, // Auto-refresh every 2 minutes
+  });
+};
+
+// Get delivery history
+const useGetDeliveryHistory = (subscriptionId, limit = 50) => {
+  return useQuery({
+    queryKey: ['admin', 'subscription', subscriptionId, 'history', limit],
+    queryFn: () => adminAPI.getDeliveryHistory(subscriptionId, limit),
+    enabled: !!subscriptionId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+// ===== DELIVERY MANAGEMENT MUTATIONS =====
+
+// Update next delivery date
+const updateNextDeliveryDateMutation = useMutation({
+  mutationFn: ({ subscriptionId, newDeliveryDate }) => 
+    adminAPI.updateNextDeliveryDate(subscriptionId, newDeliveryDate),
+  onSuccess: (_, { subscriptionId }) => {
+    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
+    queryClient.invalidateQueries(['admin', 'deliveries']);
+    queryClient.invalidateQueries(['admin', 'subscriptions']);
+  }
+});
+
+// Update delivery address
+const updateDeliveryAddressMutation = useMutation({
+  mutationFn: ({ subscriptionId, addressId }) => 
+    adminAPI.updateDeliveryAddress(subscriptionId, addressId),
+  onSuccess: (_, { subscriptionId }) => {
+    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
+  }
+});
+
+// Complete delivery
+const completeDeliveryMutation = useMutation({
+  mutationFn: ({ subscriptionId, mealsDelivered, deliveryNotes }) => 
+    adminAPI.completeDelivery(subscriptionId, mealsDelivered, deliveryNotes),
+  onSuccess: (_, { subscriptionId }) => {
+    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
+    queryClient.invalidateQueries(['admin', 'deliveries']);
+    queryClient.invalidateQueries(['admin', 'subscriptions']);
+  }
+});
+
+// Reschedule failed delivery
+const rescheduleFailedDeliveryMutation = useMutation({
+  mutationFn: ({ subscriptionId, newDeliveryDate, reason }) => 
+    adminAPI.rescheduleFailedDelivery(subscriptionId, newDeliveryDate, reason),
+  onSuccess: (_, { subscriptionId }) => {
+    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
+    queryClient.invalidateQueries(['admin', 'deliveries']);
+  }
+});
+
+// Skip next delivery
+const skipNextDeliveryMutation = useMutation({
+  mutationFn: ({ subscriptionId, reason }) => 
+    adminAPI.skipNextDelivery(subscriptionId, reason),
+  onSuccess: (_, { subscriptionId }) => {
+    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
+    queryClient.invalidateQueries(['admin', 'deliveries']);
+  }
+});
+
+// Pause subscription
+const pauseSubscriptionMutation = useMutation({
+  mutationFn: ({ subscriptionId, reason, resumeDate }) => 
+    adminAPI.pauseSubscription(subscriptionId, reason, resumeDate),
+  onSuccess: (_, { subscriptionId }) => {
+    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
+    queryClient.invalidateQueries(['admin', 'subscriptions']);
+  }
+});
+
+// Resume subscription
+const resumeSubscriptionMutation = useMutation({
+  mutationFn: ({ subscriptionId }) => 
+    adminAPI.resumeSubscription(subscriptionId),
+  onSuccess: (_, { subscriptionId }) => {
+    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
+    queryClient.invalidateQueries(['admin', 'subscriptions']);
+  }
+});
+
+// Bulk update delivery status
+const bulkUpdateDeliveryStatusMutation = useMutation({
+  mutationFn: ({ subscriptionIds, status }) => 
+    adminAPI.bulkUpdateDeliveryStatus(subscriptionIds, status),
+  onSuccess: () => {
+    queryClient.invalidateQueries(['admin', 'deliveries']);
+    queryClient.invalidateQueries(['admin', 'subscriptions']);
+  }
+});
+
+// Update next delivery meals
+const updateNextDeliveryMealsMutation = useMutation({
+  mutationFn: ({ subscriptionId, mealIds, mealsCount }) => 
+    adminAPI.updateNextDeliveryMeals(subscriptionId, mealIds, mealsCount),
+  onSuccess: (_, { subscriptionId }) => {
+    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
+  }
+});
   // ===== ORDER MANAGEMENT =====
   
   // Get all orders
@@ -589,11 +801,11 @@ const useGetSubscriptionDetails = (subscriptionId) => {
     deletePlanComplete: deletePlanCompleteMutation.mutateAsync,
     updatePlanStatus: updatePlanStatusMutation.mutateAsync,
 
-    // Subscription Management
-    updateSubscriptionStatus: updateSubscriptionStatusMutation.mutateAsync,
-    updateSubscription: updateSubscriptionMutation.mutateAsync,
-    createSubscription: createSubscriptionMutation.mutateAsync,
-    useGetSubscriptionDetails,
+
+
+
+    // DELIVERY MANAGEMENT MUTATIONS
+   
     // Order Management
     updateOrderStatus: updateOrderStatusMutation.mutateAsync,
     updateOrder: updateOrderMutation.mutateAsync,
@@ -631,11 +843,7 @@ const useGetSubscriptionDetails = (subscriptionId) => {
     isDeletingPlanComplete: deletePlanCompleteMutation.isPending,
     isUpdatingPlanStatus: updatePlanStatusMutation.isPending,
 
-    isUpdatingSubscriptionStatus: updateSubscriptionStatusMutation.isPending,
-    isUpdatingSubscription: updateSubscriptionMutation.isPending,
-
-    isUpdatingOrderStatus: updateOrderStatusMutation.isPending,
-    isUpdatingOrder: updateOrderMutation.isPending,
+    
 
     isCreatingAllergyComplete: createAllergyCompleteMutation.isPending,
     isUpdatingAllergyComplete: updateAllergyCompleteMutation.isPending,
@@ -643,15 +851,27 @@ const useGetSubscriptionDetails = (subscriptionId) => {
     isCreatingDietaryPreferenceComplete: createDietaryPreferenceCompleteMutation.isPending,
     isUpdatingDietaryPreferenceComplete: updateDietaryPreferenceCompleteMutation.isPending,
     isDeletingDietaryPreferenceComplete: deleteDietaryPreferenceCompleteMutation.isPending,
+    isUpdatingNextDeliveryDate: updateNextDeliveryDateMutation.isPending,
+  isUpdatingDeliveryAddress: updateDeliveryAddressMutation.isPending,
+  isCompletingDelivery: completeDeliveryMutation.isPending,
+  isReschedulingDelivery: rescheduleFailedDeliveryMutation.isPending,
+  isSkippingDelivery: skipNextDeliveryMutation.isPending,
+  isPausingSubscription: pauseSubscriptionMutation.isPending,
+  isResumingSubscription: resumeSubscriptionMutation.isPending,
+  isBulkUpdatingDeliveryStatus: bulkUpdateDeliveryStatusMutation.isPending,
+  isUpdatingNextDeliveryMeals: updateNextDeliveryMealsMutation.isPending,
+
 
     // Error states for unified operations
-    userCompleteError: updateUserCompleteMutation.error || setAdminMutation.error || updateLoyaltyMutation.error,
+   
     mealCompleteError: createMealCompleteMutation.error || updateMealCompleteMutation.error || deleteMealCompleteMutation.error,
     itemCompleteError: createItemCompleteMutation.error || updateItemCompleteMutation.error || deleteItemCompleteMutation.error,
     planCompleteError: createPlanCompleteMutation.error || updatePlanCompleteMutation.error || deletePlanCompleteMutation.error,
-    subscriptionError: updateSubscriptionStatusMutation.error || updateSubscriptionMutation.error,
     orderError: updateOrderStatusMutation.error || updateOrderMutation.error,
     allergyCompleteError: createAllergyCompleteMutation.error || updateAllergyCompleteMutation.error || deleteAllergyCompleteMutation.error,
     dietaryPreferenceCompleteError: createDietaryPreferenceCompleteMutation.error || updateDietaryPreferenceCompleteMutation.error || deleteDietaryPreferenceCompleteMutation.error,
+    deliveryError: updateNextDeliveryDateMutation.error || 
+                completeDeliveryMutation.error || 
+                rescheduleFailedDeliveryMutation.error,
   };
 };

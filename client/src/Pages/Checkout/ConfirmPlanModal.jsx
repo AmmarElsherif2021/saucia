@@ -387,7 +387,7 @@ const ConfirmPlanModal = ({
         consumed_meals: 0,
         delivery_address_id: null,
         preferred_delivery_time: subscriptionData.preferred_delivery_time || '10:00-11:00',
-        delivery_days: subscriptionData.delivery_days,
+        //delivery_days: subscriptionData.delivery_days,
         auto_renewal: false,
         payment_method_id: null,
         meals: subscriptionData.meals,
