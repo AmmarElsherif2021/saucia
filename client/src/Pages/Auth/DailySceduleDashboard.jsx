@@ -1,3 +1,4 @@
+//refresh
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -235,6 +236,7 @@ const STATUS_CONFIGS = {
   },
   delivery: {
     pending: { color: 'blue', bg: 'blue.50', label: 'pending', icon: FiClock },
+    active: { color: 'teal', bg: 'teal.50', label: 'active', icon: FiPackage },
     confirmed: { color: 'orange', bg: 'orange.50', label: 'confirmed', icon: FiPackage },
     preparing: { color: 'orange', bg: 'orange.50', label: 'preparing', icon: FiPackage },
     delivered: { color: 'green', bg: 'green.50', label: 'delivered', icon: FiCheckCircle },
@@ -1017,10 +1019,7 @@ const AdminSubscriptionDashboard = () => {
       <Box p={{ base: 4, md: 6 }} maxW="100%">
         <VStack spacing={6} align="stretch">
           {/* Header */}
-          <Box>
-            <Heading as="h1" size="xl" mb={2}>
-              {t('admin.dashboard')}
-            </Heading>
+          <Box> 
             <Breadcrumb separator={<ChevronRightIcon color="gray.500" />} fontSize="sm">
               <BreadcrumbItem>
                 <BreadcrumbLink href="#">{t('admin.home')}</BreadcrumbLink>
@@ -1133,9 +1132,7 @@ const AdminSubscriptionDashboard = () => {
                     }}
                     variant="outline"
                     ml={{ md: 'auto' }}
-                  >
-                    {t('admin.refresh')}
-                  </Button>
+                  />
                 </Flex>
                 
                 <Flex gap={2} overflowX="auto" py={2}>
@@ -1246,7 +1243,7 @@ const AdminSubscriptionDashboard = () => {
                           <Th>{t('admin.status')}</Th>
                           <Th>{t('admin.paymentStatus')}</Th>
                           <Th>{t('admin.amount')}</Th>
-                          <Th>{t('admin.actions')}</Th>
+                          <Th> ---- </Th>
                         </Tr>
                       </Thead>
                       <Tbody>
@@ -1313,7 +1310,7 @@ const AdminSubscriptionDashboard = () => {
                           <Th>{t('admin.dateTime')}</Th>
                           <Th>{t('admin.status')}</Th>
                           <Th>{t('admin.amount')}</Th>
-                          <Th>{t('admin.actions')}</Th>
+                          <Th> --- </Th>
                         </Tr>
                       </Thead>
                       <Tbody>
@@ -1383,7 +1380,7 @@ const AdminSubscriptionDashboard = () => {
                           <Th>{t('admin.startDate')}</Th>
                           <Th>{t('admin.endDate')}</Th>
                           <Th>{t('admin.meals')}</Th>
-                          <Th>{t('admin.actions')}</Th>
+                          <Th> --- </Th>
                         </Tr>
                       </Thead>
                       <Tbody>

@@ -15,6 +15,29 @@ export const AuthProvider = ({ children }) => {
   
   // Enhanced redirect handling with better persistence
   const [pendingRedirect, setPendingRedirect] = useState(null);
+  
+  // Current subscription state
+  const [currentSubscription, setCurrentSubscription] = useState(null);
+  const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(false);
+
+  // Function to fetch user's active subscription
+  const fetchCurrentSubscription = useCallback(async (userId) => {
+    if (!userId) {
+      setCurrentSubscription(null);
+      return;
+    }
+    
+    setIsSubscriptionLoading(true);
+    try {
+      const subscription = await userAPI.getUserActiveSubscription(userId);
+      setCurrentSubscription(subscription);
+    } catch (error) {
+      console.error('Error fetching user subscription:', error);
+      setCurrentSubscription(null);
+    } finally {
+      setIsSubscriptionLoading(false);
+    }
+  }, []);
 
   // Unified auth change handler
   const handleAuthChange = useCallback(async (event, session) => {
@@ -42,6 +65,9 @@ export const AuthProvider = ({ children }) => {
         });
         
         setError(null);
+        
+        // Fetch user's subscription when authenticated
+        await fetchCurrentSubscription(session.user.id);
       } else if (event === 'SIGNED_OUT') {
         resetAuthState();
       }
@@ -49,7 +75,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Error handling auth state change:', error);
       setError(error.message);
     }
-  }, [supabaseSession, pendingRedirect]);
+  }, [supabaseSession, pendingRedirect, fetchCurrentSubscription]);
  
   // Reset all auth state
   const resetAuthState = useCallback(() => {
@@ -57,6 +83,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setError(null);
     setPendingRedirect(null);
+    setCurrentSubscription(null);
     // Clear localStorage as well
     try {
       localStorage.removeItem('auth_pending_redirect');
@@ -200,7 +227,10 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('auth_pending_redirect');
     }
   }, []); // Empty dependency array - only run on mount
-
+  //Debug
+  useEffect(() => {
+    console.log('AuthContext currentSubscription:', currentSubscription);
+  }, []);
   // Profile completion - updates core user state
   const completeProfile = useCallback(async (profileData) => {
     try {
@@ -255,6 +285,13 @@ export const AuthProvider = ({ children }) => {
     return !!user && !!supabaseSession;
   }, [user, supabaseSession]);
 
+  // Refresh subscription data
+  const refreshSubscription = useCallback(() => {
+    if (user?.id) {
+      fetchCurrentSubscription(user.id);
+    }
+  }, [user, fetchCurrentSubscription]);
+
   // Context value - enhanced with redirect management
   const contextValue = {
     // Core auth state
@@ -262,6 +299,10 @@ export const AuthProvider = ({ children }) => {
     isLoading,
     error,
     supabaseSession,
+
+    // Subscription state
+    currentSubscription,
+    isSubscriptionLoading,
 
     // Auth methods
     loginWithGoogle,
@@ -277,6 +318,10 @@ export const AuthProvider = ({ children }) => {
     setPendingRedirectAfterAuth,
     clearPendingRedirect,
     consumePendingRedirect,
+    
+    // Subscription refresh
+    refreshSubscription,
+    fetchCurrentSubscription,
     
     // Backward compatibility
     get isJoiningPremium() {

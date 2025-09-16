@@ -231,7 +231,7 @@ export const userAPI = {
  // subscription fetch to use the view
 async getUserActiveSubscription(userId) {
   const { data, error } = await supabase
-    .from('subscription_with_next_delivery')
+    .from('user_subscriptions')
     .select(`
       *,
       plans (
@@ -270,7 +270,102 @@ async getUserActiveSubscription(userId) {
 
     return createRecord('user_subscriptions', newSubscription);
   },
+  async getSubscriptionOrders(subscriptionId) {
+  const { data, error } = await supabase
+    .from('orders')
+    .select(`
+      *,
+      order_meals (
+        id,
+        meal_id,
+        name,
+        name_arabic,
+        quantity,
+        unit_price,
+        total_price,
+        meals (
+          id,
+          name,
+          name_arabic,
+          description,
+          description_arabic,
+          image_url,
+          thumbnail_url,
+          calories,
+          protein_g,
+          carbs_g,
+          fat_g
+        )
+      ),
+      order_items (
+        id,
+        item_id,
+        name,
+        name_arabic,
+        category,
+        quantity,
+        unit_price,
+        total_price
+      ),
+      user_addresses!delivery_address_id (
+        id,
+        label,
+        address_line1,
+        city,
+        state
+      )
+    `)
+    .eq('subscription_id', subscriptionId)
+    .order('scheduled_delivery_date', { ascending: true });
 
+  if (error) throw error;
+  return data || [];
+},
+async getNextScheduledMeal(subscriptionId) {
+  const { data, error } = await supabase
+    .from('orders')
+    .select(`
+      *,
+      order_meals (
+        id,
+        meal_id,
+        name,
+        name_arabic,
+        quantity,
+        unit_price,
+        total_price,
+        meals (
+          id,
+          name,
+          name_arabic,
+          image_url,
+          thumbnail_url
+        )
+      )
+    `)
+    .eq('subscription_id', subscriptionId)
+    .in('status', ['pending', 'confirmed'])
+    .order('scheduled_delivery_date', { ascending: true })
+    .limit(1);
+
+  if (error) throw error;
+  return data?.[0] || null;
+},
+async updateOrder(orderId, orderData) {
+  const updatedOrder = {
+    ...orderData,
+    updated_at: new Date().toISOString(),
+  };
+
+  // Remove undefined values
+  Object.keys(updatedOrder).forEach(key => {
+    if (updatedOrder[key] === undefined) {
+      delete updatedOrder[key];
+    }
+  });
+
+  return updateRecord('orders', orderId, updatedOrder);
+},
   async updateUserSubscription(subscriptionId, subscriptionData) {
     const updatedSubscription = {
       ...subscriptionData,
@@ -286,26 +381,122 @@ async getUserActiveSubscription(userId) {
 
     return updateRecord('user_subscriptions', subscriptionId, updatedSubscription);
   },
+  async activateOrder(orderId, orderData) {
+  const activatedOrder = {
+    status: 'confirmed',
+    scheduled_delivery_date: orderData.scheduled_delivery_date,
+    delivery_time: orderData.delivery_time,
+    updated_at: new Date().toISOString(),
+  };
 
-  async pauseUserSubscription(subscriptionId, pauseReason) {
-    return updateRecord('user_subscriptions', subscriptionId, {
-      is_paused: true,
-      paused_at: new Date().toISOString(),
-      pause_reason: pauseReason,
-      updated_at: new Date().toISOString(),
-    });
-  },
+  return updateRecord('orders', orderId, activatedOrder);
+},
 
-  async resumeUserSubscription(subscriptionId, resumeDate) {
-    return updateRecord('user_subscriptions', subscriptionId, {
-      is_paused: false,
-      paused_at: null,
-      pause_reason: null,
-      resume_date: resumeDate,
-      updated_at: new Date().toISOString(),
-    });
-  },
+async getOrderItems(orderId) {
+  return fetchList('order_items', {
+    field: 'order_id',
+    value: orderId,
+    select: `*,
+      items (
+        id,
+        name,
+        name_arabic,
+        description,
+        category,
+        price,
+        image_url
+      )`
+  });
+},
 
+async updateOrderItem(orderItemId, itemData) {
+  const updatedItem = {
+    ...itemData,
+    total_price: itemData.unit_price * itemData.quantity, // Ensure total is calculated
+  };
+
+  return updateRecord('order_items', orderItemId, updatedItem);
+},
+
+// Enhanced subscription methods
+async getSubscriptionStats(subscriptionId) {
+  // Get total meals count
+  const { data: totalMealsData, error: totalError } = await supabase
+    .from('orders')
+    .select('id')
+    .eq('subscription_id', subscriptionId);
+
+  if (totalError) throw totalError;
+
+  // Get consumed meals count
+  const { data: consumedMealsData, error: consumedError } = await supabase
+    .from('orders')
+    .select('id')
+    .eq('subscription_id', subscriptionId)
+    .eq('status', 'delivered');
+
+  if (consumedError) throw consumedError;
+
+  // Get pending meals
+  const { data: pendingMealsData, error: pendingError } = await supabase
+    .from('orders')
+    .select('id')
+    .eq('subscription_id', subscriptionId)
+    .in('status', ['pending', 'confirmed', 'preparing', 'out_for_delivery']);
+
+  if (pendingError) throw pendingError;
+
+  return {
+    totalMeals: totalMealsData?.length || 0,
+    consumedMeals: consumedMealsData?.length || 0,
+    pendingMeals: pendingMealsData?.length || 0,
+    remainingMeals: (totalMealsData?.length || 0) - (consumedMealsData?.length || 0)
+  };
+},
+
+async updateDeliverySettings(subscriptionId, deliveryData) {
+  // Update subscription delivery preferences
+  const subscriptionUpdate = {};
+  if (deliveryData.preferred_delivery_time) {
+    subscriptionUpdate.preferred_delivery_time = deliveryData.preferred_delivery_time;
+  }
+  if (deliveryData.delivery_address_id) {
+    subscriptionUpdate.delivery_address_id = deliveryData.delivery_address_id;
+  }
+
+  if (Object.keys(subscriptionUpdate).length > 0) {
+    await this.updateUserSubscription(subscriptionId, subscriptionUpdate);
+  }
+
+  // Update pending orders with new delivery settings
+  if (deliveryData.updatePendingOrders) {
+    const { error } = await supabase
+      .from('orders')
+      .update({
+        delivery_address_id: deliveryData.delivery_address_id,
+        updated_at: new Date().toISOString()
+      })
+      .eq('subscription_id', subscriptionId)
+      .eq('status', 'pending');
+
+    if (error) throw error;
+  }
+
+  return { success: true };
+},
+async pauseUserSubscription(subscriptionId, pauseReason) {
+  return updateRecord('user_subscriptions', subscriptionId, {
+    status: 'paused',
+    updated_at: new Date().toISOString(),
+  });
+},
+
+async resumeUserSubscription(subscriptionId) {
+  return updateRecord('user_subscriptions', subscriptionId, {
+    status: 'active',
+    updated_at: new Date().toISOString(),
+  });
+},
   // User Allergies Management
   async getUserAllergies(userId) {
     return fetchList('user_allergies', {

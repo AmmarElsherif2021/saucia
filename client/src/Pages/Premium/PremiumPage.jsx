@@ -334,16 +334,13 @@ const PlanDetails = ({ plan }) => {
 
 export const PremiumPage = () => {
   const { plans, elementsLoading } = useElements();
-  const { user, setPendingRedirectAfterAuth } = useAuthContext();
-  const navigate = useNavigate();
-  
-  // Only call useUserSubscriptions if user exists
   const { 
-    subscriptions, 
-    createSubscription, 
-    updateSubscription,
-    isLoading: isSubscriptionsLoading 
-  } = user ? useUserSubscriptions() : { subscriptions: [], isLoading: false };
+    user, 
+    setPendingRedirectAfterAuth, 
+    currentSubscription,
+    isSubscriptionLoading 
+  } = useAuthContext();
+  const navigate = useNavigate();
   
   // Use the context properly
   const { 
@@ -363,44 +360,38 @@ export const PremiumPage = () => {
   const detailsSectionRef = useRef(null);
   const plansContainerRef = useRef(null);
 
-  // Find user's active subscription - with safe check
-  const activeSubscription = user && subscriptions?.length > 0 
-    ? subscriptions.find(sub => sub.status === 'active' || sub.status === 'paused')
-    : null;
-  
   // Find the plan associated with active subscription
-  const userPlan = activeSubscription && plans?.length > 0
-    ? plans.find(plan => plan.id === activeSubscription.plan_id)
+  const userPlan = currentSubscription && plans?.length > 0
+    ? plans.find(plan => plan.id === currentSubscription.plan_id)
     : null;
 
   // Initialize context with user's current plan
   useEffect(() => {
-    if (userPlan && activeSubscription) {
+    if (userPlan && currentSubscription) {
       // Initialize the context with existing subscription data
       updateSubscriptionData({
         plan: userPlan,
         plan_id: userPlan.id,
-        status: activeSubscription.status,
-        start_date: activeSubscription.start_date,
-        end_date: activeSubscription.end_date,
-        price_per_meal: activeSubscription.price_per_meal,
-        total_meals: activeSubscription.total_meals,
-        consumed_meals: activeSubscription.consumed_meals || 0,
-        delivery_address_id: activeSubscription.delivery_address_id,
-        preferred_delivery_time: activeSubscription.preferred_delivery_time,
-        payment_method_id: activeSubscription.payment_method_id,
-        auto_renewal: activeSubscription.auto_renewal,
-        is_paused: activeSubscription.is_paused,
-        meals: activeSubscription.meals || [],
+        status: currentSubscription.status,
+        start_date: currentSubscription.start_date,
+        end_date: currentSubscription.end_date,
+        price_per_meal: currentSubscription.price_per_meal,
+        total_meals: currentSubscription.total_meals,
+        consumed_meals: currentSubscription.consumed_meals || 0,
+        delivery_address_id: currentSubscription.delivery_address_id,
+        preferred_delivery_time: currentSubscription.preferred_delivery_time,
+        payment_method_id: currentSubscription.payment_method_id,
+        auto_renewal: currentSubscription.auto_renewal,
+        is_paused: currentSubscription.is_paused,
+        meals: currentSubscription.meals || [],
         // Determine term based on total meals
-        selected_term: activeSubscription.total_meals === userPlan.short_term_meals ? 'short' : 'medium'
+        selected_term: currentSubscription.total_meals === userPlan.short_term_meals ? 'short' : 'medium'
       });
     } else if (!userPlan) {
       // Reset if no active subscription
       resetSubscriptionData();
     }
-  }, [userPlan, activeSubscription, updateSubscriptionData, resetSubscriptionData]);
-
+  }, [userPlan, currentSubscription, updateSubscriptionData, resetSubscriptionData]);
   const handlePlanSelect = (plan) => {
     // Check if user is authenticated
     if (!user) {
@@ -544,7 +535,7 @@ export const PremiumPage = () => {
     setLoginModalContext({ plan: null, term: null });
   };
 
-  const isLoading = elementsLoading || (user && isSubscriptionsLoading);
+  const isLoading = elementsLoading || (user && isSubscriptionLoading);
 
   if (isLoading) {
     return (
@@ -566,7 +557,7 @@ export const PremiumPage = () => {
           {userPlan && (
             <CurrentPlanBrief
               plan={userPlan}
-              subscription={activeSubscription}
+              subscription={currentSubscription}
             />
           )}
 

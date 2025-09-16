@@ -61,81 +61,99 @@ const itemVariants = {
   }
 };
 
-// Date calculation utility (same as in ChosenPlanContext)
-const calculateDeliveryDate = (startDate, mealIndex) => {
-  const date = new Date(startDate);
-  
-  const startDayOfWeek = date.getDay();
-  const isStartDateValid = startDayOfWeek !== 5 && startDayOfWeek !== 6;
-  
-  if (isStartDateValid && mealIndex === 0) {
-    return new Date(date);
-  }
-  
-  if (!isStartDateValid) {
-    while (date.getDay() === 5 || date.getDay() === 6) {
-      date.setDate(date.getDate() + 1);
-    }
-    if (mealIndex === 0) {
-      return new Date(date);
-    }
-  }
-  
-  let currentMealIndex = 0;
-  
-  while (currentMealIndex < mealIndex) {
-    date.setDate(date.getDate() + 1);
-    const dayOfWeek = date.getDay();
-    
-    if (dayOfWeek !== 5 && dayOfWeek !== 6) {
-      currentMealIndex++;
-    }
-  }
-  
-  return new Date(date);
-};
 
-// Enhanced Meal Calendar Component with meal design mapping
-const MealDeliveryCalendar = ({ subscriptionData, mealDesigns, saladItems, t }) => {
+// Meal Ingredients Detail Modal
+const MealIngredientsModal = ({ isOpen, onClose, mealData, mealIndex, t }) => {
   const { colorMode } = useColorMode();
   const { currentLanguage } = useI18nContext();
-  const isMobile = useBreakpointValue({ base: true, md: false });
-  
-  const deliverySchedule = useMemo(() => {
-    if (!subscriptionData?.start_date || !subscriptionData?.total_meals) return [];
-    
-    const schedule = [];
-    const startDate = new Date(subscriptionData.start_date);
-    const availableMealDesigns = mealDesigns?.filter(meal => meal && Object.keys(meal).length > 0) || [];
-    
-    for (let i = 0; i < subscriptionData.total_meals; i++) {
-      const deliveryDate = calculateDeliveryDate(startDate, i);
-      
-      // Map meal designs cyclically - repeat the 5 designs across all delivery days
-      const mealDesignIndex = i % 5; // Cycle through 0-4 for the 5 meal slots
-      const assignedMealDesign = mealDesigns?.[mealDesignIndex] || null;
-      const isDesignComplete = assignedMealDesign && Object.keys(assignedMealDesign).length > 0;
-      
-      schedule.push({
-        deliveryIndex: i,
-        mealSlot: mealDesignIndex + 1, // Display as 1-5
-        deliveryDate: deliveryDate,
-        formattedDate: deliveryDate.toLocaleDateString(currentLanguage, {
-          weekday: isMobile ? 'short' : 'short',
-          month: 'short',
-          day: 'numeric'
-        }),
-        dayName: deliveryDate.toLocaleDateString(currentLanguage, { weekday: isMobile ? 'short' : 'long' }),
-        mealDesign: assignedMealDesign,
-        isComplete: isDesignComplete,
-        isEmpty: !isDesignComplete
-      });
-    };
-    //c.filter
-    console.log('Delivery Schedule:', schedule);
-    return schedule;
-  }, [subscriptionData, mealDesigns, currentLanguage, isMobile]);
+  const isArabic = currentLanguage === 'ar';
 
+  if (!mealData) return null;
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader borderBottomWidth="1px">
+          <HStack>
+            <Badge colorScheme="brand" variant="solid">
+              {t('checkout.mealDesign')} {mealIndex + 1}
+            </Badge>
+            <Text fontSize="md" fontWeight="semibold">
+              {t('checkout.ingredientDetails')}
+            </Text>
+          </HStack>
+        </ModalHeader>
+        <ModalBody py={4}>
+          <VStack spacing={3} align="stretch">
+            {/* Summary Stats */}
+            <SimpleGrid columns={2} spacing={3} mb={4}>
+              <Box textAlign="center" p={2} bg={colorMode === 'dark' ? 'gray.700' : 'gray.50'} borderRadius="md">
+                <Text fontSize="lg" fontWeight="bold" color="brand.500">
+                  {mealData.itemCount}
+                </Text>
+                <Text fontSize="xs" color="gray.600">
+                  {t('ingredients')}
+                </Text>
+              </Box>
+              <Box textAlign="center" p={2} bg={colorMode === 'dark' ? 'gray.700' : 'gray.50'} borderRadius="md">
+                <Text fontSize="lg" fontWeight="bold" color="green.500">
+                  {mealData.totalKcal}
+                </Text>
+                <Text fontSize="xs" color="gray.600">
+                  kcal
+                </Text>
+              </Box>
+            </SimpleGrid>
+
+            {/* Ingredients List */}
+            <Divider />
+            <Heading size="sm" mb={2}>{t('checkout.ingredients')}</Heading>
+            <VStack spacing={2} align="stretch" maxH="300px" overflowY="auto">
+              {mealData.items.map((item, idx) => (
+                <Flex key={idx} justify="space-between" align="center" p={2} 
+                      bg={colorMode === 'dark' ? 'gray.600' : 'white'} 
+                      borderRadius="md" borderWidth="1px">
+                  <VStack align="start" spacing={0} flex={1}>
+                    <Text fontSize="sm" fontWeight="medium">
+                      {isArabic ? item.name_arabic || item.name : item.name}
+                    </Text>
+                    {item.kcal && (
+                      <Text fontSize="2xs" color="gray.600">
+                        {item.kcal} kcal per unit
+                      </Text>
+                    )}
+                  </VStack>
+                  <HStack spacing={1}>
+                    <Badge variant="outline" colorScheme="blue">
+                      x{item.quantity}
+                    </Badge>
+                    <Text fontSize="xs" color="green.600" fontWeight="medium">
+                      {(item.kcal || 0) * item.quantity} kcal
+                    </Text>
+                  </HStack>
+                </Flex>
+              ))}
+            </VStack>
+          </VStack>
+        </ModalBody>
+        <ModalFooter>
+          <Button onClick={onClose} size="sm">
+            {t('common.close')}
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+};
+
+// Enhanced Meal Preview Component - Responsive Grid of Square Meal Cards
+const MealDesignsPreview = ({ mealDesigns, saladItems, t }) => {
+  const { colorMode } = useColorMode();
+  const { currentLanguage } = useI18nContext();
+  const isArabic = currentLanguage === 'ar';
+  const [selectedMealIndex, setSelectedMealIndex] = useState(null);
+  
   // Calculate meal design summary
   const mealSummary = useMemo(() => {
     if (!saladItems || !mealDesigns) return {};
@@ -166,7 +184,32 @@ const MealDeliveryCalendar = ({ subscriptionData, mealDesigns, saladItems, t }) 
     return summary;
   }, [saladItems, mealDesigns]);
 
-  if (!deliverySchedule.length) return null;
+  const completedMealsCount = mealDesigns?.filter(meal => 
+    meal && Object.keys(meal).length > 0
+  ).length || 0;
+
+  // Function to get ingredient preview text (first 2-3 items or first 100 characters)
+  const getIngredientPreview = (mealData) => {
+    if (!mealData?.items?.length) return t('checkout.noIngredients');
+    
+    const ingredientNames = mealData.items.map(item => 
+      isArabic ? item.name_arabic || item.name : item.name
+    );
+    
+    // Show first 2-3 ingredients or truncate at 100 characters
+    let preview = ingredientNames.slice(0, 3).join(', ');
+    if (preview.length > 100) {
+      preview = preview.substring(0, 100) + '...';
+    } else if (ingredientNames.length > 3) {
+      preview += ` +${ingredientNames.length - 3} ${t('more')}`;
+    }
+    
+    return preview;
+  };
+
+  if (!mealDesigns?.length) return null;
+
+  const selectedMealData = selectedMealIndex !== null ? mealSummary[selectedMealIndex] : null;
 
   return (
     <MotionBox
@@ -179,95 +222,149 @@ const MealDeliveryCalendar = ({ subscriptionData, mealDesigns, saladItems, t }) 
     >
       <Flex justify="space-between" align="center" mb={3}>
         <Heading size="sm" color="brand.600">
-          {t('checkout.deliverySchedule')}
+          {t('checkout.mealDesignsOverview')}
         </Heading>
-        <Badge colorScheme="blue" fontSize="xs">
-          {deliverySchedule.filter(d => d.isComplete).length} / {deliverySchedule.length} {t('checkout.ready')}
+        <Badge colorScheme={completedMealsCount === 5 ? 'green' : 'orange'} fontSize="xs">
+          {completedMealsCount} / 5 {t('checkout.completed')}
         </Badge>
       </Flex>
       
-      <VStack spacing={2} align="stretch" maxH="200px" overflowY="auto">
-        {deliverySchedule.map(({ deliveryIndex, mealSlot, formattedDate, dayName, mealDesign, isComplete, isEmpty }, index) => (
-          <Box
-            key={deliveryIndex}
-            p={2}
-            bg={colorMode === 'dark' ? 'gray.600' : 'white'}
-            borderRadius="md"
-            borderWidth="1px"
-            borderColor={isEmpty ? 'orange.200' : 'green.200'}
-            position="relative"
-            fontSize="sm"
-          >
-            <Flex align="center" justify="space-between" gap={2}>
-              <HStack spacing={2} flex={1}>
-                <Badge
-                  colorScheme={isEmpty ? 'orange' : 'green'}
-                  variant="solid"
-                  fontSize="2xs"
-                  minW="40px"
-                >
-                  #{deliveryIndex + 1}
-                </Badge>
-                
-                <VStack align="start" spacing={0} flex={1}>
-                  <Text fontSize="xs" fontWeight="medium" color="brand.600" noOfLines={1}>
-                    {formattedDate}
-                  </Text>
-                  <Text fontSize="2xs" color="gray.600" noOfLines={1}>
-                    {dayName}
-                  </Text>
-                </VStack>
-              </HStack>
-              
-              <Box textAlign="right" flex={1}>
-                {isComplete && mealSummary[mealSlot - 1] ? (
-                  <VStack align="end" spacing={0}>
-                    <Text fontSize="2xs" fontWeight="medium" color="green.600">
-                      {mealSummary[mealSlot - 1].itemCount} {t('ingredients')}
+      {/* Responsive Grid of Square Meal Cards */}
+      <SimpleGrid columns={{ base: 2, sm: 3, md: 4}} spacing={2} mb={4}>
+        {mealDesigns.map((design, index) => {
+          const isCompleted = Object.keys(design).length > 0;
+          const mealData = mealSummary[index];
+          
+          return (
+            <MotionBox
+              key={index}
+              variants={itemVariants}
+              p={2}
+              aspectRatio="1/1"
+              minH="100px"
+              bg={colorMode === 'dark' ? 'gray.600' : 'white'}
+              borderRadius="lg"
+              borderWidth="2px"
+              borderColor={isCompleted ? 'green.200' : 'orange.200'}
+              cursor={isCompleted ? 'pointer' : 'default'}
+              onClick={isCompleted ? () => setSelectedMealIndex(index) : undefined}
+              _hover={isCompleted ? { 
+                borderColor: 'green.300', 
+                transform: 'translateY(-2px)',
+                shadow: 'md'
+              } : {}}
+              transition="all 0.2s"
+              position="relative"
+              display="flex"
+              flexDirection="column"
+            >
+              {/* Meal Number Badge */}
+              <Badge
+                position="absolute"
+                top={1}
+                right={1}
+                colorScheme={isCompleted ? 'green' : 'orange'}
+                variant="solid"
+                fontSize="2xs"
+                borderRadius="full"
+                px={2}
+                zIndex={1}
+              >
+                #{index + 1}
+              </Badge>
+
+              <VStack spacing={1} align="center" justify="center" h="full" p={1}>
+                {isCompleted ? (
+                  <>
+                    {/* Stats Row */}
+                    <HStack spacing={1} fontSize="2xs" color="gray.600" mt={2}>
+                      <Text>
+                        <Text as="span" fontWeight="bold" color="brand.500">
+                          {mealData?.itemCount || 0}
+                        </Text>
+                      </Text>
+                      <Text>•</Text>
+                      <Text>
+                        <Text as="span" fontWeight="bold" color="green.500">
+                          {mealData?.totalKcal || 0}
+                        </Text>
+                      </Text>
+                    </HStack>
+
+                    {/* Ingredients Preview */}
+                    <Text 
+                      fontSize="xs" 
+                      color="gray.600" 
+                      textAlign="center"
+                      noOfLines={4}
+                      flex={1}
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      px={1}
+                    >
+                      {getIngredientPreview(mealData)}
                     </Text>
-                    <Text fontSize="2xs" color="gray.600">
-                      {mealSummary[mealSlot - 1].totalKcal} kcal
+
+                    {/* Click to view hint */}
+                    <Text fontSize="2xs" color="blue.500" fontStyle="italic">
+                      {t('common.clickToView')}
+                    </Text>
+                  </>
+                ) : (
+                  <VStack spacing={1} justify="center" flex={1} w="full">
+                    <Box
+                      w={6}
+                      h={6}
+                      borderRadius="full"
+                      border="2px dashed"
+                      borderColor="orange.300"
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                    >
+                      <Text fontSize="md" color="orange.400">+</Text>
+                    </Box>
+                    <Text fontSize="2xs" color="orange.500" textAlign="center">
+                      {t('checkout.designRequired')}
                     </Text>
                   </VStack>
-                ) : (
-                  <Text fontSize="2xs" color="orange.500" fontStyle="italic">
-                    {t('checkout.mealNotDesigned')}
-                  </Text>
                 )}
-              </Box>
-            </Flex>
-          </Box>
-        ))}
-      </VStack>
+              </VStack>
+            </MotionBox>
+          );
+        })}
+      </SimpleGrid>
       
-      {/* Enhanced Summary Stats */}
-      <Divider my={2} />
-      <SimpleGrid columns={3} spacing={2} textAlign="center" fontSize="xs">
-        <Box>
-          <Text fontSize="sm" fontWeight="bold" color="brand.600">
-            {deliverySchedule.length}
-          </Text>
-          <Text fontSize="2xs" color="gray.600">
-            {t('checkout.totalDeliveries')}
-          </Text>
-        </Box>
+      {/* Summary Stats */}
+      <Divider mb={3} />
+      <SimpleGrid columns={2} spacing={2} textAlign="center" fontSize="xs">
         <Box>
           <Text fontSize="sm" fontWeight="bold" color="green.500">
-            {deliverySchedule?.filter(d => d.isComplete).length}
+            {completedMealsCount}
           </Text>
           <Text fontSize="2xs" color="gray.600">
-            {t('checkout.readyDeliveries')}
+            {t('checkout.completedMeals')}
           </Text>
         </Box>
         <Box>
           <Text fontSize="sm" fontWeight="bold" color="orange.500">
-            {deliverySchedule?.filter(d => d.isEmpty).length}
+            {5 - completedMealsCount}
           </Text>
           <Text fontSize="2xs" color="gray.600">
-            {t('checkout.pendingDeliveries')}
+            {t('checkout.remainingMeals')}
           </Text>
         </Box>
       </SimpleGrid>
+
+      {/* Ingredients Detail Modal */}
+      <MealIngredientsModal
+        isOpen={selectedMealIndex !== null}
+        onClose={() => setSelectedMealIndex(null)}
+        mealData={selectedMealData}
+        mealIndex={selectedMealIndex}
+        t={t}
+      />
     </MotionBox>
   );
 };
@@ -377,6 +474,7 @@ const ConfirmPlanModal = ({
 
   const handleConfirmSubscription = async () => {
     try {
+      // Format the subscription data according to the database schema
       const subscription = {
         plan_id: userPlan.id,
         status: 'pending',
@@ -385,14 +483,16 @@ const ConfirmPlanModal = ({
         price_per_meal: userPlan.price_per_meal,
         total_meals: subscriptionData.total_meals,
         consumed_meals: 0,
-        delivery_address_id: null,
-        preferred_delivery_time: subscriptionData.preferred_delivery_time || '10:00-11:00',
-        //delivery_days: subscriptionData.delivery_days,
+        delivery_address_id: subscriptionData.delivery_address_id, // This should be set before reaching this modal
+        preferred_delivery_time: subscriptionData.preferred_delivery_time || '10:00:00', // Format as TIME
         auto_renewal: false,
-        payment_method_id: null,
-        meals: subscriptionData.meals,
+        payment_method_id: subscriptionData.payment_method_id, // This should be set before reaching this modal
+        meals: subscriptionData.meals, // This will be converted to JSONB by the database
+        next_delivery_meal: 0, // Start with the first meal design
       }
+      
       console.log('Creating subscription with data:', subscription)
+      
       await createSubscription(subscription)
       
       toast({
@@ -417,10 +517,22 @@ const ConfirmPlanModal = ({
   }
 
   const canConfirmSubscription = useMemo(() => {
-    return subscriptionData.meals?.every(meal => 
+    // Check if all 5 meal designs are completed
+    const mealsComplete = subscriptionData.meals?.every(meal => 
       meal && Object.keys(meal).length > 0
     )
-  }, [subscriptionData.meals])
+    
+    // Check if required fields are present
+    const hasRequiredData = !!(
+      subscriptionData.plan_id &&
+      subscriptionData.start_date &&
+      subscriptionData.end_date &&
+      subscriptionData.total_meals &&
+      subscriptionData.price_per_meal
+    )
+    
+    return mealsComplete && hasRequiredData
+  }, [subscriptionData])
 
   const completedMealsCount = useMemo(() => {
     return subscriptionData.meals?.filter(meal => 
@@ -453,9 +565,18 @@ const ConfirmPlanModal = ({
         </Flex>
         
         <Flex justify="space-between">
-          <Text color="gray.600">{t('checkout.totalDeliveries')}</Text>
+          <Text color="gray.600">{t('checkout.totalMeals')}</Text>
           <Text fontWeight="bold">{subscriptionData.total_meals}</Text>
         </Flex>
+        
+        <Flex justify="space-between">
+          <Text color="gray.600">{t('checkout.deliverySystem')}</Text>
+          <Text fontWeight="bold" fontSize="xs" color="blue.600">
+            {t('checkout.workingDaysOnly')}
+          </Text>
+        </Flex>
+        
+        <Divider />
         
         <Flex justify="space-between">
           <Text color="gray.600">{t('checkout.mealsComplete')}</Text>
@@ -537,6 +658,14 @@ const ConfirmPlanModal = ({
                       {t('checkout.designMealsInstruction')}
                     </Text>
                     
+                    {/* Alert about delivery system */}
+                    <Alert status="info" size="sm" mb={3} borderRadius="md">
+                      <AlertIcon />
+                      <Text fontSize="2xs">
+                        {t('checkout.deliveryInfo')} {/* "Meals will be delivered on working days only (Sunday-Thursday). The 5 meal designs will cycle throughout your subscription." */}
+                      </Text>
+                    </Alert>
+                    
                     {isLoadingItems ? (
                       <Text fontSize="sm">{t('loading')}...</Text>
                     ) : (
@@ -557,7 +686,7 @@ const ConfirmPlanModal = ({
                             >
                               <HStack spacing={2}>
                                 <Text fontWeight="medium" fontSize="sm">
-                                  {t('checkout.mealSlot')} {index + 1}
+                                  {t('checkout.mealDesign')} {index + 1}
                                 </Text>
                                 {Object.keys(mealDesign).length > 0 && (
                                   <Badge colorScheme="green" fontSize="2xs">
@@ -593,10 +722,9 @@ const ConfirmPlanModal = ({
                   </MotionBox>
                 </VStack>
 
-                {/* Right Column - Delivery Calendar */}
+                {/* Right Column - Meal Designs Preview */}
                 <VStack spacing={3} align="stretch">
-                  <MealDeliveryCalendar 
-                    subscriptionData={subscriptionData}
+                  <MealDesignsPreview 
                     mealDesigns={subscriptionData.meals}
                     saladItems={saladItems}
                     t={t}
@@ -627,7 +755,10 @@ const ConfirmPlanModal = ({
               <HStack spacing={2}>
                 {!canConfirmSubscription && (
                   <Text color="orange.500" fontSize="xs" noOfLines={1}>
-                    {t('checkout.designAllMealsWarning')}
+                    {completedMealsCount < 5 
+                      ? t('checkout.designAllMealsWarning')
+                      : t('checkout.completeRequiredFields')
+                    }
                   </Text>
                 )}
                 <Button
