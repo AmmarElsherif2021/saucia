@@ -554,6 +554,16 @@
         "errorUpdatingProfile": "Error updating profile"
       },
       "premium": {
+      "orders":"Orders",
+      "activeOrders":"Active Orders",
+      "activateThisOrder":"Activate this order",
+      "deliveredOrders":"Delivered Orders",
+      "locked":"Locked",
+      "orderInProgress": "Order in progress",
+      "orderInProgressMessage": "You cannot activate a new meal until your current order is delivered.",
+      "created": "Created",
+      "total":"Total",
+      "readyToActivate": "Ready to activate",
       "failedToUpdatePlanStatus": "Failed to update plan status",
       "pleaseSelectOrderAndDate": "Please select an order and delivery date",
       "mealActivatedSuccessfully": "Meal activated successfully",
@@ -1689,6 +1699,16 @@
         "errorUpdatingProfile": "خطأ في تحديث الملف الشخصي"
       },
       "premium": {
+      "orders":"الطلبات",
+      "activeOrders":"الطلبات النشطة",
+      "activateThisOrder":"فعل هذا الطلب",
+      "deliveredOrders":"الطلبات التي تم توصيلها",
+      "locked": "مقفل",
+      "orderInProgress":" لديك طلب قيد التنفيذ",
+      "orderInProgressMessage":"لا يمكنك تفعيل وجبة جديدة حتى يتم تسليم طلبك الحالي.",
+      "created": "تم الإنشاء",
+      "total":"الإجمالي",
+      "readyToActivate":"جاهز للتفعيل",
       "pleaseSelectOrderAndDate": "يرجى اختيار طلب وتاريخ التوصيل",
       "mealActivatedSuccessfully": "تم تفعيل الوجبة بنجاح",
       "failedToActivateMeal": "فشل في تفعيل الوجبة",

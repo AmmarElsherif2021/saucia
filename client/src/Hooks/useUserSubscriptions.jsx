@@ -58,8 +58,7 @@ export const useUserSubscriptions = () => {
         mutationFn: ({ orderId, deliveryTime, deliveryDate }) =>
             userAPI.activateOrder(orderId, { 
                 scheduled_delivery_date: deliveryDate,
-                delivery_time: deliveryTime,
-                status: 'confirmed'
+                status: 'active'
             }),
         onSuccess: () => {
             queryClient.invalidateQueries(['subscriptionOrders', user.id]);

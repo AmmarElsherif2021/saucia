@@ -59,8 +59,8 @@ export const CurrentPlanBrief = () => {
     switch (status) {
       case 'active': return 'green'
       case 'paused': return 'orange'
-      case 'pending': return 'blue'
-      case 'completed': return 'gray'
+      case 'pending': return 'teal'
+      case 'completed': return 'black'
       default: return 'gray'
     }
   }
@@ -71,7 +71,7 @@ export const CurrentPlanBrief = () => {
   }
 
   return (
-    <Box borderRadius={'35px'} bg="brand.100" p={6} mb={6}>
+    <Box borderRadius={'35px'} bg="brand.100" borderColor={'brand.500'} p={6} mb={6}>
       <Flex justify="space-between" align="center" mb={4}>
         <Text>
           {t('premium.currentlySubscribedToThe')}{' '}
@@ -103,7 +103,7 @@ export const CurrentPlanBrief = () => {
 
           {subscriptionStats && (
             <Flex mt={2} gap={2} flexWrap="wrap">
-              <Badge colorScheme="blue" variant="outline">
+              <Badge colorScheme="teal" variant="outline">
                 {t('premium.totalMeals')}: {subscriptionStats.totalMeals}
               </Badge>
               <Badge colorScheme="green" variant="outline">
@@ -156,7 +156,7 @@ export const CurrentPlanBrief = () => {
                 colorScheme={nextOrder.status === 'confirmed' ? 'green' : 'blue'}
                 size="sm"
               >
-                {t(`orderStatus.${nextOrder.status}`)}
+                {t(`admin.order_status.${nextOrder.status}`)}
               </Badge>
             </Box>
           )}

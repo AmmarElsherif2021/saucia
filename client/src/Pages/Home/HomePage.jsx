@@ -14,6 +14,7 @@ import { useAuthContext } from '../../Contexts/AuthContext'
 import { useNavigate } from 'react-router'
 import Intro from './Intro'
 import FloatingShapesLayout from './Hero/FloatingShapesLayout'
+import { CurrentPlanBrief } from '../Premium/CurrentPlanBrief'
 // Loading component for better UX
 const FeaturedMealsLoading = () => (
   <Center h="300px">
@@ -114,6 +115,7 @@ const HomePage = () => {
       ref={sectionRefs.hero}
     >
       <ScrollingBadgesTrail />
+      <CurrentPlanBrief/>
       
       {/* Hero section - always renders immediately */}
       <Box overflowX={'hidden'}>

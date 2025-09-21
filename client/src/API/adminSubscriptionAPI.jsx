@@ -315,7 +315,7 @@ export const adminSubscriptionAPI = {
           user_subscriptions!inner(
             id, user_id,
             user_profiles!inner(id, display_name, email, phone_number),
-            user_addresses!delivery_address_id(
+            addresses!delivery_address_id(
               id, address_line1, address_line2, city
             )
           )
@@ -464,7 +464,7 @@ async getSubscriptionOrders(options = {}) {
         user_subscriptions!inner(
           id, user_id,
           user_profiles!inner(id, display_name, email, phone_number),
-          user_addresses!delivery_address_id(
+          addresses!inner(
             id, address_line1, address_line2, city
           )
         )

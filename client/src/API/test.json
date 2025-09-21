@@ -1,5 +1,20 @@
 [
   {
+    "output": "=========================================================\nTABLE: addresses\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.addresses (\n    id bigint NOT NULL,\n    external_id text NOT NULL,\n    label text NOT NULL,\n    address_line1 text NOT NULL,\n    city text NOT NULL,\n    is_default boolean DEFAULT false NOT NULL,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    address_line2 text,\n    CONSTRAINT addresses_pkey PRIMARY KEY (id)\n);\n",
+    "sort_order": 1,
+    "table_name": "addresses"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• addresses_external_id_key (UNIQUE)\n  UNIQUE (external_id)\n\n",
+    "sort_order": 2,
+    "table_name": "addresses"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• addresses_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX addresses_pkey ON public.addresses USING btree (id)\n\n• addresses_external_id_key (UNIQUE)\n  Columns: external_id\n  Definition: CREATE UNIQUE INDEX addresses_external_id_key ON public.addresses USING btree (external_id)\n\n• idx_addresses_city\n  Columns: city\n  Definition: CREATE INDEX idx_addresses_city ON public.addresses USING btree (city)\n\n• idx_addresses_is_default\n  Columns: is_default\n  Definition: CREATE INDEX idx_addresses_is_default ON public.addresses USING btree (is_default)\n\n",
+    "sort_order": 3,
+    "table_name": "addresses"
+  },
+  {
     "output": "=========================================================\nTABLE: allergies\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.allergies (\n    id integer DEFAULT nextval('allergies_id_seq'::regclass) NOT NULL,\n    name text NOT NULL,\n    name_arabic text,\n    severity_level integer,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    CONSTRAINT allergies_pkey PRIMARY KEY (id)\n);\n",
     "sort_order": 1,
     "table_name": "allergies"
@@ -50,7 +65,7 @@
     "table_name": "items"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• items_max_free_per_meal_check (CHECK)\n  CHECK ((max_free_per_meal >= 0))\n\n• items_price_check (CHECK)\n  CHECK ((price >= ((0)::numeric)::double precision))\n\n• items_protein_g_check (CHECK)\n  CHECK ((protein_g >= 0))\n\n• items_carbs_g_check (CHECK)\n  CHECK ((carbs_g >= 0))\n\n• items_fat_g_check (CHECK)\n  CHECK ((fat_g >= 0))\n\n• items_calories_check (CHECK)\n  CHECK ((calories >= 0))\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• items_protein_g_check (CHECK)\n  CHECK ((protein_g >= 0))\n\n• items_price_check (CHECK)\n  CHECK ((price >= ((0)::numeric)::double precision))\n\n• items_max_free_per_meal_check (CHECK)\n  CHECK ((max_free_per_meal >= 0))\n\n• items_carbs_g_check (CHECK)\n  CHECK ((carbs_g >= 0))\n\n• items_fat_g_check (CHECK)\n  CHECK ((fat_g >= 0))\n\n• items_calories_check (CHECK)\n  CHECK ((calories >= 0))\n\n",
     "sort_order": 2,
     "table_name": "items"
   },
@@ -70,7 +85,7 @@
     "table_name": "meal_allergies"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• meal_allergies_allergy_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (allergy_id) REFERENCES allergies(id) ON DELETE CASCADE\n\n• meal_allergies_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• meal_allergies_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE\n\n• meal_allergies_allergy_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (allergy_id) REFERENCES allergies(id) ON DELETE CASCADE\n\n",
     "sort_order": 2,
     "table_name": "meal_allergies"
   },
@@ -170,7 +185,7 @@
     "table_name": "orders"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• valid_total (CHECK)\n  CHECK ((total_amount = (((subtotal + tax_amount) + delivery_fee) - discount_amount)))\n\n• orders_delivery_address_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (delivery_address_id) REFERENCES user_addresses(id)\n\n• orders_delivery_fee_check (CHECK)\n  CHECK ((delivery_fee >= (0)::numeric))\n\n• orders_discount_amount_check (CHECK)\n  CHECK ((discount_amount >= (0)::numeric))\n\n• orders_loyalty_points_earned_check (CHECK)\n  CHECK ((loyalty_points_earned >= 0))\n\n• orders_loyalty_points_used_check (CHECK)\n  CHECK ((loyalty_points_used >= 0))\n\n• orders_order_number_key (UNIQUE)\n  UNIQUE (order_number)\n\n• orders_payment_status_check (CHECK)\n  CHECK ((payment_status = ANY (ARRAY['pending'::text, 'paid'::text, 'failed'::text, 'refunded'::text, 'partial_refund'::text])))\n\n• orders_subscription_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (subscription_id) REFERENCES user_subscriptions(id) ON DELETE CASCADE\n\n• orders_subtotal_check (CHECK)\n  CHECK ((subtotal >= (0)::numeric))\n\n• orders_tax_amount_check (CHECK)\n  CHECK ((tax_amount >= (0)::numeric))\n\n• orders_total_amount_check (CHECK)\n  CHECK ((total_amount >= (0)::numeric))\n\n• orders_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• orders_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• orders_delivery_address_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (delivery_address_id) REFERENCES user_addresses(id)\n\n• orders_delivery_fee_check (CHECK)\n  CHECK ((delivery_fee >= (0)::numeric))\n\n• orders_discount_amount_check (CHECK)\n  CHECK ((discount_amount >= (0)::numeric))\n\n• orders_loyalty_points_earned_check (CHECK)\n  CHECK ((loyalty_points_earned >= 0))\n\n• orders_loyalty_points_used_check (CHECK)\n  CHECK ((loyalty_points_used >= 0))\n\n• orders_order_number_key (UNIQUE)\n  UNIQUE (order_number)\n\n• orders_payment_status_check (CHECK)\n  CHECK ((payment_status = ANY (ARRAY['pending'::text, 'paid'::text, 'failed'::text, 'refunded'::text, 'partial_refund'::text])))\n\n• orders_subscription_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (subscription_id) REFERENCES user_subscriptions(id) ON DELETE CASCADE\n\n• orders_subtotal_check (CHECK)\n  CHECK ((subtotal >= (0)::numeric))\n\n• orders_tax_amount_check (CHECK)\n  CHECK ((tax_amount >= (0)::numeric))\n\n• orders_total_amount_check (CHECK)\n  CHECK ((total_amount >= (0)::numeric))\n\n• valid_total (CHECK)\n  CHECK ((total_amount = (((subtotal + tax_amount) + delivery_fee) - discount_amount)))\n\n",
     "sort_order": 2,
     "table_name": "orders"
   },

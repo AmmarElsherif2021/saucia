@@ -383,9 +383,8 @@ async updateOrder(orderId, orderData) {
   },
   async activateOrder(orderId, orderData) {
   const activatedOrder = {
-    status: 'confirmed',
+    status: 'active',
     scheduled_delivery_date: orderData.scheduled_delivery_date,
-    delivery_time: orderData.delivery_time,
     updated_at: new Date().toISOString(),
   };
 

@@ -70,6 +70,8 @@ import {
   FaSearch as SearchIcon 
 } from 'react-icons/fa'
 import MealDeliveryDashboard from './DailySceduleDashboard.jsx';
+import AdminAddressManager from './AdminAddressManager.jsx';
+import { useDebugUser } from '../../Hooks/useDebugUser.jsx';
 
 // Reusable EntitySection component
 const EntitySection = ({ 
@@ -267,6 +269,7 @@ const EntitySection = ({
 // MAIN COMPONENT
 const Admin = () => {
   const { user } = useAuthContext()
+  const userInfo = useDebugUser();
   const adminFunctions = useAdminFunctions()
   const toast = useToast()
   const {
@@ -457,7 +460,12 @@ const Admin = () => {
 
   if (isLoading) return <LoadingSpinner />
   if (error) return <ErrorAlert message={error?.message || 'Failed to load admin data'} retry={handleRetry} />
-
+  if (!user || !userInfo.profile.is_admin) return (
+  <>
+  {/*JSON.stringify(userInfo, null, 2)*/}
+  <ErrorAlert message="Access denied. Admins only." />
+  </>
+)
   return (
     <Box
       sx={{
@@ -537,6 +545,9 @@ const Admin = () => {
           icon={<FaUtensils size={20} />}
         />
       </Grid>
+          <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
+          <AdminAddressManager/>
+          </Box>
           <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
           <MealDeliveryDashboard/>
           </Box>
