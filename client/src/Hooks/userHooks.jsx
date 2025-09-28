@@ -7,7 +7,7 @@ All hooks uses the auth context for user ID and session state
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthContext } from '../Contexts/AuthContext';
 import { userAPI } from '../API/userAPI';
-
+import { ordersAPI } from '../API/orderAPI';
 // 1. User Profile Hook
 export const useUserProfile = () => {
   const { user } = useAuthContext();
@@ -310,20 +310,24 @@ export const useUserAllergies = () => {
   };
   
   // 10. User Orders Hook
-  export const useUserOrders = () => {
-    const { user } = useAuthContext();
-    
-    const ordersQuery = useQuery({
-      queryKey: ['userOrders', user?.id],
-      queryFn: () => userAPI.getUserOrders(user.id),
-      enabled: !!user?.id
-    });
-    
-    return {
-      orders: ordersQuery.data || [],
-      isLoading: ordersQuery.isLoading,
-      isError: ordersQuery.isError,
-      error: ordersQuery.error,
-      refetch: ordersQuery.refetch
-    };
+ export const useUserOrders = () => {
+  const { user } = useAuthContext();
+  
+  const ordersQuery = useQuery({
+    queryKey: ['userOrders', user?.id],
+    queryFn: () => {
+      if (!user?.id) throw new Error('User not authenticated');
+      // Filter orders: either no subscription_id OR subscription orders that are not pending
+      return ordersAPI.getUserOrdersFiltered(user.id);
+    },
+    enabled: !!user?.id
+  });
+  
+  return {
+    orders: ordersQuery.data || [],
+    isLoading: ordersQuery.isLoading,
+    isError: ordersQuery.isError,
+    error: ordersQuery.error,
+    refetch: ordersQuery.refetch
   };
+};

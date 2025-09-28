@@ -16,15 +16,81 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeftIcon, ChevronRightIcon, StarIcon } from '@chakra-ui/icons'
 import { PlanCard } from '../../Components/Cards'
 import { useTranslation } from 'react-i18next'
+// MOCK DATA FOR TESTING - Comment out actual imports below
 import { useElements } from '../../Contexts/ElementsContext'
 import { enrichPlansWithImages } from './planImageUtils'
 import { useState, useEffect } from 'react'
 
+// MOCK DATA FOR TESTING PURPOSES
+// const mockPlans = [
+//   {
+//     id: 'plan-1',
+//     title: 'Premium Fitness Plan',
+//     title_arabic: 'بريميوم فيتنس بلان',
+//     description: 'High-protein meals for fitness enthusiasts',
+//     description_arabic: 'وجبات غنية بالبروتين لعشاق اللياقة البدنية',
+//     kcal: 450,
+//     carb: 45,
+//     protein: 35,
+//     fat: 12,
+//     price: 750,
+//     duration_days: 30,
+//     total_meals: 30,
+//     is_active: true,
+//     image_url: '/images/plans/fitness-plan.jpg'
+//   },
+//   {
+//     id: 'plan-2',
+//     title: 'Weight Loss Program',
+//     title_arabic: 'برنامج فقدان الوزن',
+//     description: 'Low-calorie meals designed for weight loss',
+//     description_arabic: 'وجبات منخفضة السعرات الحرارية مصممة لفقدان الوزن',
+//     kcal: 350,
+//     carb: 30,
+//     protein: 25,
+//     fat: 10,
+//     price: 650,
+//     duration_days: 30,
+//     total_meals: 30,
+//     is_active: true,
+//     image_url: '/images/plans/weight-loss-plan.jpg'
+//   },
+//   {
+//     id: 'plan-3',
+//     title: 'Muscle Building Plan',
+//     title_arabic: 'خطة بناء العضلات',
+//     description: 'High-calorie meals for muscle growth',
+//     description_arabic: 'وجبات عالية السعرات الحرارية لنمو العضلات',
+//     kcal: 600,
+//     carb: 60,
+//     protein: 45,
+//     fat: 15,
+//     price: 850,
+//     duration_days: 30,
+//     total_meals: 30,
+//     is_active: true,
+//     image_url: '/images/plans/muscle-building-plan.jpg'
+//   }
+// ];
+
+// Mock function to replace enrichPlansWithImages
+// const enrichPlansWithImages = (plans) => {
+//   return plans.map(plan => ({
+//     ...plan,
+//     image_url: plan.image_url || `/images/plans/default-plan.jpg`
+//   }));
+// };
+
 export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
-  const { plans, elementsLoading } = useElements()
+  // MOCK DATA FOR TESTING - Comment out actual context usage
+   const { plans, elementsLoading } = useElements()
   const { t } = useTranslation()
   const [currentPlanIndex, setCurrentPlanIndex] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+  
+  // Using mock data instead
+  // const plans = mockPlans;
+  // const elementsLoading = false;
 
   // Theme values
   const bgGradient = useColorModeValue(

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { EditIcon, StarIcon } from '@chakra-ui/icons';
 import { useTranslation } from 'react-i18next';
 import {
@@ -27,6 +28,29 @@ import {
   Divider,
   HStack,
   Icon,
+  IconButton,
+  Center,
+  Spinner,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  TableContainer,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  Progress,
+  Tooltip
 } from '@chakra-ui/react';
 import {
   BasicFormControl,
@@ -37,14 +61,18 @@ import {
   AddressInput,
   UserInfoItem, 
   NotificationStatus,
-  OrderHistoryTable
+  OrderHistoryTable,
+  DashboardSection,
+  ResponsiveCard,
+  ActionButtonGroup,
+  SubscriptionDetails
 } from './DashboardComponents';
 import MapModal from '../Checkout/MapModal';
 import { useI18nContext } from '../../Contexts/I18nContext';
 import { useUserAllergies } from '../../Hooks/userHooks';
 import { useUserDietaryPreferences } from '../../Hooks/useUserDietaryPreferences';
-
-// Options getters
+import { AddIcon, DeleteIcon } from '@chakra-ui/icons';
+// Options getters AddIcon
 const getGenderOptions = [
     { value: 'male', label: 'Male' },
     { value: 'female', label: 'Female' },
@@ -157,7 +185,7 @@ export const HealthProfileSection = ({ formData, handlers, t, isLoading = false 
   const { currentLanguage } = useI18nContext();
   const isArabic = currentLanguage === 'ar';
   const inputBg = { light: 'white', dark: 'gray.700' };
-  
+  const {handleInputChange} = handlers;
   // Fetch dietary preferences and allergies using hooks
   const { 
     dietaryPreferences: availablePreferences = [],
@@ -431,6 +459,7 @@ export const DeliverySection = ({ formData, handlers, onOpenMap, t }) => {
   );
 };
 
+// ProfileHeader
 export const ProfileHeader = ({ user, userPlan, onOpen, t }) => {
   return (
     <Flex 
@@ -439,21 +468,19 @@ export const ProfileHeader = ({ user, userPlan, onOpen, t }) => {
       direction={{ base: 'column', md: 'row' }} 
       textAlign={{ base: 'center', md: 'left' }}
       justify={{ base: 'center', md: 'flex-start' }}
-      gap={2}
-      
+      gap={4}
     >
       <Avatar
         size="2xl"
         name={user.displayName}
-        src={user.photoURL}
+        src={user.avatar_url}
         bg="brand.500"
         color="white"
       />
 
       <VStack
-      direction={{ base: 'column', md: 'row' }} 
-      textAlign={{ base: 'center', md: 'left' }}
-      align={{ base: 'center', md: 'flex-start' }}
+        align={{ base: 'center', md: 'flex-start' }}
+        flex={1}
       >
         <Heading size="lg" mb={1}>
           {user.displayName || t('profile.anonymousUser')}
@@ -469,11 +496,12 @@ export const ProfileHeader = ({ user, userPlan, onOpen, t }) => {
         )}
 
         <Flex 
-          mt={4} 
+          mt={2} 
           gap={3} 
           justify="center"
           direction={{ base: 'column', sm: 'row' }}
           align="center"
+          wrap="wrap"
         >
           {userPlan && (
             <Badge 
@@ -481,7 +509,6 @@ export const ProfileHeader = ({ user, userPlan, onOpen, t }) => {
               px={3} 
               py={1} 
               borderRadius="md"
-              alignSelf="center"
             >
               {userPlan.title}
             </Badge>
@@ -502,16 +529,13 @@ export const ProfileHeader = ({ user, userPlan, onOpen, t }) => {
         variant="outline"
         colorScheme="brand"
         size="lg"
-        order={{ base: 2, md: 1 }}
         mt={{ base: 4, md: 0 }}
-        mx={8}
       >
         {t('profile.editProfile')}
       </Button>
     </Flex>
   );
 };
-
 export const OverviewSection = ({ user, t }) => {
   const personalFields = [
     { label: t('profile.email'), value: user.email, verified: user.emailVerified },
@@ -577,5 +601,259 @@ export const OverviewSection = ({ user, t }) => {
         </VStack>
       </SimpleGrid>
     </Box>
+  );
+};
+// Add these components to your existing DashboardSections.jsx
+
+// Order History Section
+export const OrderHistorySection = ({ orders, isLoading, t, navigate }) => {
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minH="200px">
+        <Spinner />
+      </Box>
+    );
+  }
+
+  return (
+    <DashboardSection title={t('profile.orderHistory')}>
+      <OrderHistoryTable orders={orders} />
+      {(!orders || orders.length === 0) && (
+        <Box textAlign="center" py={8}>
+          <Button 
+            colorScheme="brand" 
+            onClick={() => navigate('/meals')}
+          >
+            {t('profile.browseMeals')}
+          </Button>
+        </Box>
+      )}
+    </DashboardSection>
+  );
+};
+
+// Subscription Section
+export const SubscriptionSection = ({ subscription, orders, isLoading, t, navigate, refetchOrders }) => {
+  return (
+    <VStack spacing={6} align="stretch">
+      <DashboardSection title={t('profile.currentSubscription')}>
+        <SubscriptionDetails 
+          subscription={subscription} 
+          isLoading={isLoading} 
+        />
+      </DashboardSection>
+
+      {subscription && (
+        <DashboardSection title={t('profile.subscriptionManagement')}>
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            <Button 
+              colorScheme="blue" 
+              variant="outline"
+              onClick={() => navigate(`/subscriptions/${subscription.id}`)}
+            >
+              {t('profile.viewSubscriptionDetails')}
+            </Button>
+            <Button 
+              colorScheme="orange" 
+              variant="outline"
+              onClick={() => navigate(`/subscriptions/${subscription.id}/meals`)}
+            >
+              {t('profile.manageMealSelection')}
+            </Button>
+          </SimpleGrid>
+        </DashboardSection>
+      )}
+    </VStack>
+  );
+};
+
+// Addresses Section
+export const AddressesSection = ({ 
+  addresses, 
+  isLoading, 
+  formState, 
+  modalState, 
+  t, 
+  onOpenModal, 
+  onCloseModal, 
+  setFormState, 
+  addAddress, 
+  updateAddress, 
+  deleteAddress 
+}) => {
+  const handleAddressSubmit = async () => {
+    // Implementation from original
+  };
+
+  return (
+    <DashboardSection 
+      title={t('profile.addresses')}
+      action={
+        <Button
+          leftIcon={<AddIcon/>}
+          colorScheme="brand"
+          onClick={() => {
+            setFormState(prev => ({ ...prev, address: {}, editingAddress: null }));
+            onOpenModal('address');
+          }}
+        >
+          {t('profile.addAddress')}
+        </Button>
+      }
+    >
+      {isLoading ? (
+        <Center minH="200px"><Spinner /></Center>
+      ) : (
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+          {addresses?.map(address => (
+            <ResponsiveCard key={address.id}>
+              <Flex justify="space-between" align="start">
+                <Box>
+                  <Text fontWeight="bold">{address.label}</Text>
+                  <Text>{address.address_line1}</Text>
+                  {address.address_line2 && <Text>{address.address_line2}</Text>}
+                  <Text>{address.city}, {address.state} {address.postal_code}</Text>
+                  {address.is_default && (
+                    <Badge colorScheme="green" mt={2}>
+                      {t('profile.default')}
+                    </Badge>
+                  )}
+                </Box>
+                <ActionButtonGroup>
+                  <IconButton
+                    icon={<EditIcon />}
+                    size="sm"
+                    aria-label={t('common.edit')}
+                    onClick={() => {
+                      setFormState(prev => ({
+                        ...prev, 
+                        address: { ...address, street: address.address_line1 },
+                        editingAddress: address
+                      }));
+                      onOpenModal('address');
+                    }}
+                  />
+                  <IconButton
+                    icon={<DeleteIcon />}
+                    size="sm"
+                    colorScheme="red"
+                    aria-label={t('common.delete')}
+                    onClick={() => deleteAddress(address.id)}
+                  />
+                </ActionButtonGroup>
+              </Flex>
+            </ResponsiveCard>
+          ))}
+        </SimpleGrid>
+      )}
+    </DashboardSection>
+  );
+};
+
+// Payment Methods Section
+export const PaymentMethodsSection = ({ 
+  paymentMethods, 
+  isLoading, 
+  formState, 
+  modalState, 
+  t, 
+  onOpenModal, 
+  onCloseModal, 
+  setFormState, 
+  addPaymentMethod, 
+  updatePaymentMethod, 
+  deletePaymentMethod,
+  isAddingPayment,
+  isUpdatingPayment
+}) => {
+  // Similar structure to AddressesSection
+  return (
+    <DashboardSection 
+      title={t('profile.paymentMethods')}
+      action={
+        <Button
+          leftIcon={< AddIcon/>}
+          colorScheme="brand"
+          onClick={() => {
+            setFormState(prev => ({ ...prev, payment: {}, editingPayment: null }));
+            onOpenModal('payment');
+          }}
+        >
+          {t('profile.addPayment')}
+        </Button>
+      }
+    >
+      {/* Payment methods grid */}
+    </DashboardSection>
+  );
+};
+
+// Reviews Section
+export const ReviewsSection = ({ 
+  reviews, 
+  isLoading, 
+  formState, 
+  modalState, 
+  t, 
+  onOpenModal, 
+  onCloseModal, 
+  setFormState, 
+  deleteReview 
+}) => {
+  // Similar structure to other sections
+  return (
+    <DashboardSection 
+      title={t('profile.reviews')}
+      action={
+        <Button
+          leftIcon={<AddIcon/>}
+          colorScheme="brand"
+          onClick={() => {
+            setFormState(prev => ({ ...prev, review: {}, editingReview: null }));
+            onOpenModal('review');
+          }}
+        >
+          {t('profile.createReview')}
+        </Button>
+      }
+    >
+      {/* Reviews grid */}
+    </DashboardSection>
+  );
+};
+
+// Favorites Section
+export const FavoritesSection = ({ 
+  favoriteMeals, 
+  favoriteItems, 
+  isLoading, 
+  t, 
+  removeFavoriteMeal, 
+  removeFavoriteItem 
+}) => {
+  return (
+    <DashboardSection title={t('profile.favorites')}>
+      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+        {favoriteMeals?.map(fav => (
+          <ResponsiveCard key={fav.meal_id}>
+            <Flex justify="space-between" align="start">
+              <Box>
+                <Text fontWeight="bold">{fav.meals?.name}</Text>
+                <Text>{fav.meals?.description}</Text>
+                <Text color="brand.500">${fav.meals?.base_price}</Text>
+              </Box>
+              <IconButton
+                icon={<DeleteIcon />}
+                size="sm"
+                colorScheme="red"
+                aria-label={t('common.delete')}
+                onClick={() => removeFavoriteMeal(fav.meal_id)}
+              />
+            </Flex>
+          </ResponsiveCard>
+        ))}
+        {/* Similar for favoriteItems   */}
+      </SimpleGrid>
+    </DashboardSection>
   );
 };

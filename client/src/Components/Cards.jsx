@@ -33,7 +33,6 @@ import {
   useColorModeValue,
   Spinner
 } from '@chakra-ui/react'
-import cartIcon from '../assets/cartIcon2.svg'
 import { StarIcon, MinusIcon, AddIcon, InfoIcon } from '@chakra-ui/icons'
 // import dessertPic from "../assets/dessert.JPG";
 // import fruitPic from "../assets/fruits.JPG";
@@ -44,6 +43,7 @@ import { useTranslation } from 'react-i18next'
 import { useCart } from '../Contexts/CartContext'
 import { motion } from 'framer-motion'
 import { t } from 'i18next'
+import { FaCartPlus } from 'react-icons/fa'
 
 // Enhanced Image Component with loading states
 const EnhancedImage = ({ 
@@ -238,15 +238,27 @@ export const MinimalMealCard = ({ meal, onClick }) => {
       cursor="pointer"
       transition="all 0.3s ease"
       _hover={{
-        transform: 'translateY(-4px)',
+        transform: 'translateY(-2px)',
         borderColor: 'brand.600',
         bg: hoverBg,
+        shadow: 'lg'
       }}
       onClick={() => onClick?.(meal)}
       position="relative"
       height="100%"
-      minH="250px"
-      w="300px"
+      w={{
+        base: "100%",
+        sm: "280px",
+        md: "300px",
+        lg: "280px",
+        xl: "300px"
+      }}
+      maxW="400px"
+      minH={{
+        base: "200px",
+        sm: "220px",
+        md: "240px"
+      }}
       px={0}
       py={0}
       opacity={imageLoaded ? 1 : 0.8}
@@ -255,11 +267,11 @@ export const MinimalMealCard = ({ meal, onClick }) => {
       {meal.is_discount_active && meal.discount_percentage > 0 && (
         <Badge
           position="absolute"
-          top="12px"
-          right="12px"
+          top="8px"
+          right="8px"
           colorScheme="red"
-          borderRadius="sm"          
-          px="3"
+          borderRadius="sm"
+          px="2"
           py="1"
           zIndex={2}
           fontSize="xs"
@@ -269,8 +281,17 @@ export const MinimalMealCard = ({ meal, onClick }) => {
         </Badge>
       )}
 
-      {/* Image Section */}
-      <Box position="relative" h="200px" w="100%" flex="0 0 auto">
+      {/* Image Section - More compact */}
+      <Box 
+        position="relative" 
+        h={{
+          base: "150px",
+          sm: "170px",
+          md: "190px"
+        }}
+        w="100%" 
+        flex="0 0 auto"
+      >
         <EnhancedImage
           src={meal.image_url}
           alt={displayName}
@@ -278,120 +299,148 @@ export const MinimalMealCard = ({ meal, onClick }) => {
           width="100%"
           borderRadius="none"
           onLoad={() => setImageLoaded(true)}
-          onError={() => setImageLoaded(true)} // Still set loaded even on error
+          onError={() => setImageLoaded(true)}
         />
         
-        {/* Quick Info Overlay */}
+        {/* Quick Info Overlay - More compact */}
         <Box
           position="absolute"
           bottom="0"
-          left="0"
-          right="0"
-          bg="rgba(0,0,0,0.5)"
-          p="1"
+          //left="0"
+          //right="0"
+          bg="rgba(0,0,0,0.6)"
           m={2}
+          p={2}
           borderRadius={'md'}
-          w={"fit-content"}
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
         >
-          <Flex justify="space-between" align="flex-end">
-            <StarRating 
-              rating={meal.rating} 
-              rating_count={meal.rating_count}
-              size="sm"
-              showCount={false}
-            />
-            {meal.prep_time_minutes && (
-              <Text fontSize="xs" color="white" fontWeight="medium">
-                {meal.prep_time_minutes} {t('common.minutes')}
-              </Text>
-            )}
-          </Flex>
+          <StarRating 
+            rating={meal.rating} 
+            rating_count={meal.rating_count}
+            size="sm"
+            showCount={true}
+          />
+          {meal.prep_time_minutes && (
+            <Text fontSize="xs" color="white" fontWeight="medium">
+              {meal.prep_time_minutes} {t('common.minutes')}
+            </Text>
+          )}
         </Box>
       </Box>
 
-      {/* Content Section */}
+      {/* Content Section - More compact */}
       <VStack
         flex="1"
-        p={4}
-        spacing="1"
+        p={{
+          base: 2,
+          sm: 3,
+          md: 3
+        }}
+        spacing={1}
         bg="transparent"
         justify="space-between"
         align="stretch"
         overflow="hidden"
+        w={'100%'}
       >
-        {/* Title and Category Section */}
-        <VStack p={2} spacing="1" align="start">
+        {/* Title and Category Section - Inline for compactness */}
+        <Box>
           <Heading
-            pt={1}
-            size="lg"
-            borderRadius="md"
-            color={colorMode === 'dark' ? 'white' : 'brand.500'}
-            bg="rgba(0,0,0,0.7)"
-            noOfLines={3}
-            lineHeight={1}
-            maxW="250px"
+            size={{
+              base: "lg",
+              sm: "lg",
+              md: "xl"
+            }}
+            color={colorMode === 'dark' ? 'white' : 'brand.800'}
+            noOfLines={2}
+            lineHeight="1.2"
+            mb="1"
+            fontSize={{
+              base: "lg",
+              sm: "lg",
+              md: "xl"
+            }}
             whiteSpace="normal"
             wordBreak="break-word"
           >
             {displayName}
           </Heading>
-          <Badge
-            alignSelf="flex-start"
-            colorScheme="warning"
-            variant="subtle"
-            fontSize="xs"
-            borderRadius="sm"
-          >
-            {meal.section ? t(`foodCategories.${meal.section?.toLowerCase?.()}`) : t('common.uncategorized')}
-          </Badge>
-        </VStack>
+          
+          <Flex justify="space-between" align="center" mb="1">
+            <Badge
+              colorScheme="warning"
+              variant="subtle"
+              fontSize="xs"
+              borderRadius="sm"
+              size="xs"
+            >
+              {meal.section ? t(`foodCategories.${meal.section?.toLowerCase?.()}`) : t('common.uncategorized')}
+            </Badge>
+            <Box mx="2">
+              <DietaryBadges meal={meal} size="xs" maxDisplay={2} />
+            </Box>
+          </Flex>
+        </Box>
 
-        {/* Description */}
-        <Box>
+        {/* Description - More compact */}
+        <Box flex="1">
           <Text
             fontSize="xs"
             color={colorMode === 'dark' ? 'gray.400' : 'gray.600'}
             noOfLines={2}
-            lineHeight="1.4"
-            minH="2.8em"
-            maxW={'250px'}
+            lineHeight="1.3"
+            display={{
+              base: "none",
+              sm: "-webkit-box"
+            }}
           >
             {displayDescription}
           </Text>
         </Box>
 
-        {/* Dietary Badges */}
-        <Box>
-          <DietaryBadges meal={meal} size="xs" />
-        </Box>
-
-        {/* Price and Action */}
+        {/* Price and Action - More compact */}
         <Flex
           justify="space-between"
           align="center"
-          py="2"
+          p="1"
           mt="auto"
+          w={'100%'}
+          bg={'rgb(255,255,255,0.4)'}
+          borderRadius={'md'}
         >
-          <PriceDisplay
-            base_price={meal.base_price}
-            is_discount_active={meal.is_discount_active}
-            discount_percentage={meal.discount_percentage}
-            size="lg"
-          />
+          <Box flex="1">
+            <PriceDisplay
+              base_price={meal.base_price}
+              is_discount_active={meal.is_discount_active}
+              discount_percentage={meal.discount_percentage}
+              size={{
+                base: "md",
+                sm: "lg",
+                md: "lg"
+              }}
+            />
+          </Box>
           <IconButton
-            icon={<InfoIcon />}
-            size="lg"
+            icon={<FaCartPlus/>}
+            size={{
+              base: "sm",
+              sm: "md",
+              md: "md"
+            }}
             colorScheme="brand"
             variant="solid"
             borderRadius="full"
             aria-label={t('buttons.viewDetails')}
+            ml="2"
+            flexShrink={0}
           />
         </Flex>
       </VStack>
     </Box>
   );
 };
-
 // Enhanced Full Meal Card with Add to Cart Modal
 export const MealCard = ({ meal, isModal = false, onClose}) => {
   const { colorMode } = useColorMode();
@@ -1486,15 +1535,17 @@ export const PlanCard = ({ plan }) => {
         </Heading>
 
         {/* Macros display */}
-        <Flex gap={3} mb={3} flexWrap="wrap" justifyContent={isArabic ? 'flex-end' : 'flex-start'}>
+        <Flex gap={2} mb={1} flexWrap="wrap" justifyContent={isArabic ? 'flex-end' : 'flex-start'}>
           {macros?.map((macro, index) => (
             <Badge
               key={index}
-              colorScheme={index === 0 ? 'secondary' : index === 1 ? 'error' : 'accent'}
+              colorScheme={index === 0 ? 'warning' : index === 1 ? 'brand' : 'teal'}
               px={2}
               py={1}
               borderRadius="md"
+              size={"xs"}
               fontSize="xs"
+              variant={"solid"}
             >
               {macro}
             </Badge>

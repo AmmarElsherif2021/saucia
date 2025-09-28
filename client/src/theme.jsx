@@ -1,35 +1,33 @@
-import { border, extendTheme, IconButton, Input, position, Select, space, textDecoration, Toast } from '@chakra-ui/react'
+import { border, extendTheme, FormControl, FormLabel, IconButton, Input, position, Select, space, textDecoration, Toast } from '@chakra-ui/react'
 import './index.css'
 import { cancelFrame, color, m, px } from 'framer-motion'
 import { defaultTextAlign } from 'ol/render/canvas'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { Children } from 'react'
-
+//Select
 const createTheme = (config) => {
   const isArabic = config?.language === 'ar'
   return extendTheme({
     colors: {
       brand: {
-        50:  '#DAF8EF',  // Slightly deeper than original, keeping softness
-        100: '#B7EEDD',  // Adjusted to reflect refined saturation
-        200: '#9FE0CB',  // More cohesive with 500 while maintaining lightness
-        300: '#79D3B7',  // Matches saturation curve
-        400: '#54C3B5',  // Strengthened while avoiding oversaturation
-        500: '#3DD5B4',  // Primary anchor color
-        600: '#00A093',  // Keeps vibrant contrast against 500
-        700: '#007F76',  // Harmonized depth adjustment
-        800: '#005E59',  // Strong foundation for contrast
-        900: '#003F3C',  // Ensured deep richness without losing clarity
-
+        50:  '#DAF8EF',
+        100: '#B7EEDD',
+        200: '#9FE0CB',
+        300: '#79D3B7',
+        400: '#54C3B5',
+        500: '#3DD5B4',
+        600: '#00A093',
+        700: '#007F76',
+        800: '#005E59',
+        900: '#003F3C',
       },
-
       secondary: {
         50: '#f4fbf7',
         100: '#e9f7ef',
         200: '#d3efdf',
         300: '#bee7cf',
         400: '#a1e2c3',
-        500: '#83d8b3', // Secondary color
+        500: '#83d8b3',
         600: '#65ce9f',
         700: '#47c48f',
         800: '#35b77f',
@@ -41,7 +39,7 @@ const createTheme = (config) => {
         200: '#f8fce7',
         300: '#f5fadd',
         400: '#f1f7c5',
-        500: '#ebf4ad', // Tertiary color
+        500: '#ebf4ad',
         600: '#e6f194',
         700: '#e0ee7c',
         800: '#daea64',
@@ -65,7 +63,7 @@ const createTheme = (config) => {
         200: '#fbbdbb',
         300: '#f99c99',
         400: '#f58b86',
-        500: '#f27973', // Highlight color
+        500: '#f27973',
         600: '#ef5d56',
         700: '#ec4039',
         800: '#dc271f',
@@ -89,7 +87,7 @@ const createTheme = (config) => {
         200: '#8ad2ff',
         300: '#5cc0ff',
         400: '#2eaeff',
-        500: '#009cff', // Info color
+        500: '#009cff',
         600: '#007ecc',
         700: '#005f99',
         800: '#004166',
@@ -101,7 +99,7 @@ const createTheme = (config) => {
         200: '#ffdd8a',
         300: '#ffcf5c',
         400: '#ffc12e',
-        500: '#ffb300', // Warning color
+        500: '#ffb300',
         600: '#cc8f00',
         700: '#996b00',
         800: '#664700',
@@ -113,7 +111,7 @@ const createTheme = (config) => {
         200: '#f28a8a',
         300: '#e95c5c',
         400: '#e02e2e',
-        500: '#d70505', // Error color
+        500: '#d70505',
         600: '#ad0404',
         700: '#840303',
         800: '#5a0202',
@@ -125,20 +123,18 @@ const createTheme = (config) => {
         200: '#9ee7c6',
         300: '#7adfb1',
         400: '#56d69c',
-        // Success color
         600: '#28a96d',
         700: '#1e8553',
         800: '#146139',
         900: '#0a3d1f',
       },
     },
-
     config: {
       initialColorMode: 'light',
       useSystemColorMode: false,
     },
     fonts: {
-      heading: isArabic ? "'Lalezar', sans-serif" : "'Outfit', sans-serif", //"'Readex Pro', sans-serif" : "'Montserrat', sans-serif",
+      heading: isArabic ? "'Lalezar', sans-serif" : "'Outfit', sans-serif",
       body: isArabic ? "'Lalezar', sans-serif" : "'Outfit', sans-serif",
     },
     styles: {
@@ -158,7 +154,6 @@ const createTheme = (config) => {
         },
       }),
     },
-
     components: {
       Box: {
         baseStyle: (props) => ({
@@ -170,7 +165,6 @@ const createTheme = (config) => {
         }),
         variants: {
           solid: (props) => ({
-            //bg: props.colorMode === 'dark' ? 'gray.700' : 'white',
             p: 4,
             borderRadius: 'lg',
           }),
@@ -318,15 +312,14 @@ const createTheme = (config) => {
           colorScheme: 'brand',
         },
       },
-
       Input: {
         baseStyle: {
           field: {
             borderRadius: 'md',
             borderWidth: '2px',
-            borderColor: 'brand.200',
+            borderColor: 'secondary.200',
             _focus: {
-              borderColor: 'brand.400',
+              borderColor: 'secondary.400',
               borderWidth: '3px',
             },
           },
@@ -344,8 +337,8 @@ const createTheme = (config) => {
           },
           filled: {
             field: {
-              bg: 'brand.100',
-              borderColor: 'brand.200',
+              bg: 'secondary.100',
+              borderColor: 'brand.200 !important',
               _hover: {
                 bg: 'brand.200',
               },
@@ -360,7 +353,6 @@ const createTheme = (config) => {
           variant: 'filled',
         },
       },
-
       Textarea: {
         baseStyle: {
           borderRadius: 'md',
@@ -400,7 +392,7 @@ const createTheme = (config) => {
           fontWeight: 'bold',
           lineHeight: 'shorter',
           color: props.colorMode === 'dark' ? 'white' : 'brand.800',
-          textAlign: isArabic?'right':'left'
+          textAlign: isArabic ? 'right' : 'left',
         }),
         sizes: {
           xl: { fontSize: '4xl' },
@@ -413,14 +405,13 @@ const createTheme = (config) => {
           size: 'md',
         },
       },
-
       Text: {
         baseStyle: (props) => ({
           margin: 0,
           padding: 0,
-          color: props.colorMode === 'dark' ? 'gray.100' : 'gray.800',
+          color: props.colorMode === 'dark' ? 'teal.100' : 'brand.800',
           fontFamily: isArabic ? "'Lalezar', sans-serif" : "'Outfit', sans-serif",
-          textAlign: isArabic?"right":"left"
+          textAlign: isArabic ? 'right' : 'left',
         }),
         variants: {
           muted: (props) => ({
@@ -432,7 +423,6 @@ const createTheme = (config) => {
           }),
         },
       },
-
       Card: {
         baseStyle: (props) => ({
           display: 'flex',
@@ -440,13 +430,11 @@ const createTheme = (config) => {
           background: props.colorMode === 'dark' ? 'gray.700' : 'white',
           alignItems: 'center',
           gap: 4,
-
-          borderRadius: '2xl', // Rounded cards as seen in screenshots
+          borderRadius: '2xl',
           p: 6,
         }),
         variants: {
           elevated: (props) => ({
-            //boxShadow: props.colorMode === 'dark' ? 'dark-lg' : 'md',
             borderRadius: '2xl',
             p: 6,
           }),
@@ -552,7 +540,6 @@ const createTheme = (config) => {
           },
         }),
       },
-
       Tooltip: {
         baseStyle: (props) => ({
           bg: props.colorMode === 'dark' ? 'gray.800' : 'white',
@@ -561,7 +548,6 @@ const createTheme = (config) => {
           boxShadow: props.colorMode === 'dark' ? 'dark-lg' : 'none',
         }),
       },
-
       Progress: {
         baseStyle: (props) => ({
           filledTrack: {
@@ -572,7 +558,6 @@ const createTheme = (config) => {
           },
         }),
       },
-
       Checkbox: {
         baseStyle: (props) => ({
           control: {
@@ -637,9 +622,8 @@ const createTheme = (config) => {
             borderRadius: 'md',
             boxShadow: props.colorMode === 'dark' ? 'dark-lg' : 'none',
           },
-          
         }),
-      },
+      }, //FormControl
       CloseButton: {
         baseStyle: (props) => ({
           color: props.colorMode === 'dark' ? 'error.200' : 'error.600',
@@ -659,13 +643,11 @@ const createTheme = (config) => {
           },
         }),
       },
-
       Divider: {
         baseStyle: (props) => ({
           borderColor: props.colorMode === 'dark' ? 'gray.600' : 'gray.200',
         }),
       },
-
       Tabs: {
         baseStyle: (props) => ({
           tab: {
@@ -677,7 +659,6 @@ const createTheme = (config) => {
           },
         }),
       },
-
       Breadcrumb: {
         baseStyle: (props) => ({
           separator: {
@@ -685,7 +666,6 @@ const createTheme = (config) => {
           },
         }),
       },
-
       Popover: {
         baseStyle: (props) => ({
           popover: {
@@ -695,7 +675,6 @@ const createTheme = (config) => {
           },
         }),
       },
-
       Collapse: {
         baseStyle: (props) => ({
           container: {
@@ -704,15 +683,24 @@ const createTheme = (config) => {
           },
         }),
       },
-      FormLabel: {
+      FormControl: {
         baseStyle: (props) => ({
-          shadow: 'none',
-          color: props.colorMode === 'dark' ? 'white' : 'brand.900',
+          w: '100%',
+          textAlign: isArabic ? 'right' : 'left',
+          mb: 4,
+          FormLabel: {
+            fontWeight: 'medium',
+            mb: 2,
+            color: props.colorMode === 'dark' ? 'gray.200' : 'secondary.700',
+            fontSize: 'md',
+            fontFamily: isArabic ? "'Lalezar', sans-serif" : "'Readex Pro', sans-serif",
+            textAlign: isArabic ? 'right' : 'left',
+          },
         }),
       },
       FormHelperText: {
         baseStyle: (props) => ({
-          color: props.colorMode === 'dark' ? 'gray.400' : 'gray.600',
+          color: props.colorMode === 'dark' ? 'gray.400' : 'secondary.600',
         }),
       },
       FormErrorMessage: {
@@ -732,23 +720,22 @@ const createTheme = (config) => {
           color: props.colorMode === 'dark' ? 'white' : 'gray.800',
         }),
       },
-     Select: {
+      Select: {
         parts: ['field', 'icon'],
         baseStyle: (props) => ({
           field: {
-            bg: props.colorMode === 'dark' ? 'gray.700' : 'brand.50',
+            bg: props.colorMode === 'dark' ? 'gray.700' : 'brand.100',
             color: props.colorMode === 'dark' ? 'white' : 'brand.800',
             px: 2,
-            pr: '3rem', 
-            borderColor:'brand.500'
+            pr: '3rem',
+            borderColor: 'brand.500',
           },
           icon: {
-            right: '0.75rem', 
-            fontSize: '1.25rem' 
-          }
+            right: '0.75rem',
+            fontSize: '1.25rem',
+          },
         }),
       },
-  
       Spinner: {
         baseStyle: (props) => ({
           color: props.colorMode === 'dark' ? 'brand.500' : 'brand.600',
@@ -769,7 +756,7 @@ const createTheme = (config) => {
           px: '10px',
           fontSize: 'sm',
           fontWeight: 'medium',
-          maxWidth:"90vw"
+          maxWidth: '90vw',
         }),
         defaultProps: {
           position: isArabic ? position.right : position.left,
@@ -779,7 +766,6 @@ const createTheme = (config) => {
         baseStyle: (props) => ({
           color: props.colorMode === 'dark' ? 'brand.300' : 'brand.700',
           textDecoration: 'underline',
-
           _hover: {
             textDecoration: 'none',
             color: props.colorMode === 'dark' ? 'brand.400' : 'brand.800',
@@ -787,7 +773,7 @@ const createTheme = (config) => {
         }),
       },
     },
-  })
+  });
 }
 export const getTheme = () => createTheme()
 

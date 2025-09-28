@@ -26,7 +26,6 @@ import {
   HStack,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-
 import { useElements } from '../../Contexts/ElementsContext';
 import { useAuthContext } from '../../Contexts/AuthContext';
 import { useChosenPlanContext } from '../../Contexts/ChosenPlanContext';
@@ -38,7 +37,7 @@ import { useI18nContext } from '../../Contexts/I18nContext';
 import { useUserSubscriptions } from '../../Hooks/useUserSubscriptions';
 import { CardPlanAvatar } from './PlanAvatar'
 import profileIcon from '../../assets/profile-b.svg'
-
+import { PlanCard } from './PlanCard';
 // Import plan images 
 import gainWeightPlanImage from '../../assets/premium/gainWeight.png'
 import keepWeightPlanImage from '../../assets/premium/keepWeight.png'
@@ -204,72 +203,7 @@ const LoginModal = ({ isOpen, onClose, selectedPlan = null, selectedTerm = null 
   )
 }
 
-const PlanCard = ({ plan, isUserPlan, onSelect }) => {
-  const cardBg = useColorModeValue('secondary.500', 'gray.700')
-  const borderColor = isUserPlan ? 'teal.400' : 'gray.200'
-  const { t } = useTranslation()
-  const { currentLanguage } = useI18nContext()
-  const isArabic = currentLanguage === 'ar'
-  
-  return (
-    <Box
-      borderWidth={isUserPlan ? '2px' : 'none'}
-      borderRadius="lg"
-      borderColor={borderColor}
-      overflow="hidden"
-      bg={cardBg}
-      p={4}
-      position="relative"
-      transition="transform 0.2s 0.2s"
-      _hover={{
-        transform: 'translateY(-2px)',
-      }}
-    >
-      {isUserPlan && (
-        <Badge colorScheme="warning" position="absolute" top={2} right={2}>
-          {t('premium.currentPlan')}
-        </Badge>
-      )}
 
-      <CardPlanAvatar 
-        plan={plan}
-        mb={4}
-        bg={useColorModeValue('gray.50', 'gray.600')}
-      />
-
-      <Heading as="h3" size="md" mb={2}>
-        {isArabic ? plan.title_arabic : plan.title}
-      </Heading>
-      <Text mb={2}>
-        <Badge colorScheme="error">
-          {plan.periods?.length || 0} {t('premium.periods')}
-        </Badge>
-      </Text>
-
-      <Flex justify="space-between" mt={3}>
-        <Box>
-          <Text fontSize="sm">
-            {t('premium.kcal')}: {plan.kcal}
-          </Text>
-          <Text fontSize="sm">
-            {t('premium.carbs')}: {plan.carb}g
-          </Text>
-          <Text fontSize="sm">
-            {t('premium.protein')}: {plan.protein}g
-          </Text>
-        </Box>
-
-        <Button
-          size="sm"
-          colorScheme={isUserPlan ? 'error' : 'brand'}
-          onClick={() => onSelect(plan)}
-        >
-          {isUserPlan ? t('premium.viewDetails') : t('premium.select')}
-        </Button>
-      </Flex>
-    </Box>
-  )
-}
 
 const PlanDetails = ({ plan }) => {
   const { t } = useTranslation()

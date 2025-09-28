@@ -17,7 +17,7 @@ import {
 } from '@chakra-ui/react'
 import { HamburgerIcon, CloseIcon, MoonIcon, SunIcon } from '@chakra-ui/icons'
 import { Link } from 'react-router-dom'
-import logoIcon from '../../assets/logo.png'
+import logoIcon from '../../assets/logo.svg'
 import { ProfileDD } from './ProfileDD.jsx'
 import { ProfileModal } from './ProfileModal'
 import { useI18nContext } from '../../Contexts/I18nContext.jsx'
@@ -41,17 +41,17 @@ export const Navbar = () => {
   const logoSize = useBreakpointValue({ 
     base: { w: 10, h: 8 }, 
     sm: { w: 12, h: 10 }, 
-    md: { w: 14, h: 12 }, 
-    lg: { w: 16, h: 14 },
-    xl: { w: 20, h: 16 }
+    md: { w: 12, h: 10 }, 
+    lg: { w: 14, h: 12 },
+    xl: { w: 14, h: 12 }
   })
   const showDesktopMenu = useBreakpointValue({ base: false, lg: true })
   const showTabletControls = useBreakpointValue({ base: false, md: true, lg: false })
 
   // Enhanced color values for better contrast and theming
   const bgColor = useColorModeValue('white', 'gray.800')
-  const borderColor = useColorModeValue('gray.200', 'gray.700')
-  const overlayBg = useColorModeValue('rgba(255, 255, 255, 0.95)', 'rgba(26, 32, 44, 0.95)')
+  const borderColor = useColorModeValue('none', 'gray.700')
+  const overlayBg = useColorModeValue('rgba(255, 255, 255, 0.9)', 'rgba(26, 32, 44, 0.95)')
 
   // Define remaining menu sections for navigation (moved sections removed)
   const menuSections = [

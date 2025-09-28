@@ -14,12 +14,15 @@ export const ScrollingBadgesTrail = ({ className = "" }) => {
   const { t } = useTranslation()
   const scrollContainerRef = useRef(null)
 
-  // Color values for theming
-  const badgeBg = useColorModeValue('brand.50', 'brand.800')
-  const badgeColor = useColorModeValue('brand.700', 'brand.200')
-  const badgeHoverBg = useColorModeValue('brand.100', 'brand.700')
-  const badgeHoverColor = useColorModeValue('brand.800', 'brand.100')
-
+  // Custom color palette
+  const colors = ['#fc8115', '#f69d33', '#20c28a', '#8bcf5b']
+  
+  // Color values for theming using the custom palette
+  const badgeBg = useColorModeValue('rgba(252, 129, 21, 0.1)', 'rgba(252, 129, 21, 0.2)')
+  const badgeColor = useColorModeValue('#fc8115', '#f69d33')
+  const badgeHoverBg = useColorModeValue('rgba(32, 194, 138, 0.15)', 'rgba(32, 194, 138, 0.25)')
+  const badgeHoverColor = useColorModeValue('#20c28a', '#8bcf5b')
+  
   // Menu sections moved from Navbar
   const badgeSections = [
     { path: '/menu', section: 'Our signature salad', label: 'signatureSalad' },
@@ -42,7 +45,7 @@ export const ScrollingBadgesTrail = ({ className = "" }) => {
   }, [])
 
   const badgeVariants = {
-    initial: { opacity: 0, scale: 0.8, y: 20 },
+    initial: { opacity: 0, scale: 0.8, y: 15 },
     animate: { 
       opacity: 1, 
       scale: 1, 
@@ -53,15 +56,15 @@ export const ScrollingBadgesTrail = ({ className = "" }) => {
       }
     },
     hover: {
-      scale: 1.05,
-      y: -2,
+      scale: 1.08,
+      y: -1,
       transition: {
         duration: 0.2,
         ease: "easeOut"
       }
     },
     tap: {
-      scale: 0.95,
+      scale: 0.96,
       transition: {
         duration: 0.1
       }
@@ -85,7 +88,8 @@ export const ScrollingBadgesTrail = ({ className = "" }) => {
       className={className}
       position="relative"
       w="100%"
-      py={{ base: 3, md: 4 }}
+      py={{ base: 2, md: 3 }}
+
     >
       {/* Gradient overlays for fade effect */}
       <Box
@@ -93,8 +97,11 @@ export const ScrollingBadgesTrail = ({ className = "" }) => {
         left={0}
         top={0}
         bottom={0}
-        w="40px"
-        
+        w="30px"
+        bgGradient={useColorModeValue(
+          'linear(to-r, white, transparent)',
+          'linear(to-r, gray.800, transparent)'
+        )}
         zIndex={2}
         pointerEvents="none"
       />
@@ -103,7 +110,7 @@ export const ScrollingBadgesTrail = ({ className = "" }) => {
         right={0}
         top={0}
         bottom={0}
-        w="40px"
+        w="30px"
         bgGradient={useColorModeValue(
           'linear(to-l, white, transparent)',
           'linear(to-l, gray.800, transparent)'
@@ -139,9 +146,9 @@ export const ScrollingBadgesTrail = ({ className = "" }) => {
           >
             {/* Content container */}
             <HStack 
-              spacing={4} 
-              px={6}
-              py={2}
+              spacing={3} 
+              px={4}
+              py={1}
               minW="max-content"
               align="center"
               justify={"center"}
@@ -159,30 +166,31 @@ export const ScrollingBadgesTrail = ({ className = "" }) => {
                     state={handleSectionNavigation(item.section)}
                   >
                     <Badge
-                      variant="subtle"
-                      colorScheme="brand"
-                      px={4}
-                      py={2}
+                      variant="ghost"
+                      px={3}
+                      py={1}
                       borderRadius="md"
-                      fontSize={{ base: 'xs', md: 'sm' }}
-                      fontWeight="semibold"
-                      bg={badgeBg}
-                      color={badgeColor}
+                      fontSize="xs"
+                      fontWeight="medium"
+                      color={colors[index % colors.length]}
                       border="2px solid"
-                      borderColor={useColorModeValue('brand.500', 'brand.400')}
+                      borderColor={colors[index % colors.length]}
                       cursor="pointer"
                       whiteSpace="nowrap"
                       userSelect="none"
                       _hover={{
                         bg: badgeHoverBg,
                         color: badgeHoverColor,
-                        borderColor: useColorModeValue('brand.300', 'brand.500'),
-                        shadow: 'md',
+                        borderColor: badgeHoverColor,
+                        shadow: 'sm',
+                        transform: 'translateY(-1px)',
                       }}
                       _active={{
-                        transform: 'scale(0.95)',
+                        transform: 'scale(0.96) translateY(0px)',
                       }}
                       transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
+                      minH="auto"
+                      lineHeight="1.2"
                     >
                       {t(`navbar.${item.label}`)}
                     </Badge>

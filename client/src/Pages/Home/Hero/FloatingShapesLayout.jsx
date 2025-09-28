@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Box, Image, useBreakpointValue, Spinner, Text, Link } from '@chakra-ui/react';
 
-// Import SVG shape components
+// Import SVG shape components shadow
 import circle from './circle.svg';
 import small_circle from './small_circle.svg';
-import orange_semi_circle from './orange_semi_circle.svg';
+import top_left_semi_circle from './orange_semi_circle.svg';
 import extruded_circle from './extruded_circle.svg';
 import right_bottom_quarter from './right_bottom_quarter.svg';
 import octa_star from './octa_star.svg';
@@ -13,11 +13,37 @@ import teal_semi_circle from './teal_semi_circle.svg';
 import circle2 from './circle2.svg';
 import small_triangle from './small_triangle.svg';
 import { useNavigate } from 'react-router';
+import { useI18nContext } from '../../../Contexts/I18nContext';
+import useClickSpark from './useClickSpark';
 
-// Responsive scaling ratios
+// Arabic translations
+const TRANSLATIONS = {
+  en: {
+    'Make Your Salad': 'Make Your Salad',
+    'Soups': 'Soups',
+    'Signature\n Salads': 'Signature\n Salads',
+    'Make \nYour Fruit Salad': 'Make \nYour Fruit Salad',
+    'Juices': 'Juices',
+    'Desserts': 'Desserts',
+    'Loading with errors...': 'Loading with errors...',
+    'Some assets failed to load but continuing...': 'Some assets failed to load but continuing...'
+  },
+  ar: {
+    'Make Your Salad': 'اصنع سلطتك',
+    'Soups': 'الشوربات',
+    'Signature\n Salads': 'السلطات\n المميزة',
+    'Make \nYour Fruit Salad': 'اصنع\n سلطة الفاكهة',
+    'Juices': 'العصائر',
+    'Desserts': 'الحلويات',
+    'Loading with errors...': 'جاري التحميل مع أخطاء...',
+    'Some assets failed to load but continuing...': 'فشل تحميل بعض الملفات ولكن المتابعة...'
+  }
+};
+
+// Responsive scaling ratios - scaled by 1.5
 const SCALE_RATIOS = {
-  tablet: 0.60,
-  mobile: 0.25
+  tablet: 0.90, // 0.60 * 1.5
+  mobile: 0.375 // 0.25 * 1.5
 };
 
 // Helper function to scale dimensions
@@ -37,71 +63,70 @@ const scaleStyle = (style, ratio) => {
   return scaled;
 };
 
-// Updated shape configuration with composed SVGs
+// Updated shape configuration with composed SVGs - all dimensions scaled by 1.5
 const SHAPE_CONFIG = {
-  orange_semi_circle: { 
-    component: orange_semi_circle, 
-    finalStyle: { left: '10px', top: '10px', width: '128px', height: '128px' },
-    initialStyle: { left: '-128px', top: '-50px', width: '128px', height: '128px' },
+  top_left_semi_circle: { 
+    component: top_left_semi_circle, 
+    finalStyle: { left: '22.5px', top: '15px', width: '192px', height: '192px' }, // 15*1.5, 10*1.5, 128*1.5
+    initialStyle: { left: '-192px', top: '-75px', width: '192px', height: '192px' }, // -128*1.5, -50*1.5, 128*1.5
+    path: '/menu',
+    section: 'make your own salad',
+    label: 'Make Your Salad'
+  },
+  circle: { 
+    component: circle, 
+    finalStyle: { left: '232.5px', top: '108px', width: '115.5px', height: '115.5px' }, // 155*1.5, 72*1.5, 77*1.5
+    initialStyle: { left: '232.5px', top: '90px', width: '7.5px', height: '7.5px' }, // 155*1.5, 60*1.5, 5*1.5
     path: '/menu',
     section: 'Soups',
     label: 'Soups'
   },
-  circle: { 
-    component: circle, 
-    finalStyle: { left: '150px', top: '60px', width: '90px', height: '90px' },
-    initialStyle: { left: '195px', top: '-144px', width: '144px', height: '144px' },
-    path: '/menu',
-    section: 'make your own salad',
-    label: 'Make Your Own Salad'
-  },
   small_circle: { 
     component: small_circle, 
-    finalStyle: { left: '140px', top: '12px', width: '43px', height: '43px' },
-    initialStyle: { left: '135px', top: '-48px', width: '48px', height: '48px' },
+    finalStyle: { left: '210px', top: '22.5px', width: '64.5px', height: '64.5px' }, // 140*1.5, 15*1.5, 43*1.5
+    initialStyle: { left: '202.5px', top: '-72px', width: '72px', height: '72px' }, // 135*1.5, -48*1.5, 48*1.5
   },
   extruded_circle: { 
     component: extruded_circle, 
-    finalStyle: { left: '247px', top: '-50px', width: '70px', height: '320px' },
-    initialStyle: { left: '247px', top: '-200px', width: '70px', height: '60px' },
+    finalStyle: { left: '357px', top: '3px', width: '114px', height: '315px' }, // 238*1.5, 2*1.5, 76*1.5, 210*1.5
+    initialStyle: { left: '370.5px', top: '3px', width: '7.5px', height: '7.5px' }, // 247*1.5, 2*1.5, 5*1.5
     path: '/menu',
     section: 'Our signature salad',
-    label: 'Our Signature Salad'
+    label: 'Signature\n Salads'
   },
   right_bottom_quarter: { 
     component: right_bottom_quarter, 
-    finalStyle: { left: '-15px', top: '220px', width: '192px', height: '128px' },
-    initialStyle: { left: '-192px', top: '160px', width: '192px', height: '128px' },
+    finalStyle: { left: '18px', top: '315px', width: '195px', height: '195px' }, // 12*1.5, 210*1.5, 130*1.5
+    initialStyle: { left: '-288px', top: '240px', width: '42px', height: '42px' }, // -192*1.5, 160*1.5, 28*1.5
     path: '/menu',
     section: 'Make Your Own Fruit Salad',
-    label: 'Make Your Own Fruit Salad'
+    label: 'Make \nYour Fruit Salad'
   },
   octa_star: { 
     component: octa_star, 
-    finalStyle: { left: '155px', top: '170px', width: '64px', height: '64px' },
-    initialStyle: { left: '800px', top: '200px', width: '64px', height: '64px' },
-
+    finalStyle: { left: '232.5px', top: '255px', width: '96px', height: '96px' }, // 155*1.5, 170*1.5, 64*1.5
+    initialStyle: { left: '1200px', top: '300px', width: '96px', height: '96px' }, // 800*1.5, 200*1.5, 64*1.5
   },
   teal_semi_circle: { 
     component: teal_semi_circle, 
-    finalStyle: { left: '230px', top: '225px', width: '100px', height: '150px' },
-    initialStyle: { left: '700px', top: '400px', width: '128px', height: '64px' },
+    finalStyle: { left: '324px', top: '360px', width: '150px', height: '150px' }, // 216*1.5, 240*1.5, 100*1.5
+    initialStyle: { left: '1050px', top: '600px', width: '192px', height: '96px' }, // 700*1.5, 400*1.5, 128*1.5, 64*1.5
     path: '/menu',
     section: 'Juices',
     label: 'Juices'
   },
   circle2: { 
     component: circle2, 
-    finalStyle: { left: '150px', top: '280px', width: '76px', height: '76px' },
-    initialStyle: { left: '300px', top: '100px', width: '80px', height: '80px' },
+    finalStyle: { left: '222px', top: '402px', width: '97.5px', height: '97.5px' }, // 148*1.5, 268*1.5, 65*1.5
+    initialStyle: { left: '450px', top: '150px', width: '120px', height: '120px' }, // 300*1.5, 100*1.5, 80*1.5
     path: '/menu',
     section: 'Desserts',
     label: 'Desserts'
   },
   small_triangle: { 
     component: small_triangle, 
-    finalStyle: { left: '25px', top: '150px', width: '48px', height: '48px' },
-    initialStyle: { left: '150px', top: '300px', width: '48px', height: '48px' },
+    finalStyle: { left: '37.5px', top: '225px', width: '72px', height: '72px' }, // 25*1.5, 150*1.5, 48*1.5
+    initialStyle: { left: '225px', top: '450px', width: '72px', height: '72px' }, // 150*1.5, 300*1.5, 48*1.5
   }
 };
 
@@ -122,7 +147,7 @@ export const getResponsiveStyle = (shapeName, isInitial = false) => {
   }
 };
 
-// Enhanced asset preloader hook with better error handling and deduplication
+// Enhanced asset preloader hook with better error handling and deduplication handleEvent
 const useAssetPreloader = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -242,7 +267,7 @@ const useAssetPreloader = () => {
 };
 
 // Enhanced loader component with better UX
-const AssetLoader = ({ progress, error }) => (
+const AssetLoader = ({ progress, error, currentLanguage }) => (
   <AnimatePresence>
     <Box
       as={motion.div}
@@ -280,12 +305,12 @@ const AssetLoader = ({ progress, error }) => (
         color={error ? "red.600" : "brand.700"}
         mb={2}
       >
-        {error ? "Loading with errors..." : "..."}
+        {error ? TRANSLATIONS[currentLanguage]['Loading with errors...'] : "..."}
       </Text>
       
       <Box
-        width="250px"
-        height="6px"
+        width="375px" // 250 * 1.5
+        height="9px" // 6 * 1.5
         bg="gray.200"
         borderRadius="full"
         overflow="hidden"
@@ -296,7 +321,7 @@ const AssetLoader = ({ progress, error }) => (
             height: '100%',
             background: error 
               ? 'linear-gradient(90deg, #e53e3e, #fc8181)' 
-              : 'linear-gradient(90deg, #3182ce, #63b3ed)',
+              : 'linear-gradient(90deg, #23d381ff, #63ed91ff)',
             borderRadius: 'inherit',
             width: `${progress}%`,
           }}
@@ -319,14 +344,83 @@ const AssetLoader = ({ progress, error }) => (
           fontSize="xs"
           color="red.500"
           textAlign="center"
-          maxW="300px"
+          maxW="450px" // 300 * 1.5
         >
-          Some assets failed to load but continuing...
+          {TRANSLATIONS[currentLanguage]['Some assets failed to load but continuing...']}
         </Text>
       )}
     </Box>
   </AnimatePresence>
 );
+
+// Custom hook for smart touch handling
+const useTouchHandler = (onTap) => {
+  const touchStartRef = useRef(null);
+  const touchMoveThreshold = 15; // 10 * 1.5
+  const touchTimeThreshold = 300; // milliseconds
+
+  const handleTouchStart = useCallback((e) => {
+    const touch = e.touches[0];
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now(),
+      moved: false
+    };
+  }, []);
+
+  const handleTouchMove = useCallback((e) => {
+    if (!touchStartRef.current) return;
+
+    const touch = e.touches[0];
+    const deltaX = Math.abs(touch.clientX - touchStartRef.current.x);
+    const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
+
+    if (deltaX > touchMoveThreshold || deltaY > touchMoveThreshold) {
+      touchStartRef.current.moved = true;
+    }
+  }, [touchMoveThreshold]);
+
+  const handleTouchEnd = useCallback((e) => {
+    if (!touchStartRef.current) return;
+
+    const touchDuration = Date.now() - touchStartRef.current.time;
+    const wasMoved = touchStartRef.current.moved;
+
+    if (!wasMoved && touchDuration < touchTimeThreshold) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Create a synthetic event with the touch coordinates for the spark
+      const syntheticEvent = {
+        ...e,
+        clientX: e.changedTouches[0].clientX,
+        clientY: e.changedTouches[0].clientY,
+        touches: e.changedTouches // Pass changedTouches as touches for spark positioning
+      };
+      
+      onTap(syntheticEvent);
+    }
+
+    touchStartRef.current = null;
+  }, [onTap, touchTimeThreshold]);
+
+  const handleClick = useCallback((e) => {
+    if (!('ontouchstart' in window)) {
+      onTap(e);
+    } else {
+      e.preventDefault();
+    }
+  }, [onTap]);
+
+  return {
+    onTouchStart: handleTouchStart,
+    onTouchMove: handleTouchMove,
+    onTouchEnd: handleTouchEnd,
+    onClick: handleClick,
+  };
+};
+
 
 const FloatingShapesLayout = () => {
   const { isLoaded, loadingProgress, loadingError } = useAssetPreloader();
@@ -338,22 +432,36 @@ const FloatingShapesLayout = () => {
     }, {})
   );
   const navigate = useNavigate();
+  const { currentLanguage } = useI18nContext();
+  const isArabic = currentLanguage === 'ar';
   const scrollContainerRef = useRef(null)
   const containerSize = useBreakpointValue({ 
-    base: '90vw', 
-    sm: '47vw', 
-    md: '35vw', 
-    lg: '30vw' 
+    base: '97vw', 
+    sm: '75vw', // 50 * 1.5
+    md: '52.5vw', // 35 * 1.5
+    lg: '45vw' // 30 * 1.5
   }) || '80vw';
+  const containerRef = useRef(null);
+  const { createSpark } = useClickSpark();
 
-  // Handle navigation to menu section
-  const handleShapeClick = useCallback((path, section) => {
+  // Handle navigation to menu section with spark effect fontFami
+  const handleShapeClick = useCallback((path, section, event) => {
+    // Create spark effect at click position
+    if (containerRef.current && event) {
+      createSpark(event, containerRef.current);
+
+    }
+
     // Navigate to the menu page with section as state
-    navigate(path, { 
+    // Add a short delay before navigation for spark effect
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    delay(350).then(() => {
+      navigate(path, {
       state: { scrollTo: section },
       replace: false
+      });
     });
-  }, [navigate]);
+  }, [navigate, createSpark]);
 
   // Memoized animation variants to prevent re-creation
   const getShapeVariants = useCallback((shape, index) => ({
@@ -378,8 +486,8 @@ const FloatingShapesLayout = () => {
       scale: 1,
       rotate: 0,
       filter: 'blur(0px)',
-      y: [0, -8 - (index % 3) * 4, 0],
-      x: [0, (index % 2 === 0 ? 4 : -4), 0],
+      y: [0, -12 - (index % 3) * 6, 0], // -8 * 1.5, (index % 3) * 4 * 1.5
+      x: [0, (index % 2 === 0 ? 6 : -6), 0], // 4 * 1.5, -4 * 1.5
       transition: {
         y: {
           duration: 2 + (index % 3),
@@ -398,12 +506,13 @@ const FloatingShapesLayout = () => {
   }), []);
 
   // Enable smooth scrolling behavior
-    useEffect(() => {
-      const container = scrollContainerRef.current
-      if (container) {
-        container.style.scrollBehavior = 'smooth'
-      }
-    }, [])
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (container) {
+      container.style.scrollBehavior = 'smooth'
+    }
+  }, []);
+
   // Only start animation after assets are fully loaded
   useEffect(() => {
     if (!isLoaded) return;
@@ -462,32 +571,56 @@ const FloatingShapesLayout = () => {
     return () => clearInterval(interval);
   }, [animationPhase]);
 
+  // Function to get responsive font size based on screen size
+  const getResponsiveFontSize = useCallback(() => {
+    return "18px"; // 12 * 1.5
+  }, []);
+
   // Memoized shape component to prevent unnecessary re-renders
   const ShapeWrapper = useCallback(({ shapeName, index }) => {
     const shape = SHAPE_CONFIG[shapeName];
     const variants = getShapeVariants(shape, index);
+    const translatedLabel = shape.label ? TRANSLATIONS[currentLanguage][shape.label] : '';
+    
+    // Smart touch handling for this specific shape
+    const touchHandlers = useTouchHandler((event) => {
+      if (shape.path && shape.section) {
+        handleShapeClick(shape.path, shape.section, event);
+      }
+    });
     
     return (
       <Box
         as={motion.div}
         position="absolute"
-        cursor="pointer"
+        cursor={shape.path ? "pointer" : "default"}
         zIndex={10}
         _hover={{ zIndex: 20 }}
         variants={variants}
         initial="initial"
         animate={animationPhase}
         whileHover={{ 
-          scale: animationPhase === 'floating' ? 1.15 : 1,
+          scale: animationPhase === 'floating' ? 1.05 : 1,
           transition: { duration: 0.2 }
         }}
         whileTap={{ scale: 0.95 }}
-        role="button"
-        aria-label={`Navigate to ${shape.label} section`}
-        onClick={() => handleShapeClick(shape.path, shape.section)}
-        title={shape.label && `Go to ${shape.label}`}
+        role={shape.path ? "button" : "img"}
+        aria-label={shape.path ? `Navigate to ${translatedLabel} section` : `Decorative shape ${shapeName}`}
+        {...(shape.path ? touchHandlers : {})}
+        title={shape.path && translatedLabel ? `Go to ${translatedLabel}` : undefined}
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        h={"fit-content"}
+        py={0}
+        style={{ 
+          touchAction: 'manipulation',
+          WebkitTouchCallout: 'none',
+          WebkitUserSelect: 'none',
+          userSelect: 'none'
+        }}
       >
-        {/* Optimized image with proper loading states */}
+        {/* Shape image */}
         <Box
           as={motion.img}
           src={shape.component}
@@ -497,59 +630,81 @@ const FloatingShapesLayout = () => {
           objectFit="contain"
           loading="eager"
           draggable={false}
-          animate={animationPhase === 'floating' ? {
-            filter: [
-              'drop-shadow(0 4px 8px rgba(0,0,0,0.1))',
-              'drop-shadow(0 8px 16px rgba(0,0,0,0.2))',
-              'drop-shadow(0 4px 8px rgba(0,0,0,0.1))'
-            ]
-          } : {}}
+          m={0}
+          // animate={animationPhase === 'floating' ? {
+          //   filter: [
+          //     'drop-shadow(0 4px 8px rgba(0,0,0,0.1))',
+          //     'drop-shadow(0 8px 16px rgba(0,0,0,0.2))',
+          //     'drop-shadow(0 4px 8px rgba(0,0,0,0.1))'
+          //   ]
+          // } : {}}
           transition={{ duration: 3, repeat: Infinity }}
           onError={(e) => {
             console.warn(`Shape image failed to load: ${shapeName}`, e);
           }}
+          style={{
+            pointerEvents: 'none' // Prevent image from interfering with touch events
+          }}
         />
         
-        {/* Label tooltip - only show when floating */}
-        <AnimatePresence>
-          {animationPhase === 'floating' && (
+        {/* Permanent label subtitle - only show for shapes with labels */}
+        {shape.label && (
+          <Box
+            as={motion.div}
+            position="absolute"
+            bottom="14%"
+            left={0}
+            w={'100%'}
+            transform="translateX(-50%)"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            initial={{ opacity: 0, y: -15 }} // -10 * 1.5
+            animate={{ 
+              opacity: animationPhase === 'floating' ? 1 : 0,
+              y: animationPhase === 'floating' ? 0 : -15 // -10 * 1.5
+            }}
+            transition={{ 
+              duration: 0.5, 
+              delay: animationPhase === 'floating' ? 1 : 0
+            }}
+            style={{
+              pointerEvents: 'none' // Prevent label from interfering with touch events
+            }}
+          >
             <Box
-              as={motion.div}
-              position="absolute"
-              bottom="-30px"
-              left="50%"
-              transform="translateX(-50%)"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              opacity={0}
-              pointerEvents="none"
-              initial={{ scale: 0, y: -10, opacity: 0 }}
-              whileHover={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              bg="rgba(255, 255, 255, 0.4)"
+              color="brand.700"
+              px={0}
+              py={0}
+              borderRadius="md"
+              fontSize='0.75em' // 0.5 * 1.5
+              fontWeight="900"
+              textAlign="center"
+              whiteSpace="nowrap"
+              backdropFilter="blur(6px)" // 4 * 1.5
+              w={'65%'}
+              h={"fit-content"}
+              lineHeight="1.5"
+              noOfLines={3}
+              mx={0}
+              fontFamily={isArabic ? "'Lalezar', sans-serif" : "'Permanent Marker', sans-serif"}
+              dir={isArabic ? 'rtl' : 'ltr'}
             >
-              <Box
-                bg="white"
-                color="brand.700"
-                px={3}
-                py={1}
-                borderRadius="md"
-                boxShadow="md"
-                fontSize="xs"
-                fontWeight="bold"
-                whiteSpace="nowrap"
-              >
-                {shape.label}
-              </Box>
+              {translatedLabel.split('\n').map((line, idx) => (
+                <span key={idx}>
+                  {line}
+                  <br />
+                </span>
+              ))}
             </Box>
-          )}
-        </AnimatePresence>
+          </Box>
+        )}
       </Box>
     );
-  }, [animationPhase, jsonData, getShapeVariants]);
+  }, [animationPhase, jsonData, getShapeVariants, getResponsiveFontSize, currentLanguage, isArabic, handleShapeClick]);
 
-  // Memoized particles to prevent re-creation
+  // Memoized particles to prevent re-creation #
   const SettlingParticles = useMemo(() => {
     if (animationPhase !== 'settling') return null;
     
@@ -558,9 +713,9 @@ const FloatingShapesLayout = () => {
         as={motion.div}
         key={`settling-${i}`}
         position="absolute"
-        width="4px"
-        height="4px"
-        bg="blue.400"
+        width="6px" // 4 * 1.5
+        height="6px" // 4 * 1.5
+        bg="brand.400"
         borderRadius="full"
         initial={{
           x: Math.random() * -window.innerWidth,
@@ -590,14 +745,14 @@ const FloatingShapesLayout = () => {
         as={motion.div}
         key={`floating-${i}`}
         position="absolute"
-        width="4px"
-        height="4px"
+        width="6px" // 4 * 1.5
+        height="6px" // 4 * 1.5
         bg="indigo.300"
         borderRadius="full"
         opacity={0.4}
         animate={{
-          x: [0, 150 + i * 20, 0],
-          y: [0, -100 + i * 15, 0],
+          x: [0, 225 + i * 30, 0], // 150 * 1.5, i * 20 * 1.5
+          y: [0, -150 + i * 22.5, 0], // -100 * 1.5, i * 15 * 1.5
           opacity: [0.2, 0.6, 0.2],
           scale: [0.5, 1, 0.5]
         }}
@@ -607,31 +762,37 @@ const FloatingShapesLayout = () => {
           delay: i * 0.8,
           ease: "easeInOut"
         }}
-        left={`${50 + i * 90}px`}
-        top={`${200 + i * 60}px`}
+        left={`${75 + i * 135}px`} // 50 * 1.5, i * 90 * 1.5
+        top={`${300 + i * 90}px`} // 200 * 1.5, i * 60 * 1.5
       />
     ));
   }, [animationPhase]);
 
   // Render loader until all assets are loaded
   if (!isLoaded) {
-    return <AssetLoader progress={loadingProgress} error={loadingError} />;
+    return <AssetLoader progress={loadingProgress} error={loadingError} currentLanguage={currentLanguage} />;
   }
 
   return (
     <AnimatePresence>
       <Box 
+        ref={containerRef}
         as={motion.div}
         width={containerSize}
-        minW={'350px'}
-        height="100vh"
+        minW={'510px'} // 340 * 1.5
+        height="595px" // 390 * 1.5
         position="relative"
         overflow="hidden"
-        mt={'50px'}
-        pt={'50px'}
+        top={{base: 0, md: 2,lg:12}} // 32 * 1.5
+        pt={0} 
+        mt={0}
+        px={6} // 4 * 1.5
+        mx={'auto'}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
+        //bg={'orange.500'}
+        //border={'3px solid #114589ff'} // 2 * 1.5
       >
         {/* Animated background */}
         <Box

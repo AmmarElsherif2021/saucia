@@ -46,6 +46,7 @@ import {
 import { useTranslation } from "react-i18next";
 import locationPin from '../../assets/locationPin.svg'
 import { useNavigate } from "react-router";
+import { useEffect } from "react";
 
 // Responsive wrapper component for consistent centering
 const ResponsiveWrapper = ({ children, ...props }) => (
@@ -359,12 +360,12 @@ export const OrderHistoryTable = ({ orders }) => {
                   <Tr key={order.id}>
                     <Td fontSize={{ base: "xs", md: "sm" }}>
                       <Text isTruncated maxW={{ base: "60px", md: "100px" }}>
-                        {order.id.slice(0, 8)}...
+                        {order.order_number || order.id.slice(0, 8)}...
                       </Text>
                     </Td>
                     <Td fontSize={{ base: "xs", md: "sm" }}>
                       <Text>
-                        {new Date(order.createdAt).toLocaleDateString('en-US', {
+                        {new Date(order.created_at).toLocaleDateString('en-US', {
                           year: '2-digit',
                           month: 'short',
                           day: 'numeric',
@@ -373,24 +374,38 @@ export const OrderHistoryTable = ({ orders }) => {
                     </Td>
                     <Td fontSize={{ base: "xs", md: "sm" }}>
                       <VStack align="start" spacing={1}>
-                        {order.items?.map((item) => (
+                        {/* Show order items */}
+                        {order.order_items?.map((item) => (
                           <Text key={item.id} isTruncated maxW={{ base: "80px", md: "150px" }}>
                             {item.name} x{item.quantity}
                           </Text>
                         ))}
+                        {/* Show order meals if they exist */}
+                        {order.order_meals?.map((meal) => (
+                          <Text key={meal.id} isTruncated maxW={{ base: "80px", md: "150px" }}>
+                            {meal.name} x{meal.quantity}
+                          </Text>
+                        ))}
+                        {/* If no items or meals, show a message */}
+                        {(!order.order_items || order.order_items.length === 0) && 
+                         (!order.order_meals || order.order_meals.length === 0) && (
+                          <Text color="gray.500" fontSize="xs">
+                            {t('profile.noItems')}
+                          </Text>
+                        )}
                       </VStack>
                     </Td>
                     <Td fontSize={{ base: "xs", md: "sm" }} isNumeric>
                       <Text fontWeight="bold">
-                        ${order.totalPrice?.toFixed(2)}
+                        ${order.total_amount?.toFixed(2)}
                       </Text>
                     </Td>
                     <Td>
                       <Badge
                         colorScheme={
-                          order.status === 'completed'
+                          order.status === 'delivered' || order.status === 'completed'
                             ? 'green'
-                            : order.status === 'pending'
+                            : order.status === 'pending' || order.status === 'confirmed'
                               ? 'yellow'
                               : 'red'
                         }
@@ -422,85 +437,18 @@ export const SubscriptionDetails = ({ subscription, isLoading }) => {
         </Center>
       );
     }
-    if (!subscription) return <Text>{t('profile.nosubscription')}</Text>;
     
-    return (
-      <ResponsiveWrapper>
-        <Center w="100%">
-          <Box 
-            w="100%" 
-            maxW="lg" 
-            bg="secondary.200" 
-            borderRadius="lg" 
-            overflow="hidden"
-          >
-            {subscription ? (
-              <Box p={{ base: 4, md: 6 }} borderWidth="1px" borderRadius="lg">
-                <VStack spacing={4} align="stretch">
-                  <Heading 
-                    size={{ base: "md", md: "lg" }} 
-                    textAlign="center"
-                    color="brand.600"
-                  >
-                    {subscription.plans?.title || t('profile.subscription')}
-                  </Heading>
-                  
-                  <Center>
-                    <Text 
-                      fontWeight="bold" 
-                      fontSize={{ base: "xl", md: "2xl" }}
-                      color="brand.500"
-                    >
-                      ${subscription.plans?.price_per_meal}/meal
-                    </Text>
-                  </Center>
-                  
-                  <VStack spacing={3} align="stretch">
-                    <HStack justify="space-between">
-                      <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
-                        {t('profile.status')}:
-                      </Text>
-                      <Badge 
-                        colorScheme="green" 
-                        size={{ base: "sm", md: "md" }}
-                        borderRadius="full"
-                      >
-                        {subscription.status}
-                      </Badge>
-                    </HStack>
-                    
-                    <HStack justify="space-between">
-                      <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
-                        {t('profile.startDate')}:
-                      </Text>
-                      <Text fontSize={{ base: "sm", md: "md" }}>
-                        {new Date(subscription.start_date).toLocaleDateString()}
-                      </Text>
-                    </HStack>
-                    
-                    <HStack justify="space-between">
-                      <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
-                        {t('profile.consumedMeals')}:
-                      </Text>
-                      <Text fontSize={{ base: "sm", md: "md" }} fontWeight="bold">
-                        {subscription.consumed_meals}
-                      </Text>
-                    </HStack>
-                  </VStack>
-                  
-                  <Center pt={4}>
-                    <Button 
-                      colorScheme="brand" 
-                      onClick={() => navigate('/subscriptions')}
-                      size={{ base: "md", md: "lg" }}
-                      w={{ base: "100%", sm: "auto" }}
-                    >
-                      {t('profile.manageSubscription')}
-                    </Button>
-                  </Center>
-                </VStack>
-              </Box>
-            ) : (
+    if (!subscription) {
+      return (
+        <ResponsiveWrapper>
+          <Center w="100%">
+            <Box 
+              w="100%" 
+              maxW="lg" 
+              bg="secondary.200" 
+              borderRadius="lg" 
+              overflow="hidden"
+            >
               <Box p={{ base: 4, md: 6 }} borderWidth="1px" borderRadius="lg">
                 <VStack spacing={4}>
                   <Text 
@@ -514,18 +462,116 @@ export const SubscriptionDetails = ({ subscription, isLoading }) => {
                     colorScheme="brand"
                     size={{ base: "md", md: "lg" }}
                     w={{ base: "100%", sm: "auto" }}
+                    onClick={() => navigate('/subscriptions')}
                   >
                     {t('profile.browsePlans')}
                   </Button>
                 </VStack>
               </Box>
-            )}
+            </Box>
+          </Center>
+        </ResponsiveWrapper>
+      );
+    }
+    
+    return (
+      <ResponsiveWrapper>
+        <Center w="100%">
+          <Box 
+            w="100%" 
+            maxW="lg" 
+            bg="secondary.200" 
+            borderRadius="lg" 
+            overflow="hidden"
+          >
+            <Box p={{ base: 4, md: 6 }} borderWidth="1px" borderRadius="lg">
+              <VStack spacing={4} align="stretch">
+                <Heading 
+                  size={{ base: "md", md: "lg" }} 
+                  textAlign="center"
+                  color="brand.600"
+                >
+                  {subscription.plans?.title || t('profile.subscription')}
+                </Heading>
+                
+                <Center>
+                  <Text 
+                    fontWeight="bold" 
+                    fontSize={{ base: "xl", md: "2xl" }}
+                    color="brand.500"
+                  >
+                    ${subscription.plans?.price_per_meal}/meal
+                  </Text>
+                </Center>
+                
+                <VStack spacing={3} align="stretch">
+                  <HStack justify="space-between">
+                    <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
+                      {t('profile.status')}:
+                    </Text>
+                    <Badge 
+                      colorScheme={subscription.status === 'active' ? 'green' : 'yellow'} 
+                      size={{ base: "sm", md: "md" }}
+                      borderRadius="full"
+                    >
+                      {subscription.status}
+                    </Badge>
+                  </HStack>
+                  
+                  <HStack justify="space-between">
+                    <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
+                      {t('profile.startDate')}:
+                    </Text>
+                    <Text fontSize={{ base: "sm", md: "md" }}>
+                      {new Date(subscription.start_date).toLocaleDateString()}
+                    </Text>
+                  </HStack>
+                  
+                  <HStack justify="space-between">
+                    <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
+                      {t('profile.endDate')}:
+                    </Text>
+                    <Text fontSize={{ base: "sm", md: "md" }}>
+                      {new Date(subscription.end_date).toLocaleDateString()}
+                    </Text>
+                  </HStack>
+                  
+                  <HStack justify="space-between">
+                    <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
+                      {t('profile.consumedMeals')}:
+                    </Text>
+                    <Text fontSize={{ base: "sm", md: "md" }} fontWeight="bold">
+                      {subscription.consumed_meals} / {subscription.total_meals}
+                    </Text>
+                  </HStack>
+                  
+                  <HStack justify="space-between">
+                    <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
+                      {t('profile.preferredDeliveryTime')}:
+                    </Text>
+                    <Text fontSize={{ base: "sm", md: "md" }}>
+                      {subscription.preferred_delivery_time?.substring(0, 5) || '12:00'}
+                    </Text>
+                  </HStack>
+                </VStack>
+                
+                <Center pt={4}>
+                  <Button 
+                    colorScheme="brand" 
+                    onClick={() => navigate('/subscriptions')}
+                    size={{ base: "md", md: "lg" }}
+                    w={{ base: "100%", sm: "auto" }}
+                  >
+                    {t('profile.manageSubscription')}
+                  </Button>
+                </Center>
+              </VStack>
+            </Box>
           </Box>
         </Center>
       </ResponsiveWrapper>
     )
 };
-
 // Enhanced Card Component for consistent layouts
 export const ResponsiveCard = ({ children, ...props }) => (
   <Box

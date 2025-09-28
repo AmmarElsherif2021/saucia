@@ -15,6 +15,9 @@ import { useNavigate } from 'react-router'
 import Intro from './Intro'
 import FloatingShapesLayout from './Hero/FloatingShapesLayout'
 import { CurrentPlanBrief } from '../Premium/CurrentPlanBrief'
+import { JoinPremiumTeaser } from '../Premium/JoinPremiumTeaser'
+import { PlanCard } from '../Premium/PlanCard'
+import CompleteProfile from '../Auth/CompleteProfile'
 // Loading component for better UX
 const FeaturedMealsLoading = () => (
   <Center h="300px">
@@ -115,8 +118,6 @@ const HomePage = () => {
       ref={sectionRefs.hero}
     >
       <ScrollingBadgesTrail />
-      <CurrentPlanBrief/>
-      
       {/* Hero section - always renders immediately */}
       <Box overflowX={'hidden'}>
         <Hero />

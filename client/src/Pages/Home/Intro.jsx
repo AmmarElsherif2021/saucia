@@ -65,6 +65,7 @@ function AnimatedText({
           key={`${text}-${index}`}
           as="span"
           mx={1}
+          dir={isArabic?'rtl':'ltr'}
           fontSize={fontSize}
           fontWeight={fontWeight}
           color={colorMode === "dark" ? "white" : color}
@@ -115,8 +116,8 @@ function MealShowcase({ meal, index }) {
   });
   const imageHeight = useBreakpointValue({ 
     base: "300px", 
-    md: "400px", 
-    lg: "500px" 
+    md: "350px", 
+    lg: "370px" 
   });
   const textAlign = useBreakpointValue({
     base: "center",
@@ -124,7 +125,7 @@ function MealShowcase({ meal, index }) {
   });
   const flexAlign = useBreakpointValue({
     base: "center",
-    md: isArabic ? "flex-end" : "flex-start"
+    md: "flex-start"
   });
 
   return (
@@ -142,7 +143,7 @@ function MealShowcase({ meal, index }) {
         <Grid 
           templateColumns={{ base: "1fr", md: "1fr 1fr" }} 
           gap={{ base: 8, md: 12 }} 
-          alignItems="center"
+          alignItems={{base:'center',md:isArabic?'flext-end':'flex-start'}}
           dir={isArabic ? "rtl" : "ltr"}
         >
           {/* Image Side */}
@@ -154,7 +155,7 @@ function MealShowcase({ meal, index }) {
               viewport={{ once: true, margin: "-100px" }}
               position="relative"
               overflow="hidden"
-              borderRadius="15%"
+              borderRadius="30px"
               h={imageHeight}
             >
               <MotionImage
@@ -218,7 +219,7 @@ function MealShowcase({ meal, index }) {
           </GridItem>
 
           {/* Content Side */}
-          <GridItem order={{ base: 2, md: (isArabic ? index % 2 !== 0 : index % 2 === 0) ? 2 : 1 }}>
+          <GridItem pt={4} order={{ base: 2, md: (isArabic ? index % 2 !== 0 : index % 2 === 0) ? 2 : 1 }}>
             <MotionBox
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -228,6 +229,11 @@ function MealShowcase({ meal, index }) {
               display="flex"
               flexDirection="column"
               alignItems={flexAlign}
+              justifyContent={'center'}
+              gap={0}
+              m={0}
+              dir={isArabic?'rtl':'ltr'}
+              
             >
               <MotionBadge
                 display="inline-block"
@@ -243,7 +249,7 @@ function MealShowcase({ meal, index }) {
                 initial={{ opacity: 0, scale: 0.8 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
-                mb={6}
+                mb={2}
                 alignSelf={flexAlign}
               >
                 {isArabic ? meal.section_arabic : meal.section}
@@ -255,12 +261,13 @@ function MealShowcase({ meal, index }) {
                 fontWeight="bold"
                 color={colorMode === "dark" ? "white" : "brand.600"}
                 delay={0.5}
-                mb={6}
+                mb={2}
                 isArabic={isArabic}
+                
               />
 
               <MotionText
-                fontSize="lg"
+                fontSize={{base:'sm',md:'md'}}
                 fontWeight="normal"
                 color={colorMode === "dark" ? "gray.300" : "gray.600"}
                 lineHeight="relaxed"
@@ -268,8 +275,9 @@ function MealShowcase({ meal, index }) {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.8 }}
-                mb={6}
+                mb={2}
                 textAlign={textAlign}
+                dir={isArabic?'rtl':'ltr'}
               >
                 {isArabic ? meal.description_arabic : meal.description || t('mealDescription', 'Experience the perfect blend of flavors and artistry in every bite.')}
               </MotionText>
@@ -283,6 +291,7 @@ function MealShowcase({ meal, index }) {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.9 }}
                   mb={6}
+                  direction={'row'}
                   justifyContent={flexAlign}
                 >
                   {meal.calories && (
@@ -314,7 +323,7 @@ function MealShowcase({ meal, index }) {
                 width="100%"
               >
                 <MotionButton
-                  size="lg"
+                  size="md"
                   bg="brand.500"
                   color="white"
                   borderRadius="xl"

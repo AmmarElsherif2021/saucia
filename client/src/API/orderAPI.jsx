@@ -1,4 +1,4 @@
-import { supabase,handleSupabaseError } from "../../supabaseClient";
+import { supabase, handleSupabaseError } from "../../supabaseClient";
 
 export const ordersAPI = {
   // User endpoints - require user authentication
@@ -42,6 +42,208 @@ export const ordersAPI = {
       return data
     } catch (error) {
       handleSupabaseError(error)
+    }
+  },
+
+  // New filtered orders function - excludes pending subscription orders
+  async getUserOrdersFiltered(userId = null) {
+    try {
+      let currentUserId = userId;
+      
+      if (!currentUserId) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('User not authenticated')
+        currentUserId = user.id;
+      }
+
+      console.log('📡 [ordersAPI] Fetching filtered orders for user:', currentUserId);
+      
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          id,
+          order_number,
+          status,
+          payment_status,
+          total_amount,
+          subtotal,
+          tax_amount,
+          delivery_fee,
+          discount_amount,
+          subscription_id,
+          subscription_meal_index,
+          scheduled_delivery_date,
+          actual_delivery_date,
+          created_at,
+          updated_at,
+          order_meals (
+            id,
+            meal_id,
+            quantity,
+            unit_price,
+            total_price,
+            name,
+            name_arabic,
+            description,
+            calories,
+            protein_g,
+            carbs_g,
+            fat_g,
+            customization_notes
+          ),
+          order_items (
+            id,
+            item_id,
+            quantity,
+            unit_price,
+            total_price,
+            name,
+            name_arabic,
+            category
+          )
+        `)
+        .eq('user_id', currentUserId)
+        .or('subscription_id.is.null,and(subscription_id.not.is.null,status.neq.pending)')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('❌ [ordersAPI] Error fetching filtered orders:', error);
+        throw error;
+      }
+
+      console.log('✅ [ordersAPI] Filtered orders fetched successfully:', data?.length);
+      return data;
+    } catch (error) {
+      console.error('❌ [ordersAPI] getUserOrdersFiltered error:', error);
+      handleSupabaseError(error);
+    }
+  },
+
+  // Get subscription orders (including pending)
+  async getSubscriptionOrders(subscriptionId) {
+    try {
+      console.log('📡 [ordersAPI] Fetching subscription orders for:', subscriptionId);
+      
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          id,
+          order_number,
+          status,
+          payment_status,
+          total_amount,
+          subtotal,
+          tax_amount,
+          delivery_fee,
+          discount_amount,
+          subscription_id,
+          subscription_meal_index,
+          scheduled_delivery_date,
+          actual_delivery_date,
+          created_at,
+          updated_at,
+          order_meals (
+            id,
+            meal_id,
+            quantity,
+            unit_price,
+            total_price,
+            name,
+            name_arabic,
+            description,
+            calories,
+            protein_g,
+            carbs_g,
+            fat_g
+          ),
+          order_items (
+            id,
+            item_id,
+            quantity,
+            unit_price,
+            total_price,
+            name,
+            name_arabic,
+            category
+          )
+        `)
+        .eq('subscription_id', subscriptionId)
+        .order('subscription_meal_index', { ascending: true });
+
+      if (error) {
+        console.error('❌ [ordersAPI] Error fetching subscription orders:', error);
+        throw error;
+      }
+
+      console.log('✅ [ordersAPI] Subscription orders fetched successfully:', data?.length);
+      return data;
+    } catch (error) {
+      console.error('❌ [ordersAPI] getSubscriptionOrders error:', error);
+      handleSupabaseError(error);
+    }
+  },
+
+  // Get next scheduled meal
+  async getNextScheduledMeal(subscriptionId) {
+    try {
+      console.log('📡 [ordersAPI] Fetching next scheduled meal for subscription:', subscriptionId);
+      
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          id,
+          order_number,
+          status,
+          subscription_meal_index,
+          scheduled_delivery_date,
+          actual_delivery_date,
+          created_at
+        `)
+        .eq('subscription_id', subscriptionId)
+        .in('status', ['active', 'confirmed', 'preparing'])
+        .order('scheduled_delivery_date', { ascending: true })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('❌ [ordersAPI] Error fetching next meal:', error);
+        throw error;
+      }
+
+      console.log('✅ [ordersAPI] Next scheduled meal:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ [ordersAPI] getNextScheduledMeal error:', error);
+      handleSupabaseError(error);
+    }
+  },
+
+  // Activate an order
+  async activateOrder(orderId, orderData) {
+    try {
+      console.log('📡 [ordersAPI] Activating order:', orderId, orderData);
+      
+      const { data, error } = await supabase
+        .from('orders')
+        .update({
+          status: 'active',
+          scheduled_delivery_date: orderData.scheduled_delivery_date,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ [ordersAPI] Error activating order:', error);
+        throw error;
+      }
+
+      console.log('✅ [ordersAPI] Order activated successfully:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ [ordersAPI] activateOrder error:', error);
+      handleSupabaseError(error);
     }
   },
 
@@ -101,23 +303,51 @@ export const ordersAPI = {
 
   async updateOrder(orderId, updates) {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('User not authenticated')
+      // Check if user authentication is needed (for user-specific updates)
+      if (!updates.skipAuth) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('User not authenticated')
+        
+        const { data, error } = await supabase
+          .from('orders')
+          .update({
+            ...updates,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', orderId)
+          .eq('user_id', user.id)
+          .select()
+          .single()
 
-      const { data, error } = await supabase
-        .from('orders')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', orderId)
-        .eq('user_id', user.id)
-        .select()
-        .single()
+        if (error) throw error
+        return data
+      } else {
+        // Admin or system update without user restriction
+        console.log('📡 [ordersAPI] Updating order:', orderId, updates);
+        
+        const updateData = { ...updates };
+        delete updateData.skipAuth; // Remove the skipAuth flag
+        
+        const { data, error } = await supabase
+          .from('orders')
+          .update({
+            ...updateData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', orderId)
+          .select()
+          .single();
 
-      if (error) throw error
-      return data
+        if (error) {
+          console.error('❌ [ordersAPI] Error updating order:', error);
+          throw error;
+        }
+
+        console.log('✅ [ordersAPI] Order updated successfully:', data);
+        return data;
+      }
     } catch (error) {
+      console.error('❌ [ordersAPI] updateOrder error:', error);
       handleSupabaseError(error)
     }
   },

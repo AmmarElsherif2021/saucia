@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Lalezar&family=Montserrat:wght@100..900&family=Outfit:wght@100..900&family=Readex+Pro:wght@200..700&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Harmattan:wght@400;500;600;700&display=swap');
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -67,6 +68,34 @@
 .outfit {
   font-family: 'Outfit', sans-serif;
   font-weight: 400;
+}
+.permanent-marker-regular {
+  font-family: "Permanent Marker", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+.harmattan-regular {
+  font-family: "Harmattan", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.harmattan-medium {
+  font-family: "Harmattan", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.harmattan-semibold {
+  font-family: "Harmattan", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.harmattan-bold {
+  font-family: "Harmattan", sans-serif;
+  font-weight: 700;
+  font-style: normal;
 }
 
 body {

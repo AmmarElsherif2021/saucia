@@ -1,4 +1,4 @@
-// Enhanced AuthContext.jsx - Better redirect handling
+// Enhanced AuthContext.jsx - Fixed profileCompleted logic
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../supabaseClient.jsx';
 import { userAPI } from '../API/userAPI.jsx';
@@ -20,6 +20,19 @@ export const AuthProvider = ({ children }) => {
   const [currentSubscription, setCurrentSubscription] = useState(null);
   const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(false);
 
+  // Function to fetch user profile from database
+  const fetchUserProfile = useCallback(async (userId) => {
+    if (!userId) return null;
+    
+    try {
+      const profile = await userAPI.getUserProfile(userId);
+      return profile;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+  }, []);
+
   // Function to fetch user's active subscription
   const fetchCurrentSubscription = useCallback(async (userId) => {
     if (!userId) {
@@ -39,7 +52,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Unified auth change handler
+  // Enhanced auth handler that fetches profile from database
   const handleAuthChange = useCallback(async (event, session) => {
     console.groupCollapsed(`Auth Event: ${event}`);
     console.log('Session:', session);
@@ -54,15 +67,40 @@ export const AuthProvider = ({ children }) => {
         
         setSupabaseSession(session);
         
-        // Set minimal user identity - extended data via TanStack hooks
-        setUser({
-          id: session.user.id,
-          email: session.user.email,
-          displayName: session.user.user_metadata?.full_name || '',
-          avatarUrl: session.user.user_metadata?.avatar_url || '',
-          isAdmin: false,
-          profileCompleted: session.user.user_metadata?.profile_completed ?? false,
-        });
+        // Fetch the actual user profile from the database
+        const userProfile = await fetchUserProfile(session.user.id);
+        
+        if (userProfile) {
+          // Set user state with data from user_profiles table
+          setUser({
+            id: session.user.id,
+            email: session.user.email,
+            displayName: userProfile.display_name || session.user.user_metadata?.full_name || '',
+            avatarUrl: userProfile.avatar_url || session.user.user_metadata?.avatar_url || '',
+            isAdmin: userProfile.is_admin || false,
+            profileCompleted: userProfile.profile_completed || false,
+            language: userProfile.language || 'en',
+            timezone: userProfile.timezone || 'Asia/Riyadh',
+            // Include other relevant fields from user_profiles
+            phoneNumber: userProfile.phone_number,
+            age: userProfile.age,
+            gender: userProfile.gender,
+            loyaltyPoints: userProfile.loyalty_points || 0,
+            accountStatus: userProfile.account_status || 'active'
+          });
+        } else {
+          // Fallback to auth data if profile doesn't exist yet
+          setUser({
+            id: session.user.id,
+            email: session.user.email,
+            displayName: session.user.user_metadata?.full_name || '',
+            avatarUrl: session.user.user_metadata?.avatar_url || '',
+            isAdmin: false,
+            profileCompleted: false, // Default to false if no profile exists
+            language: 'en',
+            timezone: 'Asia/Riyadh'
+          });
+        }
         
         setError(null);
         
@@ -75,8 +113,8 @@ export const AuthProvider = ({ children }) => {
       console.error('Error handling auth state change:', error);
       setError(error.message);
     }
-  }, [supabaseSession, pendingRedirect, fetchCurrentSubscription]);
- 
+  }, [supabaseSession, pendingRedirect, fetchUserProfile, fetchCurrentSubscription]);
+
   // Reset all auth state
   const resetAuthState = useCallback(() => {
     setSupabaseSession(null);
@@ -172,7 +210,6 @@ export const AuthProvider = ({ children }) => {
   const consumePendingRedirect = useCallback(() => {
     let redirect = pendingRedirect;
     
-    // If no redirect in state, try localStorage
     if (!redirect) {
       try {
         const storedRedirect = localStorage.getItem('auth_pending_redirect');
@@ -187,7 +224,6 @@ export const AuthProvider = ({ children }) => {
     }
     
     if (redirect) {
-      // Validate redirect is not too old (30 minutes)
       const maxAge = 30 * 60 * 1000;
       if (Date.now() - redirect.timestamp > maxAge) {
         console.log('Redirect expired, clearing');
@@ -210,14 +246,11 @@ export const AuthProvider = ({ children }) => {
       if (storedRedirect && !pendingRedirect) {
         const redirect = JSON.parse(storedRedirect);
         
-        // Check if redirect is not too old (1 minute)
         const maxAge = 60 * 1000;
         if (Date.now() - redirect.timestamp < maxAge) {
           console.log('Restoring pending redirect from localStorage:', redirect);
-          //{path: '/premium/join', reason: 'subscription_flow', timestamp: 1755689404384, planId: 1, planTitle: 'Protein Salad Plan'}
           setPendingRedirect(redirect);
         } else {
-          // Clear expired redirect
           console.log('Clearing expired redirect from localStorage');
           localStorage.removeItem('auth_pending_redirect');
         }
@@ -226,30 +259,62 @@ export const AuthProvider = ({ children }) => {
       console.warn('Could not load redirect from localStorage:', e);
       localStorage.removeItem('auth_pending_redirect');
     }
-  }, []); // Empty dependency array - only run on mount
-  //Debug
-  useEffect(() => {
-    console.log('AuthContext currentSubscription:', currentSubscription);
   }, []);
-  // Profile completion - updates core user state
+
+  // Profile completion - updates core user state by fetching fresh profile
   const completeProfile = useCallback(async (profileData) => {
     try {
       if (!user?.id) throw new Error('No user found');
       
+      // Use the userAPI completeUserProfile method
       const updatedProfile = await userAPI.completeUserProfile(user.id, profileData);
       
-      setUser(prev => ({
-        ...prev,
-        ...updatedProfile,
-        profileCompleted: true
-      }));
+      // Fetch the updated profile to ensure we have all current data
+      const freshProfile = await fetchUserProfile(user.id);
+      
+      if (freshProfile) {
+        // Update the user state with fresh data from database
+        setUser(prev => ({
+          ...prev,
+          displayName: freshProfile.display_name,
+          phoneNumber: freshProfile.phone_number,
+          age: freshProfile.age,
+          gender: freshProfile.gender,
+          language: freshProfile.language,
+          timezone: freshProfile.timezone,
+          profileCompleted: freshProfile.profile_completed
+        }));
+      }
       
       return updatedProfile;
     } catch (error) {
+      console.error('Profile completion error:', error);
       setError(error.message);
       throw error;
     }
-  }, [user]);
+  }, [user, fetchUserProfile]);
+
+  // Refresh user profile data
+  const refreshUserProfile = useCallback(async () => {
+    if (user?.id) {
+      const freshProfile = await fetchUserProfile(user.id);
+      if (freshProfile) {
+        setUser(prev => ({
+          ...prev,
+          displayName: freshProfile.display_name,
+          avatarUrl: freshProfile.avatar_url,
+          isAdmin: freshProfile.is_admin,
+          profileCompleted: freshProfile.profile_completed,
+          language: freshProfile.language,
+          timezone: freshProfile.timezone,
+          phoneNumber: freshProfile.phone_number,
+          age: freshProfile.age,
+          gender: freshProfile.gender,
+          loyaltyPoints: freshProfile.loyalty_points
+        }));
+      }
+    }
+  }, [user, fetchUserProfile]);
 
   // Auth methods
   const loginWithGoogle = useCallback(async () => {
@@ -285,14 +350,15 @@ export const AuthProvider = ({ children }) => {
     return !!user && !!supabaseSession;
   }, [user, supabaseSession]);
 
-  // Refresh subscription data
-  const refreshSubscription = useCallback(() => {
+  // Refresh both subscription and profile data
+  const refreshUserData = useCallback(() => {
     if (user?.id) {
+      refreshUserProfile();
       fetchCurrentSubscription(user.id);
     }
-  }, [user, fetchCurrentSubscription]);
+  }, [user, refreshUserProfile, fetchCurrentSubscription]);
 
-  // Context value - enhanced with redirect management
+  // Context value - enhanced with proper profile handling
   const contextValue = {
     // Core auth state
     user,
@@ -319,9 +385,10 @@ export const AuthProvider = ({ children }) => {
     clearPendingRedirect,
     consumePendingRedirect,
     
-    // Subscription refresh
-    refreshSubscription,
-    fetchCurrentSubscription,
+    // Data refresh methods
+    refreshSubscription: () => user?.id && fetchCurrentSubscription(user.id),
+    refreshUserProfile,
+    refreshUserData,
     
     // Backward compatibility
     get isJoiningPremium() {
