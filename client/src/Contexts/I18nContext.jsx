@@ -9,7 +9,7 @@ const I18nContext = createContext()
 export const useI18nContext = () => useContext(I18nContext)
 
 export const I18nProvider = ({ children }) => {
-  const getInitialLanguage = () => {
+  const getInitialLanguage = () => { 
     const storedLang = localStorage.getItem('i18nextLng')
     if (storedLang && Object.keys(translations).includes(storedLang)) {
       return storedLang

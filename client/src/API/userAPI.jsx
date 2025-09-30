@@ -227,8 +227,34 @@ export const userAPI = {
   async deleteUserPaymentMethod(paymentMethodId) {
     return deleteRecord('user_payment_methods', paymentMethodId);
   },
+  //Subscription
 
- // subscription fetch to use the view
+  async getAllUserSubscriptions(userId) {
+  const { data, error } = await supabase
+    .from('user_subscriptions')
+    .select(`
+      *,
+      plans (
+        id,
+        title,
+        title_arabic,
+        description,
+        description_arabic,
+        price_per_meal,
+        duration_days,
+        kcal,
+        protein,
+        carb,
+        avatar_url
+      )
+    `)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+},
+
 async getUserActiveSubscription(userId) {
   const { data, error } = await supabase
     .from('user_subscriptions')
@@ -249,27 +275,76 @@ async getUserActiveSubscription(userId) {
       )
     `)
     .eq('user_id', userId)
+    .not('status', 'in', '("completed","cancelled")')
     .order('created_at', { ascending: false })
     .limit(1);
 
   if (error) throw error;
+  
+  console.log('🔍 Active Subscription Query:', {
+    userId,
+    found: !!data?.[0],
+    status: data?.[0]?.status,
+    subscriptionId: data?.[0]?.id
+  });
+  
   return data?.[0] || null;
 },
 
-  async createUserSubscription(userId, subscriptionData) {
-    console.log('Creating subscription for user:', userId, subscriptionData);
-    const newSubscription = {
-      user_id: userId,
-      ...subscriptionData,
-      status: subscriptionData.status || 'pending',
-      preferred_delivery_time: subscriptionData.preferred_delivery_time || '12:00',
-      //delivery_days: subscriptionData.delivery_days || [1, 2, 3, 4, 5],
-      auto_renewal: subscriptionData.auto_renewal || false,
-      consumed_meals: subscriptionData.consumed_meals || 0,
-    };
+async createUserSubscription(userId, subscriptionData) {
+  console.log('🚀 Creating subscription for user:', userId, subscriptionData);
+  
+  // Check if user already has an active subscription
+  const activeSubscription = await this.getUserActiveSubscription(userId);
+  if (activeSubscription) {
+    console.error('❌ User already has active subscription:', {
+      existingSubscriptionId: activeSubscription.id,
+      existingStatus: activeSubscription.status,
+      userId: userId
+    });
+    throw new Error('USER_HAS_ACTIVE_SUBSCRIPTION');
+  }
 
-    return createRecord('user_subscriptions', newSubscription);
-  },
+  const newSubscription = {
+    user_id: userId,
+    ...subscriptionData,
+    status: subscriptionData.status || 'pending',
+    preferred_delivery_time: subscriptionData.preferred_delivery_time || '12:00',
+    auto_renewal: subscriptionData.auto_renewal || false,
+    consumed_meals: subscriptionData.consumed_meals || 0,
+  };
+
+  console.log('✅ Creating new subscription:', newSubscription);
+  return createRecord('user_subscriptions', newSubscription);
+},
+
+async cancelUserSubscription(subscriptionId, cancelReason) {
+  console.log('🛑 Cancelling subscription:', { subscriptionId, cancelReason });
+  
+  return updateRecord('user_subscriptions', subscriptionId, {
+    status: 'cancelled',
+    cancellation_reason: cancelReason,
+    cancelled_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+},
+
+// Enhanced subscription validation
+async validateSubscriptionCreation(userId) {
+  const activeSubscription = await this.getUserActiveSubscription(userId);
+  
+  const validationResult = {
+    canCreate: !activeSubscription,
+    hasActiveSubscription: !!activeSubscription,
+    activeSubscription: activeSubscription,
+    allowedStatuses: ['completed', 'cancelled']
+  };
+
+  console.log('🔍 Subscription Creation Validation:', validationResult);
+  
+  return validationResult;
+},
+
   async getSubscriptionOrders(subscriptionId) {
   const { data, error } = await supabase
     .from('orders')
@@ -344,7 +419,7 @@ async getNextScheduledMeal(subscriptionId) {
       )
     `)
     .eq('subscription_id', subscriptionId)
-    .in('status', ['pending', 'confirmed'])
+    .in('status', ['preparing','out_for_delivery', 'confirmed','pending'])
     .order('scheduled_delivery_date', { ascending: true })
     .limit(1);
 

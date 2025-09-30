@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthContext } from '../Contexts/AuthContext';
 import { userAPI } from '../API/userAPI';
 import { ordersAPI } from '../API/orderAPI';
+import { supabase } from '../../supabaseClient';
 // 1. User Profile Hook
 export const useUserProfile = () => {
   const { user } = useAuthContext();
@@ -329,5 +330,41 @@ export const useUserAllergies = () => {
     isError: ordersQuery.isError,
     error: ordersQuery.error,
     refetch: ordersQuery.refetch
+  };
+};
+// Restaurant Addresses Hook
+export const useRestaurantAddresses = () => {
+  const queryClient = useQueryClient();
+
+  const addressesQuery = useQuery({
+    queryKey: ['restaurantAddresses'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('addresses')
+        .select('*')
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      
+      console.log('🏪 Restaurant addresses fetched:', data);
+      
+      // Transform the data to match our component needs
+      return data.map(address => ({
+        ...address,
+        display_name: `${address.label} - ${address.address_line1}, ${address.city}`,
+        // Add default coordinates for Bahrain (you can update these with actual coordinates)
+        coordinates: [26.386145, 50.075073]
+      }));
+    },
+    staleTime: 1000 * 60 * 30, // 30 minutes
+  });
+
+  return {
+    addresses: addressesQuery.data || [],
+    isLoading: addressesQuery.isLoading,
+    isError: addressesQuery.isError,
+    error: addressesQuery.error,
+    refetch: addressesQuery.refetch
   };
 };

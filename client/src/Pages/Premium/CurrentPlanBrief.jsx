@@ -1,84 +1,25 @@
-import { Text, Flex, Box, Button, Collapse, Spinner, Badge, useDisclosure, useBreakpointValue } from '@chakra-ui/react'
-import { useState, useEffect } from 'react'
+import { Text, Flex, Box, Button, Collapse, Spinner, Badge, useDisclosure, useBreakpointValue, HStack, VStack, Icon, IconButton } from '@chakra-ui/react'
+import { FiClock } from 'react-icons/fi'
+import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-// MOCK DATA FOR TESTING - Comment out actual imports below
 import { useI18nContext } from '../../Contexts/I18nContext'
 import { useAuthContext } from '../../Contexts/AuthContext'
 import { useUserSubscriptions } from '../../Hooks/useUserSubscriptions'
 import { CircularPlanAvatar } from './PlanAvatar'
 import PlanSettingsModal from './PlanSettingsModal'
+import { 
+  useOrderItems, 
+  useSubscriptionStats, 
+  formatDeliveryDate, 
+  formatDeliveryTime,
+  getOrderStatusColor 
+} from './orderUtils'
 
-// MOCK DATA FOR TESTING PURPOSES
-// const mockData = {
-//   currentLanguage: 'en',
-//   user: { id: 'user-123', name: 'Test User' },
-//   currentSubscription: {
-//     id: 'sub-1234567890abcdef',
-//     status: 'active',
-//     total_meals: 30,
-//     consumed_meals: 12,
-//     start_date: '2023-10-15T00:00:00Z',
-//     end_date: '2023-11-15T00:00:00Z',
-//     price_per_meal: 25,
-//     auto_renewal: true,
-//     preferred_delivery_time: '13:30:00',
-//     plans: {
-//       title: 'Premium Fitness Plan',
-//       title_arabic: 'بريميوم فيتنس بلان',
-//       kcal: 450,
-//       carb: 45,
-//       protein: 35,
-//       fat: 12
-//     }
-//   },
-//   orders: [
-//     {
-//       id: 'order-1',
-//       status: 'confirmed',
-//       scheduled_delivery_date: '2023-10-28T00:00:00Z',
-//       order_meals: [
-//         {
-//           name: 'Grilled Chicken with Quinoa',
-//           name_arabic: 'دجاج مشوي مع الكينوا'
-//         }
-//       ],
-//       user_addresses: {
-//         label: 'Home',
-//         address_line1: '123 Main Street, Riyadh'
-//       }
-//     },
-//     {
-//       id: 'order-2',
-//       status: 'preparing',
-//       scheduled_delivery_date: '2023-10-29T00:00:00Z',
-//       order_meals: [
-//         {
-//           name: 'Salmon with Sweet Potato',
-//           name_arabic: 'سمك السلمون مع البطاطا الحلوة'
-//         }
-//       ],
-//       user_addresses: {
-//         label: 'Office',
-//         address_line1: '456 Business District, Riyadh'
-//       }
-//     }
-//   ],
-//   nextMeal: {
-//     id: 'order-1',
-//     status: 'confirmed',
-//     scheduled_delivery_date: '2023-10-28T00:00:00Z',
-//     order_meals: [
-//       {
-//         name: 'Grilled Chicken with Quinoa',
-//         name_arabic: 'دجاج مشوي مع الكينوا'
-//       }
-//     ],
-//     user_addresses: {
-//       label: 'Home',
-//       address_line1: '123 Main Street, Riyadh'
-//     }
-//   }
-// };
+// Consolidated OrderItems component
+const OrderItems = ({ order, isArabic }) => {
+  const { renderOrderItems } = useOrderItems();
+  return renderOrderItems(order, isArabic, false);
+};
 
 export const CurrentPlanBrief = () => {
   const { isOpen: showDetails, onToggle: toggleDetails } = useDisclosure()
@@ -86,59 +27,55 @@ export const CurrentPlanBrief = () => {
   const [subscriptionStats, setSubscriptionStats] = useState(null)
   
   const { t } = useTranslation()
-  // MOCK DATA FOR TESTING - Comment out actual context usage
   const { currentLanguage } = useI18nContext()
   const { user, currentSubscription, isSubscriptionLoading } = useAuthContext()
-  const { orders, nextMeal, isLoading: ordersLoading, nextMealLoading } = useUserSubscriptions()
   
-  // Using mock data instead
-  // const currentLanguage = mockData.currentLanguage;
-  // const user = mockData.user;
-  // const currentSubscription = mockData.currentSubscription;
-  // const isSubscriptionLoading = false;
-  // const orders = mockData.orders;
-  // const nextMeal = mockData.nextMeal;
-  // const ordersLoading = false;
-  // const nextMealLoading = false;
+  const { 
+    orders: subscriptionOrders, 
+    nextMeal, 
+    isLoading: ordersLoading 
+  } = useUserSubscriptions()
   
   const isArabic = currentLanguage === 'ar'
-  
   const buttonSize = useBreakpointValue({ base: 'sm', md: 'md' })
   const avatarSize = useBreakpointValue({ base: '70px', md: '85px' })
 
-  // Calculate subscription statistics
+  // Debug logging for data integrity
   useEffect(() => {
-    if (orders && orders.length > 0 && currentSubscription) {
-      const totalMeals = currentSubscription.total_meals
-      const consumedMeals = currentSubscription.consumed_meals || 0
-      const pendingMeals = orders.filter(order => 
-        ['pending', 'confirmed', 'preparing', 'out_for_delivery'].includes(order.status)
-      ).length
-      
-      setSubscriptionStats({
-        totalMeals,
-        consumedMeals,
-        pendingMeals,
-        remainingMeals: totalMeals - consumedMeals
-      })
+    console.log('🔍 CurrentPlanBrief Data Debug:', {
+      hasSubscription: !!currentSubscription,
+      subscriptionStatus: currentSubscription?.status,
+      subscriptionId: currentSubscription?.id,
+      ordersCount: subscriptionOrders?.length,
+      nextMeal: nextMeal,
+      isLoading: isSubscriptionLoading || ordersLoading
+    });
+  }, [currentSubscription, subscriptionOrders, nextMeal, isSubscriptionLoading, ordersLoading]);
+
+  // Calculate subscription statistics using shared utility
+  useEffect(() => {
+    if (subscriptionOrders && currentSubscription) {
+      const stats = useSubscriptionStats(subscriptionOrders, currentSubscription);
+      console.log('📊 Subscription Stats:', stats);
+      setSubscriptionStats(stats);
     }
-  }, [orders, currentSubscription])
+  }, [subscriptionOrders, currentSubscription]);
 
   if (isSubscriptionLoading || ordersLoading) {
     return (
       <Flex
-      justify="center"
-      alignItems="center"
-      py={8}
-      sx={{
-        borderRadius: "xl",
-        bg: "white",
-        border: "3px solid",
-        borderColor: "brand.500",
-      }}
+        justify="center"
+        alignItems="center"
+        py={8}
+        sx={{
+          borderRadius: "xl",
+          bg: "white",
+          border: "3px solid",
+          borderColor: "brand.500",
+        }}
       >
-      <Spinner size="md" color="brand.500" thickness="3px" />
-      <Text ml={3} color="brand.600">{t('loadingPlanDetails')}...</Text>
+        <Spinner size="md" color="brand.500" thickness="3px" />
+        <Text ml={3} color="brand.600">{t('loadingPlanDetails')}...</Text>
       </Flex>
     )
   }
@@ -160,38 +97,26 @@ export const CurrentPlanBrief = () => {
   }
 
   const plan = currentSubscription.plans
-  const nextOrder = nextMeal || orders?.find(order => 
-    ['pending', 'confirmed'].includes(order.status)
+  
+  // Find next order - consolidated logic
+  const nextOrder = subscriptionOrders?.find(order => 
+    ['active', 'confirmed', 'preparing', 'out_for_delivery'].includes(order.status)
   )
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active': return 'green'
-      case 'paused': return 'orange'
-      case 'pending': return 'teal'
-      case 'completed': return 'black'
-      default: return 'brand'
-    }
-  }
-
-  const formatDeliveryTime = (timeString) => {
-    if (!timeString) return t('premium.notSet')
-    return timeString.slice(0, 5) // Remove seconds if present
-  }
+  console.log('🎯 Next Order:', nextOrder);
 
   return (
     <Box 
-      
       p={{ base: 4, md: 6 }} 
       mb={6}
-          sx={{
+      sx={{
         borderRadius: "xl",
         bg: "white",
         border: "2px solid",
         borderColor: "brand.500",
       }}
     >
-      {/* Header Section */}
+      {/* Header Section #*/}
       <Flex 
         justify="space-between" 
         align="center" 
@@ -211,7 +136,7 @@ export const CurrentPlanBrief = () => {
           </Text>
         </Text>
         <Badge 
-          colorScheme={getStatusColor(currentSubscription.status)} 
+          colorScheme={getOrderStatusColor(currentSubscription.status)} 
           size="lg"
           px={3}
           py={1}
@@ -256,7 +181,7 @@ export const CurrentPlanBrief = () => {
             <Badge colorScheme="warning" variant="solid" fontSize="xs" px={2} py={1} borderRadius="md">
               {t('premium.protein')}: {plan?.protein || 0}g
             </Badge>
-            <Badge colorScheme="orasecondarynge" variant="solid" fontSize="xs" px={2} py={1} borderRadius="md">
+            <Badge colorScheme="orange" variant="solid" fontSize="xs" px={2} py={1} borderRadius="md">
               {t('premium.fat')}: {plan?.fat || 0}g
             </Badge>
           </Flex>
@@ -278,63 +203,82 @@ export const CurrentPlanBrief = () => {
 
           {/* Next Meal Info */}
           {nextOrder && (
-            <Box 
-              mt={4} 
-              p={4} 
-              bg="secondary.100" 
-              borderRadius="lg"
-              border="2px"
-              borderColor="brand.400"
-            >
-              <Text fontSize="sm" fontWeight="semibold" color="teal.700" mb={2} bg={"teal.200"} p={1} borderRadius="md" display="inline-block">
-                {t('premium.nextScheduledMeal')}
-              </Text>
-              
-              {nextOrder.order_meals?.[0] && (
-                <Text fontSize="xs" color="brand.700" mb={2}>
-                  {isArabic ? 
-                    nextOrder.order_meals[0].name_arabic || nextOrder.order_meals[0].name : 
-                    nextOrder.order_meals[0].name
-                  }
+            <Flex direction={{base:'column',md:'row'}} gap={4}>
+              <Box 
+                flex={1}
+                p={4} 
+                bg="secondary.100" 
+                borderRadius="lg"
+                border="1px"
+                borderColor="brand.400"
+              >
+                <Text fontSize="sm" fontWeight="semibold" color="teal.700" mb={2} bg={"teal.200"} p={1} borderRadius="md" display="inline-block">
+                  {t('premium.nextScheduledMeal')}
                 </Text>
-              )}
-
-              <Flex direction="column" gap={1}>
-                {nextOrder.scheduled_delivery_date && (
-                  <Flex align="center" fontSize="xs" color="brand.600">
-                    <Text fontSize="xs" mx={2}>{t('premium.deliveryDate')}:</Text>
-                    {new Date(nextOrder.scheduled_delivery_date).toLocaleDateString(
-                      isArabic ? 'ar-EG' : 'en-US'
-                    )}
-                  </Flex>
+                
+                {/* Display meal information from order_meals */}
+                {nextOrder.order_meals?.[0] && (
+                  <Text fontSize="xs" color="brand.700" mb={2}>
+                    {isArabic ? 
+                      nextOrder.order_meals[0].name_arabic || nextOrder.order_meals[0].name : 
+                      nextOrder.order_meals[0].name
+                    }
+                  </Text>
                 )}
 
-                <Flex align="center" fontSize="xs" color="brand.600">
-                  <Text fontSize="xs" mx={2}>{t('premium.preferredTime')}:</Text>
-                  {formatDeliveryTime(currentSubscription.preferred_delivery_time)}
+                <Flex direction="column" gap={1}>
+                  {nextOrder.scheduled_delivery_date && (
+                    <Flex align="center" fontSize="xs" color="brand.600">
+                      <Text fontSize="xs" mx={2}>{t('premium.deliveryDate')}:</Text>
+                      {formatDeliveryDate(nextOrder.scheduled_delivery_date, isArabic)}
+                    </Flex>
+                  )}
+
+                  <Flex align="center" fontSize="xs" color="brand.600">
+                    <Text fontSize="xs" mx={2}>{t('premium.preferredTime')}:</Text>
+                    {formatDeliveryTime(currentSubscription.preferred_delivery_time, t)}
+                  </Flex>
+
+                  {nextOrder.user_addresses && (
+                    <Flex align="flex-start" fontSize="xs" color="brand.600">
+                      <Text fontSize="xs" mx={2} flexShrink={0}>{t('premium.deliveryAddress')}</Text>
+                      <Text>
+                        {nextOrder.user_addresses.label} - {nextOrder.user_addresses.address_line1}
+                      </Text>
+                    </Flex>
+                  )}
                 </Flex>
 
-                {nextOrder.user_addresses && (
-                  <Flex align="flex-start" fontSize="xs" color="brand.600">
-                    <Text fontSize="xs" mx={2} flexShrink={0}>{t('premium.deliveryAddress')}</Text>
-                    <Text>
-                      {nextOrder.user_addresses.label} - {nextOrder.user_addresses.address_line1}
-                    </Text>
-                  </Flex>
-                )}
-              </Flex>
-
-              <Badge 
-                mt={3} 
-                colorScheme={nextOrder.status === 'confirmed' ? 'brand' : 'orang'}
-                size="sm"
-                px={2}
-                py={1}
-                borderRadius="md"
+                <Badge 
+                  mt={3} 
+                  colorScheme={getOrderStatusColor(nextOrder.status)}
+                  size="sm"
+                  px={2}
+                  py={1}
+                  borderRadius="md"
+                >
+                  {t(`admin.order_status.${nextOrder.status}`)}
+                </Badge>
+              </Box>
+              
+              {/* Order items detail box */}
+              <Box 
+                flex={1}
+                p={4} 
+                bg="secondary.100" 
+                borderRadius="lg"
+                border="1px"
+                borderColor="brand.400"
               >
-                {t(`admin.order_status.${nextOrder.status}`)}
-              </Badge>
-            </Box>
+                <HStack justify="space-between" align="start">
+                  <VStack align="start" spacing={2} flex={1}>
+                    <Text fontWeight="medium">#{nextOrder.order_number}</Text>
+                    <OrderItems order={nextOrder} isArabic={isArabic} />         
+              
+                  </VStack>
+                </HStack>
+              </Box>
+            </Flex>
           )}
         </Box>
 
@@ -367,7 +311,7 @@ export const CurrentPlanBrief = () => {
         </Flex>
       </Flex>
 
-      {/* Expandable Details Section */}
+      {/* ---------------------------------- Expandable Details Section ------------------------------ */}
       <Collapse in={showDetails} animateOpacity>
         <Box 
           mt={5} 
@@ -399,17 +343,13 @@ export const CurrentPlanBrief = () => {
               
               <DetailItem 
                 label={t('premium.startDate')}
-                value={new Date(currentSubscription.start_date).toLocaleDateString(
-                  isArabic ? 'ar-EG' : 'en-US'
-                )}
+                value={formatDeliveryDate(currentSubscription.start_date, isArabic)}
               />
               
               {currentSubscription.end_date && (
                 <DetailItem 
                   label={t('premium.endDate')}
-                  value={new Date(currentSubscription.end_date).toLocaleDateString(
-                    isArabic ? 'ar-EG' : 'en-US'
-                  )}
+                  value={formatDeliveryDate(currentSubscription.end_date, isArabic)}
                 />
               )}
               
@@ -423,7 +363,7 @@ export const CurrentPlanBrief = () => {
             <Box flex="1">
               {subscriptionStats && (
                 <>
-                  <Text fontSize="xs"  mb={2} color="brand.700">
+                  <Text fontSize="xs" mb={2} color="brand.700">
                     {t('premium.subscriptionProgress')}
                   </Text>
                   
@@ -470,8 +410,6 @@ export const CurrentPlanBrief = () => {
                    </Box>
                   </Box>
 
-
-
                   <DetailItem 
                     label={t('premium.autoRenewal')}
                     value={currentSubscription.auto_renewal ? t('premium.enabled') : t('premium.disabled')}
@@ -480,11 +418,11 @@ export const CurrentPlanBrief = () => {
                 </>
               )}
 
-              {orders && orders.length > 0 && (
+              {subscriptionOrders && subscriptionOrders.length > 0 && (
                 <DetailItem 
                   label={t('premium.pendingOrders')}
-                  value={orders.filter(order => 
-                    ['pending', 'confirmed', 'preparing'].includes(order.status)
+                  value={subscriptionOrders.filter(order => 
+                    ['pending', 'confirmed', 'preparing','out_for_delivery'].includes(order.status)
                   ).length}
                 />
               )}
@@ -497,7 +435,7 @@ export const CurrentPlanBrief = () => {
         isOpen={isSettingsModalOpen}
         onClose={closeSettingsModal}
         subscription={currentSubscription}
-        orders={orders}
+        orders={subscriptionOrders}
         subscriptionStats={subscriptionStats}
       />
     </Box>
@@ -523,7 +461,7 @@ const DetailItem = ({ label, value, valueColor = "brand.600" }) => (
   </Flex>
 )
 
-// Icon components (would typically import from react-icons)
+// Icon components
 const ChevronDownIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

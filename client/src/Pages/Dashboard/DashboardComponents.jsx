@@ -1,52 +1,69 @@
+import { useState, useMemo, useCallback } from 'react';
+import {
+  FormControl,
+  FormLabel,
+  Input,
+  Stack,
+  Image,
+  Checkbox,
+  Switch,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+  Select,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  TableContainer,
+  Tabs,
+  TabList,
+  Tab,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  Box,
+  Center,
+  Flex,
+  Text,
+  Badge,
+  IconButton,
+  Icon,
+  VStack,
+  HStack,
+  SimpleGrid,
+  Progress,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  Tooltip,
+  Spinner,
+  Heading,
+  Button,
+  useToast
+} from '@chakra-ui/react';
+
 import { 
-    FormControl, 
-    FormLabel, 
-    Flex, 
-    Input, 
-    IconButton, 
-    Text, 
-    Badge, 
-    NumberInput, 
-    NumberInputField, 
-    NumberInputStepper, 
-    NumberIncrementStepper, 
-    NumberDecrementStepper, 
-    Select, 
-    Checkbox, 
-    SimpleGrid, 
-    Image,
-    Spinner,
-    Box,
-    Button,
-    Switch,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    TableContainer,
-    Heading,
-    VStack,
-    HStack,
-    Center,
-    Stack,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalCloseButton,
-    Tabs,
-    TabList,
-    Tab,
-    TabPanels,
-    TabPanel
-} from "@chakra-ui/react";
-import { useTranslation } from "react-i18next";
-import locationPin from '../../assets/locationPin.svg'
-import { useNavigate } from "react-router";
-import { useEffect } from "react";
+  FiCheckCircle, 
+  FiLock, 
+  FiClock, 
+  FiCalendar,
+  FiAlertTriangle 
+} from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useI18nContext } from '../../Contexts/I18nContext';
+
+// ADD THESE MISSING IMPORTS:
+import locationPin from '../../assets/locationPin.svg';
 
 // Responsive wrapper component for consistent centering
 const ResponsiveWrapper = ({ children, ...props }) => (
@@ -375,7 +392,7 @@ export const OrderHistoryTable = ({ orders }) => {
                     <Td fontSize={{ base: "xs", md: "sm" }}>
                       <VStack align="start" spacing={1}>
                         {/* Show order items */}
-                        {order.order_items?.map((item) => (
+                        {order.items?.map((item) => (
                           <Text key={item.id} isTruncated maxW={{ base: "80px", md: "150px" }}>
                             {item.name} x{item.quantity}
                           </Text>
@@ -426,151 +443,448 @@ export const OrderHistoryTable = ({ orders }) => {
 };
   
 // Subscription Details - Mobile-optimized layout
-export const SubscriptionDetails = ({ subscription, isLoading }) => {
-    const { t } = useTranslation();
-    const navigate = useNavigate();
+export const SubscriptionDetails = ({ 
+  subscription, 
+  orders = [], 
+  isLoading,
+  onActivateOrder,
+  isActivatingOrder = false,
+  refreshSubscription 
+}) => {
+  const { t } = useTranslation();
+  const { currentLanguage } = useI18nContext();
+  const navigate = useNavigate();
+  const toast = useToast();
+  const isArabic = currentLanguage === 'ar';
+
+  const [activatingOrderId, setActivatingOrderId] = useState(null);
+
+  // Filter orders for this subscription
+  const subscriptionOrders = useMemo(() => {
+    if (!orders || !subscription?.id) return [];
+    return orders.filter(order => order.subscription_id === subscription.id);
+  }, [orders, subscription?.id]);
+
+  // Categorize orders by status
+  const { 
+    pendingOrders, 
+    activeOrders, 
+    deliveredOrders, 
+    nonPendingNonDeliveredOrders,
+    hasOrdersInProgress,
+    canActivateOrders 
+  } = useMemo(() => {
+    const pending = subscriptionOrders.filter(order => order.status === 'pending');
+    const active = subscriptionOrders.filter(order => order.status === 'active');
+    const delivered = subscriptionOrders.filter(order => order.status === 'delivered');
     
-    if (isLoading) {
-      return (
-        <Center w="100%" py={8}>
-          <Spinner size={{ base: "md", md: "lg" }} />
-        </Center>
-      );
+    // Orders that are not pending and not delivered (in progress)
+    const inProgress = subscriptionOrders.filter(order => 
+      order.status !== 'pending' && 
+      order.status !== 'delivered' && 
+      order.status !== 'cancelled'
+    );
+    
+    const hasInProgress = inProgress.length > 0;
+    const canActivate = !hasInProgress;
+
+    return {
+      pendingOrders: pending,
+      activeOrders: active,
+      deliveredOrders: delivered,
+      nonPendingNonDeliveredOrders: inProgress,
+      hasOrdersInProgress: hasInProgress,
+      canActivateOrders: canActivate
+    };
+  }, [subscriptionOrders]);
+
+
+
+  // Show toast message
+  const showToast = useCallback((title, description, status = 'success') => {
+    toast({
+      title: t(title),
+      description: t(description),
+      status,
+      duration: 3000,
+      isClosable: true,
+    });
+  }, [toast, t]);
+
+  // Handle order activation
+  const handleOrderActivation = useCallback(async (orderId) => {
+    if (!canActivateOrders) {
+      showToast('premium.error', 'premium.cannotActivateWhileOrderInProgress', 'error');
+      return;
     }
-    
-    if (!subscription) {
-      return (
-        <ResponsiveWrapper>
-          <Center w="100%">
-            <Box 
-              w="100%" 
-              maxW="lg" 
-              bg="secondary.200" 
-              borderRadius="lg" 
-              overflow="hidden"
+
+    if (!onActivateOrder) {
+      console.warn('onActivateOrder handler not provided');
+      return;
+    }
+
+    setActivatingOrderId(orderId);
+    try {
+      await onActivateOrder(orderId);
+      showToast('premium.success', 'premium.mealActivatedSuccessfully');
+    } catch (error) {
+      console.error('Error activating order:', error);
+      showToast('premium.error', 'premium.failedToActivateMeal', 'error');
+    } finally {
+      setActivatingOrderId(null);
+    }
+  }, [canActivateOrders, onActivateOrder, showToast]);
+
+  // Render order items
+  const renderOrderItems = useCallback((order) => {
+    if (!order.order_items || order.order_items.length === 0) {
+      return <Text fontSize="sm" color="gray.500">{t('premium.noItems')}</Text>;
+    }
+
+    return (
+      <VStack align="start" spacing={1}>
+        {order.order_items.map((item, index) => (
+          <HStack key={index} spacing={2} wrap="wrap">
+            <Text fontSize="sm" fontWeight="medium">
+              {isArabic ? item.name_arabic || item.name : item.name}
+            </Text>
+            {item.quantity > 1 && (
+              <Badge fontSize="xs" colorScheme="blue">x{item.quantity}</Badge>
+            )}
+            {item.category && (
+              <Badge fontSize="xs" colorScheme="gray" variant="subtle">
+                {item.category}
+              </Badge>
+            )}
+            <Text fontSize="xs" color="brand.500" fontWeight="bold">
+              ${item.total_price}
+            </Text>
+          </HStack>
+        ))}
+      </VStack>
+    );
+  }, [isArabic, t]);
+
+  // Render individual order card
+  const renderOrderCard = useCallback((order, showActivateButton = false) => (
+    <Box
+      key={order.id}
+      p={4}
+      borderWidth="2px"
+      borderColor={
+        order.status === 'pending' && canActivateOrders ? 'brand.200' :
+        order.status === 'active' ? 'green.200' : 
+        order.status === 'delivered' ? 'gray.200' : 'orange.200'
+      }
+      borderRadius="md"
+      bg={
+        order.status === 'delivered' ? 'gray.50' :
+        order.status === 'active' ? 'green.50' : 
+        order.status === 'pending' && canActivateOrders ? 'brand.50' : 'white'
+      }
+      opacity={(!canActivateOrders && order.status === 'pending') ? 0.6 : 1}
+      transition="all 0.2s"
+      _hover={
+        order.status === 'pending' && canActivateOrders 
+          ? { borderColor: 'brand.400', shadow: 'md' } 
+          : {}
+      }
+    >
+      <VStack align="stretch" spacing={3}>
+        <HStack justify="space-between" align="start">
+          <VStack align="start" spacing={1}>
+            <HStack wrap="wrap" spacing={2}>
+              <Text fontWeight="bold" fontSize="sm">
+                #{order.order_number}
+              </Text>
+              <Badge 
+                colorScheme={
+                  order.status === 'pending' ? 'blue' :
+                  order.status === 'active' ? 'green' :
+                  order.status === 'delivered' ? 'gray' : 'orange'
+                }
+                size="sm"
+              >
+                {t(`admin.order_status.${order.status}`)}
+              </Badge>
+              {order.status === 'pending' && canActivateOrders && (
+                <Badge colorScheme="yellow" size="sm">
+                  {t('premium.readyToActivate')}
+                </Badge>
+              )}
+              {order.status === 'pending' && hasOrdersInProgress && (
+                <Badge colorScheme="red" size="sm">
+                  <HStack spacing={1}>
+                    <Icon as={FiLock} boxSize="10px" />
+                    <Text>{t('premium.locked')}</Text>
+                  </HStack>
+                </Badge>
+              )}
+            </HStack>
+          </VStack>
+
+          {showActivateButton && order.status === 'pending' && (
+            <Tooltip 
+              label={
+                canActivateOrders 
+                  ? t('premium.activateThisOrder') 
+                  : t('premium.cannotActivateWhileOrderInProgress')
+              } 
+              hasArrow
             >
-              <Box p={{ base: 4, md: 6 }} borderWidth="1px" borderRadius="lg">
-                <VStack spacing={4}>
-                  <Text 
-                    textAlign="center" 
-                    fontSize={{ base: "md", md: "lg" }}
-                    color="gray.600"
-                  >
-                    {t('profile.nosubscription')}
-                  </Text>
-                  <Button 
-                    colorScheme="brand"
-                    size={{ base: "md", md: "lg" }}
-                    w={{ base: "100%", sm: "auto" }}
-                    onClick={() => navigate('/subscriptions')}
-                  >
-                    {t('profile.browsePlans')}
-                  </Button>
-                </VStack>
-              </Box>
-            </Box>
-          </Center>
-        </ResponsiveWrapper>
-      );
-    }
-    
+              <IconButton
+                icon={canActivateOrders ? <Icon as={FiCheckCircle} /> : <Icon as={FiLock} />}
+                colorScheme={canActivateOrders ? "brand" : "gray"}
+                size="sm"
+                variant={canActivateOrders ? "solid" : "outline"}
+                onClick={() => handleOrderActivation(order.id)}
+                isDisabled={!canActivateOrders}
+                isLoading={activatingOrderId === order.id}
+                aria-label={t('premium.activateOrder')}
+              />
+            </Tooltip>
+          )}
+        </HStack>
+        
+        {renderOrderItems(order)}
+        
+        <HStack spacing={4} fontSize="xs" color="gray.600" wrap="wrap">
+          {order.scheduled_delivery_date && (
+            <HStack>
+              <Icon as={FiClock} boxSize="12px" />
+              <Text>
+                {new Date(order.scheduled_delivery_date).toLocaleDateString(
+                  isArabic ? 'ar-EG' : 'en-US'
+                )}
+              </Text>
+            </HStack>
+          )}
+          <HStack>
+            <Icon as={FiCalendar} boxSize="12px" />
+            <Text>
+              {new Date(order.created_at).toLocaleDateString(
+                isArabic ? 'ar-EG' : 'en-US'
+              )}
+            </Text>
+          </HStack>
+        </HStack>
+      </VStack>
+    </Box>
+  ), [canActivateOrders, hasOrdersInProgress, renderOrderItems, handleOrderActivation, activatingOrderId, t, isArabic]);
+
+  if (isLoading) {
+    return (
+      <Center w="100%" py={8}>
+        <VStack spacing={4}>
+          <Spinner size={{ base: "md", md: "lg" }} />
+          <Text fontSize="sm" color="gray.500">
+            {t('premium.loadingSubscription')}
+          </Text>
+        </VStack>
+      </Center>
+    );
+  }
+  
+  if (!subscription) {
     return (
       <ResponsiveWrapper>
-        <Center w="100%">
-          <Box 
-            w="100%" 
-            maxW="lg" 
-            bg="secondary.200" 
-            borderRadius="lg" 
-            overflow="hidden"
-          >
-            <Box p={{ base: 4, md: 6 }} borderWidth="1px" borderRadius="lg">
-              <VStack spacing={4} align="stretch">
-                <Heading 
-                  size={{ base: "md", md: "lg" }} 
-                  textAlign="center"
-                  color="brand.600"
-                >
-                  {subscription.plans?.title || t('profile.subscription')}
-                </Heading>
-                
-                <Center>
-                  <Text 
-                    fontWeight="bold" 
-                    fontSize={{ base: "xl", md: "2xl" }}
-                    color="brand.500"
-                  >
-                    ${subscription.plans?.price_per_meal}/meal
-                  </Text>
-                </Center>
-                
-                <VStack spacing={3} align="stretch">
-                  <HStack justify="space-between">
-                    <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
-                      {t('profile.status')}:
-                    </Text>
-                    <Badge 
-                      colorScheme={subscription.status === 'active' ? 'green' : 'yellow'} 
-                      size={{ base: "sm", md: "md" }}
-                      borderRadius="full"
-                    >
-                      {subscription.status}
-                    </Badge>
-                  </HStack>
-                  
-                  <HStack justify="space-between">
-                    <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
-                      {t('profile.startDate')}:
-                    </Text>
-                    <Text fontSize={{ base: "sm", md: "md" }}>
-                      {new Date(subscription.start_date).toLocaleDateString()}
-                    </Text>
-                  </HStack>
-                  
-                  <HStack justify="space-between">
-                    <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
-                      {t('profile.endDate')}:
-                    </Text>
-                    <Text fontSize={{ base: "sm", md: "md" }}>
-                      {new Date(subscription.end_date).toLocaleDateString()}
-                    </Text>
-                  </HStack>
-                  
-                  <HStack justify="space-between">
-                    <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
-                      {t('profile.consumedMeals')}:
-                    </Text>
-                    <Text fontSize={{ base: "sm", md: "md" }} fontWeight="bold">
-                      {subscription.consumed_meals} / {subscription.total_meals}
-                    </Text>
-                  </HStack>
-                  
-                  <HStack justify="space-between">
-                    <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
-                      {t('profile.preferredDeliveryTime')}:
-                    </Text>
-                    <Text fontSize={{ base: "sm", md: "md" }}>
-                      {subscription.preferred_delivery_time?.substring(0, 5) || '12:00'}
-                    </Text>
-                  </HStack>
-                </VStack>
-                
-                <Center pt={4}>
-                  <Button 
-                    colorScheme="brand" 
-                    onClick={() => navigate('/subscriptions')}
-                    size={{ base: "md", md: "lg" }}
-                    w={{ base: "100%", sm: "auto" }}
-                  >
-                    {t('profile.manageSubscription')}
-                  </Button>
-                </Center>
-              </VStack>
-            </Box>
+        <Box 
+          w="100%" 
+          maxW="lg" 
+          bg="secondary.200" 
+          borderRadius="lg" 
+          overflow="hidden"
+        >
+          <Box p={{ base: 4, md: 6 }} borderWidth="1px" borderRadius="lg">
+            <VStack spacing={4}>
+              <Text 
+                textAlign="center" 
+                fontSize={{ base: "md", md: "lg" }}
+                color="gray.600"
+              >
+                {t('profile.nosubscription')}
+              </Text>
+              <Button 
+                colorScheme="brand"
+                size={{ base: "md", md: "lg" }}
+                w={{ base: "100%", sm: "auto" }}
+                onClick={() => navigate('/subscriptions')}
+              >
+                {t('profile.browsePlans')}
+              </Button>
+            </VStack>
           </Box>
-        </Center>
+        </Box>
       </ResponsiveWrapper>
-    )
+    );
+  }
+  
+  return (
+    <ResponsiveWrapper>
+      <VStack spacing={6} align="stretch">
+        {/* Subscription Overview */}
+        <Box 
+          w="100%" 
+          maxW="lg" 
+          bg="secondary.200" 
+          borderRadius="lg" 
+          overflow="hidden"
+        >
+          <Box p={{ base: 4, md: 6 }} borderWidth="1px" borderRadius="lg">
+            <VStack spacing={4} align="stretch">
+              <Heading 
+                size={{ base: "md", md: "lg" }} 
+                textAlign="center"
+                color="brand.600"
+              >
+                {subscription.plans?.title || t('profile.subscription')}
+              </Heading>
+              
+              <Center>
+                <Text 
+                  fontWeight="bold" 
+                  fontSize={{ base: "xl", md: "2xl" }}
+                  color="brand.500"
+                >
+                  ${subscription.plans?.price_per_meal}/meal
+                </Text>
+              </Center>
+              
+              <VStack spacing={3} align="stretch">
+                <HStack justify="space-between">
+                  <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
+                    {t('profile.status')}:
+                  </Text>
+                  <Badge 
+                    colorScheme={subscription.status === 'active' ? 'green' : 'yellow'} 
+                    size={{ base: "sm", md: "md" }}
+                    borderRadius="full"
+                  >
+                    {subscription.status}
+                  </Badge>
+                </HStack>
+                
+                <HStack justify="space-between">
+                  <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
+                    {t('profile.consumedMeals')}:
+                  </Text>
+                  <Text fontSize={{ base: "sm", md: "md" }} fontWeight="bold">
+                    {subscription.consumed_meals} / {subscription.total_meals}
+                  </Text>
+                </HStack>
+
+                {/* Progress Bar */}
+                <Box>
+                  <Text fontSize="sm" mb={2}>{t('premium.progress')}:</Text>
+                  <Progress
+                    value={(subscription.consumed_meals / subscription.total_meals) * 100}
+                    colorScheme="brand"
+                    size="md"
+                    borderRadius="md"
+                  />
+                </Box>
+                
+                <HStack justify="space-between">
+                  <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
+                    {t('profile.preferredDeliveryTime')}:
+                  </Text>
+                  <Text fontSize={{ base: "sm", md: "md" }}>
+                    {subscription.preferred_delivery_time?.substring(0, 5) || '12:00'}
+                  </Text>
+                </HStack>
+              </VStack>
+            </VStack>
+          </Box>
+        </Box>
+
+        {/* Orders Management Section */}
+        <Box 
+          w="100%" 
+          maxW="4xl" 
+          bg="white" 
+          borderRadius="lg" 
+          overflow="hidden"
+          p={{ base: 4, md: 6 }}
+          borderWidth="1px"
+        >
+          <VStack spacing={4} align="stretch">
+            <Heading size="md" color="brand.600">
+              {t('premium.upcomingMeals')}
+            </Heading>
+
+            {/* Alert for orders in progress */}
+            {hasOrdersInProgress && (
+              <Alert status="warning">
+                <AlertIcon />
+                <Box>
+                  <AlertTitle>{t('premium.orderInProgress')}</AlertTitle>
+                  <AlertDescription fontSize="sm">
+                    {t('premium.cannotActivateWhileOrderInProgress')}
+                  </AlertDescription>
+                </Box>
+              </Alert>
+            )}
+
+            {/* Pending Orders - Available for Activation */}
+            {pendingOrders.length > 0 ? (
+              <Box>
+                <Text fontSize="md" fontWeight="semibold" mb={3} color="brand.600">
+                  {t('premium.availableToActivate')} ({pendingOrders.length})
+                </Text>
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                  {pendingOrders.map((order) => renderOrderCard(order, true))}
+                </SimpleGrid>
+              </Box>
+            ) : (
+              <Alert status="info">
+                <AlertIcon />
+                <Box>
+                  <AlertTitle>{t('premium.noPendingOrders')}</AlertTitle>
+                </Box>
+              </Alert>
+            )}
+
+            {/* Active Orders - Currently Being Processed */}
+            {activeOrders.length > 0 && (
+              <Box>
+                <Text fontSize="md" fontWeight="semibold" mb={3} color="green.600">
+                  {t('premium.activeOrders')} ({activeOrders.length})
+                </Text>
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                  {activeOrders.map((order) => renderOrderCard(order, false))}
+                </SimpleGrid>
+              </Box>
+            )}
+
+            {/* Recent Delivered Orders */}
+            {deliveredOrders.length > 0 && (
+              <Box>
+                <Text fontSize="md" fontWeight="semibold" mb={3} color="gray.600">
+                  {t('premium.recentDeliveries')} ({Math.min(deliveredOrders.length, 3)})
+                </Text>
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                  {deliveredOrders.slice(0, 3).map((order) => renderOrderCard(order, false))}
+                </SimpleGrid>
+              </Box>
+            )}
+          </VStack>
+        </Box>
+
+        {/* Manage Subscription Button */}
+        <Center pt={4}>
+          <Button 
+            colorScheme="brand" 
+            onClick={() => navigate('/premium')}
+            size={{ base: "md", md: "lg" }}
+            w={{ base: "100%", sm: "auto" }}
+            minW="200px"
+          >
+            {t('profile.manageSubscription')}
+          </Button>
+        </Center>
+      </VStack>
+    </ResponsiveWrapper>
+  );
 };
 // Enhanced Card Component for consistent layouts
 export const ResponsiveCard = ({ children, ...props }) => (

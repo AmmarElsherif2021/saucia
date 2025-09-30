@@ -1,5 +1,5 @@
 // UserDashboard.jsx - Refactored Version
-import { useState, useEffect, Suspense, lazy } from 'react';
+import { useState, useEffect, Suspense, lazy,useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -57,7 +57,7 @@ export const UserDashboard = () => {
   const { t } = useTranslation();
   const toast = useToast();
   
-  const { user: authUser } = useAuthContext();
+  const { user: authUser,refreshSubscription } = useAuthContext();
 
   // Data hooks
   const { 
@@ -86,11 +86,6 @@ export const UserDashboard = () => {
     isLoading: isOrdersLoading,
     refetch: refetchOrders
   } = useUserOrders();
-
-  const { 
-    subscription, 
-    isLoading: isSubLoading
-  } = useUserSubscriptions();
 
   const {
     paymentMethods,
@@ -126,6 +121,14 @@ export const UserDashboard = () => {
     isLoading: isReviewsLoading,
     deleteReview
   } = useUserReviews();
+  const { 
+  activateOrder,
+  isActivatingOrder,
+  subscription,
+  isLoading: isSubLoading,
+} = useUserSubscriptions();
+
+
 
   // Debug: Log JSON data from selected hooks
   useEffect(() => {
@@ -272,8 +275,58 @@ export const UserDashboard = () => {
     handleDeliveryTimeChange: (e) => {
       setFormData(prev => ({ ...prev, deliveryTime: e.target.value }));
       setHasUnsavedChanges(true);
-    }
+    },
+
   };
+  //Subscription handler
+  const handleOrderActivation = useCallback(async (orderId) => {
+  if (!subscription) return;
+  
+  // Get next available date
+  const getNextAvailableDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  };
+
+  const defaultDate = getNextAvailableDate();
+  const preferredTime = subscription.preferred_delivery_time || '12:00:00';
+  const [hours, minutes] = preferredTime.split(':');
+  
+  try {
+    const deliveryDateTime = new Date(defaultDate);
+    deliveryDateTime.setHours(parseInt(hours), parseInt(minutes), 0);
+
+    await activateOrder({
+      orderId: orderId,
+      deliveryTime: `${hours}:${minutes}`,
+      deliveryDate: deliveryDateTime.toISOString()
+    });
+
+    // Refetch subscription and orders
+    await Promise.all([
+      refetchOrders(),
+      refreshSubscription ? refreshSubscription() : Promise.resolve()
+    ]);
+
+    toast({
+      title: t('premium.success'),
+      description: t('premium.mealActivatedSuccessfully'),
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+  } catch (error) {
+    console.error('Error activating order:', error);
+    toast({
+      title: t('premium.error'),
+      description: t('premium.failedToActivateMeal'),
+      status: 'error',
+      duration: 5000,
+      isClosable: true,
+    });
+  }
+}, [subscription, activateOrder, refetchOrders, refreshSubscription, toast, t]);
 
   // Enhanced Profile update handler
   const handleSubmit = async () => {
@@ -360,7 +413,7 @@ export const UserDashboard = () => {
     setHasUnsavedChanges(false);
     closeModal('profile');
   };
-
+  
   // Transform user data for display
   const transformUserData = () => {
   return {
@@ -517,6 +570,9 @@ export const UserDashboard = () => {
               t={t}
               navigate={navigate}
               refetchOrders={refetchOrders}
+              onActivateOrder={handleOrderActivation}
+              isActivatingOrder={isActivatingOrder}
+              refreshSubscription={refreshSubscription}
             />
           </TabPanel>
 

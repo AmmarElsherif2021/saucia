@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react'; 
 import { EditIcon, StarIcon } from '@chakra-ui/icons';
 import { useTranslation } from 'react-i18next';
 import {
@@ -72,6 +72,7 @@ import { useI18nContext } from '../../Contexts/I18nContext';
 import { useUserAllergies } from '../../Hooks/userHooks';
 import { useUserDietaryPreferences } from '../../Hooks/useUserDietaryPreferences';
 import { AddIcon, DeleteIcon } from '@chakra-ui/icons';
+
 // Options getters AddIcon
 const getGenderOptions = [
     { value: 'male', label: 'Male' },
@@ -633,37 +634,28 @@ export const OrderHistorySection = ({ orders, isLoading, t, navigate }) => {
 };
 
 // Subscription Section
-export const SubscriptionSection = ({ subscription, orders, isLoading, t, navigate, refetchOrders }) => {
+export const SubscriptionSection = ({ 
+  subscription, 
+  orders, 
+  isLoading, 
+  t, 
+  navigate, 
+  refetchOrders,
+  onActivateOrder,
+  isActivatingOrder,
+  refreshSubscription
+}) => {
   return (
-    <VStack spacing={6} align="stretch">
-      <DashboardSection title={t('profile.currentSubscription')}>
-        <SubscriptionDetails 
-          subscription={subscription} 
-          isLoading={isLoading} 
+    <DashboardSection title={t('profile.currentSubscription')}>
+        <SubscriptionDetails
+          subscription={subscription}
+          orders={orders}
+          isLoading={isLoading}
+          onActivateOrder={onActivateOrder}
+          isActivatingOrder={isActivatingOrder}
+          refreshSubscription={refreshSubscription}
         />
-      </DashboardSection>
-
-      {subscription && (
-        <DashboardSection title={t('profile.subscriptionManagement')}>
-          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-            <Button 
-              colorScheme="blue" 
-              variant="outline"
-              onClick={() => navigate(`/subscriptions/${subscription.id}`)}
-            >
-              {t('profile.viewSubscriptionDetails')}
-            </Button>
-            <Button 
-              colorScheme="orange" 
-              variant="outline"
-              onClick={() => navigate(`/subscriptions/${subscription.id}/meals`)}
-            >
-              {t('profile.manageMealSelection')}
-            </Button>
-          </SimpleGrid>
-        </DashboardSection>
-      )}
-    </VStack>
+    </DashboardSection>
   );
 };
 

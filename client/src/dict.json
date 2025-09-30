@@ -467,6 +467,9 @@
         "clearAll": "Clear All"
       },
       "profile": {
+        "currentSubscription":"current subscription",
+        "enabled":"Enabled",
+        "preferredDeliveryTime":"Preferred Delivery Time",
         "enter":"Enter",
         "termsAgreement": "Terms of Use",
         "signInToContinue": "Sign in to continue",
@@ -589,6 +592,9 @@
         "timezone": "Timezone"
       },
       "premium": {
+      "recentDeliveries":"Recent deliveries",
+      "upcomingMeals":"Upcoming Meals",
+      "noPendingOrders":"No pending orders",
       "orders":"Orders",
       "activeOrders":"Active Orders",
       "activateThisOrder":"Activate this order",
@@ -1061,7 +1067,22 @@
         "minimumOrder": "Minimum Order Required"
       },
       "checkout": {
-            "reviewAndConfirm": "Review and Confirm",
+              "deliveryRestrictionTitle": "Pickup Only",
+              "deliveryRestrictionMessage": "Currently we only offer pickup from our restaurant locations. Delivery service will be available soon.",
+              "selectRestaurantLocation": "Select restaurant location",
+              "cashAtRestaurant": "Cash at Restaurant",
+              "cashPaymentTitle": "Cash Payment at Restaurant",
+              "cashPaymentMessage": "Your subscription will be activated when you pay in cash at the restaurant during pickup.",
+              "paymentInstructions": "Payment Instructions:",
+              "cashInstructions": "1. Complete your subscription order online\n2. Visit the selected restaurant location\n3. Pay in cash to activate your subscription\n4. Start enjoying your meals!",
+              "comingSoonTitle": "{{method}} Coming Soon",
+              "comingSoonMessage": "This payment method will be available soon. Please use cash payment at the restaurant.",
+              "unavailable": "{{method}} Unavailable",
+              "selectPaymentMethodFirst": "Please select a payment method to continue",
+              "paymentMethodInfo": "Currently only cash payments at the restaurant are available. Online payments coming soon.",
+              "subscriptionPending": "Subscription Pending Payment",
+              "pendingPaymentMessage": "Your subscription is pending payment. Please visit the restaurant to pay in cash and activate your subscription.",
+              "reviewAndConfirm": "Review and Confirm",
             "completeYourOrder":"Complete Your Order",
             "deliverySchedule": "Delivery Schedule",
             "mealNotDesigned":"Meal not designed",
@@ -1648,7 +1669,10 @@
       },
      
     "profile": {
-      "enter":"ادخل",
+        "currentSubscription":"خطة الاشتراك الحالي",
+        "enabled":"مفعل",
+        "preferredDeliveryTime":"وقت التوصيل المفضل",
+        "enter":"ادخل",
         "termsAgreement": "شروط الاستخدام",
         "signInToContinue": "سجل الدخول للمتابعة",
         "authenticationError": "خطأ في المصادقة",
@@ -1770,6 +1794,11 @@
         "timezone": "المنطقة الزمنية"
       },
       "premium": {
+        "upcomingMeals":"الوجبات القادمة",
+        "recentDeliveries":"سجل الوجبات المستلمة",
+        "planStatus":"حالة الاشتراك",
+      "noPendingOrders":"لا توجد طلبات قيد الانتظار",
+      "failedToUpdatePlanStatus":"فشل تحديث خطة الاشتراك",
       "orders":"الطلبات",
       "activeOrders":"الطلبات النشطة",
       "activateThisOrder":"فعل هذا الطلب",

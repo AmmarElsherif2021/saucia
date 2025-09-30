@@ -1,5 +1,6 @@
+
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, delay } from 'framer-motion';
 import { Box, Image, useBreakpointValue, Spinner, Text, Link } from '@chakra-ui/react';
 
 // Import SVG shape components shadow
@@ -42,8 +43,24 @@ const TRANSLATIONS = {
 
 // Responsive scaling ratios - scaled by 1.5
 const SCALE_RATIOS = {
-  tablet: 0.90, // 0.60 * 1.5
-  mobile: 0.375 // 0.25 * 1.5
+  tablet: 0.90,
+  mobile: 0.375
+};
+
+// Centralized motion configuration - faster and steeper
+const MOTION_CONFIG = {
+  SETTLING: {
+    DURATION: 2800,
+    STAGGER: 0.2,
+    EASE: [0.8, 0, 0.2, 1]
+  },
+  FLOATING: {
+    Y_DURATION: 3.2,
+    X_DURATION: 5.5,
+    Y_AMPLITUDE: 12,
+    X_AMPLITUDE: 6,
+    STAGGER: 0.08
+  }
 };
 
 // Helper function to scale dimensions
@@ -63,70 +80,70 @@ const scaleStyle = (style, ratio) => {
   return scaled;
 };
 
-// Updated shape configuration with composed SVGs - all dimensions scaled by 1.5
+// Updated shape configuration with composed SVGs
 const SHAPE_CONFIG = {
   top_left_semi_circle: { 
     component: top_left_semi_circle, 
-    finalStyle: { left: '22.5px', top: '15px', width: '192px', height: '192px' }, // 15*1.5, 10*1.5, 128*1.5
-    initialStyle: { left: '-192px', top: '-75px', width: '192px', height: '192px' }, // -128*1.5, -50*1.5, 128*1.5
+    finalStyle: { left: '18px', top: '20px', width: '154px', height: '154px' },
+    initialStyle: {  left: '18px', top: '20px', width: '154px', height: '154px' },
     path: '/menu',
     section: 'make your own salad',
     label: 'Make Your Salad'
   },
   circle: { 
     component: circle, 
-    finalStyle: { left: '232.5px', top: '108px', width: '115.5px', height: '115.5px' }, // 155*1.5, 72*1.5, 77*1.5
-    initialStyle: { left: '232.5px', top: '90px', width: '7.5px', height: '7.5px' }, // 155*1.5, 60*1.5, 5*1.5
+    finalStyle: { left: '186px', top: '86px', width: '92px', height: '92px' },
+    initialStyle: { left: '186px', top: '86px', width: '6px', height: '6px' },
     path: '/menu',
     section: 'Soups',
     label: 'Soups'
   },
   small_circle: { 
     component: small_circle, 
-    finalStyle: { left: '210px', top: '22.5px', width: '64.5px', height: '64.5px' }, // 140*1.5, 15*1.5, 43*1.5
-    initialStyle: { left: '202.5px', top: '-72px', width: '72px', height: '72px' }, // 135*1.5, -48*1.5, 48*1.5
+    finalStyle: { left: '168px', top: '25px', width: '52px', height: '52px' },
+    initialStyle: { left: '168px', top: '25px', width: '58px', height: '58px' },
   },
   extruded_circle: { 
     component: extruded_circle, 
-    finalStyle: { left: '357px', top: '3px', width: '114px', height: '315px' }, // 238*1.5, 2*1.5, 76*1.5, 210*1.5
-    initialStyle: { left: '370.5px', top: '3px', width: '7.5px', height: '7.5px' }, // 247*1.5, 2*1.5, 5*1.5
+    finalStyle: { left: '286px', top: '15px', width: '91px', height: '252px' },
+    initialStyle: { left: '286px', top: '15px', width: '6px', height: '6px' },
     path: '/menu',
     section: 'Our signature salad',
     label: 'Signature\n Salads'
   },
   right_bottom_quarter: { 
     component: right_bottom_quarter, 
-    finalStyle: { left: '18px', top: '315px', width: '195px', height: '195px' }, // 12*1.5, 210*1.5, 130*1.5
-    initialStyle: { left: '-288px', top: '240px', width: '42px', height: '42px' }, // -192*1.5, 160*1.5, 28*1.5
+    finalStyle: { left: '14px', top: '252px', width: '156px', height: '156px' },
+    initialStyle: { left: '14px', top: '252px', width: '34px', height: '34px' },
     path: '/menu',
     section: 'Make Your Own Fruit Salad',
     label: 'Make \nYour Fruit Salad'
   },
   octa_star: { 
     component: octa_star, 
-    finalStyle: { left: '232.5px', top: '255px', width: '96px', height: '96px' }, // 155*1.5, 170*1.5, 64*1.5
-    initialStyle: { left: '1200px', top: '300px', width: '96px', height: '96px' }, // 800*1.5, 200*1.5, 64*1.5
+    finalStyle: { left: '186px', top: '204px', width: '77px', height: '77px' },
+    initialStyle: { left: '186px', top: '204px', width: '77px', height: '77px' },
   },
   teal_semi_circle: { 
     component: teal_semi_circle, 
-    finalStyle: { left: '324px', top: '360px', width: '150px', height: '150px' }, // 216*1.5, 240*1.5, 100*1.5
-    initialStyle: { left: '1050px', top: '600px', width: '192px', height: '96px' }, // 700*1.5, 400*1.5, 128*1.5, 64*1.5
+    finalStyle: { left: '259px', top: '288px', width: '120px', height: '120px' },
+    initialStyle: { left: '259px', top: '288px', width: '154px', height: '77px' },
     path: '/menu',
     section: 'Juices',
     label: 'Juices'
   },
   circle2: { 
     component: circle2, 
-    finalStyle: { left: '222px', top: '402px', width: '97.5px', height: '97.5px' }, // 148*1.5, 268*1.5, 65*1.5
-    initialStyle: { left: '450px', top: '150px', width: '120px', height: '120px' }, // 300*1.5, 100*1.5, 80*1.5
+    finalStyle: { left: '178px', top: '322px', width: '78px', height: '78px' },
+    initialStyle: { left: '360px', top: '120px', width: '96px', height: '96px' },
     path: '/menu',
     section: 'Desserts',
     label: 'Desserts'
   },
   small_triangle: { 
     component: small_triangle, 
-    finalStyle: { left: '37.5px', top: '225px', width: '72px', height: '72px' }, // 25*1.5, 150*1.5, 48*1.5
-    initialStyle: { left: '225px', top: '450px', width: '72px', height: '72px' }, // 150*1.5, 300*1.5, 48*1.5
+    finalStyle: { left: '30px', top: '180px', width: '58px', height: '58px' },
+    initialStyle: { left: '180px', top: '360px', width: '58px', height: '58px' },
   }
 };
 
@@ -241,7 +258,7 @@ const useAssetPreloader = () => {
             if (isMounted) {
               setIsLoaded(true);
             }
-          }, 200);
+          }, 100);
         }
       } catch (error) {
         if (isMounted) {
@@ -251,7 +268,7 @@ const useAssetPreloader = () => {
             if (isMounted) {
               setIsLoaded(true);
             }
-          }, 1000);
+          }, 500);
         }
       }
     };
@@ -282,12 +299,12 @@ const AssetLoader = ({ progress, error, currentLanguage }) => (
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.8 }}
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.8 }}
       >
         <Spinner
           thickness="4px"
@@ -309,8 +326,8 @@ const AssetLoader = ({ progress, error, currentLanguage }) => (
       </Text>
       
       <Box
-        width="375px" // 250 * 1.5
-        height="9px" // 6 * 1.5
+        width="375px"
+        height="9px"
         bg="gray.200"
         borderRadius="full"
         overflow="hidden"
@@ -344,7 +361,7 @@ const AssetLoader = ({ progress, error, currentLanguage }) => (
           fontSize="xs"
           color="red.500"
           textAlign="center"
-          maxW="450px" // 300 * 1.5
+          maxW="450px"
         >
           {TRANSLATIONS[currentLanguage]['Some assets failed to load but continuing...']}
         </Text>
@@ -356,8 +373,8 @@ const AssetLoader = ({ progress, error, currentLanguage }) => (
 // Custom hook for smart touch handling
 const useTouchHandler = (onTap) => {
   const touchStartRef = useRef(null);
-  const touchMoveThreshold = 15; // 10 * 1.5
-  const touchTimeThreshold = 300; // milliseconds
+  const touchMoveThreshold = 15;
+  const touchTimeThreshold = 300;
 
   const handleTouchStart = useCallback((e) => {
     const touch = e.touches[0];
@@ -396,7 +413,7 @@ const useTouchHandler = (onTap) => {
         ...e,
         clientX: e.changedTouches[0].clientX,
         clientY: e.changedTouches[0].clientY,
-        touches: e.changedTouches // Pass changedTouches as touches for spark positioning
+        touches: e.changedTouches
       };
       
       onTap(syntheticEvent);
@@ -436,10 +453,10 @@ const FloatingShapesLayout = () => {
   const isArabic = currentLanguage === 'ar';
   const scrollContainerRef = useRef(null)
   const containerSize = useBreakpointValue({ 
-    base: '97vw', 
-    sm: '75vw', // 50 * 1.5
-    md: '52.5vw', // 35 * 1.5
-    lg: '45vw' // 30 * 1.5
+    base: '80vw', 
+    sm: '62vw',
+    md: '48vw',
+    lg: '45vw'
   }) || '80vw';
   const containerRef = useRef(null);
   const { createSpark } = useClickSpark();
@@ -476,8 +493,9 @@ const FloatingShapesLayout = () => {
       scale: 1,
       rotate: 0,
       transition: {
-        duration: 7.5 + (index * 0.2),
-        ease: [0.25, 0.8, 0.25, 1],
+        delay:0,
+        duration: MOTION_CONFIG.SETTLING.DURATION + (index * MOTION_CONFIG.SETTLING.STAGGER),
+        ease: MOTION_CONFIG.SETTLING.EASE,
       }
     },
     floating: {
@@ -485,21 +503,20 @@ const FloatingShapesLayout = () => {
       opacity: 1,
       scale: 1,
       rotate: 0,
-      filter: 'blur(0px)',
-      y: [0, -12 - (index % 3) * 6, 0], // -8 * 1.5, (index % 3) * 4 * 1.5
-      x: [0, (index % 2 === 0 ? 6 : -6), 0], // 4 * 1.5, -4 * 1.5
+      y: [0, -MOTION_CONFIG.FLOATING.Y_AMPLITUDE - (index % 3) * 4, 0],
+      x: [0, (index % 2 === 0 ? MOTION_CONFIG.FLOATING.X_AMPLITUDE : -MOTION_CONFIG.FLOATING.X_AMPLITUDE), 0],
       transition: {
         y: {
-          duration: 2 + (index % 3),
+          duration: MOTION_CONFIG.FLOATING.Y_DURATION + (index % 3) * 1.2,
           repeat: Infinity,
           ease: "easeInOut",
-          delay: index * 0.1
+          delay: index * MOTION_CONFIG.FLOATING.STAGGER
         },
         x: {
-          duration: 3 + (index % 2),
+          duration: MOTION_CONFIG.FLOATING.X_DURATION + (index % 2) * 1.2,
           repeat: Infinity,
           ease: "easeInOut",
-          delay: index * 0.1
+          delay: index * MOTION_CONFIG.FLOATING.STAGGER
         }
       }
     }
@@ -519,10 +536,10 @@ const FloatingShapesLayout = () => {
 
     let timeouts = [];
 
-    // Phase transitions with proper cleanup
+    // Phase transitions with minimal delays
     const timer1 = setTimeout(() => {
       setAnimationPhase('settling');
-    }, 100);
+    }, 50);
 
     const timer2 = setTimeout(() => {
       setAnimationPhase('floating');
@@ -533,7 +550,7 @@ const FloatingShapesLayout = () => {
         });
         return updated;
       });
-    }, 500);
+    }, MOTION_CONFIG.SETTLING.DURATION + 200);
 
     timeouts.push(timer1, timer2);
 
@@ -553,7 +570,7 @@ const FloatingShapesLayout = () => {
         
         Object.keys(prev).forEach(key => {
           const currentProgress = prev[key].progress;
-          const newProgress = Math.min(currentProgress + Math.random() * 3 + 1, 100);
+          const newProgress = Math.min(currentProgress + Math.random() * 5 + 2, 100);
           
           updated[key] = {
             ...prev[key],
@@ -566,14 +583,14 @@ const FloatingShapesLayout = () => {
         
         return updated;
       });
-    }, 120);
+    }, 80);
 
     return () => clearInterval(interval);
   }, [animationPhase]);
 
   // Function to get responsive font size based on screen size
   const getResponsiveFontSize = useCallback(() => {
-    return "18px"; // 12 * 1.5
+    return "18px";
   }, []);
 
   // Memoized shape component to prevent unnecessary re-renders
@@ -631,19 +648,12 @@ const FloatingShapesLayout = () => {
           loading="eager"
           draggable={false}
           m={0}
-          // animate={animationPhase === 'floating' ? {
-          //   filter: [
-          //     'drop-shadow(0 4px 8px rgba(0,0,0,0.1))',
-          //     'drop-shadow(0 8px 16px rgba(0,0,0,0.2))',
-          //     'drop-shadow(0 4px 8px rgba(0,0,0,0.1))'
-          //   ]
-          // } : {}}
           transition={{ duration: 3, repeat: Infinity }}
           onError={(e) => {
             console.warn(`Shape image failed to load: ${shapeName}`, e);
           }}
           style={{
-            pointerEvents: 'none' // Prevent image from interfering with touch events
+            pointerEvents: 'none'
           }}
         />
         
@@ -659,17 +669,17 @@ const FloatingShapesLayout = () => {
             display="flex"
             alignItems="center"
             justifyContent="center"
-            initial={{ opacity: 0, y: -15 }} // -10 * 1.5
+            initial={{ opacity: 0, y: -15 }}
             animate={{ 
               opacity: animationPhase === 'floating' ? 1 : 0,
-              y: animationPhase === 'floating' ? 0 : -15 // -10 * 1.5
+              y: animationPhase === 'floating' ? 0 : -15
             }}
             transition={{ 
-              duration: 0.5, 
-              delay: animationPhase === 'floating' ? 1 : 0
+              duration: 0.3, 
+              delay: animationPhase === 'floating' ? 0.5 : 0
             }}
             style={{
-              pointerEvents: 'none' // Prevent label from interfering with touch events
+              pointerEvents: 'none'
             }}
           >
             <Box
@@ -678,11 +688,11 @@ const FloatingShapesLayout = () => {
               px={0}
               py={0}
               borderRadius="md"
-              fontSize='0.75em' // 0.5 * 1.5
+              fontSize='0.75em'
               fontWeight="900"
               textAlign="center"
               whiteSpace="nowrap"
-              backdropFilter="blur(6px)" // 4 * 1.5
+              backdropFilter="blur(6px)"
               w={'65%'}
               h={"fit-content"}
               lineHeight="1.5"
@@ -713,8 +723,8 @@ const FloatingShapesLayout = () => {
         as={motion.div}
         key={`settling-${i}`}
         position="absolute"
-        width="6px" // 4 * 1.5
-        height="6px" // 4 * 1.5
+        width="6px"
+        height="6px"
         bg="brand.400"
         borderRadius="full"
         initial={{
@@ -729,8 +739,8 @@ const FloatingShapesLayout = () => {
           scale: [0, 1, 0]
         }}
         transition={{
-          duration: 3,
-          delay: i * 0.1,
+          duration: 6,
+          delay: i * 0.08,
           ease: "easeOut"
         }}
       />
@@ -745,25 +755,25 @@ const FloatingShapesLayout = () => {
         as={motion.div}
         key={`floating-${i}`}
         position="absolute"
-        width="6px" // 4 * 1.5
-        height="6px" // 4 * 1.5
+        width="6px"
+        height="6px"
         bg="indigo.300"
         borderRadius="full"
         opacity={0.4}
         animate={{
-          x: [0, 225 + i * 30, 0], // 150 * 1.5, i * 20 * 1.5
-          y: [0, -150 + i * 22.5, 0], // -100 * 1.5, i * 15 * 1.5
+          x: [0, 225 + i * 30, 0],
+          y: [0, -150 + i * 22.5, 0],
           opacity: [0.2, 0.6, 0.2],
           scale: [0.5, 1, 0.5]
         }}
         transition={{
-          duration: 12 + i * 2,
+          duration: 9 + i * 1.5,
           repeat: Infinity,
-          delay: i * 0.8,
+          delay: i * 0.5,
           ease: "easeInOut"
         }}
-        left={`${75 + i * 135}px`} // 50 * 1.5, i * 90 * 1.5
-        top={`${300 + i * 90}px`} // 200 * 1.5, i * 60 * 1.5
+        left={`${75 + i * 135}px`}
+        top={`${300 + i * 90}px`}
       />
     ));
   }, [animationPhase]);
@@ -779,20 +789,18 @@ const FloatingShapesLayout = () => {
         ref={containerRef}
         as={motion.div}
         width={containerSize}
-        minW={'510px'} // 340 * 1.5
-        height="595px" // 390 * 1.5
+        minW={'400px'}
+        height="460px"
         position="relative"
         overflow="hidden"
-        top={{base: 0, md: 2,lg:12}} // 32 * 1.5
-        pt={0} 
-        mt={0}
-        px={6} // 4 * 1.5
-        mx={'auto'}
+        top={{base: 0, md: 4,lg:12}}
+        pt={8} 
+        mt={1}
+        px={0}
+        mx={0}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        //bg={'orange.500'}
-        //border={'3px solid #114589ff'} // 2 * 1.5
+        transition={{ duration: 8 }}
       >
         {/* Animated background */}
         <Box
@@ -803,7 +811,7 @@ const FloatingShapesLayout = () => {
           animate={{ 
             backgroundPosition: animationPhase === 'floating' ? ['0% 0%', '100% 100%'] : '0% 0%'
           }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
         />
 
         {/* Render all shapes */}

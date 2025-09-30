@@ -1,10 +1,12 @@
 // src/Hooks/useOrders.js
 import { useState, useCallback } from 'react';
 import { ordersAPI } from '../API/orderAPI';
+import { userAPI } from '../API/userAPI';
 
 export function useOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [itemsLoading,setItemsLoading]=useState(false)
   const [error, setError] = useState(null);
 
   // User order operations
@@ -24,6 +26,24 @@ export function useOrders() {
     }
   }, []);
 
+  // Get order items 
+  const fetchOrderItems= useCallback(
+    async (orderId)=>{
+      setItemsLoading(true);
+      setError(null);
+      try{
+        const data= await userAPI.getOrderItems(orderId);
+        return data
+      }catch(err) {
+      console.error('Error fetching user orders:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setItemsLoading(false);
+    }
+    },[]
+  )
+
   const fetchOrderById = useCallback(async (orderId) => {
     setLoading(true);
     setError(null);
@@ -38,6 +58,7 @@ export function useOrders() {
       setLoading(false);
     }
   }, []);
+
 
   const createOrder = useCallback(async (orderData) => {
     setLoading(true);
@@ -413,6 +434,7 @@ export function useOrders() {
     // State
     orders,
     loading,
+    itemsLoading,
     error,
     
     // User operations
@@ -423,6 +445,7 @@ export function useOrders() {
     cancelOrder,
     trackOrder,
     reorderItems,
+    fetchOrderItems,
     
     // Payment operations
     processPayment,

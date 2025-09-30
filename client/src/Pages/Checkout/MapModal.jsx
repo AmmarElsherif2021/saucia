@@ -1,3 +1,5 @@
+// Updated to restrict to restaurant locations only
+import { useEffect, useCallback, useState } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -12,147 +14,68 @@ import {
   Box,
   Button,
   useToast,
-  Input,
-  FormControl,
-  FormLabel,
   Alert,
   AlertIcon,
   Spinner,
+  SimpleGrid,
+  Card,
+  CardBody,
 } from '@chakra-ui/react'
-import { useEffect, useCallback, useState } from 'react'
 import MapBox from '../../Components/Map/MapBox'
-import { useUserAddresses } from '../../Hooks/userHooks'
+import { useRestaurantAddresses } from '../../Hooks/userHooks' 
 
-const MapModal = ({ isOpen, onClose, onSelectLocation }) => {
+
+const MapModal = ({ isOpen, onClose, onSelectLocation, restaurantAddresses }) => {
   const [selectedLocation, setSelectedLocation] = useState(null)
-  const [addressDetails, setAddressDetails] = useState({
-    label: '',
-    address_line1: '',
-    address_line2: '',
-    city: '',
-    state: '',
-    postal_code: '',
-    country: 'BH', // Default to Bahrain
-    delivery_instructions: ''
-  })
-  const [isGeocodingAddress, setIsGeocodingAddress] = useState(false)
-  const [isSavingAddress, setIsSavingAddress] = useState(false)
-  
-  const { addAddress } = useUserAddresses()
   const toast = useToast()
 
-  // Function to get address from coordinates using Nominatim API
-  const getAddressFromCoordinates = useCallback(async (coordinates) => {
-    const [lat, lng] = coordinates
-    
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`
-      )
-      
-      if (!response.ok) throw new Error('Failed to fetch address')
-      
-      const data = await response.json()
-      
-      // Extract structured address components
-      const address = data.address || {}
-      const addressComponents = {
-        display_name: data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-        address_line1: [
-          address.house_number,
-          address.road || address.street
-        ].filter(Boolean).join(' ') || '',
-        address_line2: [
-          address.neighbourhood,
-          address.suburb,
-          address.district
-        ].filter(Boolean).join(', ') || '',
-        city: address.city || address.town || address.village || '',
-        state: address.state || address.governorate || '',
-        postal_code: address.postcode || '',
-        country: address.country_code?.toUpperCase() || 'BH'
-      }
-      
-      return addressComponents
-    } catch (error) {
-      console.error('Geocoding error:', error)
-      return {
-        display_name: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-        address_line1: '',
-        address_line2: '',
-        city: '',
-        state: '',
-        postal_code: '',
-        country: 'BH'
-      }
-    }
-  }, [])
+  // Handle location selection from the list
+  const handleAddressSelect = useCallback((address) => {
+    setSelectedLocation(address)
+    toast({
+      title: 'Location Selected',
+      description: `Selected: ${address.label}`,
+      status: 'success',
+      duration: 2000,
+      isClosable: true,
+    })
+  }, [toast])
 
-  // Handle map click/selection
-  const handleMapLocationSelect = useCallback(async (locationData) => {
-    setIsGeocodingAddress(true)
+  // Handle map click (optional - you can disable this if you only want list selection)
+  const handleMapLocationSelect = useCallback((locationData) => {
+    // Find if the clicked location matches any restaurant address
+    const restaurantAddress = restaurantAddresses?.find(addr => 
+      addr.coordinates && 
+      Math.abs(addr.coordinates[0] - locationData.latlng.lat) < 0.01 &&
+      Math.abs(addr.coordinates[1] - locationData.latlng.lng) < 0.01
+    )
     
-    try {
-      let coordinates, addressInfo
-      
-      // Handle different location data formats
-      if (locationData.latlng) {
-        // From map click event
-        coordinates = [locationData.latlng.lat, locationData.latlng.lng]
-        addressInfo = await getAddressFromCoordinates(coordinates)
-      } else if (locationData.coordinates) {
-        // From existing location
-        coordinates = locationData.coordinates
-        addressInfo = locationData
-      } else {
-        throw new Error('Invalid location data')
-      }
-      
-      setSelectedLocation({
-        coordinates,
-        ...addressInfo
-      })
-      
-      // Update address details form
-      setAddressDetails(prev => ({
-        ...prev,
-        label: addressInfo.display_name ? `Location at ${addressInfo.city || 'Selected Area'}` : 'New Location',
-        address_line1: addressInfo.address_line1 || '',
-        address_line2: addressInfo.address_line2 || '',
-        city: addressInfo.city || '',
-        state: addressInfo.state || '',
-        postal_code: addressInfo.postal_code || '',
-        country: addressInfo.country || 'BH'
-      }))
-      
-    } catch (error) {
-      console.error('Error processing location:', error)
+    if (restaurantAddress) {
+      setSelectedLocation(restaurantAddress)
       toast({
-        title: 'Location Error',
-        description: 'Could not process the selected location',
-        status: 'error',
+        title: 'Location Selected',
+        description: `Selected: ${restaurantAddress.label}`,
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      })
+    } else {
+      toast({
+        title: 'Invalid Location',
+        description: 'Please select one of our restaurant locations from the list',
+        status: 'warning',
         duration: 3000,
         isClosable: true,
       })
-    } finally {
-      setIsGeocodingAddress(false)
     }
-  }, [getAddressFromCoordinates, toast])
+  }, [restaurantAddresses, toast])
 
-  // Handle form input changes
-  const handleInputChange = (field, value) => {
-    setAddressDetails(prev => ({
-      ...prev,
-      [field]: value
-    }))
-  }
-
-  // Handle confirming and saving the location
-  const handleConfirm = async () => {
-    if (!selectedLocation || !selectedLocation.coordinates) {
+  // Handle confirming the selected location
+  const handleConfirm = useCallback(() => {
+    if (!selectedLocation) {
       toast({
         title: 'No Location Selected',
-        description: 'Please select a location on the map first',
+        description: 'Please select a restaurant location first',
         status: 'warning',
         duration: 3000,
         isClosable: true,
@@ -160,81 +83,30 @@ const MapModal = ({ isOpen, onClose, onSelectLocation }) => {
       return
     }
 
-    setIsSavingAddress(true)
-    
-    try {
-      // Prepare address data for saving
-      const addressData = {
-        ...addressDetails,
-        location: `POINT(${selectedLocation.coordinates[1]} ${selectedLocation.coordinates[0]})`, // PostGIS format (lng, lat)
-        is_default: false // User can set as default later
-      }
-      
-      // Save to database using the hook
-      const savedAddress = await addAddress(addressData)
-      
-      // Call parent callback with the saved address
-      if (onSelectLocation) {
-        onSelectLocation({
-          ...savedAddress,
-          coordinates: selectedLocation.coordinates,
-          display_name: selectedLocation.display_name
-        })
-      }
-      
-      toast({
-        title: 'Address Saved',
-        description: 'Your delivery location has been saved successfully',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      })
-      
-      // Reset form and close modal
-      setSelectedLocation(null)
-      setAddressDetails({
-        label: '',
-        address_line1: '',
-        address_line2: '',
-        city: '',
-        state: '',
-        postal_code: '',
-        country: 'BH',
-        delivery_instructions: ''
-      })
-      onClose()
-      
-    } catch (error) {
-      console.error('Error saving address:', error)
-      toast({
-        title: 'Save Error',
-        description: 'Could not save the address. Please try again.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      })
-    } finally {
-      setIsSavingAddress(false)
+    // Call parent callback with the selected restaurant address
+    if (onSelectLocation) {
+      onSelectLocation(selectedLocation)
     }
-  }
+    
+    toast({
+      title: 'Location Saved',
+      description: 'Your pickup location has been set',
+      status: 'success',
+      duration: 2000,
+      isClosable: true,
+    })
+    
+    setSelectedLocation(null)
+    onClose()
+  }, [selectedLocation, onSelectLocation, onClose, toast])
 
-  // Reset form when modal is closed
+  // Reset when modal closes
   useEffect(() => {
     if (!isOpen) {
       setSelectedLocation(null)
-      setAddressDetails({
-        label: '',
-        address_line1: '',
-        address_line2: '',
-        city: '',
-        state: '',
-        postal_code: '',
-        country: 'BH',
-        delivery_instructions: ''
-      })
     }
   }, [isOpen])
- 
+
   return (
     <Modal
       isOpen={isOpen}
@@ -245,125 +117,89 @@ const MapModal = ({ isOpen, onClose, onSelectLocation }) => {
     >
       <ModalOverlay />
       <ModalContent maxW="90vw" mx={2} p={2}>
-        <ModalHeader>Select Delivery Location</ModalHeader>
+        <ModalHeader>Select Pickup Location</ModalHeader>
         <ModalCloseButton />
         <ModalBody pb={4}>
           <VStack spacing={4} align="stretch">
-            {/* Map Component */}
-            <Box>
-              <MapBox onSelectLocation={handleMapLocationSelect} />
-            </Box>
+            {/* Info Alert */}
+            <Alert status="info" borderRadius="md">
+              <AlertIcon />
+              <Box>
+                <Text fontWeight="500">Pickup Only</Text>
+                <Text fontSize="sm">
+                  Please select one of our restaurant locations for pickup. Delivery service is coming soon.
+                </Text>
+              </Box>
+            </Alert>
 
-            {/* Loading indicator for geocoding */}
-            {isGeocodingAddress && (
-              <Alert status="info">
-                <AlertIcon />
-                <HStack>
-                  <Spinner size="sm" />
-                  <Text>Getting address information...</Text>
-                </HStack>
-              </Alert>
-            )}
+            {/* Map Component - Optional */}
+            <Box height="300px" borderRadius="md" overflow="hidden">
+              <MapBox 
+                onSelectLocation={handleMapLocationSelect}
+                predefinedLocations={restaurantAddresses}
+              />
+            </Box>
 
             {/* Selected Location Display */}
             {selectedLocation && (
-              <Box p={4} bg="blue.50" borderRadius="md">
-                <Text fontWeight="bold" mb={2}>Selected Location:</Text>
-                <Text fontSize="sm" color="gray.600">{selectedLocation.display_name}</Text>
-                <Text fontSize="xs" color="gray.500">
-                  Coordinates: {selectedLocation.coordinates[0].toFixed(6)}, {selectedLocation.coordinates[1].toFixed(6)}
-                </Text>
-              </Box>
+              <Card bg="blue.50" borderColor="blue.200">
+                <CardBody p={4}>
+                  <Text fontWeight="bold" mb={2}>Selected Location:</Text>
+                  <Text fontSize="sm" color="gray.700">
+                    {selectedLocation.label} - {selectedLocation.address_line1}
+                  </Text>
+                  <Text fontSize="xs" color="gray.600">
+                    {selectedLocation.city}
+                  </Text>
+                </CardBody>
+              </Card>
             )}
 
-            {/* Address Details Form */}
-            {selectedLocation && (
-              <VStack spacing={3} align="stretch">
-                <Text fontWeight="bold">Address Details:</Text>
-                
-                <FormControl>
-                  <FormLabel fontSize="sm">Label (e.g., "Home", "Office")</FormLabel>
-                  <Input
-                    value={addressDetails.label}
-                    onChange={(e) => handleInputChange('label', e.target.value)}
-                    placeholder="Home, Office, etc."
-                    size="sm"
-                  />
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel fontSize="sm">Address Line 1</FormLabel>
-                  <Input
-                    value={addressDetails.address_line1}
-                    onChange={(e) => handleInputChange('address_line1', e.target.value)}
-                    placeholder="Street address, building number"
-                    size="sm"
-                  />
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel fontSize="sm">Address Line 2</FormLabel>
-                  <Input
-                    value={addressDetails.address_line2}
-                    onChange={(e) => handleInputChange('address_line2', e.target.value)}
-                    placeholder="Apartment, suite, floor (optional)"
-                    size="sm"
-                  />
-                </FormControl>
-
-                <HStack>
-                  <FormControl>
-                    <FormLabel fontSize="sm">City</FormLabel>
-                    <Input
-                      value={addressDetails.city}
-                      onChange={(e) => handleInputChange('city', e.target.value)}
-                      placeholder="City"
-                      size="sm"
-                    />
-                  </FormControl>
-                  
-                  <FormControl>
-                    <FormLabel fontSize="sm">State/Governorate</FormLabel>
-                    <Input
-                      value={addressDetails.state}
-                      onChange={(e) => handleInputChange('state', e.target.value)}
-                      placeholder="State"
-                      size="sm"
-                    />
-                  </FormControl>
-                </HStack>
-
-                <FormControl>
-                  <FormLabel fontSize="sm">Delivery Instructions</FormLabel>
-                  <Input
-                    value={addressDetails.delivery_instructions}
-                    onChange={(e) => handleInputChange('delivery_instructions', e.target.value)}
-                    placeholder="Special delivery instructions (optional)"
-                    size="sm"
-                  />
-                </FormControl>
-              </VStack>
-            )}
+            {/* Restaurant Locations List */}
+            <Box>
+              <Text fontWeight="bold" mb={3}>Our Restaurant Locations:</Text>
+              <SimpleGrid columns={1} spacing={3} maxH="300px" overflowY="auto">
+                {restaurantAddresses?.map((address) => (
+                  <Card 
+                    key={address.id}
+                    cursor="pointer"
+                    border="2px solid"
+                    borderColor={selectedLocation?.id === address.id ? 'blue.500' : 'gray.200'}
+                    onClick={() => handleAddressSelect(address)}
+                    _hover={{ borderColor: 'blue.300' }}
+                  >
+                    <CardBody p={4}>
+                      <Text fontWeight="600" fontSize="md">{address.label}</Text>
+                      <Text fontSize="sm" color="gray.600" mt={1}>
+                        {address.address_line1}
+                      </Text>
+                      <Text fontSize="sm" color="gray.500">
+                        {address.city}
+                      </Text>
+                      {address.address_line2 && (
+                        <Text fontSize="xs" color="gray.500">
+                          {address.address_line2}
+                        </Text>
+                      )}
+                    </CardBody>
+                  </Card>
+                ))}
+              </SimpleGrid>
+            </Box>
           </VStack>
         </ModalBody>
         
         <ModalFooter>
           <HStack spacing={3}>
-            <Button 
-              variant="ghost" 
-              onClick={onClose}
-              isDisabled={isSavingAddress}
-            >
+            <Button variant="ghost" onClick={onClose}>
               Cancel
             </Button>
             <Button 
               colorScheme="blue" 
               onClick={handleConfirm}
-              isDisabled={!selectedLocation || isSavingAddress}
-              isLoading={isSavingAddress}
-              loadingText="Saving..."
+              isDisabled={!selectedLocation}
             >
-              Save Location
+              Confirm Location
             </Button>
           </HStack>
         </ModalFooter>

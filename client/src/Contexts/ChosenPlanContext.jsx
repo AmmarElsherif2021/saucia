@@ -44,10 +44,13 @@ const calculateDeliveryDate = (startDate, mealIndex) => {
 };
 
 const calculateSubscriptionEndDate = (startDate, totalMeals) => {
-  if (!startDate || !totalMeals || totalMeals <= 0) return null;
-  
-  const endDate = calculateDeliveryDate(startDate, totalMeals - 1);
-  return endDate.toISOString().split('T')[0];
+  if (!startDate) return null;
+
+  const start = new Date(startDate);
+  const sixtyDaysLater = new Date(start);
+  sixtyDaysLater.setDate(start.getDate() + 60);
+
+  return sixtyDaysLater.toISOString().split('T')[0];
 };
 
 // NEW: Helper function to generate delivery schedule

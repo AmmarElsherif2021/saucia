@@ -24,6 +24,8 @@ import {
   ModalHeader,
   ModalCloseButton,
   HStack,
+  Collapse,
+  useDisclosure,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { useElements } from '../../Contexts/ElementsContext';
@@ -34,10 +36,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { JoinPremiumTeaser } from './JoinPremiumTeaser';
 import { useTranslation } from 'react-i18next';
 import { useI18nContext } from '../../Contexts/I18nContext';
-import { useUserSubscriptions } from '../../Hooks/useUserSubscriptions';
+import { useUserSubscriptions,useSubscriptionValidation } from '../../Hooks/useUserSubscriptions';
 import { CardPlanAvatar } from './PlanAvatar'
 import profileIcon from '../../assets/profile-b.svg'
-import { PlanCard } from './PlanCard';
 // Import plan images 
 import gainWeightPlanImage from '../../assets/premium/gainWeight.png'
 import keepWeightPlanImage from '../../assets/premium/keepWeight.png'
@@ -56,7 +57,306 @@ const planImages = {
   'Lose Weight': loseWeightPlanImage,
 }
 
-// Enhanced Login Modal Component
+// Icons
+const ChevronDownIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+    <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
+const ChevronUpIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+    <path d="M18 15L12 9L6 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
+// Enhanced PlanCard with integrated PlanDetails and subscription validation
+const EnhancedPlanCard = ({ 
+  plan,
+  isUserPlan = false, 
+  onSelect,
+  isArabic = false,
+  t,
+  canCreateNewSubscription = true, // NEW PROP
+  hasActiveSubscription = false // NEW PROP
+}) => {
+  const { isOpen: showDetails, onToggle: toggleDetails } = useDisclosure()
+  const cardBg = useColorModeValue('white', 'brand.800')
+  const borderColor = isUserPlan ? 'brand.500' : 'brand.400'
+  const badgeBg = useColorModeValue('brand.50', 'brand.900')
+  const badgeColor = useColorModeValue('brand.600', 'brand.200')
+  const disabledBg = useColorModeValue('gray.50', 'gray.700')
+  const disabledColor = useColorModeValue('gray.400', 'gray.500')
+
+  // Determine if this plan can be selected
+  const canSelectPlan = isUserPlan || canCreateNewSubscription
+
+  console.log('🔍 PlanCard State:', {
+    planId: plan.id,
+    planTitle: plan.title,
+    isUserPlan,
+    canCreateNewSubscription,
+    canSelectPlan,
+    hasActiveSubscription
+  })
+
+  return (
+    <Box
+      borderWidth={isUserPlan ? '3px' : '2px'}
+      borderRadius="xl"
+      borderColor={borderColor}
+      overflow="hidden"
+      bg={!canSelectPlan && !isUserPlan ? disabledBg : cardBg}
+      p={{ base: 4, md: 5 }}
+      transition="all 0.2s ease"
+      height="100%"
+      display="flex"
+      flexDirection="column"
+      _hover={{
+        transform: canSelectPlan ? 'translateY(-4px)' : 'none',
+        boxShadow: canSelectPlan ? 'xl' : 'none',
+      }}
+      opacity={!canSelectPlan && !isUserPlan ? 0.7 : 1}
+      position="relative"
+    >
+      {isUserPlan && (
+        <Badge 
+          colorScheme="brand" 
+          variant="outline"
+          position="absolute" 
+          top={3} 
+          right={isArabic ? 'auto' : 3}
+          left={isArabic ? 3 : 'auto'}
+          fontSize="xs"
+          py={1}
+          px={3}
+          borderRadius="full"
+          bg={badgeBg}
+          color={badgeColor}
+          fontWeight="semibold"
+        >
+          {t('premium.currentPlan')}
+        </Badge>
+      )}
+
+      {/* Active Subscription Warning Badge */}
+      {hasActiveSubscription && !isUserPlan && (
+        <Badge 
+          colorScheme="orange" 
+          variant="solid"
+          position="absolute" 
+          top={3} 
+          right={isArabic ? 'auto' : 3}
+          left={isArabic ? 3 : 'auto'}
+          fontSize="xs"
+          py={1}
+          px={3}
+          borderRadius="full"
+          fontWeight="semibold"
+        >
+          {t('premium.activeSubscriptionExists')}
+        </Badge>
+      )}
+
+      <VStack align="stretch" spacing={3} flex="1">
+        {/* Header */}
+        <Heading 
+          as="h3" 
+          size={{ base: 'sm', md: 'md' }}
+          noOfLines={2}
+          fontWeight="semibold"
+          color={!canSelectPlan && !isUserPlan ? disabledColor : "brand.700"}
+          textAlign={isArabic ? 'right' : 'left'}
+        >
+          {isArabic ? plan.title_arabic : plan.title}
+        </Heading>
+
+        {/* Nutrition Info - matching CurrentPlanBrief style */}
+        <Flex gap={2} flexWrap="wrap">
+          <Badge 
+            colorScheme="brand" 
+            variant="solid" 
+            fontSize="xs" 
+            px={2} 
+            py={1} 
+            borderRadius="md"
+            opacity={!canSelectPlan && !isUserPlan ? 0.6 : 1}
+          >
+            {t('premium.kcal')}: {plan.kcal || 0}
+          </Badge>
+          <Badge 
+            colorScheme="teal" 
+            variant="solid" 
+            fontSize="xs" 
+            px={2} 
+            py={1} 
+            borderRadius="md"
+            opacity={!canSelectPlan && !isUserPlan ? 0.6 : 1}
+          >
+            {t('premium.carbs')}: {plan.carb || 0}g
+          </Badge>
+          <Badge 
+            colorScheme="warning" 
+            variant="solid" 
+            fontSize="xs" 
+            px={2} 
+            py={1} 
+            borderRadius="md"
+            opacity={!canSelectPlan && !isUserPlan ? 0.6 : 1}
+          >
+            {t('premium.protein')}: {plan.protein || 0}g
+          </Badge>
+          <Badge 
+            colorScheme="orange" 
+            variant="solid" 
+            fontSize="xs" 
+            px={2} 
+            py={1} 
+            borderRadius="md"
+            opacity={!canSelectPlan && !isUserPlan ? 0.6 : 1}
+          >
+            {t('premium.fat')}: {plan.fat || 0}g
+          </Badge>
+        </Flex>
+
+        {/* Price */}
+        <Flex justify="space-between" align="center" mt="auto" pt={2}>
+          <Text 
+            fontSize="sm" 
+            color={!canSelectPlan && !isUserPlan ? disabledColor : "gray.600"} 
+            fontWeight="medium"
+          >
+            {t('premium.perMonth')}
+          </Text>
+          <Text 
+            fontSize="xl" 
+            fontWeight="bold" 
+            color={!canSelectPlan && !isUserPlan ? disabledColor : "brand.600"}
+          >
+            {plan.price} {t('currency.sar')}
+          </Text>
+        </Flex>
+
+        {/* Actions */}
+        <Flex direction="column" gap={2}>
+          <Button
+            size={{ base: 'sm', md: 'md' }}
+            colorScheme="brand"
+            variant={showDetails ? "solid" : "outline"}
+            onClick={toggleDetails}
+            rightIcon={showDetails ? <ChevronUpIcon /> : <ChevronDownIcon />}
+            width="full"
+            isDisabled={!canSelectPlan && !isUserPlan}
+          >
+            {showDetails ? t('premium.hideDetails') : t('premium.showDetails')}
+          </Button>
+          
+          <Button
+            size={{ base: 'sm', md: 'md' }}
+            colorScheme={isUserPlan ? 'gray' : 'brand'}
+            variant={isUserPlan ? 'outline' : 'solid'}
+            onClick={() => onSelect(plan)}
+            width="full"
+            fontWeight="semibold"
+            isDisabled={!canSelectPlan}
+            title={!canSelectPlan ? t('premium.cannotSelectNewPlan') : ''}
+          >
+            {isUserPlan ? t('premium.viewDetails') : t('premium.select')}
+          </Button>
+        </Flex>
+      </VStack>
+
+      {/* Expandable Details - matching CurrentPlanBrief collapse style */}
+      <Collapse in={showDetails} animateOpacity>
+        <Box 
+          mt={4} 
+          pt={4}
+          borderTop="2px"
+          borderColor="brand.300"
+        >
+          <VStack align="stretch" spacing={4}>
+            <Box>
+              <Text fontSize="xs" fontWeight="semibold" color="brand.700" mb={3}>
+                {t('checkout.subscriptionPeriod')}
+              </Text>
+              
+              {/* Short Term */}
+              <Box 
+                p={3} 
+                bg="secondary.100" 
+                borderRadius="lg"
+                mb={2}
+                border="2px"
+                borderColor="brand.400"
+              >
+                <Flex justify="space-between" align="center" mb={1}>
+                  <Text fontSize="sm" fontWeight="semibold" color="teal.700">
+                    {t('premium.shortTerm')}
+                  </Text>
+                  <Badge colorScheme="teal" fontSize="xs" px={2} py={1}>
+                    {plan.short_term_meals || 15} {t('premium.meals')}
+                  </Badge>
+                </Flex>
+                <Text fontSize="xs" color="brand.600">
+                  {t('premium.mealsOver')} {plan.short_term_meals} {t('premium.days')}
+                </Text>
+                <Text fontSize="xs" color="brand.600" fontWeight="bold">
+                  {t('premium.overallPrice')}: {plan.price_per_meal * plan.short_term_meals} {t('currency.sar')}
+                </Text>
+              </Box>
+
+              {/* Medium Term */}
+              <Box 
+                p={3} 
+                bg="secondary.100" 
+                borderRadius="lg"
+                border="2px"
+                borderColor="brand.400"
+              >
+                <Flex justify="space-between" align="center" mb={1}>
+                  <Text fontSize="sm" fontWeight="semibold" color="teal.700">
+                    {t('premium.mediumTerm')}
+                  </Text>
+                  <HStack spacing={1}>
+                    <Badge colorScheme="teal" fontSize="xs" px={2} py={1}>
+                      {plan.medium_term_meals || 30} {t('premium.meals')}
+                    </Badge>
+                    <Badge colorScheme="green" fontSize="xs" px={2} py={1}>
+                      10% off
+                    </Badge>
+                  </HStack>
+                </Flex>
+                <Text fontSize="xs" color="brand.600">
+                  {t('premium.mealsOver')} {plan.medium_term_meals} {t('premium.days')}
+                </Text>
+                <Text fontSize="xs" color="brand.600" fontWeight="bold">
+                  {t('premium.overallPrice')}: {plan.price_per_meal * plan.medium_term_meals} {t('currency.sar')}
+                </Text>
+              </Box>
+            </Box>
+
+            {/* Active Subscription Warning */}
+            {hasActiveSubscription && !isUserPlan && (
+              <Alert status="warning" size="sm" borderRadius="md">
+                <AlertIcon />
+                <Box>
+                  <Text fontSize="xs" fontWeight="bold">
+                    {t('premium.cannotSubscribeWhileActive')}
+                  </Text>
+                  <Text fontSize="xs">
+                    {t('premium.completeOrCancelCurrentFirst')}
+                  </Text>
+                </Box>
+              </Alert>
+            )}
+          </VStack>
+        </Box>
+      </Collapse>
+    </Box>
+  )
+}
+
+// Enhanced Login Modal Component (ORIGINAL FUNCTIONALITY PRESERVED)
 const LoginModal = ({ isOpen, onClose, selectedPlan = null, selectedTerm = null }) => {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -92,13 +392,11 @@ const LoginModal = ({ isOpen, onClose, selectedPlan = null, selectedTerm = null 
   }
 
   const handleLoginRedirect = () => {
-    // Set up enhanced redirect with plan context
     const redirectData = {
       path: '/premium/join',
       reason: 'subscription_flow'
     };
     
-    // Include plan context if available
     if (selectedPlan) {
       redirectData.planId = selectedPlan.id;
       redirectData.planTitle = selectedPlan.title;
@@ -203,69 +501,6 @@ const LoginModal = ({ isOpen, onClose, selectedPlan = null, selectedTerm = null 
   )
 }
 
-
-
-const PlanDetails = ({ plan }) => {
-  const { t } = useTranslation()
-  const { currentLanguage } = useI18nContext()
-  const isArabic = currentLanguage === 'ar'
-  
-  return (
-    <Box>
-      <Heading as="h3" size="sm" mb={2}>
-        {isArabic ? plan.title_arabic : plan.title}
-      </Heading>
-      <Heading as="h4" size="xs" mb={2}>
-        {t('premium.nutritionalInformation')}
-      </Heading>
-
-      <Flex mb={4} gap={4} flexWrap="wrap">
-        <Badge colorScheme="green">
-          {t('premium.kcal')}: {plan.kcal}
-        </Badge>
-        <Badge colorScheme="brand">
-          {t('premium.carbs')}: {plan.carb}g
-        </Badge>
-        <Badge colorScheme="red">
-          {t('premium.protein')}: {plan.protein}g
-        </Badge>
-      </Flex>
-
-      <Heading as="h4" size="xs" mb={2}>
-        {t('checkout.subscriptionPeriod')}
-      </Heading>
-
-      <VStack align="stretch" spacing={3}>
-        {/* Short Term */}
-        <Box p={3} bg="gray.50" borderRadius="md">
-          <Heading as="h5" size="xs" mb={1}>
-            {t('premium.shortTerm')}
-          </Heading>
-          <Text fontSize="sm">
-            {t('premium.mealsOver')} {plan.short_term_meals} {t('premium.days')}
-          </Text>
-          <Text fontSize="sm" fontWeight="bold">
-            {t('premium.overallPrice')}: ${plan.price_per_meal * plan.short_term_meals}
-          </Text>
-        </Box>
-
-        {/* Medium Term */}
-        <Box p={3} bg="gray.50" borderRadius="md">
-          <Heading as="h5" size="xs" mb={1}>
-            {t('premium.mediumTerm')}
-          </Heading>
-          <Text fontSize="sm">
-            {t('premium.mealsOver')} {plan.medium_term_meals} {t('premium.days')}
-          </Text>
-          <Text fontSize="sm" fontWeight="bold">
-            {t('premium.overallPrice')}: ${plan.price_per_meal * plan.medium_term_meals} <Badge colorScheme="green">10% off</Badge>
-          </Text>
-        </Box>
-      </VStack>
-    </Box>
-  )
-}
-
 export const PremiumPage = () => {
   const { plans, elementsLoading } = useElements();
   const { 
@@ -275,8 +510,8 @@ export const PremiumPage = () => {
     isSubscriptionLoading 
   } = useAuthContext();
   const navigate = useNavigate();
+  const { currentLanguage } = useI18nContext();
   
-  // Use the context properly
   const { 
     chosenPlan, 
     setSelectedPlan, 
@@ -285,24 +520,44 @@ export const PremiumPage = () => {
     resetSubscriptionData
   } = useChosenPlanContext();
   
+  // NEW: Subscription validation hook
+  const { 
+    canCreateSubscription, 
+    hasActiveSubscription, 
+    isLoading: validationLoading,
+    activeSubscription 
+  } = useSubscriptionValidation();
+  
   const [explorePlans, setExplorePlans] = useState(false);
   const [subscribing, setSubscribing] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginModalContext, setLoginModalContext] = useState({ plan: null, term: null });
   const { t } = useTranslation();
   const toast = useToast();
-  const detailsSectionRef = useRef(null);
+  const topSectionRef = useRef(null);
   const plansContainerRef = useRef(null);
 
-  // Find the plan associated with active subscription
+  const isArabic = currentLanguage === 'ar';
+
   const userPlan = currentSubscription && plans?.length > 0
     ? plans.find(plan => plan.id === currentSubscription.plan_id)
     : null;
 
-  // Initialize context with user's current plan
+  // Debug subscription validation state
+  useEffect(() => {
+    console.log('🔍 PremiumPage Subscription Validation:', {
+      user,
+      hasActiveSubscription,
+      canCreateSubscription,
+      validationLoading,
+      activeSubscription: activeSubscription?.id,
+      currentSubscription: currentSubscription?.id,
+      userPlan: userPlan?.id
+    });
+  }, [user, hasActiveSubscription, canCreateSubscription, validationLoading, activeSubscription, currentSubscription, userPlan]);
+
   useEffect(() => {
     if (userPlan && currentSubscription) {
-      // Initialize the context with existing subscription data
       updateSubscriptionData({
         plan: userPlan,
         plan_id: userPlan.id,
@@ -318,47 +573,82 @@ export const PremiumPage = () => {
         auto_renewal: currentSubscription.auto_renewal,
         is_paused: currentSubscription.is_paused,
         meals: currentSubscription.meals || [],
-        // Determine term based on total meals
         selected_term: currentSubscription.total_meals === userPlan.short_term_meals ? 'short' : 'medium'
       });
     } else if (!userPlan) {
-      // Reset if no active subscription
       resetSubscriptionData();
     }
   }, [userPlan, currentSubscription, updateSubscriptionData, resetSubscriptionData]);
+
+  // ENHANCED: handlePlanSelect with subscription validation
   const handlePlanSelect = (plan) => {
-    // Check if user is authenticated
+    console.log('🎯 Plan Selection Attempt:', {
+      planId: plan.id,
+      planTitle: plan.title,
+      user,
+      hasActiveSubscription,
+      canCreateSubscription,
+      isUserPlan: userPlan?.id === plan.id
+    });
+
+    // Case 1: User not logged in
     if (!user) {
+      console.log('🔐 User not logged in, showing login modal');
       setLoginModalContext({ plan, term: null });
       setShowLoginModal(true);
       return;
     }
 
-    // Set the selected plan in context
+    // Case 2: User is selecting their current plan
+    if (userPlan?.id === plan.id) {
+      console.log('📋 User selecting current plan, allowing view details');
+      setSelectedPlan(plan);
+      navigate('/premium/join', { 
+        state: { 
+          planId: plan.id,
+          fromPremiumPage: true,
+          isCurrentPlan: true // NEW: Indicate this is the current plan
+        } 
+      });
+      return;
+    }
+
+    // Case 3: User has active subscription and tries to select different plan
+    if (hasActiveSubscription) {
+      console.log('🚫 User has active subscription, blocking new plan selection');
+      toast({
+        title: t('premium.activeSubscriptionExists'),
+        description: t('premium.cannotSelectNewPlan'),
+        status: 'warning',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // Case 4: User can create new subscription
+    console.log('✅ User can create new subscription, proceeding...');
     setSelectedPlan(plan);
     
-    // If this is a new plan selection (not the user's current plan), reset other data
-    if (!userPlan || plan.id !== userPlan.id) {
-      updateSubscriptionData({
-        plan: plan,
-        plan_id: plan.id,
-        status: 'pending',
-        // Set start_date to tomorrow
-        start_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        selected_term: null,
-        consumed_meals: 0,
-        meals: [],
-        is_paused: false,
-        auto_renewal: false
-      });
-    }
+    updateSubscriptionData({
+      plan: plan,
+      plan_id: plan.id,
+      status: 'pending',
+      start_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      selected_term: null,
+      consumed_meals: 0,
+      meals: [],
+      is_paused: false,
+      auto_renewal: false
+    });
     
-    setTimeout(() => {
-      detailsSectionRef.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'end',
-      });
-    }, 50);
+    // Navigate to join page
+    navigate('/premium/join', { 
+      state: { 
+        planId: plan.id,
+        fromPremiumPage: true 
+      } 
+    });
   };
 
   const toggleExplorePlans = () => {
@@ -366,101 +656,28 @@ export const PremiumPage = () => {
     setExplorePlans(newState);
 
     if (newState) {
+      // Scroll to top first
+      setTimeout(() => {
+        topSectionRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 50);
+      
+      // Then scroll to plans
       setTimeout(() => {
         plansContainerRef.current?.scrollIntoView({
           behavior: 'smooth',
-          block: 'end',
+          block: 'start',
+        });
+      }, 500);
+    } else {
+      setTimeout(() => {
+        topSectionRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
         });
       }, 50);
-    }
-  };
-
-  const handleSubscribeRedirect = (plan, selectedTerm = null) => {
-    if (!user) {
-      setLoginModalContext({ plan, term: selectedTerm });
-      setShowLoginModal(true);
-      return;
-    }
-
-    // Set up redirect context for subscription flow
-    const redirectData = {
-      path: '/premium/join',
-      reason: 'subscription_flow',
-      planId: plan.id,
-      planTitle: plan.title
-    };
-    
-    if (selectedTerm) {
-      redirectData.selectedTerm = selectedTerm;
-    }
-
-    // Navigate to premium join page
-    navigate('/premium/join', { 
-      state: { 
-        planId: plan.id,
-        selectedTerm: selectedTerm,
-        fromPremiumPage: true 
-      } 
-    });
-  };
-
-  const handleSubscribe = async () => {
-    if (!user) {
-      setLoginModalContext({ plan: chosenPlan, term: null });
-      setShowLoginModal(true);
-      return;
-    }
-
-    if (!chosenPlan) {
-      toast({
-        title: t('premium.noPlanSelected'),
-        description: t('premium.pleaseSelectAPlan'),
-        status: 'warning',
-        duration: 3000,
-        isClosable: false,
-      });
-      return;
-    }
-
-    try {
-      setSubscribing(true);
-      
-      if (activeSubscription) {
-        // Update existing subscription
-        await updateSubscription({
-          subscriptionId: activeSubscription.id,
-          subscriptionData: { 
-            plan_id: chosenPlan.id,
-            price_per_meal: subscriptionData.price_per_meal,
-            total_meals: subscriptionData.total_meals,
-            end_date: subscriptionData.end_date
-          }
-        });
-
-        toast({
-          title: t('premium.planUpdated'),
-          description: t('premium.nowSubscribedToPlan', { planTitle: chosenPlan.title }),
-          status: 'success',
-          duration: 5000,
-          isClosable: false,
-        });
-        
-        setExplorePlans(false);
-      } else {
-        // For new subscriptions, redirect to join page
-        handleSubscribeRedirect(chosenPlan);
-        return;
-      }
-    } catch (error) {
-      toast({
-        title: t('premium.subscriptionFailed'),
-        description: error.message || t('premium.failedToUpdatePlanSubscription'),
-        status: 'error',
-        duration: 5000,
-        isClosable: false,
-      });
-    } finally {
-      setSubscribing(false);
     }
   };
 
@@ -469,13 +686,13 @@ export const PremiumPage = () => {
     setLoginModalContext({ plan: null, term: null });
   };
 
-  const isLoading = elementsLoading || (user && isSubscriptionLoading);
+  const isLoading = elementsLoading || (user && isSubscriptionLoading) || validationLoading;
 
   if (isLoading) {
     return (
       <Center h="100vh">
         <VStack spacing={4}>
-          <Spinner size="xl" color="brand.500" />
+          <Spinner size="xl" color="brand.500" thickness="3px" />
           <Text>{t('common.loading')}</Text>
         </VStack>
       </Center>
@@ -484,49 +701,86 @@ export const PremiumPage = () => {
 
   return (
     <Box p={{ base: 4, md: 8 }} bg="gray.50" minH="100vh">
-      <VStack spacing={8} align="stretch">
-        {/* Current Plan Section */}
-        <Box as={VStack} bg="white" p={6} borderRadius="xl" alignItems={'center'}>
-          <JoinPremiumTeaser />
-          {userPlan && (
-            <CurrentPlanBrief
-              plan={userPlan}
-              subscription={currentSubscription}
-            />
-          )}
+      <VStack spacing={6} align="stretch">
+        {/* Top Section - Current Plan or Teaser */}
+        <Box ref={topSectionRef}>
+          <VStack spacing={6} align="stretch">
+            {currentSubscription && userPlan && (
+              <CurrentPlanBrief
+                plan={userPlan}
+                subscription={currentSubscription}
+              />
+            )}
 
-          {userPlan && (
-            <Button mt={4} colorScheme="brand" size="sm" onClick={toggleExplorePlans}>
-              {explorePlans ? t('premium.hideAvailablePlans') : t('premium.exploreOtherPlans')}
-            </Button>
-          )}
+            <JoinPremiumTeaser explorePlans={explorePlans} newMember={!userPlan} />
+            
+            <Center>
+              {userPlan && (
+                <Button 
+                  colorScheme="brand" 
+                  size={{ base: 'md', md: 'lg' }}
+                  onClick={toggleExplorePlans}
+                >
+                  {explorePlans ? t('premium.hideAvailablePlans') : t('premium.exploreOtherPlans')}
+                </Button>
+              )}
 
-          {!userPlan && (
-            <Button mt={4} colorScheme="brand" onClick={toggleExplorePlans}>
-              {t('premium.browseAvailablePlans')}
-            </Button>
-          )}
+              {!userPlan && (
+                <Button 
+                  colorScheme="brand" 
+                  size={{ base: 'md', md: 'lg' }}
+                  onClick={toggleExplorePlans}
+                >
+                  {t('premium.browseAvailablePlans')}
+                </Button>
+              )}
+            </Center>
+          </VStack>
         </Box>
+
+        {/* Active Subscription Alert */}
+        {hasActiveSubscription && explorePlans && (
+          <Alert status="warning" borderRadius="lg">
+            <AlertIcon />
+            <Box>
+              <Text fontWeight="bold">{t('premium.activeSubscriptionAlert')}</Text>
+              <Text fontSize="sm">{t('premium.completeOrCancelCurrentFirst')}</Text>
+            </Box>
+          </Alert>
+        )}
 
         {/* Available Plans Section */}
         {explorePlans && (
           <Fade in={explorePlans}>
-            <Box bg="brand.50" p={6} borderRadius="xl" ref={plansContainerRef}>
-              <Heading as="h2" size="md" mb={6}>
+            <Box 
+              bg="white" 
+              p={{ base: 4, md: 6 }} 
+              borderRadius="xl"
+              border="2px solid"
+              borderColor="brand.400"
+              ref={plansContainerRef}
+            >
+              <Heading 
+                as="h2" 
+                size={{ base: 'md', md: 'lg' }} 
+                mb={6}
+                color="brand.700"
+              >
                 {t('premium.availablePremiumPlans')}
               </Heading>
 
               {plans && plans.length > 0 ? (
-                <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+                <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={{ base: 4, md: 6 }}>
                   {plans.map((plan) => (
-                    <PlanCard
+                    <EnhancedPlanCard
                       key={plan.id}
-                      plan={{
-                        ...plan,
-                        image: plan.avatar_url || planImages[plan.title] || dailyMealPlanImage,
-                      }}
+                      plan={plan}
                       isUserPlan={userPlan?.id === plan.id}
                       onSelect={handlePlanSelect}
+                      isArabic={isArabic}
+                      t={t}
+                      canCreateNewSubscription={canCreateSubscription} // NEW PROP
+                      hasActiveSubscription={hasActiveSubscription} // NEW PROP
                     />
                   ))}
                 </SimpleGrid>
@@ -539,48 +793,7 @@ export const PremiumPage = () => {
           </Fade>
         )}
 
-        {/* Selected Plan Details Section */}
-        {chosenPlan && explorePlans && (
-          <Box bg="secondary.200" borderRadius={'xl'} p={6} ref={detailsSectionRef}>
-            <Heading as="h2" size="md" mb={4}>
-              {t('premium.planDetails')}
-            </Heading>
-
-            <PlanDetails plan={chosenPlan} />
-
-            <Divider my={4} />
-
-            {userPlan?.id !== chosenPlan.id && (
-              <Button
-                mt={4}
-                colorScheme="brand"
-                size="lg"
-                width="full"
-                isLoading={subscribing}
-                loadingText={t('premium.processingSubscription')}
-                onClick={() => handleSubscribeRedirect(chosenPlan)}
-              >
-                {t('premium.subscribeToPlan')}
-              </Button>
-            )}
-
-            {userPlan?.id === chosenPlan.id && (
-              <Button
-                mt={4}
-                colorScheme="brand"
-                size="lg"
-                width="full"
-                onClick={handleSubscribe}
-                isLoading={subscribing}
-                loadingText={t('premium.updatingSubscription')}
-              >
-                {t('premium.updateSubscription')}
-              </Button>
-            )}
-          </Box>
-        )}
-
-        {/* Quick Action Alert for Non-authenticated Users */}
+        {/* Info Alert for Non-authenticated Users */}
         {!user && !explorePlans && (
           <Alert status="info" borderRadius="lg">
             <AlertIcon />
@@ -592,7 +805,7 @@ export const PremiumPage = () => {
         )}
       </VStack>
 
-      {/* Enhanced Login Modal */}
+      {/* Login Modal */}
       <LoginModal 
         isOpen={showLoginModal} 
         onClose={handleCloseLoginModal}

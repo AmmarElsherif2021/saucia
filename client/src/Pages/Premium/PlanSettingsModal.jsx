@@ -64,22 +64,15 @@ import { useTranslation } from 'react-i18next'
 import { useAuthContext } from '../../Contexts/AuthContext'
 import { useI18nContext } from '../../Contexts/I18nContext'
 import { useUserSubscriptions } from '../../Hooks/useUserSubscriptions'
-import { userAPI } from '../../API/userAPI'
 import { supabase } from '../../../supabaseClient'
-
-// Constants
-const ORDER_STATUS_COLORS = {
-  'pending': 'blue',
-  'confirmed': 'green', 
-  'preparing': 'orange',
-  'out_for_delivery': 'purple',
-  'delivered': 'gray',
-  'cancelled': 'red',
-  'active': 'green'
-}
-
-const DELIVERY_TIME_OPTIONS = ['11', '12', '13', '14', '15', '16', '17', '18']
-  .flatMap(hour => ['00', '30'].map(minute => ({ hour, minute, value: `${hour}:${minute}` })))
+import { 
+  useOrderItems, 
+  useSubscriptionStats, 
+  formatDeliveryDate, 
+  formatDeliveryTime,
+  getOrderStatusColor,
+  DELIVERY_TIME_OPTIONS 
+} from './orderUtils'
 
 const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscriptionStats }) => {
   const { t } = useTranslation()
@@ -115,22 +108,53 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
   const toast = useToast()
   const isArabic = currentLanguage === 'ar'
   const plan = currentSubscription?.plans
+  const { renderOrderItems } = useOrderItems()
 
-  // Memoized computed values
+  // Debug logging
+  useEffect(() => {
+    if (isOpen) {
+      console.log('🔍 PlanSettingsModal Data Debug:', {
+        subscription: subscription,
+        ordersCount: orders?.length,
+        subscriptionStats: subscriptionStats,
+        addressesCount: addresses?.length
+      });
+    }
+  }, [isOpen, subscription, orders, subscriptionStats, addresses]);
+
+  // Memoized computed values - consolidated logic
   const { 
     pendingOrders, 
     activeOrders, 
     deliveredOrders, 
     nonDeliveredOrders,
     hasOrdersInProgress,
-    canActivatePendingOrders
+    canActivatePendingOrders 
   } = useMemo(() => {
+    if (!orders || !Array.isArray(orders)) {
+      return {
+        pendingOrders: [],
+        activeOrders: [],
+        deliveredOrders: [],
+        nonDeliveredOrders: [],
+        hasOrdersInProgress: false,
+        canActivatePendingOrders: false
+      }
+    }
+
+    console.log('📊 Orders Analysis:', {
+      totalOrders: orders.length,
+      ordersByStatus: orders.reduce((acc, order) => {
+        acc[order.status] = (acc[order.status] || 0) + 1;
+        return acc;
+      }, {})
+    });
+
     const pending = orders.filter(order => order.status === 'pending')
     const active = orders.filter(order => order.status === 'active')
     const delivered = orders.filter(order => order.status === 'delivered')
     const nonDelivered = orders.filter(order => order.status !== 'delivered')
     
-    // Check if there are orders in progress (any status except pending and delivered)
     const ordersInProgress = orders.filter(order => 
       order.status !== 'pending' && 
       order.status !== 'delivered' && 
@@ -157,10 +181,6 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
     return tomorrow.toISOString().split('T')[0]
   }, [])
 
-  const getOrderStatusColor = useCallback((status) => {
-    return ORDER_STATUS_COLORS[status] || 'gray'
-  }, [])
-
   const showToast = useCallback((title, description, status = 'success') => {
     toast({
       title: t(title),
@@ -172,7 +192,7 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
   }, [toast, t])
 
   const handleError = useCallback((error, errorKey = 'premium.unexpectedError') => {
-    console.error('Error:', error)
+    console.error('❌ PlanSettingsModal Error:', error)
     showToast('premium.error', errorKey, 'error')
   }, [showToast])
 
@@ -189,7 +209,7 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
       
       if (error) throw error
       setAddresses(data || [])
-      console.log('Fetched addresses:', data)
+      console.log('📍 Fetched addresses:', data)
     } catch (error) {
       handleError(error, 'premium.failedToLoadAddresses')
     } finally {
@@ -200,6 +220,12 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
   // Initialize component data
   const initializeComponentData = useCallback(() => {
     if (!subscription) return
+
+    console.log('⚙️ Initializing component data:', {
+      subscriptionDeliveryTime: subscription.preferred_delivery_time,
+      deliveryAddressId: subscription.delivery_address_id,
+      addressesCount: addresses.length
+    });
 
     // Set delivery time
     if (subscription.preferred_delivery_time) {
@@ -251,6 +277,7 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
     setLoading(true)
     
     try {
+      console.log('⏸️ Pausing subscription:', subscription.id);
       await pauseSubscription({ 
         subscriptionId: subscription.id, 
         pauseReason: 'User requested pause' 
@@ -270,6 +297,7 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
 
     setLoading(true)
     try {
+      console.log('▶️ Resuming subscription:', subscription.id);
       await resumeSubscription({ subscriptionId: subscription.id })
       await refreshSubscription()
       showToast('premium.success', 'premium.planResumedSuccessfully')
@@ -286,7 +314,12 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
     setLoading(true)
     try {
       const deliveryTimeString = `${deliveryTime.hours}:${deliveryTime.minutes}:00`
-      console.log(`updating subscriiption with id ${currentSubscription.id}`)
+      console.log('🔄 Updating delivery settings:', {
+        subscriptionId: currentSubscription.id,
+        deliveryTime: deliveryTimeString,
+        selectedAddress: selectedAddress
+      });
+
       await updateSubscription({
         subscriptionId: currentSubscription.id,
         subscriptionData: {
@@ -299,14 +332,10 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
       showToast('premium.success', 'premium.deliverySettingsUpdated')
     } catch (error) {
       handleError(error, 'premium.failedToUpdateDeliverySettings');
-      console.log(`Trying to update subscription with id ${currentSubscription.id} with data ${{
-        preferred_delivery_time: `${JSON.stringify(deliveryTime)}`,
-        delivery_address_id: `${JSON.stringify(selectedAddress)}`,
-      }}}`)
     } finally {
       setLoading(false)
     }
-  }, [subscription, deliveryTime, selectedAddress, updateSubscription, refreshSubscription, showToast, handleError])
+  }, [currentSubscription, deliveryTime, selectedAddress, updateSubscription, refreshSubscription, showToast, handleError])
 
   const handleActivateOrderFromList = useCallback(async (orderId) => {
     if (!canActivatePendingOrders) {
@@ -326,6 +355,12 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
         0
       )
 
+      console.log('🎯 Activating order:', {
+        orderId,
+        deliveryTime: `${deliveryTime.hours}:${deliveryTime.minutes}`,
+        deliveryDate: deliveryDateTime.toISOString()
+      });
+
       await activateOrder({
         orderId: orderId,
         deliveryTime: `${deliveryTime.hours}:${deliveryTime.minutes}`,
@@ -342,28 +377,6 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
   }, [canActivatePendingOrders, getNextAvailableDate, deliveryTime, activateOrder, refreshSubscription, showToast, handleError])
 
   // Component renderers
-  const renderOrderItems = useCallback((order) => {
-    if (!order.order_items || order.order_items.length === 0) {
-      return <Text fontSize="sm" color="gray.500">{t('premium.noItems')}</Text>
-    }
-
-    return (
-      <VStack align="start" spacing={1} mt={2}>
-        {order.order_items.map((item, index) => (
-          <HStack key={index} spacing={2}>
-            <Text fontSize="sm">• {isArabic ? item.name_arabic || item.name : item.name}</Text>
-            {item.quantity > 1 && (
-              <Badge fontSize="xs" colorScheme="gray">x{item.quantity}</Badge>
-            )}
-            {item.category && (
-              <Badge fontSize="xs" colorScheme="blue" variant="subtle">{item.category}</Badge>
-            )}
-          </HStack>
-        ))}
-      </VStack>
-    )
-  }, [isArabic, t])
-
   const renderOrderCard = useCallback((order, showActivateButton = false) => (
     <Box
       key={order.id}
@@ -398,16 +411,14 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
             )}
           </HStack>
           
-          {renderOrderItems(order)}
+          {renderOrderItems(order, isArabic, true)}
           
           <HStack spacing={4} fontSize="sm" color="gray.600">
             {order.scheduled_delivery_date && (
               <HStack>
                 <Icon as={FiClock} size="14px" />
                 <Text>
-                  {new Date(order.scheduled_delivery_date).toLocaleDateString(
-                    isArabic ? 'ar-EG' : 'en-US'
-                  )}
+                  {formatDeliveryDate(order.scheduled_delivery_date, isArabic)}
                 </Text>
               </HStack>
             )}
@@ -415,9 +426,7 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
               <HStack>
                 <Icon as={FiCalendar} size="14px" />
                 <Text>
-                  {t('premium.created')}: {new Date(order.created_at).toLocaleDateString(
-                    isArabic ? 'ar-EG' : 'en-US'
-                  )}
+                  {t('premium.created')}: {formatDeliveryDate(order.created_at, isArabic)}
                 </Text>
               </HStack>
             )}
@@ -448,7 +457,7 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
         )}
       </HStack>
     </Box>
-  ), [canActivatePendingOrders, hasOrdersInProgress, getOrderStatusColor, renderOrderItems, handleActivateOrderFromList, activatingOrderId, t, isArabic])
+  ), [canActivatePendingOrders, hasOrdersInProgress, renderOrderItems, handleActivateOrderFromList, activatingOrderId, t, isArabic])
 
   const renderCurrentPlanOverview = () => (
     <Card>

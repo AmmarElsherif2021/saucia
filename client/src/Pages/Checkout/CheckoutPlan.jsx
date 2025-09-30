@@ -23,7 +23,6 @@ import {
   Container,
   Card,
   CardBody,
-  Icon,
   InputGroup,
   InputLeftElement,
   Skeleton,
@@ -47,64 +46,94 @@ import saladIcon from '../../assets/menu/salad.svg'
 import locationPin from '../../assets/locationPin.svg'
 
 // Hooks
-import { useUserProfile, useUserAddresses } from '../../Hooks/userHooks'
+import { useUserProfile, useUserAddresses, useRestaurantAddresses } from '../../Hooks/userHooks'
 import { useUserSubscriptions } from '../../Hooks/useUserSubscriptions'
 import { useChosenPlanContext } from '../../Contexts/ChosenPlanContext'
 
 //Map
 const MapModal = lazy(() => import('./MapModal'));
 
-// Date calculation utilities - moved outside component for better performance
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+const PAYMENT_METHODS = {
+  CASH: 'cash-at-restaurant',
+  CREDIT_CARD: 'credit-card',
+  PAYPAL: 'paypal',
+  APPLE_PAY: 'apple-pay',
+  GOOGLE_PAY: 'google-pay',
+}
+
+const SUBSCRIPTION_STATUS = {
+  PENDING: 'pending_payment',
+  ACTIVE: 'active',
+}
+
+const INVALID_DELIVERY_DAYS = [5, 6] // Friday and Saturday
+
+// ============================================================================
+// UTILITIES
+// ============================================================================
+
+/**
+ * Calculate delivery date skipping Fridays and Saturdays
+ */
 const calculateDeliveryDate = (startDate, mealIndex) => {
+  console.log('📅 calculateDeliveryDate called:', { startDate, mealIndex })
+  
   const date = new Date(startDate);
   let validDays = 0;
   
-  // Check if start date is a valid delivery day
   const startDayOfWeek = date.getDay();
-  if (startDayOfWeek !== 5 && startDayOfWeek !== 6) {
-    validDays = 1; // Start date counts as the first valid day
+  if (!INVALID_DELIVERY_DAYS.includes(startDayOfWeek)) {
+    validDays = 1;
   }
   
   while (validDays <= mealIndex) {
     date.setDate(date.getDate() + 1);
     const dayOfWeek = date.getDay();
     
-    // Skip Fridays (5) and Saturdays (6)
-    if (dayOfWeek !== 5 && dayOfWeek !== 6) {
+    if (!INVALID_DELIVERY_DAYS.includes(dayOfWeek)) {
       validDays++;
     }
   }
+  
+  console.log('📅 Calculated delivery date:', date)
   return date;
 }
 
-// Enhanced Section Component with clean outlined design
+/**
+ * Get color value from theme
+ */
+const getThemeColor = (theme, colorKey, shade) => {
+  try {
+    return theme.colors[colorKey]?.[shade] || `${colorKey}.${shade}`
+  } catch (e) {
+    console.warn('⚠️ Failed to get theme color:', { colorKey, shade, error: e })
+    return `${colorKey}.${shade}`
+  }
+}
+
+// ============================================================================
+// STYLED COMPONENTS
+// ============================================================================
+
+/**
+ * Enhanced Section Component with clean outlined design
+ */
 const Section = ({ title, children, bgColor = 'brand', titleColor, icon, isLoading = false }) => {
   const { colorMode } = useColorMode()
   const theme = useTheme()
   const padding = useBreakpointValue({ base: 4, md: 5 })
   const borderRadius = useBreakpointValue({ base: 'lg', md: 'xl' })
 
-  // Method 1: Use useColorModeValue for proper color resolution (Recommended)
   const cardBg = useColorModeValue(`${bgColor}.200`, 'gray.700')
   const cardBorder = useColorModeValue(`${bgColor}.400`, 'gray.600')
   const iconBg = useColorModeValue(`${bgColor}.100`, 'gray.600')
   const iconBorder = useColorModeValue(`${bgColor}.200`, 'gray.500')
   const headingColor = titleColor || useColorModeValue(`${bgColor}.700`, 'white')
 
-  // Method 2: Alternative using theme object (for more control)
-  const getColor = (colorKey, shade) => {
-    try {
-      return theme.colors[colorKey]?.[shade] || `${colorKey}.${shade}`
-    } catch (e) {
-      return `${colorKey}.${shade}`
-    }
-  }
-
-  // Method 3: Manual color resolution function
-  const resolveColor = (colorString) => {
-    const [colorName, shade] = colorString.split('.')
-    return theme.colors[colorName]?.[shade] || colorString
-  }
+  console.log('🎨 Section rendered:', { title, bgColor, isLoading, colorMode })
   
   if (isLoading) {
     return (
@@ -171,156 +200,147 @@ const Section = ({ title, children, bgColor = 'brand', titleColor, icon, isLoadi
     </Card>
   )
 }
-// Enhanced Payment Method Inputs Component with clean styling
-const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
-  const inputProps = useMemo(() => ({
-    variant: "outline",
-    bg: colorMode === 'dark' ? 'gray.700' : 'white',
-    borderWidth: "2px",
-    borderColor: colorMode === 'dark' ? 'gray.500' : 'brand.300',
-    focusBorderColor: "brand.500",
-    _hover: {
-      borderColor: colorMode === 'dark' ? 'gray.400' : 'brand.400'
-    },
-    _focus: {
-      bg: 'transparent',
-      borderColor: 'brand.500',
-    }
-  }), [colorMode]);
 
-  switch (paymentMethod) {
-    case 'credit-card':
-      return (
-        <Stack spacing={4} maxW={{ base: "100%", md: "90%" }}>
-          <FormControl>
-            <FormLabel fontSize={{ base: "sm", md: "md" }} fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>
-              {t('checkout.cardNumber')}
-            </FormLabel>
-            <Input
-              placeholder={t('checkout.cardNumberPlaceholder')}
-              maxLength={19}
-              {...inputProps}
-            />
-          </FormControl>
-
-          <Flex gap={4} direction={{ base: 'column', sm: 'row' }}>
-            <FormControl>
-              <FormLabel fontSize={{ base: "sm", md: "md" }} fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>
-                {t('checkout.expiryDate')}
-              </FormLabel>
-              <Input
-                placeholder={t('checkout.expiryDatePlaceholder')}
-                maxLength={5}
-                {...inputProps}
-              />
-            </FormControl>
-
-            <FormControl>
-              <FormLabel fontSize={{ base: "sm", md: "md" }} fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>
-                CVV
-              </FormLabel>
-              <Input 
-                placeholder="123" 
-                maxLength={3} 
-                type="password"
-                {...inputProps}
-              />
-            </FormControl>
-          </Flex>
-
-          <FormControl>
-            <FormLabel fontSize={{ base: "sm", md: "md" }} fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'brand.700'}>
-              {t('checkout.nameOnCard')}
-            </FormLabel>
-            <Input 
-              placeholder={t('checkout.cardholderNamePlaceholder')}
-              {...inputProps}
-            />
-          </FormControl>
-
-          <Box
-            p={3}
-            borderRadius="md"
-            bg={colorMode === 'dark' ? 'gray.600' : 'gray.50'}
-            border="1px solid"
-            borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.200'}
-          >
-            <Checkbox colorScheme="brand" fontSize={{ base: "sm", md: "md" }}>
-              {t('checkout.saveThisCardForFuturePayments')}
-            </Checkbox>
-          </Box>
-        </Stack>
-      )
-
-    case 'paypal':
-      return (
-        <VStack spacing={4} align="stretch" maxW={{ base: "100%", md: "90%" }}>
-          <Alert 
-            status="info" 
-            borderRadius="md" 
-            bg="blue.50" 
-            borderColor="blue.200"
-            borderWidth="1px"
-            variant="subtle"
-          >
-            <AlertIcon color="blue.500" />
-            <Text fontSize={{ base: "sm", md: "md" }} color="blue.700">
-              {t('checkout.paypalRedirectMessage')}
-            </Text>
-          </Alert>
-          <Button 
-            colorScheme="blue" 
-            leftIcon={<Text fontWeight="bold">PayPal</Text>} 
-            width="full"
-            size="md"
-            borderRadius="md"
-            variant="outline"
-          >
-            {t('checkout.continueWithPayPal')}
-          </Button>
-        </VStack>
-      )
-
-    case 'apple-pay':
-    case 'google-pay':
-      const isApplePay = paymentMethod === 'apple-pay';
-      const methodName = isApplePay ? 'Apple Pay' : 'Google Pay';
-      
-      return (
-        <VStack spacing={4} align="stretch" maxW={{ base: "100%", md: "90%" }}>
-          <Alert 
-            status="info" 
-            borderRadius="md"
-            bg={colorMode === 'dark' ? 'gray.600' : 'gray.50'}
-            borderColor={colorMode === 'dark' ? 'gray.500' : 'gray.200'}
-            borderWidth="1px"
-            variant="subtle"
-          >
-            <AlertIcon />
-            <Text fontSize={{ base: "sm", md: "md" }}>
-              {t('checkout.completePaymentWith', { method: methodName })}
-            </Text>
-          </Alert>
-          <Button 
-            colorScheme={isApplePay ? 'blackAlpha' : 'brand'} 
-            width="full"
-            size="md"
-            borderRadius="md"
-            variant="outline"
-          >
-            {t('checkout.payWith', { method: methodName })}
-          </Button>
-        </VStack>
-      )
-
-    default:
-      return null
+/**
+ * Reusable Alert Component
+ */
+const InfoAlert = ({ status = 'info', title, message, colorMode }) => {
+  const bgColors = {
+    info: colorMode === 'dark' ? 'blue.800' : 'blue.50',
+    success: colorMode === 'dark' ? 'green.800' : 'green.50',
+    warning: colorMode === 'dark' ? 'orange.800' : 'orange.50',
+    error: colorMode === 'dark' ? 'red.800' : 'red.50',
   }
+
+  const borderColors = {
+    info: colorMode === 'dark' ? 'blue.600' : 'blue.200',
+    success: colorMode === 'dark' ? 'green.600' : 'green.200',
+    warning: colorMode === 'dark' ? 'orange.600' : 'orange.200',
+    error: colorMode === 'dark' ? 'red.600' : 'red.200',
+  }
+
+  const iconColors = {
+    info: 'blue.500',
+    success: 'green.500',
+    warning: 'orange.500',
+    error: 'red.500',
+  }
+
+  console.log('⚠️ InfoAlert rendered:', { status, title })
+
+  return (
+    <Alert 
+      status={status}
+      borderRadius="md"
+      bg={bgColors[status]}
+      borderColor={borderColors[status]}
+      borderWidth="1px"
+      variant="subtle"
+    >
+      <AlertIcon color={iconColors[status]} />
+      <Box>
+        <Text fontSize={{ base: "sm", md: "md" }} fontWeight="500">
+          {title}
+        </Text>
+        {message && (
+          <Text fontSize="sm" mt={1}>
+            {message}
+          </Text>
+        )}
+      </Box>
+    </Alert>
+  )
 }
 
+/**
+ * Payment Method Inputs Component
+ */
+const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
+  console.log('💳 PaymentMethodInputs rendered:', { paymentMethod, colorMode })
+
+  const ComingSoonAlert = ({ methodName }) => (
+    <VStack spacing={4} align="stretch" maxW={{ base: "100%", md: "90%" }}>
+      <InfoAlert
+        status="info"
+        title={t('checkout.comingSoonTitle', { method: methodName }) || `${methodName} Coming Soon`}
+        message={t('checkout.comingSoonMessage') || 'This payment method will be available soon. Please use cash payment at the restaurant.'}
+        colorMode={colorMode}
+      />
+      <Button 
+        colorScheme="gray" 
+        width="full"
+        size="md"
+        borderRadius="md"
+        variant="outline"
+        isDisabled
+      >
+        {t('checkout.unavailable', { method: methodName }) || `${methodName} Unavailable`}
+      </Button>
+    </VStack>
+  );
+
+  if (paymentMethod === PAYMENT_METHODS.CASH) {
+    return (
+      <VStack spacing={4} align="stretch" maxW={{ base: "100%", md: "90%" }}>
+        <InfoAlert
+          status="success"
+          title={t('checkout.cashPaymentTitle') || 'Cash Payment at Restaurant'}
+          message={t('checkout.cashPaymentMessage') || 'Your subscription will be activated when you pay in cash at the restaurant during pickup.'}
+          colorMode={colorMode}
+        />
+        
+        <Box
+          p={3}
+          borderRadius="md"
+          bg={colorMode === 'dark' ? 'gray.600' : 'gray.50'}
+          border="1px solid"
+          borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.200'}
+        >
+          <Text fontSize="sm" fontWeight="500" mb={2}>
+            {t('checkout.paymentInstructions') || 'Payment Instructions:'}
+          </Text>
+          <Text fontSize="sm">
+            {t('checkout.cashInstructions') || '1. Complete your subscription order online\n2. Visit the selected restaurant location\n3. Pay in cash to activate your subscription\n4. Start enjoying your meals!'}
+          </Text>
+        </Box>
+      </VStack>
+    )
+  }
+
+  if ([PAYMENT_METHODS.CREDIT_CARD, PAYMENT_METHODS.PAYPAL, PAYMENT_METHODS.APPLE_PAY, PAYMENT_METHODS.GOOGLE_PAY].includes(paymentMethod)) {
+    const methodNames = {
+      [PAYMENT_METHODS.CREDIT_CARD]: 'Credit Card',
+      [PAYMENT_METHODS.PAYPAL]: 'PayPal',
+      [PAYMENT_METHODS.APPLE_PAY]: 'Apple Pay',
+      [PAYMENT_METHODS.GOOGLE_PAY]: 'Google Pay',
+    }
+    
+    return <ComingSoonAlert methodName={methodNames[paymentMethod]} />
+  }
+
+  return (
+    <VStack spacing={4} align="stretch" maxW={{ base: "100%", md: "90%" }}>
+      <InfoAlert
+        status="info"
+        title={t('checkout.selectPaymentMethodFirst') || 'Please select a payment method to continue'}
+        colorMode={colorMode}
+      />
+    </VStack>
+  )
+}
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 const CheckoutPlan = () => {
-  // ALL HOOKS MUST BE CALLED AT THE TOP LEVEL - NO CONDITIONAL CALLS
-  // Hooks and context
+  console.log('🚀 CheckoutPlan component mounted')
+
+  // ============================================================================
+  // HOOKS - ALL AT TOP LEVEL
+  // ============================================================================
+  
+  // Context hooks
   const {
     subscriptionData,
     updateSubscriptionData,
@@ -336,23 +356,21 @@ const CheckoutPlan = () => {
   const { signatureSalads } = useElements()
   const toast = useToast()
   const { t } = useTranslation();
+  const { currentLanguage } = useI18nContext()
   
-  // Responsive breakpoint hooks
+  // Responsive breakpoints
   const gridColumns = useBreakpointValue({ 
     base: 1, 
     lg: 2,
     xl: 3 
   })
-  const { currentLanguage } = useI18nContext()
   
-  // Fetch user profile and addresses
+  // Data fetching hooks
   const { createSubscription } = useUserSubscriptions();
   const { data: profile } = useUserProfile();
-  const { 
-    addresses: userAddresses, 
-    isLoading: isLoadingAddresses 
-  } = useUserAddresses();
-
+  const { addresses: userAddresses, isLoading: isLoadingAddresses } = useUserAddresses();
+  const { addresses: restaurantAddresses, isLoading: isLoadingRestaurantAddresses } = useRestaurantAddresses();
+  
   // Modal controls
   const {
     isOpen: isConfirmationOpen,
@@ -363,29 +381,64 @@ const CheckoutPlan = () => {
 
   // Local state
   const [billingInfo, setBillingInfo] = useState({
-    fullName: '',
-    email: '',
-    phoneNumber: '',
+    fullName:user.displayName || profile.display_name,
+    email: profile.email,
+    phoneNumber: profile.phone_number,
     deliveryAddress: '',
   });
-  const [paymentMethod, setPaymentMethod] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS.CASH)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Memoized default address
-  const defaultAddress = useMemo(() => 
-    userAddresses?.find(addr => addr.is_default) || userAddresses?.[0],
-    [userAddresses]
-  );
+  // ============================================================================
+  // DEBUG LOGGING FOR ALL CONSUMED DATA
+  // ============================================================================
+  
+  useEffect(() => {
+    console.group('📊 CheckoutPlan - Data State')
+    console.log('👤 User:', user)
+    console.log('📝 Profile:', profile)
+    console.log('📍 User Addresses:', userAddresses)
+    console.log('🏪 Restaurant Addresses:', restaurantAddresses)
+    console.log('🥗 Signature Salads:', signatureSalads)
+    console.log('📦 Subscription Data:', subscriptionData)
+    console.log('💳 Payment Method:', paymentMethod)
+    console.log('📋 Billing Info:', billingInfo)
+    console.log('✅ Is Subscription Valid:', isSubscriptionValid)
+    console.log('🌐 Current Language:', currentLanguage)
+    console.log('🎨 Color Mode:', colorMode)
+    console.log('⏳ Loading States:', { 
+      isLoadingAddresses, 
+      isLoadingRestaurantAddresses,
+      isSubmitting 
+    })
+    console.groupEnd()
+  }, [
+    user, 
+    profile, 
+    userAddresses, 
+    restaurantAddresses, 
+    signatureSalads, 
+    subscriptionData, 
+    paymentMethod, 
+    billingInfo, 
+    isSubscriptionValid,
+    currentLanguage,
+    colorMode,
+    isLoadingAddresses,
+    isLoadingRestaurantAddresses,
+    isSubmitting
+  ])
 
-  // Memoized initial billing info
-  const initialBillingInfo = useMemo(() => ({
-    fullName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
-    email: user?.email || '',
-    phoneNumber: user?.phoneNumber || '',
-    deliveryAddress: defaultAddress?.display_name || user?.defaultAddress || '',
-  }), [user, defaultAddress]);
+  // ============================================================================
+  // MEMOIZED VALUES
+  // ============================================================================
+  
+  const defaultAddress = useMemo(() => {
+    const result = userAddresses?.find(addr => addr.is_default) || userAddresses?.[0]
+    console.log('🏠 Default Address:', result)
+    return result
+  }, [userAddresses]);
 
-  // Memoized date calculations
   const { today, startDate, formattedEndDate } = useMemo(() => {
     const today = new Date();
     const startDate = subscriptionData?.start_date || today.toLocaleDateString('en-US', {
@@ -398,7 +451,6 @@ const CheckoutPlan = () => {
     if (subscriptionData?.end_date) {
       endDateObj = new Date(subscriptionData.end_date);
     } else {
-      // Calculate end date as delivery date of last meal
       const lastMealIndex = (subscriptionData?.total_meals || 12) - 1;
       const startDateForDelivery = subscriptionData?.start_date 
         ? new Date(subscriptionData.start_date) 
@@ -412,22 +464,20 @@ const CheckoutPlan = () => {
       day: 'numeric',
     });
 
-    return { 
-      today, 
-      startDate, 
-      endDate: endDateObj, 
-      formattedEndDate 
-    };
+    console.log('📅 Date Calculations:', { today, startDate, endDate: endDateObj, formattedEndDate })
+
+    return { today, startDate, endDate: endDateObj, formattedEndDate };
   }, [subscriptionData?.start_date, subscriptionData?.end_date, subscriptionData?.total_meals]);
 
-  // Memoized selected meal objects
   const selectedMealObjects = useMemo(() => {
-    return subscriptionData?.meals
+    const result = subscriptionData?.meals
       ?.map(id => signatureSalads?.find(meal => meal.id === id))
       .filter(Boolean) || [];
+    
+    console.log('🍽️ Selected Meal Objects:', result)
+    return result
   }, [subscriptionData?.meals, signatureSalads]);
 
-  // Memoized form input props
   const inputProps = useMemo(() => ({
     variant: "outline",
     bg: colorMode === 'dark' ? 'gray.700' : 'white',
@@ -444,91 +494,131 @@ const CheckoutPlan = () => {
     }
   }), [colorMode]);
 
-  // Event handlers with useCallback for optimization
+  // ============================================================================
+  // EVENT HANDLERS
+  // ============================================================================
+  
   const handleBillingInfoChange = useCallback((field, value) => {
+    console.log('📝 Billing Info Changed:', { field, value })
     setBillingInfo(prev => ({ ...prev, [field]: value }));
   }, []);
 
+  const showToast = useCallback((title, description, status, duration = 3000) => {
+    console.log('🔔 Toast shown:', { title, description, status })
+    toast({
+      title,
+      description,
+      status,
+      duration,
+      isClosable: false,
+    })
+  }, [toast]);
+
   const handleOpenConfirmation = useCallback(() => {
+    console.log('🎯 Handle Open Confirmation called')
+    
     if (!paymentMethod) {
-      toast({
-        title: t('checkout.paymentMethodRequired'),
-        description: t('checkout.pleaseSelectPaymentMethod'),
-        status: 'warning',
-        duration: 3000,
-        isClosable: false,
-      })
+      showToast(
+        t('checkout.paymentMethodRequired'),
+        t('checkout.pleaseSelectPaymentMethod'),
+        'warning'
+      )
       return
     }
 
     const { fullName, email, deliveryAddress } = billingInfo;
     if (!fullName || !email || !deliveryAddress) {
-      toast({
-        title: t('checkout.requiredFieldsMissing'),
-        description: t('checkout.pleaseFillAllRequiredFields'),
-        status: 'warning',
-        duration: 3000,
-        isClosable: false,
-      })
+      showToast(
+        t('checkout.requiredFieldsMissing'),
+        t('checkout.pleaseFillAllRequiredFields'),
+        'warning'
+      )
       return
     }
 
+    console.log('✅ Validation passed, opening confirmation modal')
     onOpenConfirmation()
-  }, [paymentMethod, billingInfo, toast, t, onOpenConfirmation]);
+  }, [paymentMethod, billingInfo, showToast, t, onOpenConfirmation]);
 
   const handleAddSignatureSalad = useCallback((mealId) => {
+    console.log('➕ Adding meal:', mealId)
     addMeal(mealId);
   }, [addMeal]);
 
   const handleRemoveMeal = useCallback((mealId) => {
+    console.log('➖ Removing meal:', mealId)
     removeMeal(mealId);
   }, [removeMeal]);
 
   const handleConfirmSubscription = useCallback(async () => {
+    console.log('🎯 Confirming subscription...')
     setIsSubmitting(true);
     onCloseConfirmation();
 
     try {
-      if (!user?.id) throw new Error('User not authenticated');
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
 
-      // Update subscription data with final details
+      const subscriptionStatus = paymentMethod === PAYMENT_METHODS.CASH 
+        ? SUBSCRIPTION_STATUS.PENDING 
+        : SUBSCRIPTION_STATUS.ACTIVE;
+
+      console.log('📦 Updating subscription data with status:', subscriptionStatus)
+      
       updateSubscriptionData({
         delivery_address_id: subscriptionData?.delivery_address_id,
         preferred_delivery_time: subscriptionData?.preferred_delivery_time,
-        payment_method_id: paymentMethod,
-        status: 'active'
+        payment_method: paymentMethod,
+        status: subscriptionStatus
       });
 
-      // Get final payload from context
       const subscriptionPayload = getSubscriptionPayload(user.id);
+      console.log('📤 Subscription Payload:', subscriptionPayload)
 
-      // Create subscription with the payload
       await createSubscription(subscriptionPayload);
 
-      toast({
-        title: t('checkout.subscriptionSuccessful'),
-        description: t('checkout.premiumPlanActive'),
-        status: 'success',
-        duration: 5000,
-        isClosable: false,
-      });
+      const isCashPayment = paymentMethod === PAYMENT_METHODS.CASH
+      
+      showToast(
+        isCashPayment ? t('checkout.subscriptionPending') : t('checkout.subscriptionSuccessful'),
+        isCashPayment ? t('checkout.pendingPaymentMessage') : t('checkout.premiumPlanActive'),
+        isCashPayment ? 'info' : 'success',
+        5000
+      );
 
-      navigate('/account?subscription=success');
+      const redirectPath = isCashPayment 
+        ? '/account?subscription=pending' 
+        : '/account?subscription=success'
+      
+      console.log('🔄 Navigating to:', redirectPath)
+      navigate(redirectPath);
     } catch (error) {
-      console.error('Error confirming subscription:', error);
+      console.error('❌ Error confirming subscription:', error);
       setIsSubmitting(false);
 
-      toast({
-        title: t('checkout.subscriptionFailed'),
-        description: error.message || t('checkout.failedToUpdatePlanSubscription'),
-        status: 'error',
-        duration: 5000,
-        isClosable: false,
-      });
+      showToast(
+        t('checkout.subscriptionFailed'),
+        error.message || t('checkout.failedToUpdatePlanSubscription'),
+        'error',
+        5000
+      );
     }
-  }, [user?.id, paymentMethod, subscriptionData, updateSubscriptionData, getSubscriptionPayload, createSubscription, toast, t, navigate, onCloseConfirmation]);
-
+  }, [
+    user?.id, 
+    paymentMethod, 
+    subscriptionData, 
+    updateSubscriptionData, 
+    getSubscriptionPayload, 
+    createSubscription, 
+    showToast, 
+    t, 
+    navigate, 
+    onCloseConfirmation
+  ]);
+  
   const handleSelectLocation = useCallback((addressData) => {
+    console.log('📍 Location selected:', addressData)
     setBillingInfo(prev => ({ 
       ...prev, 
       deliveryAddress: addressData.display_name 
@@ -537,28 +627,35 @@ const CheckoutPlan = () => {
       delivery_address_id: addressData.id
     });
   }, [updateSubscriptionData]);
-  
-  const handleAddressInputChange = useCallback((e) => {
-    handleBillingInfoChange('deliveryAddress', e.target.value);
-  }, [handleBillingInfoChange]);
 
-  // Initialize billing info with user data - optimized effect
+  // ============================================================================
+  // EFFECTS
+  // ============================================================================
+  
   useEffect(() => {
-    if (profile && userAddresses) {
-      const defaultAddr = userAddresses.find(addr => addr.is_default) || userAddresses[0];
+    if (profile && restaurantAddresses && restaurantAddresses.length > 0) {
+      console.log('🔄 Initializing billing info from profile and restaurant addresses')
       
       setBillingInfo({
         fullName: profile.display_name || '',
         email: user?.email || '',
         phoneNumber: profile.phone_number || '',
-        deliveryAddress: defaultAddr ? 
-          (defaultAddr.display_name || `${defaultAddr.address_line1}, ${defaultAddr.city}`) : '',
+        deliveryAddress: restaurantAddresses[0].display_name || '',
+      });
+
+      updateSubscriptionData({
+        delivery_address_id: restaurantAddresses[0].id
       });
     }
-  }, [profile, userAddresses, user?.email]);
+  }, [profile, restaurantAddresses, user?.email, updateSubscriptionData]);
 
-  // Early return after all hooks have been called
+  // ============================================================================
+  // RENDER
+  // ============================================================================
+  
+  // Early return for loading state
   if (!subscriptionData) {
+    console.log('⏳ No subscription data, showing loading skeleton')
     return (
       <Box
         minHeight="100vh"
@@ -575,6 +672,8 @@ const CheckoutPlan = () => {
       </Box>
     );
   }
+
+  console.log('✅ Rendering main checkout content')
 
   return (
     <Box
@@ -601,12 +700,8 @@ const CheckoutPlan = () => {
           </Text>
         </VStack>
 
-        <SimpleGrid
-          columns={gridColumns} 
-          spacing={6}
-          gap={6}
-        >
-          {/* Billing Information */}
+        <SimpleGrid columns={gridColumns} spacing={6} gap={6}>
+          {/* Billing Information Section */}
           <Section title={t('checkout.billingInformation')} bgColor="teal" icon={saladIcon}>
             <Stack spacing={4}>
               <FormControl isRequired>
@@ -614,7 +709,6 @@ const CheckoutPlan = () => {
                   {t('checkout.fullName')}
                 </FormLabel>
                 <Input
-                  borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.300'}
                   placeholder={t('checkout.enterYourFullName')}
                   value={billingInfo.fullName}
                   onChange={(e) => handleBillingInfoChange('fullName', e.target.value)}
@@ -631,7 +725,6 @@ const CheckoutPlan = () => {
                   placeholder={t('checkout.yourEmailAddress')}
                   value={billingInfo.email}
                   onChange={(e) => handleBillingInfoChange('email', e.target.value)}
-                  borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.300'}
                   {...inputProps}
                 />
               </FormControl>
@@ -644,7 +737,6 @@ const CheckoutPlan = () => {
                   placeholder={t('checkout.yourPhoneNumber')}
                   value={billingInfo.phoneNumber}
                   onChange={(e) => handleBillingInfoChange('phoneNumber', e.target.value)}
-                  borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.300'}
                   {...inputProps}
                 />
               </FormControl>
@@ -653,39 +745,64 @@ const CheckoutPlan = () => {
                 <FormLabel fontSize="sm" fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'brand.700'}>
                   {t('checkout.deliveryAddress')}
                 </FormLabel>
-                <Flex 
-                  alignItems="stretch" 
-                  gap={3}
-                  width="100%"
-                >
-                  <Input
-                    placeholder={t('checkout.enterDeliveryAddress')}
-                    flex="1"
-                    value={billingInfo.deliveryAddress}
-                    onChange={handleAddressInputChange}
-                    borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.300'}
-                    {...inputProps}
-                  />
+                
+                <InfoAlert
+                  status="info"
+                  title={t('checkout.deliveryRestrictionTitle') || 'Pickup Only'}
+                  message={t('checkout.deliveryRestrictionMessage') || 'Currently we only offer pickup from our restaurant locations. Delivery service will be available soon.'}
+                  colorMode={colorMode}
+                />
+
+                <Box mt={3}>
+                  {isLoadingRestaurantAddresses ? (
+                    <Skeleton height="40px" borderRadius="md" />
+                  ) : (
+                    <Select
+                      placeholder={t('checkout.selectRestaurantLocation') || "Select restaurant location"}
+                      value={billingInfo.deliveryAddress}
+                      onChange={(e) => {
+                        const selectedAddress = restaurantAddresses.find(addr => addr.display_name === e.target.value);
+                        handleBillingInfoChange('deliveryAddress', e.target.value);
+                        if (selectedAddress) {
+                          updateSubscriptionData({
+                            delivery_address_id: selectedAddress.id
+                          });
+                        }
+                      }}
+                      bg={colorMode === 'dark' ? 'gray.700' : 'white'}
+                      borderWidth="2px"
+                      borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.300'}
+                      size="md"
+                      _hover={{
+                        borderColor: colorMode === 'dark' ? 'gray.400' : 'brand.400'
+                      }}
+                    >
+                      {restaurantAddresses?.map((address) => (
+                        <option key={address.id} value={address.display_name}>
+                          {address.label} - {address.address_line1}, {address.city}
+                        </option>
+                      ))}
+                    </Select>
+                  )}
+                </Box>
+                
+                <Flex justifyContent="flex-end" mt={2}>
                   <Button 
                     onClick={onOpenMap}
-                    size="md"
-                    minW="50px"
-                    bg={colorMode === 'dark' ? 'gray.600' : 'gray.50'}
-                    border="2px solid"
-                    borderColor={colorMode === 'dark' ? 'gray.500' : 'gray.300'}
-                    _hover={{
-                      bg: colorMode === 'dark' ? 'gray.500' : 'gray.100'
-                    }}
+                    size="sm"
+                    variant="outline"
+                    leftIcon={<Image src={locationPin} alt="Location Pin" boxSize="16px" />}
                   >
-                    <Image src={locationPin} alt="Location Pin" boxSize="20px" />
+                    {t('checkout.viewOnMap') || 'View on Map'}
                   </Button>
                 </Flex>
                 
-                <Suspense fallback={<div>Loading...</div>}>
+                <Suspense fallback={<div>Loading map...</div>}>
                   <MapModal
                     isOpen={isMapOpen}
                     onClose={onCloseMap}
                     onSelectLocation={handleSelectLocation}
+                    restaurantAddresses={restaurantAddresses}
                   />
                 </Suspense>
               </FormControl>
@@ -697,17 +814,14 @@ const CheckoutPlan = () => {
                 border="1px solid"
                 borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.200'}
               >
-                <Checkbox 
-                  colorScheme="brand" 
-                  fontSize="sm"
-                >
+                <Checkbox colorScheme="brand" fontSize="sm">
                   {t('checkout.sendMePlanUpdatesAndNotifications')}
                 </Checkbox>
               </Box>
             </Stack>
           </Section>
 
-          {/* Payment Details */}
+          {/* Payment Details Section */}
           <Section title={t('checkout.paymentDetails')} bgColor="secondary" icon={paymentIcon}>
             <VStack spacing={5} align="stretch">
               <FormControl>
@@ -720,25 +834,43 @@ const CheckoutPlan = () => {
                   bg={colorMode === 'dark' ? 'gray.700' : 'white'}
                   borderWidth="2px"
                   borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.300'}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  onChange={(e) => {
+                    console.log('💳 Payment method changed:', e.target.value)
+                    setPaymentMethod(e.target.value)
+                  }}
                   value={paymentMethod}
                   size="md"
                   _hover={{
                     borderColor: colorMode === 'dark' ? 'gray.400' : 'brand.400'
                   }}
                 >
-                  <option value="credit-card">Credit Card</option>
-                  <option value="paypal">PayPal</option>
-                  <option value="apple-pay">Apple Pay</option>
-                  <option value="google-pay">Google Pay</option>
+                  <option value={PAYMENT_METHODS.CASH}>
+                    {t('checkout.cashAtRestaurant') || 'Cash at Restaurant'}
+                  </option>
+                  <option value={PAYMENT_METHODS.CREDIT_CARD} disabled>
+                    {t('checkout.creditCard') || 'Credit Card'} ({t('checkout.comingSoon') || 'Coming Soon'})
+                  </option>
+                  <option value={PAYMENT_METHODS.PAYPAL} disabled>
+                    {t('checkout.paypal') || 'PayPal'} ({t('checkout.comingSoon') || 'Coming Soon'})
+                  </option>
+                  <option value={PAYMENT_METHODS.APPLE_PAY} disabled>
+                    {t('checkout.applePay') || 'Apple Pay'} ({t('checkout.comingSoon') || 'Coming Soon'})
+                  </option>
+                  <option value={PAYMENT_METHODS.GOOGLE_PAY} disabled>
+                    {t('checkout.googlePay') || 'Google Pay'} ({t('checkout.comingSoon') || 'Coming Soon'})
+                  </option>
                 </Select>
+                
+                <Text fontSize="xs" color="gray.500" mt={2}>
+                  {t('checkout.paymentMethodInfo') || 'Currently only cash payments at the restaurant are available. Online payments coming soon.'}
+                </Text>
               </FormControl>
 
               <PaymentMethodInputs paymentMethod={paymentMethod} t={t} colorMode={colorMode} />
             </VStack>
           </Section>
 
-          {/* Subscription Summary */}
+          {/* Subscription Summary Section */}
           <Section title={t('checkout.subscriptionSummary')} bgColor="brand" icon={orderIcon}>
             <SubscriptionSummary />
             <Button
@@ -766,7 +898,7 @@ const CheckoutPlan = () => {
           </Section>
         </SimpleGrid>
 
-        {/* ConfirmPlanModal */}
+        {/* Confirmation Modal */}
         {isConfirmationOpen && (
           <ConfirmPlanModal
             isOpen={isConfirmationOpen}
