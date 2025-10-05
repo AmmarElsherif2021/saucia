@@ -498,5 +498,105 @@ async getSubscriptionOrders(options = {}) {
     console.error('Failed to get subscription orders:', error);
     return [];
   }
-}
+},
+ subscribeToSubscriptions(callback) {
+    return supabase
+      .channel('admin-subscriptions-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_subscriptions'
+        },
+        callback
+      )
+      .subscribe();
+  },
+
+  // Subscribe to specific subscription changes
+  subscribeToSubscription(subscriptionId, callback) {
+    return supabase
+      .channel(`subscription-${subscriptionId}-changes`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_subscriptions',
+          filter: `id=eq.${subscriptionId}`
+        },
+        callback
+      )
+      .subscribe();
+  },
+
+  // Subscribe to subscription orders changes
+  subscribeToSubscriptionOrders(subscriptionId, callback) {
+    return supabase
+      .channel(`subscription-orders-${subscriptionId}-changes`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `subscription_id=eq.${subscriptionId}`
+        },
+        callback
+      )
+      .subscribe();
+  },
+
+  // Subscribe to all orders changes (admin view)
+  subscribeToAllOrders(callback) {
+    return supabase
+      .channel('admin-orders-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders'
+        },
+        callback
+      )
+      .subscribe();
+  },
+
+  // Subscribe to upcoming deliveries
+  subscribeToUpcomingDeliveries(callback) {
+    return supabase
+      .channel('upcoming-deliveries-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: 'status=in.(pending,confirmed,preparing)'
+        },
+        callback
+      )
+      .subscribe();
+  },
+
+  // Get real-time connection status
+  async getRealtimeStatus() {
+    try {
+      const channel = supabase.channel('status-check');
+      return new Promise((resolve) => {
+        channel
+          .on('system', { event: 'connected' }, () => resolve({ connected: true }))
+          .on('system', { event: 'disconnected' }, () => resolve({ connected: false }))
+          .subscribe();
+        
+        // Cleanup after check
+        setTimeout(() => channel.unsubscribe(), 1000);
+      });
+    } catch (error) {
+      return { connected: false, error: error.message };
+    }
+  }
+
 };

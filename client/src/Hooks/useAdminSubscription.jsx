@@ -1,8 +1,38 @@
 import { useState, useEffect, useCallback } from 'react';
 import { adminSubscriptionAPI } from '../API/adminSubscriptionAPI';
 
-// ===== BASE HOOK FOR COMMON FUNCTIONALITY =====
-const useBaseSubscription = (defaultOptions = {}) => {
+// ===== CONSTANTS AND CONFIGURATIONS =====
+const DEFAULT_OPTIONS = {
+  orderBy: 'created_at',
+  ascending: false,
+  limit: 50
+};
+
+const MOCK_ANALYTICS = {
+  total_subscriptions: 0,
+  active_subscriptions: 0,
+  month_growth: 0,
+  active_growth: 0,
+  today_deliveries: 0,
+  delivery_completion_rate: 0,
+  monthly_revenue: 0,
+  revenue_growth: 0
+};
+
+// ===== UTILITY FUNCTIONS =====
+const handleApiError = (error, context = 'API call') => {
+  const errorMessage = error?.message || `An unexpected error occurred during ${context}`;
+  console.error(`${context} failed:`, errorMessage, error);
+  return errorMessage;
+};
+
+const shouldRefetch = (lastFetch, cacheTime = 30000) => {
+  if (!lastFetch) return true;
+  return Date.now() - lastFetch.getTime() > cacheTime;
+};
+
+// ===== BASE HOOKS =====
+const useBaseApi = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
@@ -11,15 +41,15 @@ const useBaseSubscription = (defaultOptions = {}) => {
   const executeApiCall = useCallback(async (apiCall, ...args) => {
     setLoading(true);
     setError(null);
+    
     try {
       const result = await apiCall(...args);
       setData(result);
       setLastFetch(new Date());
       return result;
     } catch (err) {
-      const errorMessage = err.message || 'An unexpected error occurred';
+      const errorMessage = handleApiError(err, 'API call');
       setError(errorMessage);
-      console.error('API call failed:', errorMessage, err);
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
@@ -47,63 +77,9 @@ const useBaseSubscription = (defaultOptions = {}) => {
   };
 };
 
-// ===== MAIN SUBSCRIPTION MANAGEMENT HOOK =====
-export const useAdminSubscription = () => {
-  const base = useBaseSubscription();
-
-  // Helper function to wrap API calls
-  const createApiCall = (apiCall) => 
-    useCallback((...args) => base.executeApiCall(apiCall, ...args), [base]);
-
-  const getAllSubscriptions = createApiCall(adminSubscriptionAPI.getAllSubscriptions);
-  const getSubscriptionDetails = createApiCall(adminSubscriptionAPI.getSubscriptionDetails);
-  const createSubscription = createApiCall(adminSubscriptionAPI.createSubscription);
-  const activateSubscription = createApiCall(adminSubscriptionAPI.activateSubscription);
-  const updateSubscription = createApiCall(adminSubscriptionAPI.updateSubscription);
-  const updateSubscriptionStatus = createApiCall(adminSubscriptionAPI.updateSubscriptionStatus);
-  
-  const updateDeliveryStatus = useCallback(
-    async (orderId, status) => {
-      try {
-        const result = await adminSubscriptionAPI.updateOrderStatus(orderId, status);
-        return result;
-      } catch (err) {
-        console.error('Update delivery status failed:', err);
-        throw err;
-      }
-    },
-    []
-  );
-  
-  const updateOrderStatus = createApiCall(adminSubscriptionAPI.updateOrderStatus);
-
-  return {
-    // State
-    loading: base.loading,
-    error: base.error,
-    data: base.data,
-    lastFetch: base.lastFetch,
-    
-    // Subscription management functions
-    getAllSubscriptions,
-    getSubscriptionDetails,
-    createSubscription,
-    activateSubscription,
-    updateSubscription,
-    updateSubscriptionStatus,
-    updateDeliveryStatus,
-    updateOrderStatus,
-    // Utility functions
-    clearError: base.clearError,
-    resetData: base.resetData,
-    refresh: base.refresh
-  };
-};
-
-// ===== BASE HOOK FOR LIST DATA =====
-const useBaseList = (apiCall, initialOptions = {}) => {
+const useBaseList = (apiCall, initialOptions = {}, realtimeConfig = null) => {
   const [data, setData] = useState([]);
-  const [options, setOptions] = useState(initialOptions);
+  const [options, setOptions] = useState({ ...DEFAULT_OPTIONS, ...initialOptions });
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -119,14 +95,43 @@ const useBaseList = (apiCall, initialOptions = {}) => {
       setTotalCount((result || []).length);
       return result;
     } catch (err) {
-      console.error('Fetch data failed:', err);
-      setError(err.message);
+      const errorMessage = handleApiError(err, 'Fetch data');
+      setError(errorMessage);
       setData([]);
       throw err;
     } finally {
       setLoading(false);
     }
   }, [apiCall, options]);
+
+  // Real-time subscription setup
+  useEffect(() => {
+    if (!realtimeConfig?.subscribe) return;
+
+    const subscription = realtimeConfig.subscribe((payload) => {
+      console.log('🔔 Real-time update:', payload);
+      
+      // Update local data based on event type
+      if (payload.eventType === 'INSERT') {
+        setData(prev => [payload.new, ...prev]);
+      } else if (payload.eventType === 'UPDATE') {
+        setData(prev => prev.map(item => 
+          item.id === payload.new.id ? payload.new : item
+        ));
+      } else if (payload.eventType === 'DELETE') {
+        setData(prev => prev.filter(item => item.id !== payload.old.id));
+      }
+
+      // Optionally refetch to ensure consistency
+      if (realtimeConfig.refetchOnChange) {
+        fetchData();
+      }
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, [realtimeConfig, fetchData]);
 
   const updateOptions = useCallback((newOptions) => {
     setOptions(prev => ({ ...prev, ...newOptions }));
@@ -146,61 +151,126 @@ const useBaseList = (apiCall, initialOptions = {}) => {
   };
 };
 
+// ===== API CALL CREATORS =====
+const createApiCaller = (executeApiCall, apiCall) => 
+  useCallback((...args) => executeApiCall(apiCall, ...args), [executeApiCall, apiCall]);
+
 // ===== SPECIALIZED HOOKS =====
 
-// Hook for subscription list with proper data handling
-export const useSubscriptionList = (initialOptions = {}) => {
-  const defaultOptions = {
-    orderBy: 'created_at',
-    ascending: false,
-    limit: 50,
-    ...initialOptions
+// Main subscription management hook
+export const useAdminSubscription = () => {
+  const base = useBaseApi();
+  
+  // Create all API callers
+  const apiCallers = {
+    getAllSubscriptions: createApiCaller(base.executeApiCall, adminSubscriptionAPI.getAllSubscriptions),
+    getSubscriptionDetails: createApiCaller(base.executeApiCall, adminSubscriptionAPI.getSubscriptionDetails),
+    createSubscription: createApiCaller(base.executeApiCall, adminSubscriptionAPI.createSubscription),
+    activateSubscription: createApiCaller(base.executeApiCall, adminSubscriptionAPI.activateSubscription),
+    updateSubscription: createApiCaller(base.executeApiCall, adminSubscriptionAPI.updateSubscription),
+    updateSubscriptionStatus: createApiCaller(base.executeApiCall, adminSubscriptionAPI.updateSubscriptionStatus),
+    updateOrderStatus: createApiCaller(base.executeApiCall, adminSubscriptionAPI.updateOrderStatus),
   };
 
-  const base = useBaseList(adminSubscriptionAPI.getAllSubscriptions, defaultOptions);
+  // Special handling for delivery status updates
+  const updateDeliveryStatus = useCallback(
+    async (orderId, status) => {
+      try {
+        const result = await adminSubscriptionAPI.updateOrderStatus(orderId, status);
+        return result;
+      } catch (err) {
+        const errorMessage = handleApiError(err, 'Update delivery status');
+        throw new Error(errorMessage);
+      }
+    },
+    []
+  );
 
-  // Initial fetch
+  return {
+    // State
+    loading: base.loading,
+    error: base.error,
+    data: base.data,
+    lastFetch: base.lastFetch,
+    
+    // API functions
+    ...apiCallers,
+    updateDeliveryStatus,
+    
+    // Utility functions
+    clearError: base.clearError,
+    resetData: base.resetData,
+    refresh: base.refresh
+  };
+};
+
+// Subscription list hook with real-time updates
+export const useSubscriptionList = (initialOptions = {}) => {
+  const base = useBaseList(
+    adminSubscriptionAPI.getAllSubscriptions, 
+    initialOptions,
+    {
+      subscribe: (callback) => adminSubscriptionAPI.subscribeToSubscriptions(callback),
+      refetchOnChange: false // Update locally for better UX
+    }
+  );
+
+  // Initial fetch on mount
   useEffect(() => {
     base.fetchData();
   }, []);
 
   // Refetch when key options change
   useEffect(() => {
-    base.fetchData();
+    if (base.options.status || base.options.orderBy || base.options.ascending || base.options.user_id) {
+      base.fetchData();
+    }
   }, [base.options.status, base.options.orderBy, base.options.ascending, base.options.user_id]);
 
   const filterByStatus = useCallback((status) => {
     base.updateOptions({ status: status === 'all' ? undefined : status });
   }, [base.updateOptions]);
 
-  return { 
+  return {
     ...base,
     subscriptions: base.data,
     filterByStatus,
   };
 };
 
-// Hook for upcoming deliveries with corrected API call
+// Upcoming deliveries hook with real-time updates
 export const useUpcomingDeliveries = (daysAhead = 7, options = {}) => {
   const fetchDeliveries = useCallback(async () => {
-    const days = Math.max(0, parseInt(daysAhead, 10) || 7);
-    return await adminSubscriptionAPI.getUpcomingDeliveries(days);
+    try {
+      const days = Math.max(0, parseInt(daysAhead, 10) || 7);
+      return await adminSubscriptionAPI.getUpcomingDeliveries(days);
+    } catch (error) {
+      const errorMessage = handleApiError(error, 'Fetch deliveries');
+      throw new Error(errorMessage);
+    }
   }, [daysAhead]);
 
-  const base = useBaseList(fetchDeliveries, options);
+  const base = useBaseList(
+    fetchDeliveries, 
+    options,
+    {
+      subscribe: (callback) => adminSubscriptionAPI.subscribeToUpcomingDeliveries(callback),
+      refetchOnChange: true // Refetch to ensure date filters are correct
+    }
+  );
 
-  // Initial fetch
+  // Fetch data when the fetchDeliveries function changes
   useEffect(() => {
     base.fetchData();
-  }, [base.fetchData]);
+  }, [fetchDeliveries]);
 
-  return { 
+  return {
     ...base,
     deliveries: base.data,
   };
 };
 
-// Hook for subscription analytics with mock data fallback
+// Analytics hook with robust error handling and mock data fallback
 export const useSubscriptionAnalytics = (options = {}) => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -212,40 +282,49 @@ export const useSubscriptionAnalytics = (options = {}) => {
     
     try {
       let data;
+      
+      // Try to fetch from API first
       try {
         data = await adminSubscriptionAPI.getSubscriptionAnalytics();
       } catch (apiError) {
         console.warn('Analytics API failed, using mock data:', apiError);
-        // Fallback mock data
-        data = {
-          total_subscriptions: 0,
-          active_subscriptions: 0,
-          month_growth: 0,
-          active_growth: 0,
-          today_deliveries: 0,
-          delivery_completion_rate: 0,
-          monthly_revenue: 0,
-          revenue_growth: 0
-        };
+        // Use mock data as fallback
+        data = { ...MOCK_ANALYTICS };
       }
       
       setAnalytics(data);
       return data;
     } catch (err) {
-      console.error('Fetch analytics failed:', err);
-      setError(err.message);
+      const errorMessage = handleApiError(err, 'Fetch analytics');
+      setError(errorMessage);
       throw err;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Initial fetch
+  // Initial fetch on mount
   useEffect(() => {
     fetchAnalytics();
   }, [fetchAnalytics]);
 
-  return { 
+  // Real-time updates for analytics (refetch when subscriptions change)
+  useEffect(() => {
+    const subscription = adminSubscriptionAPI.subscribeToSubscriptions(() => {
+      // Debounce analytics refetch to avoid excessive calls
+      const timeoutId = setTimeout(() => {
+        fetchAnalytics();
+      }, 2000);
+
+      return () => clearTimeout(timeoutId);
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, [fetchAnalytics]);
+
+  return {
     data: analytics,
     analytics,
     isLoading: loading,
@@ -254,18 +333,26 @@ export const useSubscriptionAnalytics = (options = {}) => {
   };
 };
 
-export default useAdminSubscription;
-
+// Subscription orders hook with real-time updates
 export const useSubscriptionOrders = (options = {}) => {
-  const base = useBaseList(adminSubscriptionAPI.getSubscriptionOrders, options);
+  const base = useBaseList(
+    adminSubscriptionAPI.getSubscriptionOrders, 
+    options,
+    {
+      subscribe: (callback) => adminSubscriptionAPI.subscribeToAllOrders(callback),
+      refetchOnChange: false
+    }
+  );
 
-  // Initial fetch
+  // Initial fetch on mount
   useEffect(() => {
     base.fetchData();
   }, []);
 
-  return { 
+  return {
     ...base,
     orders: base.data,
   };
 };
+
+export default useAdminSubscription;

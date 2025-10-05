@@ -3,44 +3,76 @@ import { CRT } from '../../Components/Cart'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useCart } from '../../Contexts/CartContext'
+import { useEffect } from 'react'
 
 const CartPage = () => {
   const { colorMode } = useColorMode()
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { cart, addToCart, removeFromCart } = useCart()
+  const { 
+    cart, 
+    updateMealQuantity, 
+    updateItemQuantity,
+    removeMealFromCart,
+    //removeItemFromCart
+  } = useCart()
+
+  useEffect(() => {
+    console.log('Cart state updated:', JSON.stringify(cart, null, 2))
+  }, [cart])
+
+  // Convert cart structure to format expected by CRT component
+  // const cartMeals = [
+  //   // Add meals to cart items
+  //   ...cart.meals.map(meal => ({
+  //     id: meal.meal_id,
+  //     type: 'meal',
+  //     name: meal.name,
+  //     name_arabic: meal.name_arabic,
+  //     unit_price: meal.unit_price,
+  //     quantity: meal.quantity,
+  //     image: meal.image_url,
+  //     selectedItems: meal.selectedItems?.map(item => item.item_id) || []
+  //   })),
+    // Add standalone items to cart items
+    // ...cart.items.map(item => ({
+    //   id: item.item_id,
+    //   type: 'item',
+    //   name: item.name,
+    //   price: item.unit_price,
+    //   quantity: item.quantity,
+    //   quantity: item.quantity,
+    //   image: item.image_url,
+    //   selectedItems: []
+    // }))
+    //]
 
   const handleIncrease = (id) => {
-    const item = cart.find((item) => item.id === id)
-    if (item) {
-      // We're updating an existing item's quantity by 1
-      const updatedItem = { ...item }
-      updatedItem.qty += 1 // Just pass 1 as the qty to increment by one
-      addToCart(updatedItem)
+    const meal = cart.meals.find((m) => m.temp_meal_id === id)
+    if (meal && meal.quantity<999) {
+        updateMealQuantity(id, meal.quantity + 1)
     }
   }
 
   const handleDecrease = (id) => {
-    const item = cart.find((item) => item.id === id)
-    if (item && item.qty > 1) {
-      // We're decreasing the quantity, so we pass a negative value
-      const updatedItem = { ...item }
-      updatedItem.qty -= 1 // Negative value to decrement
-      addToCart(updatedItem)
+    const meal = cart.meals.find((m) => m.temp_meal_id === id)
+    if (meal && meal.quantity > 1) {
+       updateMealQuantity(id, meal.quantity - 1)
     }
   }
 
   const handleRemove = (id) => {
-    removeFromCart(id)
+    const meal = cart.meals.find((m) => m.temp_meal_id === id)
+    if (meal) {
+      removeMealFromCart(id)
+    }
   }
 
-  const totalPrice = cart.reduce(
-    (total, item) => total + item.price * item.qty, // Use qty instead of quantity
-    0,
-  )
+  // Use the calculated total from cart metadata
+  const totalPrice = cart.orderMetadata.subtotal
 
   const handleCheckOut = () => {
-    window.alert(t('cart.proceedToCheckout')) // Translate "Proceeding to checkout..."
+    window.alert(t('cart.proceedToCheckout'))
     navigate('/checkout')
   }
 
@@ -50,11 +82,7 @@ const CartPage = () => {
         {t('cart.yourCart')}
       </Heading>
       <CRT
-        items={cart.map((item) => ({
-          ...item,
-          name: item.name,
-          quantity: item.qty, // Map qty to quantity for the CRT component
-        }))}
+        meals={cart.meals}
         totalPrice={totalPrice}
         onIncrease={handleIncrease}
         onDecrease={handleDecrease}

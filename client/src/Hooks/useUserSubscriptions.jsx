@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { useAuthContext } from '../Contexts/AuthContext';
 import { userAPI } from '../API/userAPI';
 
@@ -12,7 +13,7 @@ export const useUserSubscriptions = () => {
         queryFn: () => userAPI.getUserActiveSubscription(user.id),
         enabled: !!user?.id,
         onSuccess: (data) => {
-            console.log('🔍 Subscription Query Result:', {
+            console.log('📋 Subscription Query Result:', {
                 hasSubscription: !!data,
                 subscriptionId: data?.id,
                 status: data?.status,
@@ -35,12 +36,55 @@ export const useUserSubscriptions = () => {
         }
     });
 
+    // Real-time subscription for subscription updates
+    useEffect(() => {
+        if (!user?.id) return;
+
+        const subscription = userAPI.subscribeToUserSubscriptions(user.id, (payload) => {
+            console.log('🔔 Subscription update:', payload);
+            
+            // Update active subscription query
+            if (payload.eventType === 'UPDATE') {
+                queryClient.setQueryData(['userSubscription', user.id], (old) => {
+                    if (old?.id === payload.new.id) {
+                        return payload.new;
+                    }
+                    return old;
+                });
+            } else if (payload.eventType === 'INSERT') {
+                queryClient.invalidateQueries(['userSubscription', user.id]);
+            }
+            
+            // Always invalidate all subscriptions list
+            queryClient.invalidateQueries(['allUserSubscriptions', user.id]);
+        });
+
+        return () => {
+            subscription?.unsubscribe();
+        };
+    }, [user?.id, queryClient]);
+
     // Get subscription orders (pending meals)
     const ordersQuery = useQuery({
         queryKey: ['subscriptionOrders', user?.id, subscriptionQuery.data?.id],
         queryFn: () => userAPI.getSubscriptionOrders(subscriptionQuery.data?.id),
         enabled: !!subscriptionQuery.data?.id
     });
+
+    // Real-time subscription for order updates within subscriptions
+    useEffect(() => {
+        if (!user?.id || !subscriptionQuery.data?.id) return;
+
+        const subscription = userAPI.subscribeToUserSubscriptionOrders?.(subscriptionQuery.data.id, (payload) => {
+            console.log('🔔 Subscription order update:', payload);
+            queryClient.invalidateQueries(['subscriptionOrders', user.id]);
+            queryClient.invalidateQueries(['nextMeal', user.id]);
+        });
+
+        return () => {
+            subscription?.unsubscribe();
+        };
+    }, [user?.id, subscriptionQuery.data?.id, queryClient]);
 
     // Get next scheduled meal
     const nextMealQuery = useQuery({

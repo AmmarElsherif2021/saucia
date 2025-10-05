@@ -70,108 +70,72 @@ export const CustomizableMealModal = ({
    * Calculate total price based on selected items - using useMemo for performance
    */
   const totalPrice = useMemo(() => {
-    let price = meal.base_price || meal.price || 0
+  let price = meal.base_price || meal.price || 0
+  
+  // Calculate extra charges for selected items
+  Object.entries(selectedItems).forEach(([itemId, quantity]) => {
+    if (quantity <= 0) return
     
-    // Group selected items by section for charging calculation
-    const sectionItems = {}
+    // Find the item in groupedItems
+    let item = null
+    for (const section of Object.entries(groupedItems)) {
+      item = section[1].find((i) => i.id == itemId)
+      if (item) break
+    }
     
-    Object.entries(selectedItems).forEach(([itemId, quantity]) => {
-      if (quantity <= 0) return
-      
-      // Find the item in groupedItems
-      let item = null
-      let itemSection = null
-      
-      for (const [section, items] of Object.entries(groupedItems)) {
-        item = items.find((i) => i.id == itemId)
-        if (item) {
-          itemSection = section
-          break
-        }
-      }
-      
-      if (item && itemSection) {
-        if (!sectionItems[itemSection]) {
-          sectionItems[itemSection] = []
-        }
-        sectionItems[itemSection].push({ item, quantity })
-      }
-    })
-
-    // Calculate extra charges for each section
-    Object.entries(sectionItems).forEach(([section, items]) => {
-      const freeAllowance = sectionFreeCounts[section]?.value || 0
-      const totalQuantityInSection = items.reduce((sum, { quantity }) => sum + quantity, 0)
-      
-      if (totalQuantityInSection > freeAllowance) {
-        // Sort items by price (most expensive first) to charge for expensive items
-        const sortedItems = [...items].sort(
-          (a, b) => (b.item.price || 0) - (a.item.price || 0)
-        )
-        
-        let remainingFreeItems = freeAllowance
-        
-        for (const { item, quantity } of sortedItems) {
-          const itemPrice = item.price || 0
-          
-          if (remainingFreeItems >= quantity) {
-            // All items in this entry are free
-            remainingFreeItems -= quantity
-          } else if (remainingFreeItems > 0) {
-            // Some items are free, some are charged
-            const chargedQuantity = quantity - remainingFreeItems
-            price += chargedQuantity * itemPrice
-            remainingFreeItems = 0
-          } else {
-            // All items in this entry are charged
-            price += quantity * itemPrice
-          }
-        }
-      }
-    })
-    
-    return price
-  }, [selectedItems, meal, groupedItems, sectionFreeCounts])
+    if (item && item.price) {
+      price += item.price * quantity
+    }
+  })
+  
+  return Number(price.toFixed(2))
+}, [selectedItems, meal, groupedItems])
 
   /**
    * Select or deselect an item (toggle, default quantity 1)
    * Now shows confirmation for unsafe items
    */
-  const handleSelectItem = (item) => {
-    const isSafe = isItemSafe(item)
-    
-    // If selecting an unsafe item for the first time, show warning
-    if (!isSafe && !selectedItems[item.id]) {
-      setShowAllergenWarning(true)
-    }
-    
-    setSelectedItems((prev) => {
-      if (prev[item.id]) {
-        const { [item.id]: _, ...rest } = prev
-        return rest
-      }
-      return { ...prev, [item.id]: 1 }
-    })
-  }
 
-  /**
-   * Change quantity for a specific item
-   */
-  const handleQuantityChange = (itemId, delta, e) => {
-    if (e) e.stopPropagation()
-    
-    setSelectedItems((prev) => {
-      const currentQty = prev[itemId] || 0
-      const newQty = currentQty + delta
-      
-      if (newQty <= 0) {
-        const { [itemId]: _, ...rest } = prev
-        return rest
+      /**
+       * Change quantity for a specific item with proper validation
+       */
+      const handleQuantityChange = (itemId, delta, e) => {
+        if (e) e.stopPropagation()
+        
+        setSelectedItems((prev) => {
+          const currentQty = prev[itemId] || 0
+          const newQty = Math.max(0, currentQty + delta) // Ensure never negative
+          
+          if (newQty === 0) {
+            const { [itemId]: _, ...rest } = prev
+            return rest
+          }
+          
+          return { ...prev, [itemId]: newQty }
+        })
       }
-      
-      return { ...prev, [itemId]: newQty }
-    })
-  }
+
+      /**
+       * Select or deselect an item (toggle, default quantity 1)
+       */
+      const handleSelectItem = (item) => {
+        const isSafe = isItemSafe(item)
+        
+        // If selecting an unsafe item for the first time, show warning
+        if (!isSafe && !selectedItems[item.id]) {
+          setShowAllergenWarning(true)
+        }
+        
+        setSelectedItems((prev) => {
+          const currentQty = prev[item.id] || 0
+          // Toggle: if already selected, remove; if not, set to 1
+          if (currentQty > 0) {
+            const { [item.id]: _, ...rest } = prev
+            return rest
+          }
+          return { ...prev, [item.id]: 1 }
+        })
+      }
 
   /**
    * Get section usage statistics
@@ -610,12 +574,12 @@ export const CustomizableMealModal = ({
             
           </Flex>
           <Button
-              colorScheme="brand"
-              onClick={handleConfirm}
-              isDisabled={totalSelectedItems === 0}
-              mx={1}
-            >
-              {t('menuPage.addToCart') || 'Add to Cart'}
+            colorScheme="brand"
+            onClick={() => onConfirm(selectedItems, totalPrice)}
+            isDisabled={totalSelectedItems === 0}
+            mx={1}
+          >
+            {t('menuPage.addToCart') || 'Add to Cart'}
           </Button>
         </ModalFooter>
       </ModalContent>

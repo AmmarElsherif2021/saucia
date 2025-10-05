@@ -16,92 +16,38 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 // Import prefetch utilities
 import { PREFETCH_STRATEGIES, networkAwarePrefetch, backgroundSync } from './lib/prefetchQueries'
+function safeLazy(importFn, componentName) {
+  return React.lazy(() =>
+    importFn().catch(err => {
+      console.error(`Failed to load ${componentName}:`, err);
+
+      const hasReloaded = sessionStorage.getItem(`reload-${componentName}`);
+      if (!hasReloaded) {
+        sessionStorage.setItem(`reload-${componentName}`, 'true');
+        window.location.reload();
+      }
+
+      return { default: () => <div>Error loading {componentName}</div> };
+    })
+  );
+}
 
 // Lazy-loaded pages with better error boundaries
-const HomePage = React.lazy(() => 
-  import('./Pages/Home/HomePage.jsx').catch(err => {
-    console.error('Failed to load HomePage:', err)
-    return { default: () => <div>Error loading Home page</div> }
-  })
-)
-const MenuPage = React.lazy(() => 
-  import('./Pages/Menu/MenuPage.jsx').catch(err => {
-    console.error('Failed to load MenuPage:', err)
-    return { default: () => <div>Error loading Menu page</div> }
-  })
-)
-const UserAccountPage = React.lazy(() => 
-  import('./Pages/Dashboard/UserAccountPage.jsx').catch(err => {
-    console.error('Failed to load UserAccountPage:', err)
-    return { default: () => <div>Error loading Account page</div> }
-  })
-)
-const CartPage = React.lazy(() => 
-  import('./Pages/Cart/CartPage.jsx').catch(err => {
-    console.error('Failed to load CartPage:', err)
-    return { default: () => <div>Error loading Cart page</div> }
-  })
-)
-const CheckoutPage = React.lazy(() => 
-  import('./Pages/Checkout/CheckoutPage.jsx').catch(err => {
-    console.error('Failed to load CheckoutPage:', err)
-    return { default: () => <div>Error loading Checkout page</div> }
-  })
-)
-const CheckoutPlan = React.lazy(() => 
-  import('./Pages/Checkout/CheckoutPlan.jsx').catch(err => {
-    console.error('Failed to load CheckoutPlan:', err)
-    return { default: () => <div>Error loading Checkout Plan page</div> }
-  })
-)
-const InfoPage = React.lazy(() => 
-  import('./Pages/InfoPage.jsx').catch(err => {
-    console.error('Failed to load InfoPage:', err)
-    return { default: () => <div>Error loading Info page</div> }
-  })
-)
-const AboutPage = React.lazy(() => 
-  import('./Pages/About/AboutPage.jsx').catch(err => {
-    console.error('Failed to load AboutPage:', err)
-    return { default: () => <div>Error loading About page</div> }
-  })
-)
-const PremiumPage = React.lazy(() => 
-  import('./Pages/Premium/PremiumPage.jsx').catch(err => {
-    console.error('Failed to load PremiumPage:', err)
-    return { default: () => <div>Error loading Premium page</div> }
-  })
-)
-const OAuth = React.lazy(() => 
-  import('./Pages/Auth/Auth.jsx').catch(err => {
-    console.error('Failed to load OAuth:', err)
-    return { default: () => <div>Error loading Auth page</div> }
-  })
-)
-const Admin = React.lazy(() => 
-  import('./Pages/Auth/Admin.jsx').catch(err => {
-    console.error('Failed to load Admin:', err)
-    return { default: () => <div>Error loading Admin page</div> }
-  })
-)
-const JoinPlanPage = React.lazy(() => 
-  import('./Pages/Premium/JoinPlan/JoinPlanPage.jsx').catch(err => {
-    console.error('Failed to load JoinPlanPage:', err)
-    return { default: () => <div>Error loading Join Plan page</div> }
-  })
-)
-const AuthCallback = React.lazy(() => 
-  import('./Pages/Auth/AuthCallback.jsx').catch(err => {
-    console.error('Failed to load AuthCallback:', err)
-    return { default: () => <div>Error loading Auth Callback</div> }
-  })
-)
-const AuthCompleteProfile = React.lazy(() => 
-  import('./Pages/Auth/CompleteProfile.jsx').catch(err => {
-    console.error('Failed to load AuthCompleteProfile:', err)
-    return { default: () => <div>Error loading Complete Profile</div> }
-  })
-)
+
+const HomePage = safeLazy(() => import('./Pages/Home/HomePage.jsx'), 'HomePage');
+const MenuPage = safeLazy(() => import('./Pages/Menu/MenuPage.jsx'), 'MenuPage');
+const UserAccountPage = safeLazy(() => import('./Pages/Dashboard/UserAccountPage.jsx'), 'UserAccountPage');
+const CartPage = safeLazy(() => import('./Pages/Cart/CartPage.jsx'), 'CartPage');
+const CheckoutPage = safeLazy(() => import('./Pages/Checkout/CheckoutPage.jsx'), 'CheckoutPage');
+const CheckoutPlan = safeLazy(() => import('./Pages/Checkout/CheckoutPlan.jsx'), 'CheckoutPlan');
+const InfoPage = safeLazy(() => import('./Pages/InfoPage.jsx'), 'InfoPage');
+const AboutPage = safeLazy(() => import('./Pages/About/AboutPage.jsx'), 'AboutPage');
+const PremiumPage = safeLazy(() => import('./Pages/Premium/PremiumPage.jsx'), 'PremiumPage');
+const OAuth = safeLazy(() => import('./Pages/Auth/Auth.jsx'), 'OAuth');
+const Admin = safeLazy(() => import('./Pages/Auth/Admin.jsx'), 'Admin');
+const JoinPlanPage = safeLazy(() => import('./Pages/Premium/JoinPlan/JoinPlanPage.jsx'), 'JoinPlanPage');
+const AuthCallback = safeLazy(() => import('./Pages/Auth/AuthCallback.jsx'), 'AuthCallback');
+const AuthCompleteProfile = safeLazy(() => import('./Pages/Auth/CompleteProfile.jsx'), 'AuthCompleteProfile');
 
 // Enhanced page loader with better UX
 const PageLoader = ({ message = 'Loading...', showRetry = false, onRetry }) => (

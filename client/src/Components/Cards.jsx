@@ -1,4 +1,5 @@
 /* eslint-disable */
+//quantity
 import gainWeightPlanImage from '../assets/premium/gainWeight.png'
 import keepWeightPlanImage from '../assets/premium/keepWeight.png'
 import loseWeightPlanImage from '../assets/premium/loseWeight.png'
@@ -31,12 +32,10 @@ import {
   ScaleFade,
   Divider,
   useColorModeValue,
-  Spinner
+  Spinner,
+  useToast
 } from '@chakra-ui/react'
 import { StarIcon, MinusIcon, AddIcon, InfoIcon } from '@chakra-ui/icons'
-// import dessertPic from "../assets/dessert.JPG";
-// import fruitPic from "../assets/fruits.JPG";
-// import leavesPic from "../assets/leaves.JPG"
 import unknownDefaultImage from '../assets/menu/unknownMeal.jpg'
 import { useI18nContext } from '../Contexts/I18nContext'
 import { useTranslation } from 'react-i18next'
@@ -112,6 +111,7 @@ const EnhancedImage = ({
     </Box>
   );
 };
+
 // Enhanced Star Rating Component
 const StarRating = ({ rating = 0, rating_count = 0, size = "sm", showCount = true }) => {
   const { colorMode } = useColorMode();
@@ -208,13 +208,36 @@ const PriceDisplay = ({ base_price, is_discount_active, discount_percentage = 0,
   );
 };
 
+// Helper function to validate meal for cart
+const validateMealForCart = (meal) => {
+  if (!meal || !meal.id) {
+    console.error('Invalid meal: missing id', meal);
+    return false;
+  }
+  
+  if (!meal.name) {
+    console.error('Invalid meal: missing name', meal);
+    return false;
+  }
+  
+  const price = meal.base_price || meal.price;
+  if (price === undefined || price === null) {
+    console.error('Invalid meal: missing price', meal);
+    return false;
+  }
+  
+  return true;
+};
+
 // Enhanced Minimal Meal Card - Grid optimized
 export const MinimalMealCard = ({ meal, onClick }) => {
   const { colorMode } = useColorMode();
   const { t } = useTranslation();
   const { currentLanguage } = useI18nContext();
   const [imageLoaded, setImageLoaded] = useState(false);
-  
+  const { addMealToCart } = useCart();
+  const toast = useToast();
+
   const isArabic = currentLanguage === 'ar';
   const displayName = isArabic && meal.name_arabic ? meal.name_arabic : meal.name;
   const displayDescription = isArabic && meal.description_arabic ? meal.description_arabic : meal.description;
@@ -225,6 +248,50 @@ export const MinimalMealCard = ({ meal, onClick }) => {
 
   if (!meal.is_available) return null;
 
+  const handleAddToCart = (e) => {
+    e.stopPropagation();
+    
+    if (!validateMealForCart(meal)) {
+      console.error('Cannot add invalid meal to cart');
+      toast({
+        title: t('cart.error') || "Error",
+        description: t('cart.invalidMeal') || "This meal cannot be added to cart",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top-right",
+      });
+      return;
+    }
+
+    const cartMeal = {
+      meal_id: meal.id,
+      name: displayName,
+      name_arabic: meal.name_arabic || null,
+      description: displayDescription,
+      unit_price: meal.base_price || meal.price || 0,
+      quantity: 1,
+      calories: meal.calories || null,
+      protein_g: meal.protein_g || null,
+      carbs_g: meal.carbs_g || null,
+      fat_g: meal.fat_g || null,
+      is_selective: meal.is_selective || false
+    };
+
+    const result = addMealToCart(cartMeal);
+    
+    if (result.success) {
+      toast({
+        title: t('cart.addedToCart') || "Added to cart!",
+        description: `${cartMeal.name} added to your cart`,
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+        position: "top-right",
+      });
+    }
+  };
+  
   return (
     <Box
       as={Button}
@@ -306,8 +373,6 @@ export const MinimalMealCard = ({ meal, onClick }) => {
         <Box
           position="absolute"
           bottom="0"
-          //left="0"
-          //right="0"
           bg="rgba(0,0,0,0.6)"
           m={2}
           p={2}
@@ -429,10 +494,11 @@ export const MinimalMealCard = ({ meal, onClick }) => {
               sm: "md",
               md: "md"
             }}
+            onClick={handleAddToCart}
             colorScheme="brand"
             variant="solid"
             borderRadius="full"
-            aria-label={t('buttons.viewDetails')}
+            aria-label={t('buttons.addToCart')}
             ml="2"
             flexShrink={0}
           />
@@ -441,13 +507,14 @@ export const MinimalMealCard = ({ meal, onClick }) => {
     </Box>
   );
 };
+
 // Enhanced Full Meal Card with Add to Cart Modal
-export const MealCard = ({ meal, isModal = false, onClose}) => {
+export const MealCard = ({ meal, isModal = false, onClose, quantity = 1, setQuantity, onAddToCart
+ }) => {
   const { colorMode } = useColorMode();
   const { t } = useTranslation();
   const { currentLanguage } = useI18nContext();
-  const { addToCart } = useCart();
-  const [quantity, setQuantity] = useState(1);
+  const { addMealToCart } = useCart();
   
   const isArabic = currentLanguage === 'ar';
   const displayName = isArabic && meal.name_arabic ? meal.name_arabic : meal.name;
@@ -458,15 +525,28 @@ export const MealCard = ({ meal, isModal = false, onClose}) => {
   const imageHeight = isModal ? '250px' : useBreakpointValue({ base: '150px', sm: '210px' });
 
   const handleAddToCart = useCallback(() => {
-    addToCart({
-      id: meal.id,
-      name: displayName,
-      price: meal.base_price,
-      image: meal.image_url,
-      qty: quantity
-    });
+    if (!validateMealForCart(meal)) {
+      console.error('Cannot add invalid meal to cart');
+      return;
+    }
+
+    // const cartMeal = {
+    //   meal_id: meal.id,
+    //   name: displayName,
+    //   name_arabic: meal.name_arabic || null,
+    //   description: displayDescription,
+    //   unit_price: meal.base_price || meal.price || 0,
+    //   quantity: quantity,
+    //   calories: meal.calories || null,
+    //   protein_g: meal.protein_g || null,
+    //   carbs_g: meal.carbs_g || null,
+    //   fat_g: meal.fat_g || null,
+    //   is_selective: meal.is_selective || false
+    // };
+
+    onAddToCart();
     if (onClose) onClose();
-  }, [meal, displayName, quantity, addToCart, onClose]);
+  }, [meal, displayName, displayDescription, quantity, addMealToCart, onClose]);
 
   const incrementQuantity = () => setQuantity(prev => prev + 1);
   const decrementQuantity = () => setQuantity(prev => Math.max(1, prev - 1));
@@ -617,7 +697,7 @@ export const MealCard = ({ meal, isModal = false, onClose}) => {
 
               {/* Total Price */}
               <Text fontSize="lg" fontWeight="bold" color="secondary.800">
-                {t('checkout.total')}: {(meal.base_price * quantity).toFixed(2)} {t('common.currency')}
+                {t('checkout.total')}: {((meal.base_price || meal.price || 0) * quantity).toFixed(2)} {t('common.currency')}
               </Text>
 
               {/* Add to Cart Button */}
@@ -665,7 +745,52 @@ export const MealCard = ({ meal, isModal = false, onClose}) => {
 // Main Component with Modal System
 export const MealCardWithModal = ({ meal }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [quantity, setQuantity] = useState(1);
   const { t } = useTranslation();
+  const { addMealToCart } = useCart();
+  const toast = useToast(); // Add toast hook
+
+  const handleAddToCart = () => {
+    const result = addMealToCart({
+      meal_id: meal.id,
+      name: meal.name,
+      name_arabic: meal.name_arabic,
+      description: meal.description,
+      unit_price: meal.base_price || meal.price || 0,
+      quantity: quantity,
+      calories: meal.calories,
+      protein_g: meal.protein_g,
+      carbs_g: meal.carbs_g,
+      fat_g: meal.fat_g,
+      is_selective: meal.is_selective
+    });
+
+    if (result.success) {
+      // Show success toast
+      toast({
+        title: t('cart.addedToCart') || "Added to cart!",
+        description: `${quantity} × ${meal.name} added to your cart`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "top-right",
+      });
+      
+      // Close modal and reset quantity
+      onClose();
+      setQuantity(1);
+    } else {
+      // Show error toast
+      toast({
+        title: t('cart.addToCartError') || "Error",
+        description: t('cart.failedToAdd') || "Failed to add item to cart",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top-right",
+      });
+    }
+  };
 
   return (
     <>
@@ -674,9 +799,24 @@ export const MealCardWithModal = ({ meal }) => {
       <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered scrollBehavior={'inside'}>
         <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
         <ModalContent bg="secondary.100" w={'auto'} my={4} py={0} px={1} maxH={'92%'}>
+          <ModalHeader>
+            <Flex justify="space-between" align="center">
+              <Text fontSize="xl" fontWeight="bold">
+                {meal.name}
+              </Text>
+              <ModalCloseButton position="relative" />
+            </Flex>
+          </ModalHeader>
           <ModalBody>
             <ScaleFade initialScale={0.9} in={isOpen}>
-              <MealCard meal={meal} isModal={true} onClose={onClose} />
+              <MealCard 
+                meal={meal} 
+                isModal={true} 
+                onClose={onClose} 
+                quantity={quantity}
+                setQuantity={setQuantity}
+                onAddToCart={handleAddToCart}
+              />
             </ScaleFade>
           </ModalBody>
         </ModalContent>
@@ -684,7 +824,6 @@ export const MealCardWithModal = ({ meal }) => {
     </>
   );
 };
-
 
 export const AddToCartModal = ({
   isOpen,
@@ -699,7 +838,42 @@ export const AddToCartModal = ({
   discountPercentage,
   colorMode,
   currency = 'SAR',
-}) => (
+}) => {
+  
+  const toast = useToast(); // Add toast hook
+
+  const handleConfirm = () => {
+    const result = onConfirm();
+    if (result && result.success) {
+      // Show success toast
+      toast({
+        title: t('cart.addedToCart') || "Added to cart!",
+        description: `${quantity} × ${name} added to your cart`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "top-right",
+      });
+      onClose();
+    } else {
+      // Show error toast if needed
+      toast({
+        title: t('cart.error') || "Error",
+        description: t('cart.failedToAdd') || "Failed to add item to cart",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top-right",
+      });
+    }
+  };
+  useEffect(() => {
+    if (!isOpen) {
+      setQuantity(1); 
+    }
+  }, [isOpen, setQuantity]);
+
+  return (
   <Modal isOpen={isOpen} onClose={onClose} isCentered>
     <ModalOverlay />
     <ModalContent
@@ -759,23 +933,19 @@ export const AddToCartModal = ({
         <Button variant="outline" mx={3} onClick={onClose}>
           {t('buttons.maybeLater') || t('buttons.cancel')}
         </Button>
-        <Button colorScheme="brand" onClick={onConfirm}>
+        <Button colorScheme="brand" onClick={handleConfirm}>
           {t('buttons.addToCart') || t('buttons.confirm')} ({quantity})
         </Button>
       </ModalFooter>
     </ModalContent>
   </Modal>
-)
-
-
-
-
+)};
 
 // Premium Food Card - More detailed with rating, tag, and action buttons
 export const PremiumMealCard = ({ meal }) => {
   const { colorMode } = useColorMode();
   const { t } = useTranslation();
-  const { addToCart } = useCart();
+  const { addMealToCart } = useCart();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
   
@@ -794,13 +964,17 @@ export const PremiumMealCard = ({ meal }) => {
     is_discount_active: hasOffer,
   } = meal;
 
-  const handleConfirm = () => {
-    addToCart({ 
-      id, 
-      name, 
-      price, 
-      image, 
-      qty: quantity 
+  const effectivePrice = hasOffer && discount_percentage > 0
+  ? price * (1 - discount_percentage / 100)
+  : price;
+
+const handleConfirm = () => {
+  addMealToCart({
+    meal_id: id,
+    name: name,
+    unit_price: effectivePrice,
+    quantity: quantity,
+    //image: image,
     });
     setIsModalOpen(false);
   };
@@ -916,11 +1090,11 @@ export const PremiumMealCard = ({ meal }) => {
 export const FeaturedMealCard = ({ item, index = 0 }) => {
   const { colorMode } = useColorMode();
   const { t, i18n } = useTranslation();
-  const { addToCart } = useCart();
+  const { addMealToCart } = useCart();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const isArabic = i18n.language === 'ar';
-
+  const toast = useToast(); 
   // Extract properties from item object
   const {
     id,
@@ -957,17 +1131,27 @@ export const FeaturedMealCard = ({ item, index = 0 }) => {
 
   // Display names based on language
   const displayName = isArabic ? name_arabic || name : name;
-
-  const handleConfirm = () => {
-    addToCart({
-      id,
-      name: displayName,
-      price: base_price, // Always use base_price here
-      image,
-      qty: quantity,
-      discount: hasOffer ? discount_percentage : 0 // Pass discount separately
+  const handleAddToCart = () => {
+    const result = addToCart({
+      id: meal.id,
+      name: isArabic ? meal.name_arabic : meal.name,
+      price: meal.basePrice || 28,
+      image: meal.image_url || meal.thumbnailUrl,
+      qty: quantity
     });
-    setIsModalOpen(false);
+
+    if (result.success) {
+      toast({
+        title: t('cart.addedToCart') || "Added to cart!",
+        description: `${quantity} × ${isArabic ? meal.name_arabic : meal.name} added to your cart`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "top-right",
+      });
+      setIsModalOpen(false);
+      setQuantity(1);
+    }
   };
 
   // Responsive values
@@ -1194,7 +1378,7 @@ export const FeaturedMealCard = ({ item, index = 0 }) => {
 export const OfferMealCard = ({ meal }) => {
   const { colorMode } = useColorMode()
   const { t, i18n } = useTranslation()
-  const { addToCart } = useCart()
+  const { addMealToCart } = useCart()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const isArabic = i18n.language === 'ar'
@@ -1246,19 +1430,11 @@ const displayDescription = currentLanguage === 'ar'
   : description;
 
 const handleConfirm = () => {
-  addToCart({
-    id,
+  addMealToCart({
+    meal_id: id,
     name: displayName,
-    price: effectivePrice,
-    base_price,
-    image,
-    qty: quantity,
-    dietaryFlags: {
-      vegetarian: is_vegetarian,
-      vegan: is_vegan,
-      glutenFree: is_gluten_free,
-      dairyFree: is_dairy_free
-    }
+    unit_price: effectivePrice,
+    quantity: quantity,
   })
   setIsModalOpen(false)
 }

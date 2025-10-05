@@ -20,7 +20,16 @@ import {
   AlertIcon,
   Card,
   CardBody,
-  Badge
+  Badge,
+  Text,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  Divider,
+  HStack,
+  Icon,
+  Tooltip
 } from '@chakra-ui/react'
 import { useAuthContext } from '../../../Contexts/AuthContext'
 import { 
@@ -31,9 +40,14 @@ import { useUserAllergies } from '../../../Hooks/useUserAllergies'
 import { useUserDietaryPreferences } from '../../../Hooks/useUserDietaryPreferences'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useI18nContext } from '../../../Contexts/I18nContext'
 import { useDataIntegrity, getInitialFormData } from './dataIntegrityUtils'
+import { 
+  calculateNutritionProfile, 
+  canCalculateNutrition 
+} from './nutritionCalculator'
+import { InfoIcon } from '@chakra-ui/icons'
 
 const CommonQuestions = ({ onComplete }) => {
   const { currentLanguage } = useI18nContext();
@@ -82,6 +96,20 @@ const CommonQuestions = ({ onComplete }) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [hasInitialized, setHasInitialized] = useState(false)
 
+  // Calculate nutrition profile dynamically
+  const nutritionProfile = useMemo(() => {
+    if (!canCalculateNutrition(formData)) return null;
+    
+    return calculateNutritionProfile({
+      weight: parseInt(formData.healthProfile.weight),
+      height: parseInt(formData.healthProfile.height),
+      age: parseInt(formData.age),
+      gender: formData.gender,
+      activityLevel: formData.healthProfile.activityLevel,
+      fitnessGoal: formData.healthProfile.fitnessGoal
+    });
+  }, [formData]);
+
   // Debug all loaded data
   useEffect(() => {
     if (!hasInitialized && (userProfile || healthProfile || userDietaryPreferences || userAllergies)) {
@@ -114,7 +142,7 @@ const CommonQuestions = ({ onComplete }) => {
     }
   }, [userProfile, healthProfile, userDietaryPreferences, userAllergies, availablePreferences, availableAllergies, hasInitialized, logDataState])
 
-  // Initialize form with user data - Enhanced version
+  // Initialize form with user data
   const initializeFormData = useCallback(() => {
     if (!userProfile && !healthProfile && !userDietaryPreferences && !userAllergies) {
       console.log('⏳ Waiting for data to initialize form...');
@@ -125,24 +153,21 @@ const CommonQuestions = ({ onComplete }) => {
     
     const newFormData = getInitialFormData();
 
-    // Set basic profile data
     if (userProfile) {
       newFormData.age = userProfile?.age?.toString() || '';
       newFormData.gender = userProfile?.gender || '';
     }
 
-    // Set health profile data
     if (healthProfile) {
       newFormData.healthProfile = {
         ...newFormData.healthProfile,
         height: healthProfile?.height_cm?.toString() || '',
         weight: healthProfile?.weight_kg?.toString() || '',
-        activityLevel: healthProfile?.activity_level || 'moderately-active',
+        activityLevel: healthProfile?.activity_level || 'moderately_active',
         fitnessGoal: healthProfile?.fitness_goal || 'maintenance',
       };
     }
 
-    // Set dietary preferences
     if (userDietaryPreferences && Array.isArray(userDietaryPreferences)) {
       const preferenceIds = userDietaryPreferences
         .map(p => p.preference_id)
@@ -151,7 +176,6 @@ const CommonQuestions = ({ onComplete }) => {
       console.log('📋 Setting dietary preferences:', preferenceIds);
     }
 
-    // Set allergies
     if (userAllergies && Array.isArray(userAllergies)) {
       const allergyIds = userAllergies
         .map(a => a.allergy_id)
@@ -166,7 +190,6 @@ const CommonQuestions = ({ onComplete }) => {
     console.log('✅ Form initialized with:', newFormData);
   }, [userProfile, healthProfile, userDietaryPreferences, userAllergies]);
 
-  // Initialize form when all data is available
   useEffect(() => {
     initializeFormData();
   }, [initializeFormData]);
@@ -209,7 +232,6 @@ const CommonQuestions = ({ onComplete }) => {
     try {
       if (!user?.id) throw new Error('User not authenticated')
 
-      // Validate required fields
       const validation = validateFormData(formData, ['age', 'gender'])
       if (!validation.isValid) {
         throw new Error(validation.errors.join(', '))
@@ -222,7 +244,7 @@ const CommonQuestions = ({ onComplete }) => {
         preferences: false
       };
 
-      // Step 1: Update user profile
+      // Update user profile
       const profileData = {}
       const ageValue = formData.age ? parseInt(formData.age) : null
       
@@ -240,7 +262,7 @@ const CommonQuestions = ({ onComplete }) => {
         await updateProfile(profileData)
       }
 
-      // Step 2: Update health profile
+      // Update health profile
       const healthData = {}
       const heightValue = formData.healthProfile.height ? parseInt(formData.healthProfile.height) : null
       const weightValue = formData.healthProfile.weight ? parseInt(formData.healthProfile.weight) : null
@@ -267,7 +289,7 @@ const CommonQuestions = ({ onComplete }) => {
         await updateHealthProfile(healthData)
       }
 
-      // Step 3: Update allergies
+      // Update allergies
       const currentAllergyIds = userAllergies?.map(a => a.allergy_id) || []
       const newAllergyIds = formData.healthProfile.allergies
       
@@ -281,7 +303,7 @@ const CommonQuestions = ({ onComplete }) => {
         updates.allergies = true
       }
 
-      // Step 4: Update dietary preferences
+      // Update dietary preferences
       const currentPrefIds = userDietaryPreferences?.map(p => p.preference_id) || []
       const newPrefIds = formData.healthProfile.dietaryPreferences
       
@@ -321,14 +343,12 @@ const CommonQuestions = ({ onComplete }) => {
     }
   }
 
-  // Enhanced loading states with debugging
   const isLoading = isLoadingProfile || isLoadingHealth || 
                    isLoadingAllergies || isLoadingPreferences
 
   const hasError = profileError || healthError || 
                   allergiesError || preferencesError
 
-  // Debug loading states
   useEffect(() => {
     if (isLoading) {
       console.log('⏳ CommonQuestions Loading States:', {
@@ -345,6 +365,7 @@ const CommonQuestions = ({ onComplete }) => {
   const borderColor = { light: 'brand.300', dark: 'brand.500' }
   const inputBg = { light: 'white', dark: 'gray.700' }
   const cardBg = { light: 'brand.100', dark: 'gray.700' }
+  const statBg = { light: 'brand.50', dark: 'gray.600' }
 
   if (hasError) {
     console.error('❌ CommonQuestions Errors:', {
@@ -392,7 +413,6 @@ const CommonQuestions = ({ onComplete }) => {
               </Alert>
             )}
 
-            {/* Data Loading Debug Info */}
             {process.env.NODE_ENV === 'development' && (
               <Alert status="info" size="sm" fontSize="xs">
                 <AlertIcon />
@@ -405,7 +425,6 @@ const CommonQuestions = ({ onComplete }) => {
             )}
 
             <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
-              {/* Age */}
               <FormControl>
                 <FormLabel color="brand.800">{t('premium.age')}</FormLabel>
                 {isLoading ? (
@@ -426,7 +445,6 @@ const CommonQuestions = ({ onComplete }) => {
                 )}
               </FormControl>
 
-              {/* Gender */}
               <FormControl>
                 <FormLabel color="brand.800">{t('premium.gender')}</FormLabel>
                 {isLoading ? (
@@ -449,7 +467,6 @@ const CommonQuestions = ({ onComplete }) => {
                 )}
               </FormControl>
 
-              {/* Height */}
               <FormControl>
                 <FormLabel color="brand.800">{t('premium.heightCm')}</FormLabel>
                 {isLoading ? (
@@ -470,7 +487,6 @@ const CommonQuestions = ({ onComplete }) => {
                 )}
               </FormControl>
 
-              {/* Weight */}
               <FormControl>
                 <FormLabel color="brand.800">{t('premium.weightKg')}</FormLabel>
                 {isLoading ? (
@@ -492,7 +508,6 @@ const CommonQuestions = ({ onComplete }) => {
               </FormControl>
             </SimpleGrid>
 
-            {/* Activity Level */}
             <FormControl>
               <FormLabel color="brand.800">{t('premium.activityLevel')}</FormLabel>
               {isLoading ? (
@@ -513,7 +528,6 @@ const CommonQuestions = ({ onComplete }) => {
               )}
             </FormControl>
 
-            {/* Fitness Goal */}
             <FormControl>
               <FormLabel color="brand.800">{t('premium.fitnessGoal')}</FormLabel>
               {isLoading ? (
@@ -537,7 +551,104 @@ const CommonQuestions = ({ onComplete }) => {
               )}
             </FormControl>
 
-            {/* Dietary Preferences */}
+            {/* Nutrition Profile Display */}
+            {nutritionProfile && (
+              <Box
+                bg={statBg[colorMode]}
+                p={5}
+                borderRadius="lg"
+                borderWidth="2px"
+                borderColor="brand.400"
+              >
+                <HStack mb={3}>
+                  <Heading size="md" color="brand.700">
+                    Your Daily Nutrition Target
+                  </Heading>
+                  <Tooltip 
+                    label="Calculated using Mifflin-St Jeor Equation based on your profile"
+                    placement="top"
+                  >
+                    <Icon as={InfoIcon} color="brand.500" />
+                  </Tooltip>
+                </HStack>
+                
+                <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
+                  <Stat>
+                    <StatLabel fontSize="sm">BMR</StatLabel>
+                    <StatNumber color="brand.700">{nutritionProfile.bmr}</StatNumber>
+                    <StatHelpText fontSize="xs">kcal/day</StatHelpText>
+                  </Stat>
+                  
+                  <Stat>
+                    <StatLabel fontSize="sm">TDEE</StatLabel>
+                    <StatNumber color="brand.700">{nutritionProfile.tdee}</StatNumber>
+                    <StatHelpText fontSize="xs">kcal/day</StatHelpText>
+                  </Stat>
+                  
+                  <Stat>
+                    <StatLabel fontSize="sm">Target</StatLabel>
+                    <StatNumber color="green.600">{nutritionProfile.dailyCalories}</StatNumber>
+                    <StatHelpText fontSize="xs">kcal/day</StatHelpText>
+                  </Stat>
+                  
+                  <Stat>
+                    <StatLabel fontSize="sm">Adjustment</StatLabel>
+                    <StatNumber color="teal.600">
+                      {nutritionProfile.calculations.goalAdjustment > 0 ? '+' : ''}
+                      {(nutritionProfile.calculations.goalAdjustment * 100).toFixed(0)}%
+                    </StatNumber>
+                    <StatHelpText fontSize="xs">for goal</StatHelpText>
+                  </Stat>
+                </SimpleGrid>
+                
+                <Divider my={4} borderColor="brand.300" />
+                
+                <Text fontWeight="semibold" mb={3} color="brand.800">
+                  Daily Macronutrients
+                </Text>
+                
+                <SimpleGrid columns={{ base: 3 }} spacing={4}>
+                  <Stat>
+                    <StatLabel fontSize="sm" color="blue.600">Protein</StatLabel>
+                    <StatNumber fontSize="2xl" color="blue.700">
+                      {nutritionProfile.macros.protein}g
+                    </StatNumber>
+                    <StatHelpText fontSize="xs">
+                      {(nutritionProfile.calculations.macroRatios.protein * 100).toFixed(0)}%
+                    </StatHelpText>
+                  </Stat>
+                  
+                  <Stat>
+                    <StatLabel fontSize="sm" color="orange.600">Carbs</StatLabel>
+                    <StatNumber fontSize="2xl" color="orange.700">
+                      {nutritionProfile.macros.carbs}g
+                    </StatNumber>
+                    <StatHelpText fontSize="xs">
+                      {(nutritionProfile.calculations.macroRatios.carbs * 100).toFixed(0)}%
+                    </StatHelpText>
+                  </Stat>
+                  
+                  <Stat>
+                    <StatLabel fontSize="sm" color="purple.600">Fat</StatLabel>
+                    <StatNumber fontSize="2xl" color="purple.700">
+                      {nutritionProfile.macros.fat}g
+                    </StatNumber>
+                    <StatHelpText fontSize="xs">
+                      {(nutritionProfile.calculations.macroRatios.fat * 100).toFixed(0)}%
+                    </StatHelpText>
+                  </Stat>
+                </SimpleGrid>
+                
+                <Alert status="info" mt={4} borderRadius="md" fontSize="sm">
+                  <AlertIcon />
+                  <Text>
+                    These calculations are based on the Mifflin-St Jeor equation and are estimates. 
+                    Consult a healthcare professional for personalized advice.
+                  </Text>
+                </Alert>
+              </Box>
+            )}
+
             <FormControl>
               <FormLabel color="brand.800">
                 {t('premium.dietaryPreferences')} 
@@ -571,7 +682,6 @@ const CommonQuestions = ({ onComplete }) => {
               )}
             </FormControl>
 
-            {/* Allergies */}
             <FormControl>
               <FormLabel color="brand.800">
                 {t('premium.allergies')}

@@ -50,8 +50,8 @@ const SCALE_RATIOS = {
 // Centralized motion configuration - faster and steeper
 const MOTION_CONFIG = {
   SETTLING: {
-    DURATION: 2800,
-    STAGGER: 0.2,
+    DURATION: 1200,
+    STAGGER: 0,
     EASE: [0.8, 0, 0.2, 1]
   },
   FLOATING: {
@@ -59,7 +59,7 @@ const MOTION_CONFIG = {
     X_DURATION: 5.5,
     Y_AMPLITUDE: 12,
     X_AMPLITUDE: 6,
-    STAGGER: 0.08
+    STAGGER: 0
   }
 };
 

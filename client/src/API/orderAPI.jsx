@@ -104,7 +104,7 @@ export const ordersAPI = {
         `)
         .eq('user_id', currentUserId)
         .or('subscription_id.is.null,and(subscription_id.not.is.null,status.neq.pending)')
-        .order('created_at', { ascending: false });
+        .order('scheduled_delivery_date', { ascending: true });
 
       if (error) {
         console.error('❌ [ordersAPI] Error fetching filtered orders:', error);
@@ -278,28 +278,170 @@ export const ordersAPI = {
     }
   },
 
-  async createOrder(orderData) {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('User not authenticated')
 
-      const { data, error } = await supabase
-        .from('orders')
-        .insert([{
-          ...orderData,
-          user_id: user.id,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }])
-        .select()
-        .single()
+/** ========================================================
+ * Create a complete order with meals and items
+ * Handles the correct insertion order due to FK constraints
+ * 
+ * @param {Object} orderData - Complete order data from cart
+ * @returns {Object} Created order with all related data
+ * ==========================================================
+ */
+async createCompleteOrder(orderData) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
 
-      if (error) throw error
-      return data
-    } catch (error) {
-      handleSupabaseError(error)
+    console.log('📦 [ordersAPI] Creating complete order:', orderData)
+
+    // Step 1: Create the main order
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .insert([{
+        user_id: user.id,
+        delivery_address_id: orderData.delivery_address_id,
+        subtotal: orderData.subtotal,
+        tax_amount: orderData.tax_amount,
+        delivery_fee: orderData.delivery_fee,
+        discount_amount: orderData.discount_amount || 0,
+        total_amount: orderData.total_amount,
+        payment_method: orderData.payment_method,
+        payment_status: orderData.payment_status || 'pending',
+        status: orderData.status || 'pending',
+        contact_phone: orderData.contact_phone,
+        delivery_instructions: orderData.delivery_instructions,
+        special_instructions: orderData.special_instructions,
+        coupon_code: orderData.coupon_code,
+        loyalty_points_used: orderData.loyalty_points_used || 0,
+        loyalty_points_earned: orderData.loyalty_points_earned || 0,
+        scheduled_delivery_date: orderData.scheduled_delivery_date,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }])
+      .select()
+      .single()
+
+    if (orderError) {
+      console.error('❌ [ordersAPI] Order creation failed:', orderError)
+      throw orderError
     }
-  },
+
+    console.log('✅ [ordersAPI] Order created with ID:', order.id)
+
+    // Step 2: Create order_meals if any
+    let createdOrderMeals = []
+    if (orderData.order_meals && orderData.order_meals.length > 0) {
+      const orderMealsData = orderData.order_meals.map(meal => ({
+        order_id: order.id,
+        meal_id: meal.meal_id,
+        quantity: meal.quantity,
+        unit_price: meal.unit_price,
+        total_price: meal.total_price,
+        name: meal.name,
+        name_arabic: meal.name_arabic,
+        description: meal.description,
+        calories: meal.calories,
+        protein_g: meal.protein_g,
+        carbs_g: meal.carbs_g,
+        fat_g: meal.fat_g,
+        customization_notes: meal.customization_notes,
+        created_at: new Date().toISOString()
+      }))
+
+      console.log('🍽️ [ordersAPI] Inserting order_meals:', orderMealsData.length)
+
+      const { data: meals, error: mealsError } = await supabase
+        .from('order_meals')
+        .insert(orderMealsData)
+        .select()
+
+      if (mealsError) {
+        console.error('❌ [ordersAPI] Order meals creation failed:', mealsError)
+        // Rollback: delete the order
+        await supabase.from('orders').delete().eq('id', order.id)
+        throw mealsError
+      }
+
+      createdOrderMeals = meals
+      console.log('✅ [ordersAPI] Created order_meals:', createdOrderMeals.length)
+    }
+
+    // Step 3: Create order_items if any
+    let createdOrderItems = []
+    if (orderData.order_items && orderData.order_items.length > 0) {
+      // Map order_items to include order_meal_id where applicable
+      const orderItemsData = orderData.order_items.map(item => {
+        // If item has meal_id (it's an addon), find the corresponding order_meal_id
+        let order_meal_id = null
+        if (item.meal_id) {
+          const orderMeal = createdOrderMeals.find(om => om.meal_id === item.meal_id)
+          if (orderMeal) {
+            order_meal_id = orderMeal.id
+          }
+        }
+
+        return {
+          order_id: order.id,
+          order_meal_id: order_meal_id, // Will be null for standalone items
+          item_id: item.item_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.total_price,
+          name: item.name,
+          name_arabic: item.name_arabic,
+          category: item.category,
+          created_at: new Date().toISOString()
+        }
+      })
+
+      console.log('🥗 [ordersAPI] Inserting order_items:', orderItemsData.length)
+
+      const { data: items, error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItemsData)
+        .select()
+
+      if (itemsError) {
+        console.error('❌ [ordersAPI] Order items creation failed:', itemsError)
+        // Rollback: delete order_meals and order
+        if (createdOrderMeals.length > 0) {
+          await supabase.from('order_meals').delete().eq('order_id', order.id)
+        }
+        await supabase.from('orders').delete().eq('id', order.id)
+        throw itemsError
+      }
+
+      createdOrderItems = items
+      console.log('✅ [ordersAPI] Created order_items:', createdOrderItems.length)
+    }
+
+    // Step 4: Fetch the complete order with all relations
+    const { data: completeOrder, error: fetchError } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        order_meals(*),
+        order_items(*),
+        user_addresses(*)
+      `)
+      .eq('id', order.id)
+      .single()
+
+    if (fetchError) {
+      console.error('❌ [ordersAPI] Failed to fetch complete order:', fetchError)
+      // Don't rollback here, order was created successfully
+      throw fetchError
+    }
+
+    console.log('✅ [ordersAPI] Complete order created successfully:', completeOrder.id)
+    return completeOrder
+
+  } catch (error) {
+    console.error('❌ [ordersAPI] createCompleteOrder error:', error)
+    handleSupabaseError(error)
+    throw error
+  }
+},
 
   async updateOrder(orderId, updates) {
     try {
@@ -726,6 +868,111 @@ export const ordersAPI = {
       return data
     } catch (error) {
       handleSupabaseError(error)
+    }
+  },
+   // ===== REAL-TIME OPERATIONS =====
+  
+  // Subscribe to user orders changes
+  subscribeToUserOrders(userId, callback) {
+    return supabase
+      .channel(`user-${userId}-orders-changes`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `user_id=eq.${userId}`
+        },
+        callback
+      )
+      .subscribe();
+  },
+
+  // Subscribe to specific order changes
+  subscribeToOrder(orderId, callback) {
+    return supabase
+      .channel(`order-${orderId}-changes`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `id=eq.${orderId}`
+        },
+        callback
+      )
+      .subscribe();
+  },
+
+  // Subscribe to subscription orders for a user
+  subscribeToUserSubscriptionOrders(userId, callback) {
+    return supabase
+      .channel(`user-${userId}-subscription-orders`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `user_id=eq.${userId}.and.subscription_id.not.is.null`
+        },
+        callback
+      )
+      .subscribe();
+  },
+
+  // Subscribe to order status changes
+  subscribeToOrderStatusChanges(statuses, callback) {
+    const statusFilter = statuses.map(s => `status=eq.${s}`).join(',');
+    return supabase
+      .channel('order-status-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: statusFilter
+        },
+        callback
+      )
+      .subscribe();
+  },
+
+  // Bulk update orders with real-time notification
+  async bulkUpdateOrdersWithRealtime(orderUpdates, options = {}) {
+    try {
+      console.log('📡 [ordersAPI] Bulk updating orders:', orderUpdates.length);
+      
+      const { data, error } = await supabase
+        .from('orders')
+        .upsert(orderUpdates.map(update => ({
+          ...update,
+          updated_at: new Date().toISOString()
+        })))
+        .select();
+
+      if (error) {
+        console.error('❌ [ordersAPI] Bulk update error:', error);
+        throw error;
+      }
+
+      console.log('✅ [ordersAPI] Bulk update successful:', data?.length);
+      
+      // Notify real-time subscribers if enabled
+      if (options.notifyRealtime && data?.length > 0) {
+        data.forEach(order => {
+          // This would trigger the postgres_changes event automatically
+          console.log('🔔 [ordersAPI] Real-time update triggered for order:', order.id);
+        });
+      }
+
+      return data;
+    } catch (error) {
+      console.error('❌ [ordersAPI] bulkUpdateOrdersWithRealtime error:', error);
+      throw error;
     }
   }
 };

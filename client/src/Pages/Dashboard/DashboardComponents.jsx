@@ -496,7 +496,7 @@ export const SubscriptionDetails = ({
       hasOrdersInProgress: hasInProgress,
       canActivateOrders: canActivate
     };
-  }, [subscriptionOrders]);
+  }, [subscriptionOrders,refreshSubscription]);
 
 
 
@@ -533,7 +533,7 @@ export const SubscriptionDetails = ({
     } finally {
       setActivatingOrderId(null);
     }
-  }, [canActivateOrders, onActivateOrder, showToast]);
+  }, [canActivateOrders, onActivateOrder,refreshSubscription, showToast]);
 
   // Render order items
   const renderOrderItems = useCallback((order) => {
@@ -670,7 +670,7 @@ export const SubscriptionDetails = ({
         </HStack>
       </VStack>
     </Box>
-  ), [canActivateOrders, hasOrdersInProgress, renderOrderItems, handleOrderActivation, activatingOrderId, t, isArabic]);
+  ), [canActivateOrders, hasOrdersInProgress, renderOrderItems, handleOrderActivation, activatingOrderId, refreshSubscription, t, isArabic]);
 
   if (isLoading) {
     return (
@@ -825,7 +825,7 @@ export const SubscriptionDetails = ({
               </Alert>
             )}
 
-            {/* Pending Orders - Available for Activation */}
+            {/* Pending Orders - Available for Activation  refresh*/}
             {pendingOrders.length > 0 ? (
               <Box>
                 <Text fontSize="md" fontWeight="semibold" mb={3} color="brand.600">
@@ -845,17 +845,20 @@ export const SubscriptionDetails = ({
             )}
 
             {/* Active Orders - Currently Being Processed */}
-            {activeOrders.length > 0 && (
+          
+             {
+              nonPendingNonDeliveredOrders.length> 0 && (
               <Box>
                 <Text fontSize="md" fontWeight="semibold" mb={3} color="green.600">
                   {t('premium.activeOrders')} ({activeOrders.length})
                 </Text>
                 <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                  {activeOrders.map((order) => renderOrderCard(order, false))}
+                  {nonPendingNonDeliveredOrders.map((order) => renderOrderCard(order, false))}
                 </SimpleGrid>
               </Box>
             )}
-
+             
+             
             {/* Recent Delivered Orders */}
             {deliveredOrders.length > 0 && (
               <Box>

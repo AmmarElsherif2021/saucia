@@ -92,14 +92,14 @@ function MealShowcase({ meal, index }) {
   const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0.3, 1, 1, 0.3]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
-  const { addToCart } = useCart();
+  const { addMealToCart } = useCart();
   const { colorMode } = useColorMode();
   const { t } = useTranslation();
   const { currentLanguage } = useI18nContext();
   const isArabic = currentLanguage === 'ar';
   
   const handleAddToCart = () => {
-    addToCart({
+    addMealToCart({
       id: meal.id,
       name: isArabic ? meal.name_arabic : meal.name,
       price: meal.basePrice || 28,

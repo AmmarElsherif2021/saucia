@@ -113,7 +113,7 @@ const MealSection = ({ section, selectiveItems, handlers, userFiltering }) => {
       {section.meals.map((meal) => {
         if (!meal?.id) return null
         
-        const isSelective = meal.preparation_instructions === 'selective'
+        const isSelective = meal.is_selective === true;
         const mealAllergens = getMealAllergens(meal)
         const isMealUnsafe = !isMealSafe(meal)
         
@@ -151,7 +151,7 @@ const MealSection = ({ section, selectiveItems, handlers, userFiltering }) => {
 const MenuPage = () => {
   const { t } = useTranslation()
   const { currentLanguage } = useI18nContext()
-  const { addToCart } = useCart()
+  const { addMealToCart } = useCart()
   const location = useLocation()
   
   // State
@@ -279,20 +279,61 @@ const MenuPage = () => {
   }, [elementsError])
 
   // Handlers
-  const handleAddToCart = useCallback((meal) => {
-    try {
-      addToCart({
-        id: meal.id,
-        name: meal.name,
-        price: parseFloat(meal.price) || 0,
-        image: meal.image,
-        qty: 1,
-        addOns: meal.addOns || []
-      })
-    } catch (error) {
-      console.error('Error adding to cart:', error)
+   const handleAddToCart = (meal, selectedItems = [], totalPrice = null) => {
+  console.log('📦 MenuPage: Adding meal to cart', {
+    meal: meal.name,
+    selectedItems,
+    totalPrice
+  })
+  
+  // Ensure selectedItems is always an array
+  const safeSelectedItems = Array.isArray(selectedItems) ? selectedItems : []
+  
+  const result = addMealToCart(meal, safeSelectedItems, totalPrice)
+  
+  if (!result.success) {
+    toast({
+      title: t('cart.error') || "Error",
+      description: t('cart.failedToAdd') || "Failed to add item to cart",
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+      position: "top-right",
+    })
+  }
+  
+  return result
+}
+
+const handleConfirm = (selectedItems, totalPrice) => {
+  // selectedItems is an object: { itemId: quantity, ... }
+  const addOnsArray = []
+  
+  Object.entries(selectedItems).forEach(([itemId, quantity]) => {
+    if (quantity <= 0) return
+    
+    // Find the item in groupedItems
+    let itemDetails = null
+    for (const section of Object.values(groupedItems)) {
+      itemDetails = section.find(item => item.id == itemId)
+      if (itemDetails) break
     }
-  }, [addToCart])
+    
+    if (!itemDetails) return
+    
+    // Push ONE entry per item with quantity property
+    addOnsArray.push({
+      item_id: itemDetails.id,
+      name: itemDetails.name,
+      name_arabic: itemDetails.name_arabic,
+      category: itemDetails.category,
+      unit_price: itemDetails.price || 0,
+      quantity: parseInt(quantity) || 1
+    })
+  })
+
+  onhandleAddToCart(meal, addOnsArray, totalPrice)
+}
 
   const handleRetry = useCallback(() => {
     setHasError(false)

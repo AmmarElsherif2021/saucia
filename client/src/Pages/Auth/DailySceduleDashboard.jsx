@@ -252,11 +252,29 @@ const STATUS_CONFIGS = {
   }
 };
 
+// ===== RESPONSIVE CONFIGURATIONS =====
+const RESPONSIVE_CONFIG = {
+  // Grid and layout configurations
+  grid: {
+    analytics: { base: 1, sm: 2, md: 4 },
+    form: { base: 1, sm: 2 }
+  },
+  // Spacing configurations
+  spacing: {
+    section: { base: 4, md: 6 },
+    card: { base: 2, md: 4 }
+  },
+  // Sizing configurations
+  sizing: {
+    input: { base: '100%', md: '300px' },
+    select: { base: '100%', md: '200px' }
+  }
+};
+
 // ===== UTILITY FUNCTIONS =====
 const transformOrderData = (orderData) => {
   if (!orderData) return [];
   
-  // Debugging: Log the raw order data
   console.log('Raw order data:', orderData);
   
   return orderData.map(order => {
@@ -264,7 +282,6 @@ const transformOrderData = (orderData) => {
     const userProfile = subscriptionData.user_profiles || {};
     const userAddress = subscriptionData.user_addresses || {};
     
-    // Debugging: Log order items for this order
     console.log(`Order #${order.order_number} items:`, order.order_items);
     
     const baseData = {
@@ -278,7 +295,7 @@ const transformOrderData = (orderData) => {
       delivery_instructions: order.delivery_instructions,
       subscription_meal_index: order.subscription_meal_index,
       created_at: order.created_at,
-      order_items: order.order_items || [], // Add order items
+      order_items: order.order_items || [],
       subscription: {
         id: subscriptionData.id,
         user_id: subscriptionData.user_id,
@@ -304,7 +321,6 @@ const transformOrderData = (orderData) => {
         }) : 'N/A',
     };
 
-    // Add type-specific data
     return {
       ...baseData,
       subscription: {
@@ -319,8 +335,8 @@ const transformOrderData = (orderData) => {
     };
   });
 };
-// ===== REUSABLE COMPONENTS =====
-// ===== REUSABLE MODAL COMPONENTS =====
+
+// ===== REUSABLE RESPONSIVE COMPONENTS =====
 const BaseModal = ({ isOpen, onClose, title, icon, children, size = "xl" }) => {
   const isMobile = useBreakpointValue({ base: true, md: false });
   
@@ -343,9 +359,155 @@ const BaseModal = ({ isOpen, onClose, title, icon, children, size = "xl" }) => {
   );
 };
 
-// Modal to show order items
+// Responsive Card Component refresh
+const ResponsiveCard = ({ children, ...props }) => {
+  const cardBg = useColorModeValue('white', 'gray.700');
+  
+  return (
+    <Card 
+      bg={cardBg} 
+      borderRadius="lg" 
+      p={RESPONSIVE_CONFIG.spacing.card}
+      {...props}
+    >
+      {children}
+    </Card>
+  );
+};
+
+// Responsive Grid Component
+const ResponsiveGrid = ({ children, type = 'analytics', ...props }) => {
+  return (
+    <SimpleGrid 
+      columns={RESPONSIVE_CONFIG.grid[type]} 
+      spacing={4}
+      {...props}
+    >
+      {children}
+    </SimpleGrid>
+  );
+};
+
+// Loading Skeleton Component
+const LoadingSkeleton = ({ count = 3, type = 'card' }) => {
+  const cardBg = useColorModeValue('white', 'gray.700');
+  
+  if (type === 'card') {
+    return (
+      <VStack spacing={4} align="stretch">
+        {Array.from({ length: count }).map((_, i) => (
+          <ResponsiveCard key={i}>
+            <CardBody>
+              <Skeleton height="20px" mb={4} />
+              <SkeletonText noOfLines={3} spacing={3} />
+            </CardBody>
+          </ResponsiveCard>
+        ))}
+      </VStack>
+    );
+  }
+  
+  return null;
+};
+
+// Empty State Component
+const EmptyState = ({ icon, message, ...props }) => {
+  const IconComponent = icon;
+  
+  return (
+    <Center py={10} {...props}>
+      <VStack spacing={4}>
+        <Icon as={IconComponent} boxSize={12} color="gray.400" />
+        <Text color="gray.500">{message}</Text>
+      </VStack>
+    </Center>
+  );
+};
+
+// Filter Controls Component
+const FilterControls = ({ 
+  searchQuery, 
+  onSearchChange, 
+  statusFilter, 
+  onStatusFilterChange, 
+  selectedDate, 
+  onDateChange,
+  onRefresh,
+  filteredData,
+  t 
+}) => {
+  const isMobile = useBreakpointValue({ base: true, md: false });
+  
+  return (
+    <ResponsiveCard>
+      <CardBody>
+        <VStack spacing={4} align="stretch">
+          <Flex direction={{ base: 'column', md: 'row' }} gap={4}>
+            <InputGroup maxW={RESPONSIVE_CONFIG.sizing.input}>
+              <InputLeftElement pointerEvents="none">
+                <FiSearch color="gray.300" />
+              </InputLeftElement>
+              <Input
+                placeholder={t('admin.searchPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+              />
+            </InputGroup>
+            
+            <Select
+              value={statusFilter}
+              onChange={(e) => onStatusFilterChange(e.target.value)}
+              maxW={RESPONSIVE_CONFIG.sizing.select}
+            >
+              <option value="all">{t('admin.allStatuses')}</option>
+              {Object.keys(STATUS_CONFIGS.delivery).map(status => (
+                <option key={status} value={status}>
+                  {t(`admin.${STATUS_CONFIGS.delivery[status].label}`)}
+                </option>
+              ))}
+            </Select>
+            
+            <Input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => onDateChange(e.target.value)}
+              maxW={RESPONSIVE_CONFIG.sizing.select}
+            />
+            
+            <Button
+              leftIcon={<FiRefreshCw />}
+              onClick={onRefresh}
+              variant="outline"
+              ml={{ md: 'auto' }}
+            />
+          </Flex>
+          
+          <Flex gap={1} overflowX="auto" py={2} width={isMobile ? '100%' : '90%'}>
+            {Object.keys(STATUS_CONFIGS.delivery).map(status => (
+              <Button
+                key={status}
+                size="xs"
+                variant={statusFilter === status ? "solid" : "outline"}
+                colorScheme={STATUS_CONFIGS.delivery[status].color}
+                onClick={() => onStatusFilterChange(statusFilter === status ? 'all' : status)}
+                leftIcon={STATUS_CONFIGS.delivery[status].icon}
+                flexShrink={0}
+              >
+                <small style={{fontSize:"0.8em"}}>
+                  {t(`admin.${STATUS_CONFIGS.delivery[status].label}`)} 
+                  ({filteredData.filter(d => d.status === status).length})
+                </small>
+              </Button>
+            ))}
+          </Flex>
+        </VStack>
+      </CardBody>
+    </ResponsiveCard>
+  );
+};
+
+// ===== EXISTING COMPONENTS (Optimized for Responsiveness) =====
 const OrderItemsModal = ({ isOpen, onClose, order, t }) => {
-  // Debugging: Log order items when modal opens
   useEffect(() => {
     if (isOpen && order) {
       console.log('Order items:', order.order_items);
@@ -368,40 +530,42 @@ const OrderItemsModal = ({ isOpen, onClose, order, t }) => {
         <Box>
           <Text fontWeight="semibold" mb={2}>{t('admin.items')}:</Text>
           {order?.order_items?.length > 0 ? (
-            <Table variant="simple" size="sm">
-              <Thead>
-                <Tr>
-                  <Th>{t('admin.item')}</Th>
-                  <Th>{t('admin.quantity')}</Th>
-                  <Th>{t('admin.price')}</Th>
-                  <Th>{t('admin.total')}</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {order.order_items.map((item) => (
-                  <Tr key={item.id}>
-                    <Td>
-                      <VStack align="start" spacing={0}>
-                        <Text fontWeight="medium">{item.name}</Text>
-                        {item.name_arabic && (
-                          <Text fontSize="sm" color="gray.600">
-                            {item.name_arabic}
-                          </Text>
-                        )}
-                        {item.category && (
-                          <Badge colorScheme="blue" fontSize="xs">
-                            {item.category}
-                          </Badge>
-                        )}
-                      </VStack>
-                    </Td>
-                    <Td>{item.quantity}</Td>
-                    <Td>${item.unit_price}</Td>
-                    <Td>${item.total_price}</Td>
+            <Box overflowX="auto">
+              <Table variant="simple" size="sm">
+                <Thead>
+                  <Tr>
+                    <Th>{t('admin.item')}</Th>
+                    <Th>{t('admin.quantity')}</Th>
+                    <Th>{t('admin.price')}</Th>
+                    <Th>{t('admin.total')}</Th>
                   </Tr>
-                ))}
-              </Tbody>
-            </Table>
+                </Thead>
+                <Tbody>
+                  {order.order_items.map((item) => (
+                    <Tr key={item.id}>
+                      <Td>
+                        <VStack align="start" spacing={0}>
+                          <Text fontWeight="medium">{item.name}</Text>
+                          {item.name_arabic && (
+                            <Text fontSize="sm" color="gray.600">
+                              {item.name_arabic}
+                            </Text>
+                          )}
+                          {item.category && (
+                            <Badge colorScheme="blue" fontSize="xs">
+                              {item.category}
+                            </Badge>
+                          )}
+                        </VStack>
+                      </Td>
+                      <Td>{item.quantity}</Td>
+                      <Td>${item.unit_price}</Td>
+                      <Td>${item.total_price}</Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+            </Box>
           ) : (
             <Text color="gray.500">{t('admin.noItems')}</Text>
           )}
@@ -417,7 +581,7 @@ const OrderItemsModal = ({ isOpen, onClose, order, t }) => {
     </BaseModal>
   );
 };
-//status badge component
+
 const StatusBadge = ({ status, type = 'order', t }) => {
   const config = STATUS_CONFIGS[type][status] || STATUS_CONFIGS[type].pending;
   const StatusIcon = config.icon;
@@ -465,7 +629,6 @@ const DataTableRow = ({ data, onEdit, onStatusChange, type = 'order', isMobile, 
   const config = STATUS_CONFIGS[type];
   const statusConfig = config[data.status] || config.pending;
   
-  // Common elements for both mobile and desktop views
   const renderCommonElements = () => (
     <>
       <Flex justify="space-between" align="start">
@@ -482,7 +645,7 @@ const DataTableRow = ({ data, onEdit, onStatusChange, type = 'order', isMobile, 
       
       <Divider />
       
-      <SimpleGrid columns={2} spacing={2}>
+      <ResponsiveGrid type="form" spacing={2}>
         {type !== 'subscription' && (
           <>
             <Box>
@@ -510,7 +673,7 @@ const DataTableRow = ({ data, onEdit, onStatusChange, type = 'order', isMobile, 
             }
           </Text>
         </Box>
-      </SimpleGrid>
+      </ResponsiveGrid>
       
       {type !== 'subscription' && (
         <Box>
@@ -530,7 +693,6 @@ const DataTableRow = ({ data, onEdit, onStatusChange, type = 'order', isMobile, 
     </>
   );
 
-  // Action buttons for both mobile and desktop
   const renderActionButtons = () => (
     <HStack spacing={2} justify="flex-end">
       {(type === 'order' || type === 'delivery') && (
@@ -560,7 +722,7 @@ const DataTableRow = ({ data, onEdit, onStatusChange, type = 'order', isMobile, 
 
   if (isMobile) {
     return (
-      <Box borderWidth="1px" borderRadius="lg" p={4} mb={4} boxShadow="sm">
+      <Box borderWidth="1px" borderRadius="lg" p={3} mb={3} width="100%">
         <VStack align="stretch" spacing={3}>
           {renderCommonElements()}
           {renderActionButtons()}
@@ -569,9 +731,8 @@ const DataTableRow = ({ data, onEdit, onStatusChange, type = 'order', isMobile, 
     );
   }
   
-  // Desktop view
   return (
-    <Tr _hover={{ bg: 'gray.50' }}>
+    <Tr _hover={{ bg: 'teal.100' }}>
       <Td>
         <HStack spacing={3}>
           <Avatar size="sm" name={data.user_profile?.display_name} />
@@ -644,7 +805,6 @@ const DataTableRow = ({ data, onEdit, onStatusChange, type = 'order', isMobile, 
   );
 };
 
-
 const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
   const toast = useToast();
   const { updateSubscription, updateDeliveryStatus } = useAdminSubscription();
@@ -680,7 +840,6 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
       if (type === 'subscription') {
         await updateSubscription(data.id, formData);
       } else {
-        // Format the scheduled_delivery_date for delivery/order
         const scheduled_delivery_date = new Date(`${formData.delivery_date}T${formData.delivery_time}:00`);
         await updateDeliveryStatus(data.id, {
           scheduled_delivery_date: scheduled_delivery_date.toISOString(),
@@ -745,7 +904,7 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
                 </Select>
               </FormControl>
 
-              <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={4}>
+              <ResponsiveGrid type="form" spacing={4}>
                 <FormControl>
                   <FormLabel fontWeight="semibold">{t('admin.totalMeals')}</FormLabel>
                   <NumberInput
@@ -776,9 +935,9 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
                     </NumberInputStepper>
                   </NumberInput>
                 </FormControl>
-              </SimpleGrid>
+              </ResponsiveGrid>
 
-              <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={4}>
+              <ResponsiveGrid type="form" spacing={4}>
                 <FormControl>
                   <FormLabel fontWeight="semibold">{t('admin.startDate')}</FormLabel>
                   <Input
@@ -798,11 +957,11 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
                     focusBorderColor="blue.500"
                   />
                 </FormControl>
-              </SimpleGrid>
+              </ResponsiveGrid>
             </>
           ) : (
             <>
-              <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={4}>
+              <ResponsiveGrid type="form" spacing={4}>
                 <FormControl>
                   <FormLabel fontWeight="semibold">{t('admin.deliveryDate')}</FormLabel>
                   <Input
@@ -827,7 +986,7 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
                     ))}
                   </Select>
                 </FormControl>
-              </SimpleGrid>
+              </ResponsiveGrid>
               
               <FormControl>
                 <FormLabel fontWeight="semibold">{t('admin.status')}</FormLabel>
@@ -882,6 +1041,92 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
     </BaseModal>
   );
 };
+
+// ===== TAB CONTENT COMPONENT (DRY Implementation) =====
+const TabContent = ({ 
+  data, 
+  loading, 
+  type, 
+  onEdit, 
+  onStatusChange, 
+  onViewItems, 
+  emptyStateIcon, 
+  emptyStateMessage,
+  t 
+}) => {
+  const isMobile = useBreakpointValue({ base: true, md: false });
+  
+  if (loading) {
+    return <LoadingSkeleton count={3} />;
+  }
+  
+  if (data.length === 0) {
+    return <EmptyState icon={emptyStateIcon} message={emptyStateMessage} />;
+  }
+  
+  if (isMobile) {
+    return (
+      <VStack spacing={4} align="stretch">
+        {data.map(item => (
+          <DataTableRow
+            key={item.id}
+            data={item}
+            onEdit={(item) => onEdit(item, type)}
+            onStatusChange={(id, status) => onStatusChange(id, status, type)}
+            type={type}
+            isMobile={isMobile}
+            t={t}
+            onViewItems={onViewItems}
+          />
+        ))}
+      </VStack>
+    );
+  }
+  
+  return (
+    <Box overflowX="auto">
+      <Table variant="simple" size="md">
+        <Thead>
+          <Tr>
+            <Th>{t('admin.customer')}</Th>
+            {type !== 'subscription' && <Th>{t('admin.order')}</Th>}
+            {type !== 'subscription' && <Th>{t('admin.address')}</Th>}
+            {type !== 'subscription' && <Th>{t('admin.dateTime')}</Th>}
+            <Th>{t('admin.status')}</Th>
+            {type === 'subscription' ? (
+              <>
+                <Th>{t('admin.startDate')}</Th>
+                <Th>{t('admin.endDate')}</Th>
+                <Th>{t('admin.meals')}</Th>
+              </>
+            ) : (
+              <>
+                <Th>{t('admin.paymentStatus')}</Th>
+                <Th>{t('admin.amount')}</Th>
+              </>
+            )}
+            <Th>Actions</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {data.map(item => (
+            <DataTableRow
+              key={item.id}
+              data={item}
+              onEdit={(item) => onEdit(item, type)}
+              onStatusChange={(id, status) => onStatusChange(id, status, type)}
+              type={type}
+              isMobile={isMobile}
+              t={t}
+              onViewItems={onViewItems}
+            />
+          ))}
+        </Tbody>
+      </Table>
+    </Box>
+  );
+};
+
 // ===== MAIN DASHBOARD COMPONENT =====
 const AdminSubscriptionDashboard = () => {
   const { t } = useTranslation();
@@ -892,8 +1137,9 @@ const AdminSubscriptionDashboard = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState('order');
-   const [selectedOrderForItems, setSelectedOrderForItems] = useState(null);
+  const [selectedOrderForItems, setSelectedOrderForItems] = useState(null);
   const [isItemsModalOpen, setIsItemsModalOpen] = useState(false);
+  
   const { 
     data: deliveryData, 
     isLoading: deliveriesLoading, 
@@ -944,12 +1190,11 @@ const AdminSubscriptionDashboard = () => {
     });
   }, [transformedDeliveries, subscriptionData, transformedSubscriptionOrders, searchQuery, statusFilter, modalType]);
   
-  //handlers
   const handleViewOrderItems = (order) => {
     setSelectedOrderForItems(order);
     setIsItemsModalOpen(true);
   };
-
+  
   const handleStatusChange = async (itemId, newStatus, type) => {
     try {
       if (type === 'subscription') {
@@ -998,9 +1243,14 @@ const AdminSubscriptionDashboard = () => {
     setIsModalOpen(false);
   };
 
+  const handleRefresh = () => {
+    refetchDeliveries();
+    refetchSubscriptions();
+    refetchSubscriptionOrders();
+  };
+
   const isMobile = useBreakpointValue({ base: true, md: false });
-  const bgColor = useColorModeValue('gray.50', 'gray.900');
-  const cardBg = useColorModeValue('white', 'gray.800');
+  const bgColor = useColorModeValue('teal.50', 'gray.900');
   
   if (deliveriesError || subscriptionsError || analyticsError) {
     return (
@@ -1015,151 +1265,91 @@ const AdminSubscriptionDashboard = () => {
   }
   
   return (
-    <Box bg={bgColor} minH="100vh">
-      <Box p={{ base: 4, md: 6 }} maxW="100%">
+    <Box bg={bgColor} minH="100vh" w="100%" overflowX="hidden">
+      <Box p={RESPONSIVE_CONFIG.spacing.section} maxW="100%">
         <VStack spacing={6} align="stretch">
           {/* Header */}
           <Box> 
-            <Breadcrumb separator={<ChevronRightIcon color="gray.500" />} fontSize="sm">
-              <BreadcrumbItem>
-                <BreadcrumbLink href="#">{t('admin.home')}</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbItem isCurrentPage>
-                <BreadcrumbLink href="#">{t('admin.subscriptionManagement')}</BreadcrumbLink>
-              </BreadcrumbItem>
-            </Breadcrumb>
+            <Heading size={{ base: 'lg', md: 'xl' }}>{t('admin.subscriptionManagement')}</Heading>
           </Box>
           
           {/* Analytics Cards */}
           {!analyticsLoading && analyticsData && (
-            <SimpleGrid columns={{ base: 1, sm: 2, md: 4 }} spacing={4}>
-              <Card bg={cardBg} borderRadius="lg" boxShadow="sm">
+            <ResponsiveGrid type="analytics" spacing={4}>
+              <ResponsiveCard>
                 <CardBody>
                   <Stat>
                     <StatLabel fontSize="sm" color="gray.600">{t('admin.totalSubscriptions')}</StatLabel>
-                    <StatNumber fontSize="2xl">{analyticsData.total_subscriptions}</StatNumber>
+                    <StatNumber fontSize={{ base: 'xl', md: '2xl' }}>{analyticsData.total_subscriptions}</StatNumber>
                     <StatHelpText>
                       <StatArrow type="increase" />
                       {analyticsData.month_growth}% {t('admin.fromLastMonth')}
                     </StatHelpText>
                   </Stat>
                 </CardBody>
-              </Card>
+              </ResponsiveCard>
               
-              <Card bg={cardBg} borderRadius="lg" boxShadow="sm">
+              <ResponsiveCard>
                 <CardBody>
                   <Stat>
                     <StatLabel fontSize="sm" color="gray.600">{t('admin.activeSubscriptions')}</StatLabel>
-                    <StatNumber fontSize="2xl">{analyticsData.active_subscriptions}</StatNumber>
+                    <StatNumber fontSize={{ base: 'xl', md: '2xl' }}>{analyticsData.active_subscriptions}</StatNumber>
                     <StatHelpText>
                       <StatArrow type="increase" />
                       {analyticsData.active_growth}% {t('admin.fromLastMonth')}
                     </StatHelpText>
                   </Stat>
                 </CardBody>
-              </Card>
+              </ResponsiveCard>
               
-              <Card bg={cardBg} borderRadius="lg" boxShadow="sm">
+              <ResponsiveCard>
                 <CardBody>
                   <Stat>
-                    <StatLabel fontSize="sm" color="gray.600">{t('admin.todayDeliveries')}</StatLabel>
-                    <StatNumber fontSize="2xl">{analyticsData.today_deliveries}</StatNumber>
+                    <StatLabel fontSize="sm" color="teal.600">{t('admin.todayDeliveries')}</StatLabel>
+                    <StatNumber fontSize={{ base: 'xl', md: '2xl' }}>{analyticsData.today_deliveries}</StatNumber>
                     <StatHelpText>
                       <StatArrow type="decrease" />
                       {analyticsData.delivery_completion_rate}% {t('admin.completed')}
                     </StatHelpText>
                   </Stat>
                 </CardBody>
-              </Card>
+              </ResponsiveCard>
               
-              <Card bg={cardBg} borderRadius="lg" boxShadow="sm">
+              <ResponsiveCard>
                 <CardBody>
                   <Stat>
-                    <StatLabel fontSize="sm" color="gray.600">{t('admin.revenue')}</StatLabel>
-                    <StatNumber fontSize="2xl">${analyticsData.monthly_revenue}</StatNumber>
+                    <StatLabel fontSize="sm" color="teal.600">{t('admin.revenue')}</StatLabel>
+                    <StatNumber fontSize={{ base: 'xl', md: '2xl' }}>${analyticsData.monthly_revenue}</StatNumber>
                     <StatHelpText>
                       <StatArrow type="increase" />
                       {analyticsData.revenue_growth}% {t('admin.fromLastMonth')}
                     </StatHelpText>
                   </Stat>
                 </CardBody>
-              </Card>
-            </SimpleGrid>
+              </ResponsiveCard>
+            </ResponsiveGrid>
           )}
           
           {/* Filters and Controls */}
-          <Card bg={cardBg} borderRadius="lg" boxShadow="sm">
-            <CardBody>
-              <VStack spacing={4} align="stretch">
-                <Flex direction={{ base: 'column', md: 'row' }} gap={4}>
-                  <InputGroup maxW={{ base: '100%', md: '300px' }}>
-                    <InputLeftElement pointerEvents="none">
-                      <FiSearch color="gray.300" />
-                    </InputLeftElement>
-                    <Input
-                      placeholder={t('admin.searchPlaceholder')}
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </InputGroup>
-                  
-                  <Select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    maxW={{ base: '100%', md: '200px' }}
-                  >
-                    <option value="all">{t('admin.allStatuses')}</option>
-                    {Object.keys(STATUS_CONFIGS.delivery).map(status => (
-                      <option key={status} value={status}>
-                        {t(`admin.${STATUS_CONFIGS.delivery[status].label}`)}
-                      </option>
-                    ))}
-                  </Select>
-                  
-                  <Input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    maxW={{ base: '100%', md: '200px' }}
-                  />
-                  
-                  <Button
-                    leftIcon={<FiRefreshCw />}
-                    onClick={() => {
-                      refetchDeliveries();
-                      refetchSubscriptions();
-                      refetchSubscriptionOrders();
-                    }}
-                    variant="outline"
-                    ml={{ md: 'auto' }}
-                  />
-                </Flex>
-                
-                <Flex gap={2} overflowX="auto" py={2}>
-                  {Object.keys(STATUS_CONFIGS.delivery).map(status => (
-                    <Button
-                      key={status}
-                      size="sm"
-                      variant={statusFilter === status ? "solid" : "outline"}
-                      colorScheme={STATUS_CONFIGS.delivery[status].color}
-                      onClick={() => setStatusFilter(statusFilter === status ? 'all' : status)}
-                      leftIcon={STATUS_CONFIGS.delivery[status].icon}
-                    >
-                      {t(`admin.${STATUS_CONFIGS.delivery[status].label}`)} ({filteredData.filter(d => d.status === status).length})
-                    </Button>
-                  ))}
-                </Flex>
-              </VStack>
-            </CardBody>
-          </Card>
+          <FilterControls
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            onRefresh={handleRefresh}
+            filteredData={filteredData}
+            t={t}
+          />
           
           {/* Main Content Tabs */}
           <Tabs variant="enclosed" colorScheme="blue" isLazy onChange={(index) => {
             const types = ['order', 'delivery', 'subscription', 'analytics'];
             setModalType(types[index]);
           }}>
-            <TabList>
-              <Tab>
+            <TabList overflowX="auto" py={1}>
+              <Tab whiteSpace="nowrap">
                 <HStack spacing={2}>
                   <FiShoppingBag />
                   <Text>{t('admin.subscriptionOrders')}</Text>
@@ -1168,7 +1358,7 @@ const AdminSubscriptionDashboard = () => {
                   </Badge>
                 </HStack>
               </Tab>
-              <Tab>
+              <Tab whiteSpace="nowrap">
                 <HStack spacing={2}>
                   <FiTruck />
                   <Text>{t('admin.deliveries')}</Text>
@@ -1177,7 +1367,7 @@ const AdminSubscriptionDashboard = () => {
                   </Badge>
                 </HStack>
               </Tab>
-              <Tab>
+              <Tab whiteSpace="nowrap">
                 <HStack spacing={2}>
                   <FiUsers />
                   <Text>{t('admin.subscriptions')}</Text>
@@ -1186,7 +1376,7 @@ const AdminSubscriptionDashboard = () => {
                   </Badge>
                 </HStack>
               </Tab>
-              <Tab>
+              <Tab whiteSpace="nowrap">
                 <HStack spacing={2}>
                   <FiBarChart2 />
                   <Text>{t('admin.analytics')}</Text>
@@ -1197,210 +1387,47 @@ const AdminSubscriptionDashboard = () => {
             <TabPanels>
               {/* Subscription Orders Tab */}
               <TabPanel px={0}>
-                {subscriptionOrdersLoading ? (
-                  <VStack spacing={4} align="stretch">
-                    {[1, 2, 3].map(i => (
-                      <Card key={i} bg={cardBg} borderRadius="lg" boxShadow="sm">
-                        <CardBody>
-                          <Skeleton height="20px" mb={4} />
-                          <SkeletonText noOfLines={3} spacing={3} />
-                        </CardBody>
-                      </Card>
-                    ))}
-                  </VStack>
-                ) : filteredData.length === 0 ? (
-                  <Center py={10}>
-                    <VStack spacing={4}>
-                      <Icon as={FiShoppingBag} boxSize={12} color="gray.400" />
-                      <Text color="gray.500">{t('admin.noSubscriptionOrders')}</Text>
-                    </VStack>
-                  </Center>
-                ) : isMobile ? (
-                  <VStack spacing={4} align="stretch">
-                    {filteredData.map(item => (
-                      <DataTableRow
-                        key={item.id}
-                        data={item}
-                        onEdit={(item) => handleEditItem(item, 'order')}
-                        onStatusChange={(id, status) => handleStatusChange(id, status, 'order')}
-                        type="order"
-                        isMobile={isMobile}
-                        t={t}
-                        onViewItems={handleViewOrderItems}
-
-                      />
-                    ))}
-                  </VStack>
-                ) : (
-                  <Box overflowX="auto">
-                    <Table variant="simple" size="md">
-                      <Thead>
-                        <Tr>
-                          <Th>{t('admin.customer')}</Th>
-                          <Th>{t('admin.order')}</Th>
-                          <Th>{t('admin.address')}</Th>
-                          <Th>{t('admin.dateTime')}</Th>
-                          <Th>{t('admin.status')}</Th>
-                          <Th>{t('admin.paymentStatus')}</Th>
-                          <Th>{t('admin.amount')}</Th>
-                          <Th> ---- </Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        {filteredData.map(item => (
-                          <DataTableRow
-                            key={item.id}
-                            data={item}
-                            onEdit={(item) => handleEditItem(item, 'order')}
-                            onStatusChange={(id, status) => handleStatusChange(id, status, 'order')}
-                            type="order"
-                            isMobile={isMobile}
-                            t={t}
-                            onViewItems={handleViewOrderItems}
-                          />
-                        ))}
-                      </Tbody>
-                    </Table>
-                  </Box>
-                )}
+                <TabContent
+                  data={filteredData}
+                  loading={subscriptionOrdersLoading}
+                  type="order"
+                  onEdit={handleEditItem}
+                  onStatusChange={handleStatusChange}
+                  onViewItems={handleViewOrderItems}
+                  emptyStateIcon={FiShoppingBag}
+                  emptyStateMessage={t('admin.noSubscriptionOrders')}
+                  t={t}
+                />
               </TabPanel>
               
               {/* Deliveries Tab */}
               <TabPanel px={0}>
-                {deliveriesLoading ? (
-                  <VStack spacing={4} align="stretch">
-                    {[1, 2, 3].map(i => (
-                      <Card key={i} bg={cardBg} borderRadius="lg" boxShadow="sm">
-                        <CardBody>
-                          <Skeleton height="20px" mb={4} />
-                          <SkeletonText noOfLines={3} spacing={3} />
-                        </CardBody>
-                      </Card>
-                    ))}
-                  </VStack>
-                ) : filteredData.length === 0 ? (
-                  <Center py={10}>
-                    <VStack spacing={4}>
-                      <Icon as={FiPackage} boxSize={12} color="gray.400" />
-                      <Text color="gray.500">{t('admin.noDeliveries')}</Text>
-                    </VStack>
-                  </Center>
-                ) : isMobile ? (
-                  <VStack spacing={4} align="stretch">
-                    {filteredData.map(item => (
-                      <DataTableRow
-                        key={item.id}
-                        data={item}
-                        onEdit={(item) => handleEditItem(item, 'delivery')}
-                        onStatusChange={(id, status) => handleStatusChange(id, status, 'delivery')}
-                        type="delivery"
-                        isMobile={isMobile}
-                        t={t}
-                      />
-                    ))}
-                  </VStack>
-                ) : (
-                  <Box overflowX="auto">
-                    <Table variant="simple" size="md">
-                      <Thead>
-                        <Tr>
-                          <Th>{t('admin.customer')}</Th>
-                          <Th>{t('admin.order')}</Th>
-                          <Th>{t('admin.address')}</Th>
-                          <Th>{t('admin.dateTime')}</Th>
-                          <Th>{t('admin.status')}</Th>
-                          <Th>{t('admin.amount')}</Th>
-                          <Th> --- </Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        {filteredData.map(item => (
-                          <DataTableRow
-                            key={item.id}
-                            data={item}
-                            onEdit={(item) => handleEditItem(item, 'delivery')}
-                            onStatusChange={(id, status) => handleStatusChange(id, status, 'delivery')}
-                            type="delivery"
-                            isMobile={isMobile}
-                            t={t}
-                            onViewItems={handleViewOrderItems}
-
-                          />
-                        ))}
-                      </Tbody>
-                    </Table>
-                  </Box>
-                )}
+                <TabContent
+                  data={filteredData}
+                  loading={deliveriesLoading}
+                  type="delivery"
+                  onEdit={handleEditItem}
+                  onStatusChange={handleStatusChange}
+                  onViewItems={handleViewOrderItems}
+                  emptyStateIcon={FiPackage}
+                  emptyStateMessage={t('admin.noDeliveries')}
+                  t={t}
+                />
               </TabPanel>
               
               {/* Subscriptions Tab */}
               <TabPanel px={0}>
-                {subscriptionsLoading ? (
-                  <VStack spacing={4} align="stretch">
-                    {[1, 2, 3].map(i => (
-                      <Card key={i} bg={cardBg} borderRadius="lg" boxShadow="sm">
-                        <CardBody>
-                          <Skeleton height="20px" mb={4} />
-                          <SkeletonText noOfLines={3} spacing={3} />
-                        </CardBody>
-                      </Card>
-                    ))}
-                  </VStack>
-                ) : filteredData.length === 0 ? (
-                  <Center py={10}>
-                    <VStack spacing={4}>
-                      <Icon as={FiUsers} boxSize={12} color="gray.400" />
-                      <Text color="gray.500">{t('admin.noSubscriptions')}</Text>
-                    </VStack>
-                  </Center>
-                ) : isMobile ? (
-                  <VStack spacing={4} align="stretch">
-                    {filteredData.map(item => (
-                      <DataTableRow
-                        key={item.id}
-                        data={item}
-                        onEdit={(item) => handleEditItem(item, 'subscription')}
-                        onStatusChange={(id, status) => handleStatusChange(id, status, 'subscription')}
-                        type="subscription"
-                        isMobile={isMobile}
-                        t={t}
-                        onViewItems={handleViewOrderItems}
-
-                      />
-                    ))}
-                  </VStack>
-                ) : (
-                  <Box overflowX="auto">
-                    <Table variant="simple" size="md">
-                      <Thead>
-                        <Tr>
-                          <Th>{t('admin.customer')}</Th>
-                          <Th>{t('admin.plan')}</Th>
-                          <Th>{t('admin.status')}</Th>
-                          <Th>{t('admin.startDate')}</Th>
-                          <Th>{t('admin.endDate')}</Th>
-                          <Th>{t('admin.meals')}</Th>
-                          <Th> --- </Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        {filteredData.map(item => (
-                          <DataTableRow
-                            key={item.id}
-                            data={item}
-                            onEdit={(item) => handleEditItem(item, 'subscription')}
-                            onStatusChange={(id, status) => handleStatusChange(id, status, 'subscription')}
-                            type="subscription"
-                            isMobile={isMobile}
-                            t={t}
-                            onViewItems={handleViewOrderItems}
-
-                          />
-                        ))}
-                      </Tbody>
-                    </Table>
-                  </Box>
-                )}
+                <TabContent
+                  data={filteredData}
+                  loading={subscriptionsLoading}
+                  type="subscription"
+                  onEdit={handleEditItem}
+                  onStatusChange={handleStatusChange}
+                  onViewItems={handleViewOrderItems}
+                  emptyStateIcon={FiUsers}
+                  emptyStateMessage={t('admin.noSubscriptions')}
+                  t={t}
+                />
               </TabPanel>
               
               {/* Analytics Tab */}
@@ -1414,7 +1441,7 @@ const AdminSubscriptionDashboard = () => {
         </VStack>
       </Box>
       
-      {/* Modal */}
+      {/* Modals */}
       <EditModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

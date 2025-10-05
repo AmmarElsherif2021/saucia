@@ -1,3 +1,5 @@
+// CustomizableCard.jsx - COMPLETE FILE with fixed handleConfirm
+
 import mealImage from '../../assets/menu/defaultMeal.jpg'
 import {
   Box,
@@ -12,9 +14,7 @@ import { CustomizableMealModal } from './CustomizableMealModal'
 import { useTranslation } from 'react-i18next'
 import { useI18nContext } from '../../Contexts/I18nContext'
 
-/**
- * Free item counts for each salad section (English and Arabic keys)
- */
+// Free item counts for each salad section
 const SALAD_SECTION_FREE_COUNTS = {
   protein: { value: 0, key_arabic: 'بروتين' },
   Nuts: { value: 1, key_arabic: 'مكسرات' },
@@ -26,26 +26,20 @@ const SALAD_SECTION_FREE_COUNTS = {
   Vegetables: { value: 4, key_arabic: 'خضروات' },
 }
 
-/**
- * Free item count for fruit salad section
- */
+// Free item count for fruit salad section
 const FRUIT_SECTION_FREE_COUNT = {
   'salad-fruits': { value: 5, key_arabic: 'سلطة فواكه' },
 }
 
-/**
- * CustomizableMealCard component
- * Displays a meal card that opens a modal for customization and adding to cart.
- *
- * @param {Object} props
- * @param {Object} props.meal - Meal data object
- * @param {Array} props.selectableItems - List of selectable add-on items
- * @param {Function} props.onhandleAddToCart - Callback when adding to cart
- */
 export const CustomizableMealCard = ({
   meal,
   selectableItems,
   onhandleAddToCart,
+  unsafeItemIds = [],
+  userAllergies = [],
+  isItemSafe = () => true,
+  isMealUnsafe = false,
+  mealAllergens = [],
 }) => {
   // Determine which section free counts to use based on meal type
   const SECTION_FREE_COUNTS =
@@ -62,9 +56,7 @@ export const CustomizableMealCard = ({
   const { colorMode } = useColorMode()
   const isArabic = currentLanguage === 'ar'
 
-  /**
-   * Group selectable items by their category
-   */
+  // Group selectable items by their category
   const groupedItems = selectableItems.reduce((acc, item) => {
     const section = item.category || 'Uncategorized'
     if (!acc[section]) {
@@ -76,27 +68,49 @@ export const CustomizableMealCard = ({
 
   /**
    * Handle confirmation from the modal
-   * Converts selected items to addOns array and triggers add to cart
+   * Converts selectedItems object to array with ONE entry per unique item
    */
-  const handleConfirm = (selectedItems, totalPrice) => {
-    // Convert selectedItems object to an array of add-on IDs
-    const addOnsArray = Object.entries(selectedItems).flatMap(([id, qty]) =>
-      Array(qty).fill(id),
-    )
-
-    onhandleAddToCart({
-      id: meal.id,
-      name: meal.name,
-      image: meal.image_url || meal.image || '',
-      addOns: addOnsArray,
-      price: totalPrice,
-      qty: 1,
+ const handleConfirm = (selectedItems, totalPrice) => {
+  console.group('🎯 CUSTOMIZABLE CARD - HANDLE CONFIRM')
+  console.log('Selected items from modal (object):', selectedItems)
+  console.log('Total price:', totalPrice)
+  
+  // Convert selectedItems object to array format expected by cart
+  const addOnsArray = Object.entries(selectedItems)
+    .filter(([itemId, quantity]) => quantity > 0)
+    .map(([itemId, quantity]) => {
+      // Find the item in groupedItems to get full details
+      let itemDetails = null
+      for (const section of Object.values(groupedItems)) {
+        itemDetails = section.find(item => item.id == itemId)
+        if (itemDetails) break
+      }
+      
+      if (!itemDetails) {
+        console.warn('Item not found:', itemId)
+        return null
+      }
+      
+      return {
+        item_id: itemDetails.id,
+        name: itemDetails.name,
+        name_arabic: itemDetails.name_arabic,
+        category: itemDetails.category,
+        unit_price: itemDetails.price || 0,
+        quantity: Number(quantity)
+      }
     })
+    .filter(Boolean) // Remove null entries
 
-    onClose()
-  }
+  console.log('Final addOns array:', addOnsArray)
+  console.groupEnd()
+  
+  // Call parent handler with the correct parameters
+  onhandleAddToCart(meal, addOnsArray, totalPrice)
+}
 
-  // Get display values for price, name, and description (with localization)
+
+  // Get display values
   const displayPrice = meal.price || meal.base_price || 0
   const mealName = isArabic ? meal.name_arabic || meal.name : meal.name
   const mealDescription = isArabic
@@ -118,12 +132,7 @@ export const CustomizableMealCard = ({
         cursor="pointer"
       >
         <Image
-          src={
-            meal.image_url ||
-            meal.thumbnail_url ||
-            meal.image ||
-            mealImage
-          }
+          src={meal.image_url || meal.thumbnail_url || meal.image || mealImage}
           alt={mealName}
           height="200px"
           width="100%"
@@ -167,8 +176,10 @@ export const CustomizableMealCard = ({
         t={t}
         sectionFreeCounts={SECTION_FREE_COUNTS}
         onConfirm={handleConfirm}
+        unsafeItemIds={unsafeItemIds}
+        userAllergies={userAllergies}
+        isItemSafe={isItemSafe}
       />
     </>
   )
 }
-

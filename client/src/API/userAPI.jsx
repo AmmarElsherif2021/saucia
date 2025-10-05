@@ -919,5 +919,98 @@ async resumeUserSubscription(subscriptionId) {
       console.error('Error fetching complete user data:', error);
       throw error;
     }
+  },
+  //Hot updates
+    // Subscribe to user subscriptions changes
+  subscribeToUserSubscriptions(userId, callback) {
+    return supabase
+      .channel(`user-${userId}-subscriptions-changes`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_subscriptions',
+          filter: `user_id=eq.${userId}`
+        },
+        callback
+      )
+      .subscribe();
+  },
+
+  // Subscribe to user addresses changes
+  subscribeToUserAddresses(userId, callback) {
+    return supabase
+      .channel(`user-${userId}-addresses-changes`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_addresses',
+          filter: `user_id=eq.${userId}`
+        },
+        callback
+      )
+      .subscribe();
+  },
+
+  // Subscribe to user health profile changes
+  subscribeToUserHealthProfile(userId, callback) {
+    return supabase
+      .channel(`user-${userId}-health-changes`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_health_profiles',
+          filter: `user_id=eq.${userId}`
+        },
+        callback
+      )
+      .subscribe();
+  },
+
+  // Real-time subscription status monitoring
+  async monitorSubscriptionStatus(subscriptionId, onStatusChange) {
+    const subscription = this.subscribeToUserSubscriptions(subscriptionId, (payload) => {
+      if (payload.eventType === 'UPDATE' && payload.new.status !== payload.old.status) {
+        onStatusChange(payload.new.status, payload.old.status, payload.new);
+      }
+    });
+
+    return subscription;
+  },
+
+  // Enhanced subscription creation with real-time setup
+  async createUserSubscriptionWithRealtime(userId, subscriptionData) {
+    try {
+      console.log('🚀 Creating subscription with real-time setup:', { userId, subscriptionData });
+      
+      // Validate subscription creation
+      const validation = await this.validateSubscriptionCreation(userId);
+      if (!validation.canCreate) {
+        throw new Error('USER_HAS_ACTIVE_SUBSCRIPTION');
+      }
+
+      const newSubscription = {
+        user_id: userId,
+        ...subscriptionData,
+        status: subscriptionData.status || 'pending',
+        preferred_delivery_time: subscriptionData.preferred_delivery_time || '12:00',
+        auto_renewal: subscriptionData.auto_renewal || false,
+        consumed_meals: subscriptionData.consumed_meals || 0,
+      };
+
+      const createdSubscription = await createRecord('user_subscriptions', newSubscription);
+      
+      console.log('✅ Subscription created with real-time setup:', createdSubscription);
+      
+      return createdSubscription;
+    } catch (error) {
+      console.error('❌ Failed to create subscription with real-time:', error);
+      throw error;
+    }
   }
 };

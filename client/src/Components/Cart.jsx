@@ -19,23 +19,23 @@ import { useTranslation } from 'react-i18next'
 import dailySaladIcon from '../assets/menu/unknownMeal.jpg'
 import cartIcon from '../assets/cartIcon.svg'
 import { useElements } from '../Contexts/ElementsContext'
+import { useI18nContext } from '../Contexts/I18nContext'
 
 export const CartCard = ({
-  name,
-  price,
-  image,
-  addOns = [],
-  quantity,
-  onIncrease,
-  onDecrease,
-  onRemove,
+    key,
+    meal,
+    onIncrease,
+    onDecrease,
+    onRemove
 }) => {
   const { colorMode } = useColorMode()
   const { t } = useTranslation()
-  const { items } = useElements()
-
+  //const { meals } = useElements()
+  const {currentLanguage} = useI18nContext();
+  const isArabic = currentLanguage === 'ar';
   return (
     <Flex
+      key={key}
       direction="row"
       align="center"
       justify="space-between"
@@ -48,8 +48,8 @@ export const CartCard = ({
       {/* Image with quantity badge */}
       <Box position="relative" width="60px" height="60px" borderRadius="md" flexShrink={0} mr={3}>
         <Image
-          src={image}
-          alt={name}
+          src={meal.image}
+          alt={meal.name}
           objectFit="cover"
           width="100%"
           height="100%"
@@ -65,11 +65,11 @@ export const CartCard = ({
           px={1.5}
           fontSize="xs"
         >
-          {quantity}
+          {meal.quantity}
         </Badge>
       </Box>
 
-      {/* Item details */}
+      {/* meal details */}
       <Box flex="1" minW="0" mr={2}>
         <Text
           fontWeight="bold"
@@ -77,26 +77,31 @@ export const CartCard = ({
           color={colorMode === 'dark' ? 'white' : 'gray.800'}
           noOfLines={1}
         >
-          {name}
+          {isArabic?meal.name_arabic:meal.name}
         </Text>
+        <small>{JSON.stringify(meal)} </small>
 
         {/* Add-ons badges */}
-        {Array.isArray(addOns) && addOns.length > 0 && (
+        {Array.isArray(meal?.selectedItems) && meal?.selectedItems > 0 && (
           <Flex wrap="wrap" gap={1} mt={1}>
-            {addOns.map((addOnId, index) => {
-              const addOn = items.find((item) => item.id === addOnId)
-              return addOn ? (
+            {meal?.selectedItems?.map((item, index) => {
+              return item?.id && (
+                <>
+                {/* Use item.name or item.name_arabic based on current language 
+                   {JSON.stringify(item)}
+                */}
                 <Badge
-                  key={`${addOnId}-${index}`}
-                  colorScheme="teal"
+                  key={`${item.id}`}
+                  colorScheme="orange"
                   borderRadius="full"
                   px={1.5}
                   py={0.5}
                   fontSize="2xs"
                 >
-                  {addOn.name}
+                  {isArabic? item?.name_arabic : item?.name} x {item?.quantity}
                 </Badge>
-              ) : null
+                </>
+              ) 
             })}
           </Flex>
         )}
@@ -105,7 +110,7 @@ export const CartCard = ({
       {/* Price and controls */}
       <Flex direction="column" align="flex-end">
         <Text fontSize="sm" fontWeight="bold" mb={1}>
-          {(price * quantity).toFixed(2)}{t("common.currency")}
+          {(meal.unit_price * meal.quantity).toFixed(2)}{t("common.currency")}
         </Text>
 
         <Flex align="center">
@@ -125,7 +130,7 @@ export const CartCard = ({
           />
           <IconButton
             icon={<DeleteIcon />}
-            aria-label={t('buttons.removeItem')}
+            aria-label={t('buttons.removemeal')}
             size="xs"
             variant="ghost"
             colorScheme="red"
@@ -139,7 +144,7 @@ export const CartCard = ({
 }
 
 export const CRT = ({
-  items = [],
+  meals = [],
   totalPrice = 0,
   onIncrease,
   onDecrease,
@@ -152,8 +157,8 @@ export const CRT = ({
   const [promoCode, setPromoCode] = useState('')
   const { t } = useTranslation()
 
-  const handleIncrease = (itemId) => {
-    onIncrease(itemId)
+  const handleIncrease = (meal) => {
+    onIncrease(meal.temp_meal_id)
     toast({
       title: t('toasts.quantityUpdated'),
       status: 'success',
@@ -162,9 +167,8 @@ export const CRT = ({
     })
   }
 
-  const handleDecrease = (itemId) => {
-    const item = items.find((i) => i.id === itemId)
-    if (item.quantity <= 1) {
+  const handleDecrease = (meal) => {
+    if (meal.quantity <= 1) {
       toast({
         title: t('toasts.minQuantity'),
         description: t('toasts.cantReduceQuantity'),
@@ -174,14 +178,14 @@ export const CRT = ({
       })
       return
     }
-    onDecrease(itemId)
+    onDecrease(meal.temp_meal_id)
   }
 
-  const handleRemove = (itemId, itemName) => {
-    onRemove(itemId)
+  const handleRemove = (meal, mealName) => {
+    onRemove(meal.temp_meal_id)
     toast({
       title: t('toasts.mealRemoved'),
-      description: t('toasts.mealRemovedDescription', { mealName: itemName }),
+      description: t('toasts.mealRemovedDescription', { mealName: mealName }),
       status: 'info',
       duration: 2000,
       isClosable: false,
@@ -224,33 +228,29 @@ export const CRT = ({
           <Image src={cartIcon} alt="Cart Icon" boxSize="30px" mr={2} />
         </Flex>
         <Badge colorScheme="orange" fontSize="sm" px={2} py={1} borderRadius="full">
-          {items.length} {items.length === 1 ? t('cart.meal') : t('cart.meals')}
+          {meals.length} {meals.length === 1 ? t('cart.meal') : t('cart.meals')}
         </Badge>
       </Flex>
 
-      {items.length === 0 ? (
+      {meals.length === 0 ? (
         <Text color="gray.500" py={3} textAlign="center">
           {t('cart.emptyCart')}
         </Text>
       ) : (
         <Stack spacing={2} m={2} maxHeight="40vh" overflowY="auto" overflowX={'hidden'}>
-          {items.map((item) => (
+          {meals.map((meal) => (
             <CartCard
-              key={item.id}
-              name={item.name}
-              price={item.price}
-              image={item.image || dailySaladIcon}
-              quantity={item?.quantity || item?.qty}
-              addOns={item.addOns || []}
-              onIncrease={() => handleIncrease(item.id)}
-              onDecrease={() => handleDecrease(item.id)}
-              onRemove={() => handleRemove(item.id, item.name)}
+              key={meal.temp_meal_id}
+              meal={meal}
+              onIncrease={() => handleIncrease(meal.id)}
+              onDecrease={() => handleDecrease(meal.id)}
+              onRemove={() => handleRemove(meal.id, meal.name)}
             />
           ))}
         </Stack>
       )}
 
-      {items.length > 0 && (
+      {meals.length > 0 && (
         <>
           <Divider my={3} />
           <Stack spacing={2} mb={4}>
@@ -298,7 +298,7 @@ export const CRT = ({
           </Flex>
         </Box>
 
-        {checkoutButton && items.length > 0 && (
+        {checkoutButton && meals.length > 0 && (
           <Button
             colorScheme="brand"
             size="md"
