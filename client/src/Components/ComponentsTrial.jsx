@@ -18,6 +18,7 @@ import {
   CloseButton,
   AlertDescription,
   AlertTitle,
+  theme,
 
 } from '@chakra-ui/react'
 import 'react-datepicker/dist/react-datepicker.css'
@@ -235,20 +236,23 @@ const EnhancedAccordionButton = ({
   isExpanded, 
   index 
 }) => {
-  const buttonBg = useColorModeValue('brand.500', 'brand.600')
+  const buttonBg = `${section.theme}.200` ||'brand.400' //useColorModeValue('brand.500', 'brand.600')
   const buttonHoverBg = useColorModeValue('secondary.500', 'secondary.600')
-  const expandedBorderColor = useColorModeValue('brand.500', 'brand.400')
+  const expandedBorderColor = `${section.theme}.300` ||'brand.400'//useColorModeValue('brand.500', 'brand.400')
   
   return (
     <AccordionButton
       _expanded={{
-        border: `4px solid ${expandedBorderColor}`,
+        border: `0px solid transparent`,
+        //px:2,
         bg: buttonBg,
         transform: 'translateY(-2px)',
+        borderRadius: '15px 15px 0px 0px',
       }}
       
       sx={{
         borderColor: expandedBorderColor,
+        borderRadius: '15px',
         bg: buttonBg,
         color: 'brand.900',
         my: -0.5,
@@ -266,6 +270,7 @@ const EnhancedAccordionButton = ({
         height: '100%',
         background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
         transition: 'left 0.5s ease',
+        //paddingX: 2,
       }}
       _hover={{
         _before: {
@@ -291,10 +296,11 @@ const EnhancedAccordionButton = ({
               size="md" 
               transition="all 0.2s ease"
               transform={isExpanded ? 'translateX(4px)' : 'translateX(0)'}
+              color={'brand.700'}
             >
               {section.title} {''}
               {section.subtitle && (
-               <small style={{marginX:'10px'}}>{section.subtitle}</small>        
+               <small style={{marginX:'15px'}}>{section.subtitle}</small>        
             )}
             </Heading>
             
@@ -304,6 +310,9 @@ const EnhancedAccordionButton = ({
       <AccordionIcon 
         transition="transform 0.3s ease"
         transform={isExpanded ? 'rotate(180deg) scale(1.1)' : 'rotate(0deg) scale(1)'}
+        color= {useColorModeValue('#04765447','brand.800')}
+        boxSize={'14'}
+        p={0}
       />
     </AccordionButton>
   )
@@ -313,7 +322,8 @@ const EnhancedAccordionButton = ({
 export const ACC = ({ sections = [], expandedIndex, onToggle }) => {
   // For proper operation with Chakra UI's Accordion
   const indexValue = expandedIndex !== undefined && expandedIndex >= 0 ? [expandedIndex] : []
-  
+  // Color mode values
+  const themes = ['teal', 'brand', 'secondary', 'warning', 'green']
   // Panel background for better visual separation
   const panelBg = useColorModeValue('gray.50', 'gray.800')
   const panelBorder = useColorModeValue('gray.200', 'gray.700')
@@ -325,10 +335,11 @@ export const ACC = ({ sections = [], expandedIndex, onToggle }) => {
   }, [expandedIndex, indexValue])
 
   // Enhanced sections with fallback data
-  const enhancedSections = sections.map(section => ({
+  const enhancedSections = sections.map((section,i) => ({
     ...section,
     iconFallback: getIconFallback(section.title),
-    subtitle: getSubtitle(section.title)
+    subtitle: getSubtitle(section.title),
+    theme: themes[i % themes.length] || 'teal.400'
   }))
 
   return (
@@ -341,7 +352,7 @@ export const ACC = ({ sections = [], expandedIndex, onToggle }) => {
         }
       }}
       allowToggle={true}
-      spacing={2}
+      //spacing={16}
     >
       {enhancedSections.map((section, index) => {
         const isExpanded = indexValue.includes(index)
@@ -352,44 +363,52 @@ export const ACC = ({ sections = [], expandedIndex, onToggle }) => {
             id={`section-${index}`}
             data-section-name={section.title}
             border="none"
+            borderRadius="15px"
             overflow="hidden"
             transition="all 0.3s ease"
-            _hover={{
-              boxShadow: "0 4px 8px rgba(0,0,0,0.15)"
-            }}
-            bg={isExpanded ? 'white' : 'transparent'}
+            mb={4}
+            mx={2} // Added horizontal margin
+            bg={isExpanded ? `${section.theme}.200` : 'transparent'}
           >
             <h2>
               <EnhancedAccordionButton
-                section={section}
-                isExpanded={isExpanded}
-                index={index}
+          section={section}
+          isExpanded={isExpanded}
+          index={index}
               />
             </h2>
             
             <AccordionPanel
               my={0}
               p={6}
-              bg={panelBg}
-              borderTop={`1px solid ${panelBorder}`}
+              bg={`${section.theme}.200` || panelBg}
+              borderTop={`1px solid transparent`}
               style={{ 
                 overflowY: 'auto', 
                 maxHeight: '50vh',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                borderRadius: '0 0 15px 15px',
+                paddingLeft: '10px',
               }}
               sx={{
                 '&::-webkit-scrollbar': {
-                  width: '8px',
+                  width: '36px', // Wider to accommodate border spacing
                 },
                 '&::-webkit-scrollbar-track': {
-                  background: 'gray.100',
-                  borderRadius: '4px',
+                  background: '#ffffff6f',
+                  borderRadius: '15px',
+                  border: '10px solid transparent', // Spacing on sides
+                  backgroundClip: 'content-box',
+                  width: '8px'
                 },
                 '&::-webkit-scrollbar-thumb': {
-                  background: 'gray.400',
-                  borderRadius: '4px',
+                  background: `${section.theme}.400` || `brand.400`,
+                  borderRadius: '28px',
+                  border: '15px solid transparent', // Creates spacing around thumb
+                  backgroundClip: 'content-box', // Key property
                   '&:hover': {
-                    background: 'gray.500',
+                    background: 'brand.500',
+                    backgroundClip: 'content-box',
                   }
                 }
               }}

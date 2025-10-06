@@ -3,314 +3,325 @@ import {
   Box,
   Flex,
   Text,
-  Heading,
   Button,
   Badge,
   Divider,
   useColorMode,
   useToast,
-  Input,
   Stack,
   Image,
+  Textarea,
+  IconButton,
+  HStack,
+  VStack,
 } from '@chakra-ui/react'
-import { IconButton, AddIcon, MinusIcon, DeleteIcon } from '@chakra-ui/icons'
-import { useEffect, useState } from 'react'
+import { AddIcon, MinusIcon, DeleteIcon } from '@chakra-ui/icons'
 import { useTranslation } from 'react-i18next'
 import dailySaladIcon from '../assets/menu/unknownMeal.jpg'
 import cartIcon from '../assets/cartIcon.svg'
-import { useElements } from '../Contexts/ElementsContext'
 import { useI18nContext } from '../Contexts/I18nContext'
 
-export const CartCard = ({
-    key,
-    meal,
-    onIncrease,
-    onDecrease,
-    onRemove
-}) => {
+const CartCard = ({ meal, onIncrease, onDecrease, onRemove }) => {
   const { colorMode } = useColorMode()
   const { t } = useTranslation()
-  //const { meals } = useElements()
-  const {currentLanguage} = useI18nContext();
-  const isArabic = currentLanguage === 'ar';
+  const { currentLanguage } = useI18nContext()
+  const isArabic = currentLanguage === 'ar'
+  const isDark = colorMode === 'dark'
+
+  const mealName = isArabic ? meal.name_arabic : meal.name
+  const mealTotal = (meal.unit_price * meal.quantity).toFixed(2)
+
   return (
     <Flex
-      key={key}
       direction="row"
       align="center"
       justify="space-between"
-      bg={colorMode === 'dark' ? 'gray.700' : 'white'}
+      bg={isDark ? 'teal.700' : 'secondary.200'}
+      borderWidth={"2px"}
+      borderColor={isDark ? 'teal.500' : 'secondary.400'}
       borderRadius="lg"
-      width="97%"
-      p={2}
-      m={1}
+      p={3}
+      transition="all 0.2s"
+      _hover={{ bg:isDark ? 'teal.600' : 'secondary.300', transform: 'translateY(-2px)' }} 
     >
       {/* Image with quantity badge */}
-      <Box position="relative" width="60px" height="60px" borderRadius="md" flexShrink={0} mr={3}>
+      <Box position="relative" width="70px" height="70px" borderRadius="md" flexShrink={0} mr={3}>
         <Image
-          src={meal.image}
-          alt={meal.name}
+          src={meal?.image || meal?.image_url || dailySaladIcon}
+          alt={mealName}
           objectFit="cover"
           width="100%"
           height="100%"
-          borderRadius="md"
+          borderRadius="lg"
         />
         <Badge
           position="absolute"
-          top="-1"
-          right="-1"
-          bg="error.300"
+          top="-2"
+          right="-2"
+          bg="orange.500"
           color="white"
           borderRadius="full"
-          px={1.5}
+          px={2}
           fontSize="xs"
+          fontWeight="bold"
         >
           {meal.quantity}
         </Badge>
       </Box>
 
-      {/* meal details */}
-      <Box flex="1" minW="0" mr={2}>
+      {/* Meal details */}
+      <VStack flex="1" align="flex-start" spacing={1} mr={2}>
         <Text
           fontWeight="bold"
-          fontSize="sm"
-          color={colorMode === 'dark' ? 'white' : 'gray.800'}
+          fontSize="md"
+          color={isDark ? 'white' : 'gray.800'}
           noOfLines={1}
         >
-          {isArabic?meal.name_arabic:meal.name}
+          {mealName}
         </Text>
-        <small>{JSON.stringify(meal)} </small>
 
         {/* Add-ons badges */}
-        {Array.isArray(meal?.selectedItems) && meal?.selectedItems > 0 && (
-          <Flex wrap="wrap" gap={1} mt={1}>
-            {meal?.selectedItems?.map((item, index) => {
-              return item?.id && (
-                <>
-                {/* Use item.name or item.name_arabic based on current language 
-                   {JSON.stringify(item)}
-                */}
+        {Array.isArray(meal?.selectedItems) && meal.selectedItems.length > 0 && (
+          <Flex wrap="wrap" gap={1}>
+            {meal.selectedItems.map((item, index) =>
+              item.item_id ? (
                 <Badge
-                  key={`${item.id}`}
+                  key={`${item.item_id}-${index}`}
                   colorScheme="orange"
+                  variant="subtle"
                   borderRadius="full"
-                  px={1.5}
+                  px={2}
                   py={0.5}
                   fontSize="2xs"
                 >
-                  {isArabic? item?.name_arabic : item?.name} x {item?.quantity}
+                  {isArabic ? item?.name_arabic : item?.name} ×{item?.quantity}
                 </Badge>
-                </>
-              ) 
-            })}
+              ) : null
+            )}
           </Flex>
         )}
-      </Box>
 
-      {/* Price and controls */}
-      <Flex direction="column" align="flex-end">
-        <Text fontSize="sm" fontWeight="bold" mb={1}>
-          {(meal.unit_price * meal.quantity).toFixed(2)}{t("common.currency")}
+        {/* Price */}
+        <Text fontSize="lg" fontWeight="bold" color="teal.500">
+          {mealTotal} {t('common.currency')}
         </Text>
+      </VStack>
 
-        <Flex align="center">
+      {/* Controls */}
+     
+        <HStack spacing={1}>
           <IconButton
-            icon={<MinusIcon />}
+            icon={<MinusIcon boxSize={3} />}
             aria-label={t('buttons.decreaseQuantity')}
-            size="xs"
+            size="sm"
+            colorScheme="gray"
             variant="ghost"
             onClick={onDecrease}
+            isDisabled={meal.quantity <= 1}
           />
           <IconButton
-            icon={<AddIcon />}
+            icon={<AddIcon boxSize={3} />}
             aria-label={t('buttons.increaseQuantity')}
-            size="xs"
+            size="sm"
+            colorScheme="teal"
             variant="ghost"
             onClick={onIncrease}
           />
-          <IconButton
-            icon={<DeleteIcon />}
-            aria-label={t('buttons.removemeal')}
-            size="xs"
-            variant="ghost"
-            colorScheme="red"
-            onClick={onRemove}
-            ml={1}
-          />
-        </Flex>
-      </Flex>
+        </HStack>
+        <IconButton
+          icon={<DeleteIcon />}
+          aria-label={t('buttons.removeMeal')}
+          size="sm"
+          colorScheme="red"
+          variant="ghost"
+          onClick={onRemove}
+          ml={2}
+        />
     </Flex>
   )
 }
 
+const OrderSummaryRow = ({ label, value, isTotal, isDiscount, colorMode }) => (
+  <Flex justify="space-between" fontSize={isTotal ? 'lg' : 'sm'} fontWeight={isTotal ? 'bold' : 'medium'}>
+    <Text color={isDiscount ? 'green.500' : isTotal ? (colorMode === 'dark' ? 'white' : 'gray.800') : 'gray.600'}>
+      {label}
+    </Text>
+    <Text color={isDiscount ? 'green.600' : isTotal ? 'teal.600' : 'gray.700'} fontWeight={isTotal ? 'bold' : 'normal'}>
+      {isDiscount && '-'}{value}
+    </Text>
+  </Flex>
+)
+
 export const CRT = ({
+  orderMetadata = {},
   meals = [],
-  totalPrice = 0,
   onIncrease,
   onDecrease,
   onRemove,
+  onInstructionsChange,
   checkoutButton = true,
   onCheckout,
 }) => {
   const { colorMode } = useColorMode()
   const toast = useToast()
-  const [promoCode, setPromoCode] = useState('')
   const { t } = useTranslation()
+  const isDark = colorMode === 'dark'
+
+  const showToast = (title, description, status) => {
+    toast({
+      title,
+      description,
+      status,
+      duration: 2000,
+      isClosable: true,
+      position: 'top-right',
+    })
+  }
 
   const handleIncrease = (meal) => {
     onIncrease(meal.temp_meal_id)
-    toast({
-      title: t('toasts.quantityUpdated'),
-      status: 'success',
-      duration: 1000,
-      isClosable: false,
-    })
+    showToast(t('toasts.quantityUpdated'), null, 'success')
   }
 
   const handleDecrease = (meal) => {
     if (meal.quantity <= 1) {
-      toast({
-        title: t('toasts.minQuantity'),
-        description: t('toasts.cantReduceQuantity'),
-        status: 'warning',
-        duration: 2000,
-        isClosable: false,
-      })
+      showToast(t('toasts.minQuantity'), t('toasts.cantReduceQuantity'), 'warning')
       return
     }
     onDecrease(meal.temp_meal_id)
   }
 
-  const handleRemove = (meal, mealName) => {
+  const handleRemove = (meal) => {
     onRemove(meal.temp_meal_id)
-    toast({
-      title: t('toasts.mealRemoved'),
-      description: t('toasts.mealRemovedDescription', { mealName: mealName }),
-      status: 'info',
-      duration: 2000,
-      isClosable: false,
-    })
+    showToast(
+      t('toasts.mealRemoved'),
+      t('toasts.mealRemovedDescription', { mealName: meal.name }),
+      'info'
+    )
   }
 
-  const handleApplyPromoCode = () => {
-    if (promoCode === 'DISCOUNT10') {
-      toast({
-        title: t('toasts.promoApplied'),
-        description: t('toasts.discountApplied'),
-        status: 'success',
-        duration: 2000,
-        isClosable: false,
-      })
-    } else {
-      toast({
-        title: t('toasts.invalidPromo'),
-        description: t('toasts.checkPromoCode'),
-        status: 'error',
-        duration: 2000,
-        isClosable: false,
-      })
-    }
-  }
+  const isEmpty = meals.length === 0
+  const hasDiscount = orderMetadata.discount_amount > 0
 
   return (
     <Box
-      bg={colorMode === 'dark' ? 'gray.800' : 'brand.200'}
-      borderRadius="xl"
-      width={['95%', '87%', '70%']}
-      minWidth="280px"
-      p={4}
-      mx="5px"
-      h={'auto'}
-      overflowY="auto"
+      bg={isDark ? 'gray.800' : 'white'}
+      borderRadius="2xl"
+      width={['95%', '90%', '75%', '60%']}
+      maxW="800px"
+      minWidth="300px"
+      p={6}
+      //boxShadow="xl"
+      borderWidth="4px"
+      borderColor={isDark ? 'gray.700' : 'secondary.300'}
     >
-      <Flex align="center" justify="space-between" mb={3}>
-        <Flex align="center">
-          <Image src={cartIcon} alt="Cart Icon" boxSize="30px" mr={2} />
-        </Flex>
-        <Badge colorScheme="orange" fontSize="sm" px={2} py={1} borderRadius="full">
+      {/* Header */}
+      <Flex align="center" justify="space-between" mb={4}>
+        <HStack spacing={2}>
+          <Image src={cartIcon} alt="Cart" boxSize="32px" />
+          <Text fontSize="3xl" fontWeight="bold" color={isDark ? 'white' : 'brand.800'}>
+            {t('cart.yourCart')}
+          </Text>
+        </HStack>
+        <Badge colorScheme="orange" fontSize="md" px={3} py={1} borderRadius="full">
           {meals.length} {meals.length === 1 ? t('cart.meal') : t('cart.meals')}
         </Badge>
       </Flex>
 
-      {meals.length === 0 ? (
-        <Text color="gray.500" py={3} textAlign="center">
-          {t('cart.emptyCart')}
-        </Text>
-      ) : (
-        <Stack spacing={2} m={2} maxHeight="40vh" overflowY="auto" overflowX={'hidden'}>
-          {meals.map((meal) => (
-            <CartCard
-              key={meal.temp_meal_id}
-              meal={meal}
-              onIncrease={() => handleIncrease(meal.id)}
-              onDecrease={() => handleDecrease(meal.id)}
-              onRemove={() => handleRemove(meal.id, meal.name)}
-            />
-          ))}
-        </Stack>
-      )}
+      <Divider mb={4} />
 
-      {meals.length > 0 && (
+      {/* Cart Items */}
+      {isEmpty ? (
+        <VStack py={12} spacing={3}>
+          <Text fontSize="6xl">🛒</Text>
+          <Text color="gray.500" fontSize="lg" textAlign="center">
+            {t('cart.emptyCart')}
+          </Text>
+        </VStack>
+      ) : (
         <>
-          <Divider my={3} />
-          <Stack spacing={2} mb={4}>
-            <Flex justify="space-between" fontSize="sm">
-              <Text>{t('cart.subtotal')}</Text>
-              <Text>${totalPrice.toFixed(2)}</Text>
-            </Flex>
-            <Flex justify="space-between" fontSize="sm">
-              <Text color="gray.500">{t('cart.deliveryFee')}</Text>
-              <Text color="gray.600">15 {t("common.currency")}</Text>
-            </Flex>
-            <Divider my={1} />
-            <Flex justify="space-between" fontSize="md" fontWeight="bold">
-              <Text>{t('cart.total')}</Text>
-              <Text color="teal.600">{(totalPrice + 15).toFixed(2)}{t("common.currency")}</Text>
-            </Flex>
+          <Stack spacing={3} maxHeight="45vh" overflowY="auto" pr={2} mb={4}>
+            {meals.map((meal) => (
+              <CartCard
+                key={meal.temp_meal_id}
+                meal={meal}
+                onIncrease={() => handleIncrease(meal)}
+                onDecrease={() => handleDecrease(meal)}
+                onRemove={() => handleRemove(meal)}
+              />
+            ))}
           </Stack>
+
+          <Divider my={4} />
+
+          {/* Order Summary */}
+          <Stack spacing={2} mb={5}>
+            <OrderSummaryRow
+              label={t('cart.subtotal')}
+              value={`${orderMetadata.subtotal?.toFixed(2) || '0.00'} ${t('common.currency')}`}
+              colorMode={colorMode}
+            />
+            <OrderSummaryRow
+              label={t('cart.deliveryFee')}
+              value={`${orderMetadata.delivery_fee?.toFixed(2) || '0.00'} ${t('common.currency')}`}
+              colorMode={colorMode}
+            />
+            {hasDiscount && (
+              <OrderSummaryRow
+                label={t('cart.discount')}
+                value={`${orderMetadata.discount_amount?.toFixed(2)} ${t('common.currency')}`}
+                isDiscount
+                colorMode={colorMode}
+              />
+            )}
+            <Divider my={2} />
+            <OrderSummaryRow
+              label={t('cart.total')}
+              value={`${orderMetadata.total_amount?.toFixed(2) || '0.00'} ${t('common.currency')}`}
+              isTotal
+              colorMode={colorMode}
+            />
+          </Stack>
+
+          {/* Special Instructions */}
+          <Box mb={4}>
+            <Text fontSize="sm" fontWeight="semibold" mb={2} color={isDark ? 'gray.300' : 'gray.700'}>
+              {t('cart.specialInstructions')}
+            </Text>
+            <Textarea
+              placeholder={t('cart.specialInstructionsPlaceholder')}
+              variant="filled"
+              size="md"
+              value={orderMetadata.client_instructions || ''}
+              onChange={(e) => onInstructionsChange && onInstructionsChange(e.target.value)}
+              rows={3}
+              resize="vertical"
+              bg={isDark ? 'gray.700' : 'gray.50'}
+              _hover={{ bg: isDark ? 'gray.650' : 'gray.100' }}
+              _focus={{ bg: isDark ? 'gray.700' : 'white', borderColor: 'teal.400' }}
+            />
+          </Box>
+
+          {/* Checkout Button */}
+          {checkoutButton && (
+            <Button
+              colorScheme="teal"
+              size="lg"
+              width="full"
+              onClick={onCheckout}
+              fontWeight="bold"
+              py={6}
+              fontSize="lg"
+              borderRadius="xl"
+              boxShadow="lg"
+              _hover={{ transform: 'translateY(-2px)', boxShadow: 'xl' }}
+              transition="all 0.2s"
+            >
+              {t('buttons.proceedToCheckout')}
+            </Button>
+          )}
         </>
       )}
-
-      <Stack spacing={4}>
-        <Box>
-          <Text fontSize="sm" fontWeight="medium" mb={1}>
-            {t('cart.specialInstructions')}
-          </Text>
-          <Input placeholder={t('cart.specialInstructionsPlaceholder')} variant="ghost" size="sm" />
-        </Box>
-
-        <Box>
-          <Text fontSize="sm" fontWeight="medium" mb={1}>
-            {t('cart.promoCode')}
-          </Text>
-          <Flex gap={2}>
-            <Input
-              placeholder={t('cart.enterPromoCode')}
-              value={promoCode}
-              onChange={(e) => setPromoCode(e.target.value)}
-              variant="ghost"
-              size="sm"
-              flex={1}
-            />
-            <Button colorScheme="brand" onClick={handleApplyPromoCode} size="sm" px={4}>
-              {t('buttons.apply')}
-            </Button>
-          </Flex>
-        </Box>
-
-        {checkoutButton && meals.length > 0 && (
-          <Button
-            colorScheme="brand"
-            size="md"
-            width="full"
-            onClick={onCheckout}
-            fontWeight="bold"
-            mt={2}
-          >
-            {t('buttons.proceedToCheckout')}
-          </Button>
-        )}
-      </Stack>
     </Box>
   )
 }

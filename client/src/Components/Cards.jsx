@@ -153,21 +153,21 @@ const DietaryBadges = ({ meal, size = "xs" }) => {
   if (meal.is_vegetarian) badges.push({ key: 'vegetarian', color: 'green' });
   if (meal.is_vegan) badges.push({ key: 'vegan', color: 'teal' });
   if (meal.is_gluten_free) badges.push({ key: 'glutenFree', color: 'orange' });
-  if (meal.is_dairy_free) badges.push({ key: 'dairyFree', color: 'blue' });
+  if (meal.is_dairy_free) badges.push({ key: 'dairyFree', color: 'secondary' });
 
   if (badges.length === 0) return null;
 
   return (
-    <Flex wrap="wrap" justifyContent={'center'} gap={1} maxH={"25%"}>
+    <Flex wrap="wrap" justifyContent={'start'} gap={1} minW={"65%"} w={'fit-content'} bg={'#1f7f6e73'} p={1} m={0} borderRadius={'md'}>
       {badges.map(({ key, color }) => (
         <Badge
           key={key}
           colorScheme={color}
           variant="subtle"
           fontSize={size}
-          borderRadius="full"
-          px={2}
-          py={0.5}
+          borderRadius="sm"
+          px={1}
+          py={0.2}
         >
           {t(`dietaryTags.${key}`)}
         </Badge>
@@ -242,9 +242,9 @@ export const MinimalMealCard = ({ meal, onClick }) => {
   const displayName = isArabic && meal.name_arabic ? meal.name_arabic : meal.name;
   const displayDescription = isArabic && meal.description_arabic ? meal.description_arabic : meal.description;
 
-  const cardBg = colorMode === 'dark' ? 'gray.800' : 'secondary.600';
+  const cardBg = colorMode === 'dark' ? 'gray.800' : '#03894f6c';
   const borderColor = colorMode === 'dark' ? 'gray.700' : 'brand.400';
-  const hoverBg = colorMode === 'dark' ? 'gray.750' : 'brand.600';
+  const hoverBg = colorMode === 'dark' ? 'gray.750' : 'brand.500';
 
   if (!meal.is_available) return null;
 
@@ -252,7 +252,7 @@ export const MinimalMealCard = ({ meal, onClick }) => {
     e.stopPropagation();
     
     if (!validateMealForCart(meal)) {
-      console.error('Cannot add invalid meal to cart');
+      console.error('Cannot add invalid meal to cart'); //zIndex
       toast({
         title: t('cart.error') || "Error",
         description: t('cart.invalidMeal') || "This meal cannot be added to cart",
@@ -297,7 +297,7 @@ export const MinimalMealCard = ({ meal, onClick }) => {
       as={Button}
       display="flex"
       flexDirection="column"
-      bg={cardBg}
+      bg= {cardBg}
       borderWidth="2px"
       borderColor={borderColor}
       borderRadius="md"
@@ -308,11 +308,10 @@ export const MinimalMealCard = ({ meal, onClick }) => {
         transform: 'translateY(-2px)',
         borderColor: 'brand.600',
         bg: hoverBg,
-        shadow: 'lg'
       }}
       onClick={() => onClick?.(meal)}
       position="relative"
-      height="100%"
+      height="auto"
       w={{
         base: "100%",
         sm: "280px",
@@ -351,18 +350,14 @@ export const MinimalMealCard = ({ meal, onClick }) => {
       {/* Image Section - More compact */}
       <Box 
         position="relative" 
-        h={{
-          base: "150px",
-          sm: "170px",
-          md: "190px"
-        }}
+        
         w="100%" 
         flex="0 0 auto"
       >
         <EnhancedImage
           src={meal.image_url}
           alt={displayName}
-          height="100%"
+          height="auto"
           width="100%"
           borderRadius="none"
           onLoad={() => setImageLoaded(true)}
@@ -409,18 +404,19 @@ export const MinimalMealCard = ({ meal, onClick }) => {
         align="stretch"
         overflow="hidden"
         w={'100%'}
+        zIndex={1}
       >
         {/* Title and Category Section - Inline for compactness */}
         <Box>
           <Heading
             size={{
-              base: "lg",
+              base: "md",
               sm: "lg",
               md: "xl"
             }}
-            color={colorMode === 'dark' ? 'white' : 'brand.800'}
+            color= "white" //{colorMode === 'dark' ? 'white' : 'warning.100'}
             noOfLines={2}
-            lineHeight="1.2"
+            lineHeight="1.7"
             mb="1"
             fontSize={{
               base: "lg",
@@ -429,41 +425,19 @@ export const MinimalMealCard = ({ meal, onClick }) => {
             }}
             whiteSpace="normal"
             wordBreak="break-word"
+            bg={'#012e1eaa'}
           >
             {displayName}
           </Heading>
           
           <Flex justify="space-between" align="center" mb="1">
-            <Badge
-              colorScheme="warning"
-              variant="subtle"
-              fontSize="xs"
-              borderRadius="sm"
-              size="xs"
-            >
-              {meal.section ? t(`foodCategories.${meal.section?.toLowerCase?.()}`) : t('common.uncategorized')}
-            </Badge>
             <Box mx="2">
               <DietaryBadges meal={meal} size="xs" maxDisplay={2} />
             </Box>
           </Flex>
         </Box>
 
-        {/* Description - More compact */}
-        <Box flex="1">
-          <Text
-            fontSize="xs"
-            color={colorMode === 'dark' ? 'gray.400' : 'gray.600'}
-            noOfLines={2}
-            lineHeight="1.3"
-            display={{
-              base: "none",
-              sm: "-webkit-box"
-            }}
-          >
-            {displayDescription}
-          </Text>
-        </Box>
+       
 
         {/* Price and Action - More compact */}
         <Flex

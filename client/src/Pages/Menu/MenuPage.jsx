@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, Suspense } from 'react'
+import React, { Children,useState, useEffect, useMemo, useCallback, Suspense, useRef } from 'react'
 import { useUserMenuFiltering } from '../../Hooks/setUserMenuFiltering'
 import { useLocation } from 'react-router-dom'
 import { CustomizableMealCard } from './CustomizableCard'
@@ -34,6 +34,7 @@ import saladIcon from '../../assets/menu/salad.svg'
 import soupIcon from '../../assets/menu/soup.svg'
 import fruitIcon from '../../assets/menu/fruit.svg'
 import dessertIcon from '../../assets/menu/dessert.svg'
+import MasonryMenuDemo from './MasonryAccordationPanel'
 
 // Memoized section icons map
 const SECTION_ICONS = {
@@ -84,8 +85,48 @@ const ErrorFallback = ({ error, resetErrorBoundary }) => (
       Try Again
     </Button>
   </Center>
-)
+);
+// Masonry grid component
+const MasonryGrid = ({ children, columns = { base: 1, sm: 3, md: 2, lg: 3 }, gap = 4 }) => {
+  const [columnCount, setColumnCount] = useState(1);
+  const containerRef = useRef(null);
 
+  useEffect(() => {
+    const updateColumns = () => {
+      if (!containerRef.current) return;
+      const width = containerRef.current.offsetWidth;
+      let cols = 1;
+      
+      if (width >= 1024) cols = columns.lg || 3;
+      else if (width >= 768) cols = columns.md || 2;
+      else if (width >= 480) cols = columns.sm || 2;
+      else cols = columns.base || 1;
+      
+      setColumnCount(cols);
+    };
+
+    updateColumns();
+    window.addEventListener('resize', updateColumns);
+    return () => window.removeEventListener('resize', updateColumns);
+  }, [columns]);
+
+  const childrenArray = React.Children.toArray(children);
+  const columnWrappers = Array.from({ length: columnCount }, () => []);
+  
+  childrenArray.forEach((child, index) => {
+    columnWrappers[index % columnCount].push(child);
+  });
+
+  return (
+    <Box ref={containerRef} display="flex" gap={gap} width="100%">
+      {columnWrappers.map((column, columnIndex) => (
+        <Box key={columnIndex} flex="1" display="flex" flexDirection="column" gap={gap}>
+          {column}
+        </Box>
+      ))}
+    </Box>
+  );
+};
 // Optimized meal section component
 const MealSection = ({ section, selectiveItems, handlers, userFiltering }) => {
   const { handleAddToCart } = handlers
@@ -109,8 +150,8 @@ const MealSection = ({ section, selectiveItems, handlers, userFiltering }) => {
   }
 
   return (
-    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
-      {section.meals.map((meal) => {
+     <MasonryGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap={3}>
+        {section.meals.map((meal) => {
         if (!meal?.id) return null
         
         const isSelective = meal.is_selective === true;
@@ -144,7 +185,7 @@ const MealSection = ({ section, selectiveItems, handlers, userFiltering }) => {
           </Box>
         )
       })}
-    </SimpleGrid>
+    </MasonryGrid>
   )
 }
 
@@ -305,35 +346,35 @@ const MenuPage = () => {
   return result
 }
 
-const handleConfirm = (selectedItems, totalPrice) => {
-  // selectedItems is an object: { itemId: quantity, ... }
-  const addOnsArray = []
+// const handleConfirm = (selectedItems, totalPrice) => {
+//   // selectedItems is an object: { itemId: quantity, ... }
+//   const addOnsArray = []
   
-  Object.entries(selectedItems).forEach(([itemId, quantity]) => {
-    if (quantity <= 0) return
+//   Object.entries(selectedItems).forEach(([itemId, quantity]) => {
+//     if (quantity <= 0) return
     
-    // Find the item in groupedItems
-    let itemDetails = null
-    for (const section of Object.values(groupedItems)) {
-      itemDetails = section.find(item => item.id == itemId)
-      if (itemDetails) break
-    }
+//     // Find the item in groupedItems
+//     let itemDetails = null
+//     for (const section of Object.values(groupedItems)) {
+//       itemDetails = section.find(item => item.id == itemId)
+//       if (itemDetails) break
+//     }
     
-    if (!itemDetails) return
+//     if (!itemDetails) return
     
-    // Push ONE entry per item with quantity property
-    addOnsArray.push({
-      item_id: itemDetails.id,
-      name: itemDetails.name,
-      name_arabic: itemDetails.name_arabic,
-      category: itemDetails.category,
-      unit_price: itemDetails.price || 0,
-      quantity: parseInt(quantity) || 1
-    })
-  })
+//     // Push ONE entry per item with quantity property
+//     addOnsArray.push({
+//       item_id: itemDetails.id,
+//       name: itemDetails.name,
+//       name_arabic: itemDetails.name_arabic,
+//       category: itemDetails.category,
+//       unit_price: itemDetails.price || 0,
+//       quantity: parseInt(quantity) || 1
+//     })
+//   })
 
-  onhandleAddToCart(meal, addOnsArray, totalPrice)
-}
+//   onhandleAddToCart(meal, addOnsArray, totalPrice)
+// }
 
   const handleRetry = useCallback(() => {
     setHasError(false)
@@ -400,7 +441,6 @@ const handleConfirm = (selectedItems, totalPrice) => {
         <Heading mb={6} textStyle="heading">
           {t('menuPage.title', 'Menu')}
         </Heading>
-        
         <ACC
           sections={sections.map((section, index) => ({
             title: currentLanguage === 'ar' ? section.name_arabic : section.name,

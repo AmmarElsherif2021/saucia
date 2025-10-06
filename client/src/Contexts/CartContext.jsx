@@ -13,7 +13,8 @@ export const CartProvider = ({ children }) => {
       tax_amount: 0,
       delivery_fee: 0,
       discount_amount: 0,
-      total_amount: 0
+      total_amount: 0,
+      client_instructions: '' // Added client instructions
     }
   })
 
@@ -22,7 +23,7 @@ export const CartProvider = ({ children }) => {
     // Calculate subtotal from all meals
     const subtotal = cart.meals.reduce((sum, meal) => sum + meal.total_price, 0)
 
-    const tax_amount = subtotal * 0.15 // 15% tax
+    const tax_amount = subtotal * 0.0 // 0% tax to be updated by admin later
     const total_amount = subtotal + tax_amount + cart.orderMetadata.delivery_fee - cart.orderMetadata.discount_amount
 
     setCart(prev => ({
@@ -34,7 +35,7 @@ export const CartProvider = ({ children }) => {
         total_amount: Number(total_amount.toFixed(2))
       }
     }))
-  }, [cart.meals.length, cart.orderMetadata.delivery_fee, cart.orderMetadata.discount_amount])
+  }, [cart.meals, cart.orderMetadata.delivery_fee, cart.orderMetadata.discount_amount])
 
   const addMealToCart = (meal, selectedItems = [], totalPrice = null) => {
     console.group('🍽️ ADD MEAL TO CART')
@@ -78,8 +79,6 @@ export const CartProvider = ({ children }) => {
 
       const quantity = meal.quantity || 1
       const total_price = Number((unit_price * quantity).toFixed(2))
-
-      //console.log('Meal pricing:', { unit_price, quantity, total_price })
 
        // Process selected items with the temporary meal ID
         const processedItems = (selectedItems || []).map(item => {
@@ -208,7 +207,7 @@ export const CartProvider = ({ children }) => {
   }
 
   const updateMealQuantity = (temp_meal_id, newQuantity) => {
-    console.log('📝 Updating meal quantity:', { temp_meal_id, newQuantity })
+    console.log('🔄 Updating meal quantity:', { temp_meal_id, newQuantity })
     try {
       if (newQuantity <= 0) {
         removeMealFromCart(temp_meal_id)
@@ -217,7 +216,8 @@ export const CartProvider = ({ children }) => {
       setCart(prevCart => ({
         ...prevCart,
         meals: prevCart.meals.map(meal => {
-          if (meal.id === temp_meal_id) {
+          // FIX: Compare with temp_meal_id instead of id
+          if (meal.temp_meal_id === temp_meal_id) {
             const newTotalPrice = Number((meal.unit_price * newQuantity).toFixed(2))
             return { ...meal, quantity: newQuantity, total_price: newTotalPrice }
           }
@@ -230,7 +230,7 @@ export const CartProvider = ({ children }) => {
   }
 
   const updateItemQuantity = (temp_meal_id, item_id, newQuantity) => {
-    console.log('📝 Updating item quantity:', { temp_meal_id, item_id, newQuantity })
+    console.log('🔄 Updating item quantity:', { temp_meal_id, item_id, newQuantity })
     try {
       if (newQuantity <= 0) {
         removeItemFromCart(temp_meal_id, item_id)
@@ -258,6 +258,20 @@ export const CartProvider = ({ children }) => {
     }
   }
 
+  const updateClientInstructions = (instructions) => {
+    try {
+      setCart(prevCart => ({
+        ...prevCart,
+        orderMetadata: {
+          ...prevCart.orderMetadata,
+          client_instructions: instructions
+        }
+      }))
+    } catch (err) {
+      console.error('Failed to update client instructions:', err)
+    }
+  }
+
   const applyDiscount = (discountAmount) => {
     try {
       setCart(prevCart => ({
@@ -279,9 +293,10 @@ export const CartProvider = ({ children }) => {
         orderMetadata: {
           subtotal: 0,
           tax_amount: 0,
-          delivery_fee: 0,
+          delivery_fee: 15,
           discount_amount: 0,
-          total_amount: 0
+          total_amount: 0,
+          client_instructions: ''
         }
       })
       toast({
@@ -321,6 +336,7 @@ export const CartProvider = ({ children }) => {
         delivery_fee: cart.orderMetadata.delivery_fee,
         discount_amount: cart.orderMetadata.discount_amount,
         total_amount: cart.orderMetadata.total_amount,
+        client_instructions: cart.orderMetadata.client_instructions,
         order_meals: orderMeals,
         order_items: [], // Empty since items are part of meals
         meal_data: cart.meals.map(meal => ({
@@ -348,6 +364,7 @@ export const CartProvider = ({ children }) => {
       removeItemFromCart,
       updateMealQuantity,
       updateItemQuantity,
+      updateClientInstructions,
       applyDiscount,
       clearCart,
       prepareOrderForSubmission
