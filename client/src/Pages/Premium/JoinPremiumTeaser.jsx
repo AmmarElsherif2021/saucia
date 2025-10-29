@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next'
 import { useElements } from '../../Contexts/ElementsContext'
 import { enrichPlansWithImages } from './planImageUtils'
 import { useState, useEffect } from 'react'
+import { useI18nContext } from '../../Contexts/I18nContext'
 
 // MOCK DATA FOR TESTING PURPOSES
 // const mockPlans = [
@@ -38,55 +39,17 @@ import { useState, useEffect } from 'react'
 //     total_meals: 30,
 //     is_active: true,
 //     image_url: '/images/plans/fitness-plan.jpg'
-//   },
-//   {
-//     id: 'plan-2',
-//     title: 'Weight Loss Program',
-//     title_arabic: 'برنامج فقدان الوزن',
-//     description: 'Low-calorie meals designed for weight loss',
-//     description_arabic: 'وجبات منخفضة السعرات الحرارية مصممة لفقدان الوزن',
-//     kcal: 350,
-//     carb: 30,
-//     protein: 25,
-//     fat: 10,
-//     price: 650,
-//     duration_days: 30,
-//     total_meals: 30,
-//     is_active: true,
-//     image_url: '/images/plans/weight-loss-plan.jpg'
-//   },
-//   {
-//     id: 'plan-3',
-//     title: 'Muscle Building Plan',
-//     title_arabic: 'خطة بناء العضلات',
-//     description: 'High-calorie meals for muscle growth',
-//     description_arabic: 'وجبات عالية السعرات الحرارية لنمو العضلات',
-//     kcal: 600,
-//     carb: 60,
-//     protein: 45,
-//     fat: 15,
-//     price: 850,
-//     duration_days: 30,
-//     total_meals: 30,
-//     is_active: true,
-//     image_url: '/images/plans/muscle-building-plan.jpg'
-//   }
-// ];
+//   },,,
 
-// Mock function to replace enrichPlansWithImages
-// const enrichPlansWithImages = (plans) => {
-//   return plans.map(plan => ({
-//     ...plan,
-//     image_url: plan.image_url || `/images/plans/default-plan.jpg`
-//   }));
-// };
 
 export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
   // MOCK DATA FOR TESTING - Comment out actual context usage
    const { plans, elementsLoading } = useElements()
   const { t } = useTranslation()
   const [currentPlanIndex, setCurrentPlanIndex] = useState(0)
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const {currentLanguage}=useI18nContext();
+  const isArabic = currentLanguage==='ar' ? true : false;
   
   // Using mock data instead
   // const plans = mockPlans;
@@ -309,6 +272,7 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
   }
 
   // Multiple plans display with custom slider
+  // Multiple plans display with circular avatars
   return (
     <Box
       as={motion.div}
@@ -316,7 +280,7 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
       initial="hidden"
       animate="visible"
       bgGradient={bgGradient}
-      p={8}
+      p={4}
       borderRadius="3xl"
       position="relative"
       overflow="hidden"
@@ -366,114 +330,81 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
           </VStack>
         </motion.div>
 
-        {/* Plans Slider */}
+        {/* Circular Avatar Plans Grid */}
         <motion.div variants={itemVariants}>
-          <VStack spacing={6}>
-            {/* Slider Container */}
-            <Box
-              position="relative"
-              w={{ base: "100%", md: "500px" }}
-              h="auto"
-              overflow="hidden"
-            >
-              <AnimatePresence mode="wait" custom={currentPlanIndex}>
-                <Box
-                  as={motion.div}
-                  key={currentPlanIndex}
-                  custom={currentPlanIndex}
-                  variants={slideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  position="relative"
-                >
+          <SimpleGrid columns={{ base:2, md: 2 }} spacing={12} w="100%">
+            {processedPlans.map((plan, index) => (
+              <Box
+                key={plan.id}
+                as={motion.div}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ scale: 1.05, y: -5 }}
+              >
+                <VStack spacing={4}>
+                
                   <Box
+                    position="relative"
+                    w={{ base: "100px", md: "130px", lg: "150px" }}
+                    h={{ base: "100px", md: "130px", lg: "150px" }}
+                    borderRadius="full"
+                    overflow="hidden"
+                    border="4px solid"
+                    borderColor={accentColor}
                     bg={cardBg}
-                    borderRadius="2xl"
-                    p={6}
                     shadow="2xl"
-                    backdropFilter="blur(10px)"
-                    border="1px solid"
-                    borderColor="whiteAlpha.200"
-                  >
-                    <PlanCard plan={processedPlans[currentPlanIndex]} />
-                  </Box>
-                </Box>
-              </AnimatePresence>
-
-              {/* Navigation Arrows */}
-              {processedPlans.length > 1 && (
-                <>
-                  <IconButton
-                    aria-label="Previous plan"
-                    icon={<ChevronLeftIcon />}
-                    position="absolute"
-                    left="-20px"
-                    top="50%"
-                    transform="translateY(-50%)"
-                    onClick={goToPrevious}
-                    variant="solid"
-                    colorScheme="whiteAlpha"
-                    bg="whiteAlpha.200"
-                    color={textColor}
-                    _hover={{
-                      bg: "whiteAlpha.300",
-                      transform: "translateY(-50%) scale(1.1)"
-                    }}
-                    size="lg"
-                    borderRadius="full"
-                    backdropFilter="blur(10px)"
-                  />
-                  <IconButton
-                    aria-label="Next plan"
-                    icon={<ChevronRightIcon />}
-                    position="absolute"
-                    right="-20px"
-                    top="50%"
-                    transform="translateY(-50%)"
-                    onClick={goToNext}
-                    variant="solid"
-                    colorScheme="whiteAlpha"
-                    bg="whiteAlpha.200"
-                    color={textColor}
-                    _hover={{
-                      bg: "whiteAlpha.300",
-                      transform: "translateY(-50%) scale(1.1)"
-                    }}
-                    size="lg"
-                    borderRadius="full"
-                    backdropFilter="blur(10px)"
-                  />
-                </>
-              )}
-            </Box>
-
-            {/* Dots Indicator */}
-            {processedPlans.length > 1 && (
-              <HStack spacing={2}>
-                {processedPlans.map((_, index) => (
-                  <Box
-                    key={index}
-                    as="button"
-                    w={currentPlanIndex === index ? "24px" : "8px"}
-                    h="8px"
-                    borderRadius="full"
-                    bg={currentPlanIndex === index ? accentColor : "whiteAlpha.400"}
-                    onClick={() => goToSlide(index)}
-                    transition="all 0.3s ease"
-                    _hover={{
-                      bg: currentPlanIndex === index ? accentColor : "whiteAlpha.600",
-                      transform: "scale(1.2)"
-                    }}
                     cursor="pointer"
-                  />
-                ))}
-              </HStack>
-            )}
+                    onClick={() => explorePlans && explorePlans()}
+                  >
+                    {plan.avatar_url ? (
+                      <Box
+                        as="img"
+                        src={plan.avatar_url}
+                        alt={plan.title}
+                        w="100%"
+                        h="100%"
+                        objectFit="cover"
+                      />
+                    ) : (
+                      <Flex
+                        w="100%"
+                        h="100%"
+                        align="center"
+                        justify="center"
+                        bgGradient="linear(to-br, brand.400, brand.600)"
+                      >
+                        <Icon as={StarIcon} w={12} h={12} color={accentColor} />
+                      </Flex>
+                    )}
+                  </Box>
 
-           
-          </VStack>
-        </motion.div>
+                  {/* Plan Info */}
+                  <VStack spacing={2} textAlign="center">
+                    <Text
+                      color={textColor}
+                      fontSize={["xs","xs", "sm", "xl"]}
+                      fontWeight="bold"
+                      noOfLines={1}
+                    >
+                      {!isArabic? plan.title:plan.title_arabic}
+                    </Text>
+                    
+                    <HStack spacing={3} fontSize="sm" flexWrap="wrap" justify="center" >
+                      <Text fontWeight={'thin'} bg={'brand.800'} color={"secondary.100"}>{plan.kcal} kcal</Text>
+                    
+                      <Text fontWeight={'thin'} bg={'brand.800'} color={"secondary.100"}>{plan.carb}gm carb</Text>
+                    
+                      <Text fontWeight={'thin'} bg={'brand.800'} color={"secondary.100"}>{plan.protein}gm protein</Text>
+
+                    </HStack>
+                    
+                  </VStack>
+                </VStack>
+              </Box>
+            ))}
+          </SimpleGrid>
+        </motion.div>  
       </VStack>
     </Box>
   )

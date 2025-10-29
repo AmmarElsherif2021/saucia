@@ -141,7 +141,7 @@
         "Category (Arabic)": "Category (Arabic)",
         "Price": "Price",
         "Free Count": "Free Count",
-        "Available": "Available",
+        "available": "Available",
         "Yes": "Yes",
         "No": "No",
         "None": "None",
@@ -467,6 +467,7 @@
         "clearAll": "Clear All"
       },
       "profile": {
+        "signInToContinueSubscription":"Sign in to continue to subscription",
         "currentSubscription":"current subscription",
         "enabled":"Enabled",
         "preferredDeliveryTime":"Preferred Delivery Time",
@@ -592,6 +593,13 @@
         "timezone": "Timezone"
       },
       "premium": {
+      "selectedPlanWillBeReserved":"The selected plan will be reserved for you for the next",
+      "signInToContinueWithPlan":"Sign in to continue with this plan",
+      "continueWithLogin":"Continue to Login",
+      "fat":"Fat",
+      "perMonth": "per month",
+      "readyToStart": "Ready to start your premium journey?",
+      "signInToExploreAndSubscribe": "Sign in to explore plans and subscribe",
       "recentDeliveries":"Recent deliveries",
       "upcomingMeals":"Upcoming Meals",
       "noPendingOrders":"No pending orders",
@@ -645,8 +653,8 @@
         "meals":"meals",
         "subscriptionTerm":"Subscription Term",
         "selectPlanToSeeDetails":"Select plan to see details",
-        "shortTerm":"12 Days plan",
-        "mediumTerm":"20 Days plan",
+        "shortTerm":"12 Meals/plan",
+        "mediumTerm":"20 Meals/plan",
         "pricePerMeal":"Price per meal",
         "overallPrice":"overall price",
         "mealsOver":"meal over",
@@ -992,6 +1000,8 @@
       },
 
       "menuPage": {
+        "itemsWithAllergens": "Items with allergens",
+        "fullyCustomizable": "Fully Customizable",
         "extraCharge": "Extra charge for additional items",
         "title": "Salad Menu",
         "baseIngredients": "Base Ingredients",
@@ -1366,7 +1376,7 @@
         "Category (Arabic)": "الفئة (بالعربية)",
         "Price": "السعر",
         "Free Count": "العدد المجاني",
-        "Available": "متوفر",
+        "available": "متوفر",
         "Yes": "نعم",
         "No": "لا",
         "Allergies": "الحساسيات",
@@ -1669,6 +1679,7 @@
       },
      
     "profile": {
+       "signInToContinueSubscription":"سجل الدخول للمتابعة إلى الاشتراك",
         "currentSubscription":"خطة الاشتراك الحالي",
         "enabled":"مفعل",
         "preferredDeliveryTime":"وقت التوصيل المفضل",
@@ -1794,6 +1805,12 @@
         "timezone": "المنطقة الزمنية"
       },
       "premium": {
+        "signInToContinueWithPlan": "سجل الدخول للمتابعة مع خطة الاشتراك",
+        "continueWithLogin": "متابعة لتسجيل الدخول",
+        "selectedPlanWillBeReserved": "سيتم حجز الخطة المحددة لمدة 15 دقيقة أثناء تسجيل الدخول أو إنشاء الحساب",
+        "fat":"دهون",
+        "readyToStart": "هل أنت مستعد للبدء؟",
+        "signInToExploreAndSubscribe": "سجل الدخول لاستكشاف خطط الاشتراك المميزة والاشتراك",
         "upcomingMeals":"الوجبات القادمة",
         "recentDeliveries":"سجل الوجبات المستلمة",
         "planStatus":"حالة الاشتراك",
@@ -1847,8 +1864,8 @@
         "meals":"وجبة",
         "subscriptionTerm":"فترة الاشتراك",
         "selectPlanToSeeDetails":"اختر باقة لمعرفة التفاصيل",
-        "shortTerm":"باقة ال12يوم",
-        "mediumTerm":"باقة ال20يوم",
+        "shortTerm":"باقة ال12 وجبة",
+        "mediumTerm":"باقة ال20وجبة",
         "overallPrice": "سعر الاشتراك",
         "pricePerMeal":"سعر الوجبة",
         "mealsOver":"مدة اشتراك لمدة",
@@ -2204,6 +2221,8 @@
         "saucia": "سوسيا"
       },
       "menuPage": {
+        "itemsWithAllergens":"عناصر تحتوي على مسببات الحساسية",
+        "fullyCustomizable":"قابل للتخصيص بالكامل",
         "extraCharge": "رسوم إضافية",
         "title": "قائمة السلطات",
         "baseIngredients": "المكونات الأساسية",

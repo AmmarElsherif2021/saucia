@@ -1,5 +1,4 @@
-// Updated to restrict to restaurant locations only
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useCallback } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -22,57 +21,68 @@ import {
   CardBody,
 } from '@chakra-ui/react'
 import MapBox from '../../Components/Map/MapBox'
-import { useRestaurantAddresses } from '../../Hooks/userHooks' 
 
-
-const MapModal = ({ isOpen, onClose, onSelectLocation, restaurantAddresses }) => {
-  const [selectedLocation, setSelectedLocation] = useState(null)
+const MapModal = ({
+  isOpen,
+  onClose,
+  addresses = [],
+  selectedAddress,
+  onSelectAddress,
+  loading = false,
+  error = null,
+}) => {
   const toast = useToast()
 
-  // Handle location selection from the list
-  const handleAddressSelect = useCallback((address) => {
-    setSelectedLocation(address)
-    toast({
-      title: 'Location Selected',
-      description: `Selected: ${address.label}`,
-      status: 'success',
-      duration: 2000,
-      isClosable: true,
-    })
-  }, [toast])
-
-  // Handle map click (optional - you can disable this if you only want list selection)
-  const handleMapLocationSelect = useCallback((locationData) => {
-    // Find if the clicked location matches any restaurant address
-    const restaurantAddress = restaurantAddresses?.find(addr => 
-      addr.coordinates && 
-      Math.abs(addr.coordinates[0] - locationData.latlng.lat) < 0.01 &&
-      Math.abs(addr.coordinates[1] - locationData.latlng.lng) < 0.01
-    )
-    
-    if (restaurantAddress) {
-      setSelectedLocation(restaurantAddress)
+  // Handle address selection from the list
+  const handleAddressSelect = useCallback(
+    (address) => {
+      if (onSelectAddress) onSelectAddress(address)
       toast({
         title: 'Location Selected',
-        description: `Selected: ${restaurantAddress.label}`,
+        description: `Selected: ${address.label || address.display_name}`,
         status: 'success',
         duration: 2000,
         isClosable: true,
       })
-    } else {
-      toast({
-        title: 'Invalid Location',
-        description: 'Please select one of our restaurant locations from the list',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      })
-    }
-  }, [restaurantAddresses, toast])
+    },
+    [onSelectAddress, toast]
+  )
 
-  // Handle confirming the selected location
+  // Handle map click
+  const handleMapLocationSelect = useCallback(
+    (locationData) => {
+      const restaurantAddress = addresses?.find(
+        (addr) =>
+          addr.coordinates &&
+          Math.abs(addr.coordinates[0] - locationData.latlng.lat) < 0.01 &&
+          Math.abs(addr.coordinates[1] - locationData.latlng.lng) < 0.01
+      )
+
+      if (restaurantAddress) {
+        if (onSelectAddress) onSelectAddress(restaurantAddress)
+        toast({
+          title: 'Location Selected',
+          description: `Selected: ${restaurantAddress.label || restaurantAddress.display_name}`,
+          status: 'success',
+          duration: 2000,
+          isClosable: true,
+        })
+      } else {
+        toast({
+          title: 'Invalid Location',
+          description: 'Please select one of our restaurant locations from the list',
+          status: 'warning',
+          duration: 3000,
+          isClosable: true,
+        })
+      }
+    },
+    [addresses, onSelectAddress, toast]
+  )
+
+  // Confirm selection
   const handleConfirm = useCallback(() => {
-    if (!selectedLocation) {
+    if (!selectedAddress) {
       toast({
         title: 'No Location Selected',
         description: 'Please select a restaurant location first',
@@ -82,12 +92,6 @@ const MapModal = ({ isOpen, onClose, onSelectLocation, restaurantAddresses }) =>
       })
       return
     }
-
-    // Call parent callback with the selected restaurant address
-    if (onSelectLocation) {
-      onSelectLocation(selectedLocation)
-    }
-    
     toast({
       title: 'Location Saved',
       description: 'Your pickup location has been set',
@@ -95,17 +99,45 @@ const MapModal = ({ isOpen, onClose, onSelectLocation, restaurantAddresses }) =>
       duration: 2000,
       isClosable: true,
     })
-    
-    setSelectedLocation(null)
     onClose()
-  }, [selectedLocation, onSelectLocation, onClose, toast])
+  }, [selectedAddress, onClose, toast])
 
-  // Reset when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-      setSelectedLocation(null)
-    }
-  }, [isOpen])
+  // Show loading state
+  if (loading) {
+    return (
+      <Modal isOpen={isOpen} onClose={onClose} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalBody py={10}>
+            <VStack spacing={4}>
+              <Spinner size="xl" color="brand.500" />
+              <Text>Loading restaurant locations...</Text>
+            </VStack>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <Modal isOpen={isOpen} onClose={onClose} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalBody py={10}>
+            <Alert status="error" borderRadius="md">
+              <AlertIcon />
+              <Box>
+                <Text fontWeight="500">Error loading locations</Text>
+                <Text fontSize="sm">{error}</Text>
+              </Box>
+            </Alert>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    )
+  }
 
   return (
     <Modal
@@ -121,7 +153,6 @@ const MapModal = ({ isOpen, onClose, onSelectLocation, restaurantAddresses }) =>
         <ModalCloseButton />
         <ModalBody pb={4}>
           <VStack spacing={4} align="stretch">
-            {/* Info Alert */}
             <Alert status="info" borderRadius="md">
               <AlertIcon />
               <Box>
@@ -132,44 +163,43 @@ const MapModal = ({ isOpen, onClose, onSelectLocation, restaurantAddresses }) =>
               </Box>
             </Alert>
 
-            {/* Map Component - Optional */}
             <Box height="300px" borderRadius="md" overflow="hidden">
-              <MapBox 
+              <MapBox
                 onSelectLocation={handleMapLocationSelect}
-                predefinedLocations={restaurantAddresses}
+                predefinedLocations={addresses}
               />
             </Box>
 
-            {/* Selected Location Display */}
-            {selectedLocation && (
+            {selectedAddress && (
               <Card bg="blue.50" borderColor="blue.200">
                 <CardBody p={4}>
                   <Text fontWeight="bold" mb={2}>Selected Location:</Text>
                   <Text fontSize="sm" color="gray.700">
-                    {selectedLocation.label} - {selectedLocation.address_line1}
+                    {selectedAddress.label || selectedAddress.display_name} - {selectedAddress.address_line1}
                   </Text>
                   <Text fontSize="xs" color="gray.600">
-                    {selectedLocation.city}
+                    {selectedAddress.city}
                   </Text>
                 </CardBody>
               </Card>
             )}
 
-            {/* Restaurant Locations List */}
             <Box>
               <Text fontWeight="bold" mb={3}>Our Restaurant Locations:</Text>
               <SimpleGrid columns={1} spacing={3} maxH="300px" overflowY="auto">
-                {restaurantAddresses?.map((address) => (
-                  <Card 
+                {addresses?.map((address) => (
+                  <Card
                     key={address.id}
                     cursor="pointer"
                     border="2px solid"
-                    borderColor={selectedLocation?.id === address.id ? 'blue.500' : 'gray.200'}
+                    borderColor={selectedAddress?.id === address.id ? 'blue.500' : 'gray.200'}
                     onClick={() => handleAddressSelect(address)}
                     _hover={{ borderColor: 'blue.300' }}
                   >
                     <CardBody p={4}>
-                      <Text fontWeight="600" fontSize="md">{address.label}</Text>
+                      <Text fontWeight="600" fontSize="md">
+                        {address.label || address.display_name}
+                      </Text>
                       <Text fontSize="sm" color="gray.600" mt={1}>
                         {address.address_line1}
                       </Text>
@@ -188,16 +218,16 @@ const MapModal = ({ isOpen, onClose, onSelectLocation, restaurantAddresses }) =>
             </Box>
           </VStack>
         </ModalBody>
-        
+
         <ModalFooter>
           <HStack spacing={3}>
             <Button variant="ghost" onClick={onClose}>
               Cancel
             </Button>
-            <Button 
-              colorScheme="blue" 
+            <Button
+              colorScheme="blue"
               onClick={handleConfirm}
-              isDisabled={!selectedLocation}
+              isDisabled={!selectedAddress}
             >
               Confirm Location
             </Button>

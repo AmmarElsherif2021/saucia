@@ -20,7 +20,7 @@
     "table_name": "allergies"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• allergies_severity_level_check (CHECK)\n  CHECK (((severity_level >= 1) AND (severity_level <= 5)))\n\n• allergies_name_key (UNIQUE)\n  UNIQUE (name)\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• allergies_name_key (UNIQUE)\n  UNIQUE (name)\n\n• allergies_severity_level_check (CHECK)\n  CHECK (((severity_level >= 1) AND (severity_level <= 5)))\n\n",
     "sort_order": 2,
     "table_name": "allergies"
   },
@@ -50,7 +50,7 @@
     "table_name": "item_allergies"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• item_allergies_item_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE\n\n• item_allergies_allergy_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (allergy_id) REFERENCES allergies(id) ON DELETE CASCADE\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• item_allergies_allergy_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (allergy_id) REFERENCES allergies(id) ON DELETE CASCADE\n\n• item_allergies_item_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE\n\n",
     "sort_order": 2,
     "table_name": "item_allergies"
   },
@@ -60,12 +60,12 @@
     "table_name": "item_allergies"
   },
   {
-    "output": "=========================================================\nTABLE: items\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.items (\n    id integer DEFAULT nextval('items_id_seq'::regclass) NOT NULL,\n    name text NOT NULL,\n    name_arabic text,\n    description text,\n    description_arabic text,\n    category text NOT NULL,\n    category_arabic text,\n    price double precision NOT NULL,\n    calories integer DEFAULT 0 NOT NULL,\n    protein_g integer DEFAULT 0 NOT NULL,\n    carbs_g integer DEFAULT 0 NOT NULL,\n    fat_g integer DEFAULT 0 NOT NULL,\n    max_free_per_meal integer DEFAULT 0 NOT NULL,\n    image_url text,\n    is_available boolean DEFAULT true NOT NULL,\n    sort_order integer DEFAULT 0 NOT NULL,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    updated_at timestamp with time zone DEFAULT now() NOT NULL,\n    is_additive boolean DEFAULT true NOT NULL,\n    CONSTRAINT items_pkey PRIMARY KEY (id)\n);\n",
+    "output": "=========================================================\nTABLE: items\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.items (\n    id integer DEFAULT nextval('items_id_seq'::regclass) NOT NULL,\n    name text NOT NULL,\n    name_arabic text,\n    description text,\n    description_arabic text,\n    category text NOT NULL,\n    category_arabic text,\n    price double precision NOT NULL,\n    calories integer DEFAULT 0 NOT NULL,\n    protein_g integer DEFAULT 0 NOT NULL,\n    carbs_g integer DEFAULT 0 NOT NULL,\n    fat_g integer DEFAULT 0 NOT NULL,\n    max_free_per_meal integer DEFAULT 0 NOT NULL,\n    image_url text,\n    is_available boolean DEFAULT true NOT NULL,\n    sort_order integer DEFAULT 0 NOT NULL,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    updated_at timestamp with time zone DEFAULT now() NOT NULL,\n    is_additive boolean DEFAULT true NOT NULL,\n    weight integer DEFAULT 0,\n    CONSTRAINT items_pkey PRIMARY KEY (id)\n);\n",
     "sort_order": 1,
     "table_name": "items"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• items_calories_check (CHECK)\n  CHECK ((calories >= 0))\n\n• items_carbs_g_check (CHECK)\n  CHECK ((carbs_g >= 0))\n\n• items_fat_g_check (CHECK)\n  CHECK ((fat_g >= 0))\n\n• items_max_free_per_meal_check (CHECK)\n  CHECK ((max_free_per_meal >= 0))\n\n• items_price_check (CHECK)\n  CHECK ((price >= ((0)::numeric)::double precision))\n\n• items_protein_g_check (CHECK)\n  CHECK ((protein_g >= 0))\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• items_max_free_per_meal_check (CHECK)\n  CHECK ((max_free_per_meal >= 0))\n\n• items_price_check (CHECK)\n  CHECK ((price >= ((0)::numeric)::double precision))\n\n• items_protein_g_check (CHECK)\n  CHECK ((protein_g >= 0))\n\n• items_calories_check (CHECK)\n  CHECK ((calories >= 0))\n\n• items_carbs_g_check (CHECK)\n  CHECK ((carbs_g >= 0))\n\n• items_fat_g_check (CHECK)\n  CHECK ((fat_g >= 0))\n\n",
     "sort_order": 2,
     "table_name": "items"
   },
@@ -85,7 +85,7 @@
     "table_name": "meal_allergies"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• meal_allergies_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE\n\n• meal_allergies_allergy_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (allergy_id) REFERENCES allergies(id) ON DELETE CASCADE\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• meal_allergies_allergy_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (allergy_id) REFERENCES allergies(id) ON DELETE CASCADE\n\n• meal_allergies_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE\n\n",
     "sort_order": 2,
     "table_name": "meal_allergies"
   },
@@ -95,18 +95,23 @@
     "table_name": "meal_allergies"
   },
   {
-    "output": "=========================================================\nTABLE: meal_items\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.meal_items (\n    meal_id integer NOT NULL,\n    item_id integer NOT NULL,\n    is_included boolean DEFAULT true NOT NULL,\n    max_quantity integer DEFAULT 1 NOT NULL,\n    CONSTRAINT meal_items_pkey PRIMARY KEY (meal_id, item_id)\n);\n",
+    "output": "=========================================================\nTABLE: meal_items\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.meal_items (\n    meal_id integer NOT NULL,\n    items integer[],\n    CONSTRAINT meal_items_pkey PRIMARY KEY (meal_id)\n);\n",
     "sort_order": 1,
     "table_name": "meal_items"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• meal_items_max_quantity_check (CHECK)\n  CHECK ((max_quantity > 0))\n\n• meal_items_item_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE\n\n• meal_items_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• trg_validate_meal_items_array (OTHER (t))\n  TRIGGER DEFERRABLE\n\n• meal_items_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE\n\n",
     "sort_order": 2,
     "table_name": "meal_items"
   },
   {
-    "output": "3️⃣  Indexes\n-------------------------------------------------\n• meal_items_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: meal_id, item_id\n  Definition: CREATE UNIQUE INDEX meal_items_pkey ON public.meal_items USING btree (meal_id, item_id)\n\n",
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• meal_items_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: meal_id\n  Definition: CREATE UNIQUE INDEX meal_items_pkey ON public.meal_items USING btree (meal_id)\n\n• idx_meal_items_items_gin\n  Columns: items\n  Definition: CREATE INDEX idx_meal_items_items_gin ON public.meal_items USING gin (items)\n\n",
     "sort_order": 3,
+    "table_name": "meal_items"
+  },
+  {
+    "output": "4️⃣  Triggers & Function Definitions\n-------------------------------------------------\n🔥 TRIGGER: trg_validate_meal_items_array\n   Timing: AFTER\n   Events: INSERT, UPDATE\n   Function: public.validate_meal_items_array()\n\n📋 Trigger Definition:\nCREATE CONSTRAINT TRIGGER trg_validate_meal_items_array AFTER INSERT OR UPDATE ON public.meal_items DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION validate_meal_items_array()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.validate_meal_items_array()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  IF NEW.items IS NOT NULL THEN\n    PERFORM 1\n    FROM unnest(NEW.items) AS iid\n    LEFT JOIN public.items it ON it.id = iid\n    WHERE it.id IS NULL;\n    IF FOUND THEN\n      RAISE EXCEPTION 'meal_items.items contains non-existent item id';\n    END IF;\n  END IF;\n  RETURN NEW;\nEND;\n$function$\n\n\n",
+    "sort_order": 4,
     "table_name": "meal_items"
   },
   {
@@ -115,7 +120,7 @@
     "table_name": "meal_reviews"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• meal_reviews_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• meal_reviews_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE\n\n• meal_reviews_rating_check (CHECK)\n  CHECK (((rating >= 1) AND (rating <= 5)))\n\n• meal_reviews_user_id_meal_id_order_id_key (UNIQUE)\n  UNIQUE (user_id, meal_id, order_id)\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• meal_reviews_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• meal_reviews_user_id_meal_id_order_id_key (UNIQUE)\n  UNIQUE (user_id, meal_id, order_id)\n\n• meal_reviews_rating_check (CHECK)\n  CHECK (((rating >= 1) AND (rating <= 5)))\n\n• meal_reviews_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE\n\n",
     "sort_order": 2,
     "table_name": "meal_reviews"
   },
@@ -130,12 +135,12 @@
     "table_name": "meal_reviews"
   },
   {
-    "output": "=========================================================\nTABLE: meals\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.meals (\n    id integer DEFAULT nextval('meals_id_seq'::regclass) NOT NULL,\n    name text NOT NULL,\n    name_arabic text,\n    description text,\n    description_arabic text,\n    section text NOT NULL,\n    section_arabic text,\n    base_price numeric(10,2) DEFAULT 0 NOT NULL,\n    calories integer DEFAULT 0 NOT NULL,\n    protein_g integer DEFAULT 0 NOT NULL,\n    carbs_g integer DEFAULT 0 NOT NULL,\n    fat_g integer DEFAULT 0 NOT NULL,\n    fiber_g integer,\n    sugar_g integer,\n    sodium_mg integer,\n    ingredients text,\n    ingredients_arabic text,\n    image_url text,\n    thumbnail_url text,\n    is_premium boolean DEFAULT false NOT NULL,\n    is_vegetarian boolean DEFAULT false NOT NULL,\n    is_vegan boolean DEFAULT false NOT NULL,\n    is_gluten_free boolean DEFAULT false NOT NULL,\n    is_dairy_free boolean DEFAULT false NOT NULL,\n    spice_level integer,\n    prep_time_minutes integer,\n    rating numeric(3,2),\n    rating_count integer DEFAULT 0 NOT NULL,\n    is_featured boolean DEFAULT false NOT NULL,\n    discount_percentage numeric(5,2),\n    discount_valid_until timestamp with time zone,\n    is_available boolean DEFAULT true NOT NULL,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    updated_at timestamp with time zone DEFAULT now() NOT NULL,\n    is_selective boolean DEFAULT false NOT NULL,\n    CONSTRAINT meals_pkey PRIMARY KEY (id)\n);\n",
+    "output": "=========================================================\nTABLE: meals\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.meals (\n    id integer DEFAULT nextval('meals_id_seq'::regclass) NOT NULL,\n    name text NOT NULL,\n    name_arabic text,\n    description text,\n    description_arabic text,\n    section text NOT NULL,\n    section_arabic text,\n    base_price numeric(10,2) DEFAULT 0 NOT NULL,\n    calories integer DEFAULT 0 NOT NULL,\n    protein_g integer DEFAULT 0 NOT NULL,\n    carbs_g integer DEFAULT 0 NOT NULL,\n    fat_g integer DEFAULT 0 NOT NULL,\n    fiber_g integer,\n    sugar_g integer,\n    sodium_mg integer,\n    ingredients text,\n    ingredients_arabic text,\n    image_url text,\n    thumbnail_url text,\n    is_premium boolean DEFAULT false NOT NULL,\n    is_vegetarian boolean DEFAULT false NOT NULL,\n    is_vegan boolean DEFAULT false NOT NULL,\n    is_gluten_free boolean DEFAULT false NOT NULL,\n    is_dairy_free boolean DEFAULT false NOT NULL,\n    spice_level integer,\n    prep_time_minutes integer,\n    rating numeric(3,2),\n    rating_count integer DEFAULT 0 NOT NULL,\n    is_featured boolean DEFAULT false NOT NULL,\n    discount_percentage numeric(5,2),\n    discount_valid_until timestamp with time zone,\n    is_available boolean DEFAULT true NOT NULL,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    updated_at timestamp with time zone DEFAULT now() NOT NULL,\n    is_selective boolean DEFAULT false NOT NULL,\n    weight integer DEFAULT 0,\n    CONSTRAINT meals_pkey PRIMARY KEY (id)\n);\n",
     "sort_order": 1,
     "table_name": "meals"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• meals_fat_g_check (CHECK)\n  CHECK ((fat_g >= 0))\n\n• meals_sugar_g_check (CHECK)\n  CHECK ((sugar_g >= 0))\n\n• meals_spice_level_check (CHECK)\n  CHECK (((spice_level >= 0) AND (spice_level <= 5)))\n\n• meals_sodium_mg_check (CHECK)\n  CHECK ((sodium_mg >= 0))\n\n• meals_rating_count_check (CHECK)\n  CHECK ((rating_count >= 0))\n\n• meals_rating_check (CHECK)\n  CHECK (((rating >= (0)::numeric) AND (rating <= (5)::numeric)))\n\n• meals_protein_g_check (CHECK)\n  CHECK ((protein_g >= 0))\n\n• meals_prep_time_minutes_check (CHECK)\n  CHECK ((prep_time_minutes > 0))\n\n• meals_base_price_check (CHECK)\n  CHECK ((base_price >= (0)::numeric))\n\n• meals_calories_check (CHECK)\n  CHECK ((calories >= 0))\n\n• meals_carbs_g_check (CHECK)\n  CHECK ((carbs_g >= 0))\n\n• meals_discount_percentage_check (CHECK)\n  CHECK (((discount_percentage >= (0)::numeric) AND (discount_percentage <= (100)::numeric)))\n\n• meals_fiber_g_check (CHECK)\n  CHECK ((fiber_g >= 0))\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• meals_protein_g_check (CHECK)\n  CHECK ((protein_g >= 0))\n\n• meals_base_price_check (CHECK)\n  CHECK ((base_price >= (0)::numeric))\n\n• meals_sugar_g_check (CHECK)\n  CHECK ((sugar_g >= 0))\n\n• meals_spice_level_check (CHECK)\n  CHECK (((spice_level >= 0) AND (spice_level <= 5)))\n\n• meals_calories_check (CHECK)\n  CHECK ((calories >= 0))\n\n• meals_rating_check (CHECK)\n  CHECK (((rating >= (0)::numeric) AND (rating <= (5)::numeric)))\n\n• meals_rating_count_check (CHECK)\n  CHECK ((rating_count >= 0))\n\n• meals_sodium_mg_check (CHECK)\n  CHECK ((sodium_mg >= 0))\n\n• meals_carbs_g_check (CHECK)\n  CHECK ((carbs_g >= 0))\n\n• meals_fat_g_check (CHECK)\n  CHECK ((fat_g >= 0))\n\n• meals_discount_percentage_check (CHECK)\n  CHECK (((discount_percentage >= (0)::numeric) AND (discount_percentage <= (100)::numeric)))\n\n• meals_fiber_g_check (CHECK)\n  CHECK ((fiber_g >= 0))\n\n• meals_prep_time_minutes_check (CHECK)\n  CHECK ((prep_time_minutes > 0))\n\n",
     "sort_order": 2,
     "table_name": "meals"
   },
@@ -155,7 +160,7 @@
     "table_name": "order_items"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• order_items_order_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE\n\n• order_items_item_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE SET NULL\n\n• order_items_quantity_check (CHECK)\n  CHECK ((quantity > 0))\n\n• valid_item_total (CHECK)\n  CHECK ((total_price = (unit_price * (quantity)::numeric)))\n\n• order_items_unit_price_check (CHECK)\n  CHECK ((unit_price >= (0)::numeric))\n\n• order_items_total_price_check (CHECK)\n  CHECK ((total_price >= (0)::numeric))\n\n• order_items_order_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (order_meal_id) REFERENCES order_meals(id) ON DELETE CASCADE\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• order_items_item_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE SET NULL\n\n• order_items_order_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (order_meal_id) REFERENCES order_meals(id) ON DELETE CASCADE\n\n• order_items_unit_price_check (CHECK)\n  CHECK ((unit_price >= (0)::numeric))\n\n• order_items_total_price_check (CHECK)\n  CHECK ((total_price >= (0)::numeric))\n\n• order_items_quantity_check (CHECK)\n  CHECK ((quantity > 0))\n\n• valid_item_total (CHECK)\n  CHECK ((total_price = (unit_price * (quantity)::numeric)))\n\n• order_items_order_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE\n\n",
     "sort_order": 2,
     "table_name": "order_items"
   },
@@ -170,7 +175,7 @@
     "table_name": "order_meals"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• valid_meal_total (CHECK)\n  CHECK ((total_price = (unit_price * (quantity)::numeric)))\n\n• order_meals_unit_price_check (CHECK)\n  CHECK ((unit_price >= (0)::numeric))\n\n• order_meals_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE SET NULL\n\n• order_meals_order_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE\n\n• order_meals_quantity_check (CHECK)\n  CHECK ((quantity > 0))\n\n• order_meals_total_price_check (CHECK)\n  CHECK ((total_price >= (0)::numeric))\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• order_meals_total_price_check (CHECK)\n  CHECK ((total_price >= (0)::numeric))\n\n• order_meals_quantity_check (CHECK)\n  CHECK ((quantity > 0))\n\n• order_meals_order_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE\n\n• order_meals_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE SET NULL\n\n• valid_meal_total (CHECK)\n  CHECK ((total_price = (unit_price * (quantity)::numeric)))\n\n• order_meals_unit_price_check (CHECK)\n  CHECK ((unit_price >= (0)::numeric))\n\n",
     "sort_order": 2,
     "table_name": "order_meals"
   },
@@ -185,7 +190,7 @@
     "table_name": "orders"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• orders_subscription_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (subscription_id) REFERENCES user_subscriptions(id) ON DELETE CASCADE\n\n• orders_order_number_key (UNIQUE)\n  UNIQUE (order_number)\n\n• orders_loyalty_points_used_check (CHECK)\n  CHECK ((loyalty_points_used >= 0))\n\n• orders_loyalty_points_earned_check (CHECK)\n  CHECK ((loyalty_points_earned >= 0))\n\n• orders_discount_amount_check (CHECK)\n  CHECK ((discount_amount >= (0)::numeric))\n\n• orders_delivery_fee_check (CHECK)\n  CHECK ((delivery_fee >= (0)::numeric))\n\n• orders_delivery_address_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (delivery_address_id) REFERENCES user_addresses(id)\n\n• orders_subtotal_check (CHECK)\n  CHECK ((subtotal >= (0)::numeric))\n\n• orders_payment_status_check (CHECK)\n  CHECK ((payment_status = ANY (ARRAY['pending'::text, 'paid'::text, 'failed'::text, 'refunded'::text, 'partial_refund'::text])))\n\n• valid_total (CHECK)\n  CHECK ((total_amount = (((subtotal + tax_amount) + delivery_fee) - discount_amount)))\n\n• orders_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• orders_total_amount_check (CHECK)\n  CHECK ((total_amount >= (0)::numeric))\n\n• orders_tax_amount_check (CHECK)\n  CHECK ((tax_amount >= (0)::numeric))\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• orders_loyalty_points_used_check (CHECK)\n  CHECK ((loyalty_points_used >= 0))\n\n• orders_delivery_address_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (delivery_address_id) REFERENCES user_addresses(id)\n\n• orders_delivery_fee_check (CHECK)\n  CHECK ((delivery_fee >= (0)::numeric))\n\n• orders_discount_amount_check (CHECK)\n  CHECK ((discount_amount >= (0)::numeric))\n\n• orders_loyalty_points_earned_check (CHECK)\n  CHECK ((loyalty_points_earned >= 0))\n\n• orders_order_number_key (UNIQUE)\n  UNIQUE (order_number)\n\n• orders_payment_status_check (CHECK)\n  CHECK ((payment_status = ANY (ARRAY['pending'::text, 'paid'::text, 'failed'::text, 'refunded'::text, 'partial_refund'::text])))\n\n• orders_subscription_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (subscription_id) REFERENCES user_subscriptions(id) ON DELETE CASCADE\n\n• orders_subtotal_check (CHECK)\n  CHECK ((subtotal >= (0)::numeric))\n\n• orders_tax_amount_check (CHECK)\n  CHECK ((tax_amount >= (0)::numeric))\n\n• orders_total_amount_check (CHECK)\n  CHECK ((total_amount >= (0)::numeric))\n\n• orders_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• valid_total (CHECK)\n  CHECK ((total_amount = (((subtotal + tax_amount) + delivery_fee) - discount_amount)))\n\n",
     "sort_order": 2,
     "table_name": "orders"
   },
@@ -205,7 +210,7 @@
     "table_name": "plan_meals"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• plan_meals_plan_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE CASCADE\n\n• plan_meals_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• plan_meals_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE\n\n• plan_meals_plan_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE CASCADE\n\n",
     "sort_order": 2,
     "table_name": "plan_meals"
   },
@@ -220,7 +225,7 @@
     "table_name": "plans"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• plans_price_per_meal_check (CHECK)\n  CHECK ((price_per_meal >= (0)::numeric))\n\n• plans_check (CHECK)\n  CHECK ((medium_term_meals >= short_term_meals))\n\n• plans_min_meals_per_week_check (CHECK)\n  CHECK ((short_term_meals > 0))\n\n• plans_target_calories_per_meal_check (CHECK)\n  CHECK ((kcal > 0))\n\n• plans_target_carbs_per_meal_check (CHECK)\n  CHECK ((carb >= 0))\n\n• plans_target_protein_per_meal_check (CHECK)\n  CHECK ((protein > 0))\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• plans_target_calories_per_meal_check (CHECK)\n  CHECK ((kcal > 0))\n\n• plans_target_carbs_per_meal_check (CHECK)\n  CHECK ((carb >= 0))\n\n• plans_target_protein_per_meal_check (CHECK)\n  CHECK ((protein > 0))\n\n• plans_min_meals_per_week_check (CHECK)\n  CHECK ((short_term_meals > 0))\n\n• plans_price_per_meal_check (CHECK)\n  CHECK ((price_per_meal >= (0)::numeric))\n\n• plans_check (CHECK)\n  CHECK ((medium_term_meals >= short_term_meals))\n\n",
     "sort_order": 2,
     "table_name": "plans"
   },
@@ -275,7 +280,7 @@
     "table_name": "user_allergies"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_allergies_allergy_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (allergy_id) REFERENCES allergies(id) ON DELETE CASCADE\n\n• user_allergies_severity_override_check (CHECK)\n  CHECK (((severity_override >= 1) AND (severity_override <= 5)))\n\n• user_allergies_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_allergies_severity_override_check (CHECK)\n  CHECK (((severity_override >= 1) AND (severity_override <= 5)))\n\n• user_allergies_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• user_allergies_allergy_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (allergy_id) REFERENCES allergies(id) ON DELETE CASCADE\n\n",
     "sort_order": 2,
     "table_name": "user_allergies"
   },
@@ -305,7 +310,7 @@
     "table_name": "user_favorite_items"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_favorite_items_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• user_favorite_items_item_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_favorite_items_item_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE\n\n• user_favorite_items_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n",
     "sort_order": 2,
     "table_name": "user_favorite_items"
   },
@@ -335,7 +340,7 @@
     "table_name": "user_health_profiles"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_health_profiles_target_protein_check (CHECK)\n  CHECK ((target_protein > 0))\n\n• user_health_profiles_target_calories_check (CHECK)\n  CHECK ((target_calories > 0))\n\n• user_health_profiles_height_cm_check (CHECK)\n  CHECK (((height_cm > (0)::numeric) AND (height_cm < (300)::numeric)))\n\n• user_health_profiles_weight_kg_check (CHECK)\n  CHECK (((weight_kg > (0)::numeric) AND (weight_kg < (500)::numeric)))\n\n• user_health_profiles_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_health_profiles_target_protein_check (CHECK)\n  CHECK ((target_protein > 0))\n\n• user_health_profiles_weight_kg_check (CHECK)\n  CHECK (((weight_kg > (0)::numeric) AND (weight_kg < (500)::numeric)))\n\n• user_health_profiles_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• user_health_profiles_target_calories_check (CHECK)\n  CHECK ((target_calories > 0))\n\n• user_health_profiles_height_cm_check (CHECK)\n  CHECK (((height_cm > (0)::numeric) AND (height_cm < (300)::numeric)))\n\n",
     "sort_order": 2,
     "table_name": "user_health_profiles"
   },
@@ -375,7 +380,7 @@
     "table_name": "user_payment_methods"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_payment_methods_expiry_month_check (CHECK)\n  CHECK (((expiry_month >= 1) AND (expiry_month <= 12)))\n\n• only_one_default_payment_per_user (EXCLUDE)\n  EXCLUDE USING btree (user_id WITH =) WHERE ((is_default = true))\n\n• user_payment_methods_expiry_year_check (CHECK)\n  CHECK (((expiry_year)::numeric >= EXTRACT(year FROM now())))\n\n• user_payment_methods_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_payment_methods_expiry_year_check (CHECK)\n  CHECK (((expiry_year)::numeric >= EXTRACT(year FROM now())))\n\n• user_payment_methods_expiry_month_check (CHECK)\n  CHECK (((expiry_month >= 1) AND (expiry_month <= 12)))\n\n• user_payment_methods_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• only_one_default_payment_per_user (EXCLUDE)\n  EXCLUDE USING btree (user_id WITH =) WHERE ((is_default = true))\n\n",
     "sort_order": 2,
     "table_name": "user_payment_methods"
   },
@@ -395,7 +400,7 @@
     "table_name": "user_profiles"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_profiles_gender_check (CHECK)\n  CHECK ((gender = ANY (ARRAY['male'::text, 'female'::text, 'other'::text, 'prefer_not_to_say'::text])))\n\n• user_profiles_id_key (UNIQUE)\n  UNIQUE (id)\n\n• user_profiles_language_check (CHECK)\n  CHECK ((language = ANY (ARRAY['en'::bpchar, 'ar'::bpchar])))\n\n• user_profiles_loyalty_points_check (CHECK)\n  CHECK ((loyalty_points >= 0))\n\n• user_profiles_age_check (CHECK)\n  CHECK (((age > 0) AND (age < 150)))\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_profiles_loyalty_points_check (CHECK)\n  CHECK ((loyalty_points >= 0))\n\n• user_profiles_age_check (CHECK)\n  CHECK (((age > 0) AND (age < 150)))\n\n• user_profiles_gender_check (CHECK)\n  CHECK ((gender = ANY (ARRAY['male'::text, 'female'::text, 'other'::text, 'prefer_not_to_say'::text])))\n\n• user_profiles_id_key (UNIQUE)\n  UNIQUE (id)\n\n• user_profiles_language_check (CHECK)\n  CHECK ((language = ANY (ARRAY['en'::bpchar, 'ar'::bpchar])))\n\n",
     "sort_order": 2,
     "table_name": "user_profiles"
   },
@@ -415,7 +420,7 @@
     "table_name": "user_subscriptions"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_subscriptions_plan_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE CASCADE\n\n• user_subscriptions_price_per_meal_check (CHECK)\n  CHECK ((price_per_meal >= (0)::numeric))\n\n• user_subscriptions_total_meals_check (CHECK)\n  CHECK ((total_meals > 0))\n\n• user_subscriptions_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• valid_end_date (CHECK)\n  CHECK (((end_date IS NULL) OR (end_date > start_date)))\n\n• valid_next_delivery_meal_index (CHECK)\n  CHECK ((next_delivery_meal >= 0))\n\n• consumed_not_exceed_total (CHECK)\n  CHECK ((consumed_meals <= total_meals))\n\n• user_subscriptions_consumed_meals_check (CHECK)\n  CHECK ((consumed_meals >= 0))\n\n• user_subscriptions_delivery_address_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (delivery_address_id) REFERENCES addresses(id) ON UPDATE CASCADE ON DELETE CASCADE\n\n• user_subscriptions_payment_method_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (payment_method_id) REFERENCES user_payment_methods(id)\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_subscriptions_plan_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE CASCADE\n\n• user_subscriptions_price_per_meal_check (CHECK)\n  CHECK ((price_per_meal >= (0)::numeric))\n\n• user_subscriptions_total_meals_check (CHECK)\n  CHECK ((total_meals > 0))\n\n• user_subscriptions_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• valid_end_date (CHECK)\n  CHECK (((end_date IS NULL) OR (end_date > start_date)))\n\n• valid_next_delivery_meal_index (CHECK)\n  CHECK ((next_delivery_meal >= 0))\n\n• user_subscriptions_consumed_meals_check (CHECK)\n  CHECK ((consumed_meals >= 0))\n\n• consumed_not_exceed_total (CHECK)\n  CHECK ((consumed_meals <= total_meals))\n\n• user_subscriptions_delivery_address_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (delivery_address_id) REFERENCES addresses(id) ON UPDATE CASCADE ON DELETE CASCADE\n\n• user_subscriptions_payment_method_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (payment_method_id) REFERENCES user_payment_methods(id)\n\n",
     "sort_order": 2,
     "table_name": "user_subscriptions"
   },

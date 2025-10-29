@@ -6,7 +6,7 @@ import loseWeightPlanImage from '../assets/premium/loseWeight.png'
 import dailyMealPlanImage from '../assets/premium/dailymealplan.png'
 import saladsPlanImage from '../assets/premium/proteinsaladplan.png'
 import mealPlaceHolder from '../assets/menu/defaultMeal.jpg'
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import {
     Box,
   Flex,
@@ -43,6 +43,160 @@ import { useCart } from '../Contexts/CartContext'
 import { motion } from 'framer-motion'
 import { t } from 'i18next'
 import { FaCartPlus } from 'react-icons/fa'
+
+// Single Source of Truth for Menu Theming - Hex Format
+const MENU_THEMES = {
+  // Section themes
+  sections: {
+    'Salads': '#49924eff',
+    'Soups': '#0288d1', 
+    'Proteins': '#d32f2f',
+    'Cheese': '#ed6c02',
+    'Extras': '#7b1fa2',
+    'Dressings': '#00796b',
+    'Fruits': '#c2185b',
+    'Make Your Own Salad': '#03894f',
+    'Make Your Own Fruit Salad': '#03894f',
+    'Our signature salad': '#03894f',
+    'Juices': '#0288d1',
+    'Desserts': '#7b1fa2',
+    'Default': '#03894f'
+  },
+  
+  // Card themes based on meal types
+  cards: {
+    customizable: '#03894f',
+    salad: '#2d7d32',
+    protein: '#d32f2f',
+    default: '#03894f'
+  },
+  
+  // Transparency levels for different UI elements
+  transparency: {
+    cardBg: '80', // 50% opacity
+    border: '90', // 56% opacity  
+    hover: '90',  // 56% opacity
+    content: '40', // 25% opacity
+    title: 'aa'   // 67% opacity
+  }
+}
+//AddToCard
+export const AddToCartModal = ({
+  isOpen,
+  onClose,
+  name,
+  price,
+  quantity,
+  setQuantity,
+  onConfirm,
+  t,
+  hasOffer,
+  discountPercentage,
+  colorMode,
+  currency = 'SAR',
+}) => {
+  
+  const toast = useToast(); // Add toast hook
+
+  const handleConfirm = () => {
+    const result = onConfirm();
+    if (result && result.success) {
+      // Show success toast
+      // toast({
+      //   title: t('cart.addedToCart') || "Added to cart!",
+      //   description: `${quantity} × ${name} added to your cart`,
+      //   status: "success",
+      //   duration: 3000,
+      //   isClosable: true,
+      //   position: "top-right",
+      // });
+      console.log(`${quantity} × ${name} added to your cart`);
+      onClose();
+    } else {
+      // Show error toast if needed
+  //     toast({
+  //       title: t('cat.error') || "Error",
+  //       description: t('cart.failedToAdd') || "Failed to add item to cart",
+  //       status: "error",
+  //       duration: 3000,
+  //       isClosable: true,
+  //       position: "top-right",
+  //     });
+     }
+   };
+  useEffect(() => {
+    if (!isOpen) {
+      setQuantity(1); 
+    }
+  }, [isOpen, setQuantity]);
+
+  return (
+  <Modal isOpen={isOpen} onClose={onClose} isCentered>
+    <ModalOverlay />
+    <ModalContent
+      width={['90%', '80%', '50%']}
+      maxWidth="90vw"
+      p={1}
+      ml="1vw"
+      mr="4vw"
+      bg={colorMode === 'dark' ? 'gray.800' : 'white'}
+    >
+      <ModalHeader>
+        <Flex align="center">
+          <Text fontSize="xl" fontWeight="bold">
+            {name}
+          </Text>
+          {hasOffer && (
+            <Badge mx={2} colorScheme="green">
+              {discountPercentage}% OFF
+            </Badge>
+          )}
+        </Flex>
+      </ModalHeader>
+      <ModalBody>
+        <Flex direction="column" gap={4}>
+          <Text color={colorMode== "dark"?"brand.300":"brand.600" } fontSize="lg" fontWeight="medium">
+            {t('cart.howManyWouldYouLike')}
+          </Text>
+          <Flex align="center" justify="space-between">
+            <Text>{t('common.quantity')}:</Text>
+            <Flex align="center" gap={3}>
+              <IconButton
+                icon={<MinusIcon />}
+                aria-label="Decrease quantity"
+                onClick={() => setQuantity((prev) => Math.max(prev - 1, 1))}
+                size="sm"
+              />
+              <Text fontSize="xl" fontWeight="bold" minW="2vw" textAlign="center">
+                {quantity}
+              </Text>
+              <IconButton
+                icon={<AddIcon />}
+                aria-label="Increase quantity"
+                onClick={() => setQuantity((prev) => prev + 1)}
+                size="sm"
+              />
+            </Flex>
+          </Flex>
+          <Flex justify="space-between" align="center" mt={4}>
+            <Text fontSize="lg">{t('profile.total')}:</Text>
+            <Text fontSize="xl" fontWeight="bold" color="brand.500">
+              {currency} {(price * quantity).toFixed(2)}
+            </Text>
+          </Flex>
+        </Flex>
+      </ModalBody>
+      <ModalFooter>
+        <Button variant="outline" mx={3} onClick={onClose}>
+          {t('buttons.maybeLater') || t('buttons.cancel')}
+        </Button>
+        <Button colorScheme="brand" onClick={handleConfirm}>
+          {t('buttons.addToCart') || t('buttons.confirm')} ({quantity})
+        </Button>
+      </ModalFooter>
+    </ModalContent>
+  </Modal>
+)};
 
 // Enhanced Image Component with loading states
 const EnhancedImage = ({ 
@@ -146,7 +300,7 @@ const StarRating = ({ rating = 0, rating_count = 0, size = "sm", showCount = tru
 };
 
 // Dietary Badges Component
-const DietaryBadges = ({ meal, size = "xs" }) => {
+const DietaryBadges = ({ meal, size = "sm" }) => {
   const { t } = useTranslation();
   
   const badges = [];
@@ -158,13 +312,13 @@ const DietaryBadges = ({ meal, size = "xs" }) => {
   if (badges.length === 0) return null;
 
   return (
-    <Flex wrap="wrap" justifyContent={'start'} gap={1} minW={"65%"} w={'fit-content'} bg={'#1f7f6e73'} p={1} m={0} borderRadius={'md'}>
+    <Flex wrap="wrap" justifyContent={'start'} gap={1}  w={'fit-content'} bg={'#096c3e73'} px={0} m={0} borderRadius={'md'}>
       {badges.map(({ key, color }) => (
         <Badge
           key={key}
           colorScheme={color}
-          variant="subtle"
-          fontSize={size}
+          variant="solid"
+          fontSize={size === "sm" ? "8px" : "8px"}
           borderRadius="sm"
           px={1}
           py={0.2}
@@ -189,7 +343,7 @@ const PriceDisplay = ({ base_price, is_discount_active, discount_percentage = 0,
       <Text
         fontWeight="bold"
         fontSize={size}
-        color="brand.800"
+        color="secondary.800"
         lineHeight="2.2"
       >
         {typeof price === 'number' ? price.toFixed(2) : 'N/A'}{' '}{t('common.currency')}
@@ -230,7 +384,14 @@ const validateMealForCart = (meal) => {
 };
 
 // Enhanced Minimal Meal Card - Grid optimized
-export const MinimalMealCard = ({ meal, onClick }) => {
+// Enhanced Minimal Meal Card - Grid optimized
+export const MinimalMealCard = ({
+  meal, 
+  onClick, 
+  colorInHex = '#03894f',
+  applyTransparency,
+  transparency
+}) => {
   const { colorMode } = useColorMode();
   const { t } = useTranslation();
   const { currentLanguage } = useI18nContext();
@@ -242,242 +403,256 @@ export const MinimalMealCard = ({ meal, onClick }) => {
   const displayName = isArabic && meal.name_arabic ? meal.name_arabic : meal.name;
   const displayDescription = isArabic && meal.description_arabic ? meal.description_arabic : meal.description;
 
-  const cardBg = colorMode === 'dark' ? 'gray.800' : '#03894f6c';
-  const borderColor = colorMode === 'dark' ? 'gray.700' : 'brand.400';
-  const hoverBg = colorMode === 'dark' ? 'gray.750' : 'brand.500';
+  // Default transparency function if not provided
+  const defaultApplyTransparency = (hexColor, transparency = '80') => {
+    return `${hexColor}${transparency}`;
+  };
 
-  if (!meal.is_available) return null;
+  // Default transparency values if not provided
+  const defaultTransparency = {
+    cardBg: '50',
+    border: '80',
+    hover: '90',
+    content: '40',
+    title: 'bb'
+  };
+
+  // Use provided or fallback values
+  const effectiveApplyTransparency = applyTransparency || defaultApplyTransparency;
+  const effectiveTransparency = transparency || defaultTransparency;
+
+  const getColor = (level) => {
+    return effectiveApplyTransparency(colorInHex, effectiveTransparency[level]);
+  };
+
+  const cardBg = getColor('cardBg');
+  const borderColor = getColor('border');
+  const hoverBg = getColor('hover');
+  const contentBg = getColor('content');
+  const titleBg = getColor('title');
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
+
+  const handleImageError = () => {
+    setImageLoaded(true);
+  };
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
-    
-    if (!validateMealForCart(meal)) {
-      console.error('Cannot add invalid meal to cart'); //zIndex
-      toast({
-        title: t('cart.error') || "Error",
-        description: t('cart.invalidMeal') || "This meal cannot be added to cart",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-        position: "top-right",
-      });
-      return;
-    }
-
-    const cartMeal = {
-      meal_id: meal.id,
-      name: displayName,
-      name_arabic: meal.name_arabic || null,
-      description: displayDescription,
-      unit_price: meal.base_price || meal.price || 0,
-      quantity: 1,
-      calories: meal.calories || null,
-      protein_g: meal.protein_g || null,
-      carbs_g: meal.carbs_g || null,
-      fat_g: meal.fat_g || null,
-      is_selective: meal.is_selective || false
-    };
-
-    const result = addMealToCart(cartMeal);
-    
-    if (result.success) {
-      toast({
-        title: t('cart.addedToCart') || "Added to cart!",
-        description: `${cartMeal.name} added to your cart`,
-        status: "success",
-        duration: 2000,
-        isClosable: true,
-        position: "top-right",
-      });
-    }
+    onClick?.(meal);
   };
-  
+
   return (
     <Box
-      as={Button}
-      display="flex"
-      flexDirection="column"
-      bg= {cardBg}
-      borderWidth="2px"
-      borderColor={borderColor}
-      borderRadius="md"
+      position="relative"
+      w={{ base: "100%" }}
+      minH={{ base: "300px", sm: "350px", md: "370px" }}
+      maxW="400px"
+      borderRadius="xl"
       overflow="hidden"
       cursor="pointer"
-      transition="all 0.3s ease"
+      transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
       _hover={{
-        transform: 'translateY(-2px)',
-        borderColor: 'brand.600',
-        bg: hoverBg,
+        transform: 'translateY(-8px) scale(1.02)',
+        //boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
       }}
       onClick={() => onClick?.(meal)}
-      position="relative"
-      height="auto"
-      w={{
-        base: "100%",
-        sm: "280px",
-        md: "300px",
-        lg: "280px",
-        xl: "300px"
-      }}
-      maxW="400px"
-      minH={{
-        base: "200px",
-        sm: "220px",
-        md: "240px"
-      }}
-      px={0}
-      py={0}
-      opacity={imageLoaded ? 1 : 0.8}
+      opacity={imageLoaded ? 1 : 0.9}
+      //boxShadow="0 10px 30px rgba(0,0,0,0.2)"
     >
-      {/* Discount Badge */}
-      {meal.is_discount_active && meal.discount_percentage > 0 && (
-        <Badge
-          position="absolute"
-          top="8px"
-          right="8px"
-          colorScheme="red"
-          borderRadius="sm"
-          px="2"
-          py="1"
-          zIndex={2}
-          fontSize="xs"
-          fontWeight="bold"
-        >
-          -{meal.discount_percentage.toFixed(0)}%
-        </Badge>
-      )}
-
-      {/* Image Section - More compact */}
-      <Box 
-        position="relative" 
-        
-        w="100%" 
-        flex="0 0 auto"
+      {/* Background Image - Full Card Coverage */}
+      <Box
+        position="absolute"
+        top="0"
+        left="0"
+        right="0"
+        bottom="0"
+        zIndex={0}
       >
         <EnhancedImage
-          src={meal.image_url}
+          src={meal.image_url || meal.thumbnail_url || meal.image || '/default-meal.jpg'}
           alt={displayName}
-          height="auto"
-          width="100%"
-          borderRadius="none"
-          onLoad={() => setImageLoaded(true)}
-          onError={() => setImageLoaded(true)}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
         />
         
-        {/* Quick Info Overlay - More compact */}
+        {/* Gradient Overlays for better text visibility */}
         <Box
           position="absolute"
+          top="0"
+          left="0"
+          right="0"
           bottom="0"
-          bg="rgba(0,0,0,0.6)"
-          m={2}
-          p={2}
-          borderRadius={'md'}
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <StarRating 
-            rating={meal.rating} 
-            rating_count={meal.rating_count}
-            size="sm"
-            showCount={true}
-          />
-          {meal.prep_time_minutes && (
-            <Text fontSize="xs" color="white" fontWeight="medium">
-              {meal.prep_time_minutes} {t('common.minutes')}
-            </Text>
+          bgGradient={`linear(to-b, rgba(0,0,0,0.6) 0%, transparent 40%,  rgba(0, 32, 22, 0.8) 70%, rgba(0, 32, 22, 0.8) 100%)`}
+          zIndex={1}
+        />
+      </Box>
+
+      {/* Top Section - Badges and Status */}
+      <Box
+        position="absolute"
+        top="0"
+        left="0"
+        right="0"
+        zIndex={2}
+        p={4}
+      >
+        <Flex justify="space-between" align="flex-start">
+          {/* Discount Badge */}
+          {meal.is_discount_active && meal.discount_percentage > 0 && (
+            <Badge
+              colorScheme="red"
+              fontSize="sm"
+              px={3}
+              py={1}
+              borderRadius="full"
+              fontWeight="bold"
+              //boxShadow="0 4px 12px rgba(0,0,0,0.3)"
+              //backdropFilter="blur(10px)"
+            >
+              -{meal.discount_percentage.toFixed(0)}% OFF
+            </Badge>
           )}
+          
+          {/* Prep Time */}
+          {meal.prep_time_minutes && (
+            <Badge
+              bg="rgba(0,0,0,0.6)"
+              color="white"
+              fontSize="xs"
+              px={3}
+              py={1}
+              borderRadius="full"
+              //backdropFilter="blur(10px)"
+              fontWeight="medium"
+            >
+              ⏱️ {meal.prep_time_minutes} {t('common.minutes')}
+            </Badge>
+          )}
+        </Flex>
+
+        {/* Dietary Badges - Top Right Corner */}
+        <Box mt={2}>
+          <DietaryBadges meal={meal} size="xs" />
         </Box>
       </Box>
 
-      {/* Content Section - More compact */}
+      {/* Bottom Section - Content and Controls */}
       <VStack
-        flex="1"
-        p={{
-          base: 2,
-          sm: 3,
-          md: 3
-        }}
-        spacing={1}
-        bg="transparent"
-        justify="space-between"
+        position="absolute"
+        bottom="0"
+        left="0"
+        right="0"
+        zIndex={2}
+        p={4}
+        spacing={3}
         align="stretch"
-        overflow="hidden"
-        w={'100%'}
-        zIndex={1}
       >
-        {/* Title and Category Section - Inline for compactness */}
-        <Box>
+        {/* Title with Glassmorphism Effect */}
+        <Box
+          bg={'#ffffffca'}
+          //backdropFilter="blur(20px)"
+          borderRadius="lg"
+          p={1}
+          border="1px solid transparent"
+          h={"fit-content"}
+          w={"fit-content"}
+          //borderColor="whiteAlpha.300"
+          //boxShadow="0 8px 32px rgba(0,0,0,0.3)"
+        >
           <Heading
-            size={{
-              base: "md",
-              sm: "lg",
-              md: "xl"
-            }}
-            color= "white" //{colorMode === 'dark' ? 'white' : 'warning.100'}
+            size="md"
+            color="brand.700"
             noOfLines={2}
-            lineHeight="1.7"
-            mb="1"
-            fontSize={{
-              base: "lg",
-              sm: "lg",
-              md: "xl"
-            }}
-            whiteSpace="normal"
-            wordBreak="break-word"
-            bg={'#012e1eaa'}
+            lineHeight="1.1"
+            fontSize={{ base: "lg", md: "xl" }}
+            //textShadow="0 2px 8px rgba(0,0,0,0.5)"
           >
             {displayName}
           </Heading>
           
-          <Flex justify="space-between" align="center" mb="1">
-            <Box mx="2">
-              <DietaryBadges meal={meal} size="xs" maxDisplay={2} />
-            </Box>
-          </Flex>
+         
         </Box>
 
-       
-
-        {/* Price and Action - More compact */}
+        {/* Price and Action Bar */}
         <Flex
-          justify="space-between"
+          bg={'#000000a9'}//{contentBg}
+          //backdropFilter="blur(20px)"
+          borderRadius="lg"
+          p={3}
           align="center"
-          p="1"
-          mt="auto"
-          w={'100%'}
-          bg={'rgb(255,255,255,0.4)'}
-          borderRadius={'md'}
+          justify="space-between"
+          border="1px solid"
+          borderColor="transparent"
+          //boxShadow="0 8px 32px rgba(255, 255, 255, 0.3)"
         >
-          <Box flex="1">
+          <Box>
             <PriceDisplay
-              base_price={meal.base_price}
+              base_price={meal.base_price || meal.price || 0}
               is_discount_active={meal.is_discount_active}
               discount_percentage={meal.discount_percentage}
-              size={{
-                base: "md",
-                sm: "lg",
-                md: "lg"
-              }}
+              size="xl"
             />
           </Box>
+          
+          {/* Add to Cart Button with Glow Effect */}
           <IconButton
-            icon={<FaCartPlus/>}
-            size={{
-              base: "sm",
-              sm: "md",
-              md: "md"
-            }}
+            icon={<FaCartPlus size={20} color={'#03543cff'}/>}
+            size="lg"
             onClick={handleAddToCart}
-            colorScheme="brand"
+            colorScheme="secondary"
             variant="solid"
             borderRadius="full"
             aria-label={t('buttons.addToCart')}
-            ml="2"
-            flexShrink={0}
+            //boxShadow="0 4px 20px rgba(3, 137, 79, 0.4)"
+            _hover={{
+              transform: 'scale(1.1)',
+              //boxShadow: '0 6px 30px rgba(3, 137, 79, 0.6)',
+            }}
+            _active={{
+              transform: 'scale(0.95)',
+            }}
+            transition="all 0.2s"
           />
         </Flex>
+
+        {/* Status Badge at Bottom shadow*/}
+        <Flex justify="center">
+          <Badge
+            colorScheme="secondary"
+            fontSize="xs"
+            px={3}
+            py={1}
+            borderRadius="full"
+            bg="rgba(9, 156, 102, 0.56)"
+            color="green.300"
+            backdropFilter="blur(10px)"
+            border="1px solid"
+            borderColor="transparent"
+          >
+            ✓ {t('admin.available')}
+          </Badge>
+        </Flex>
       </VStack>
+
+      {/* Hover Border Effect */}
+      <Box
+        position="absolute"
+        top="0"
+        left="0"
+        right="0"
+        bottom="0"
+        border="3px solid"
+        borderColor={borderColor}
+        borderRadius="xl"
+        pointerEvents="none"
+        transition="all 0.3s"
+        opacity={0}
+        _groupHover={{ opacity: 1 }}
+        zIndex={3}
+      />
     </Box>
   );
 };
@@ -503,20 +678,6 @@ export const MealCard = ({ meal, isModal = false, onClose, quantity = 1, setQuan
       console.error('Cannot add invalid meal to cart');
       return;
     }
-
-    // const cartMeal = {
-    //   meal_id: meal.id,
-    //   name: displayName,
-    //   name_arabic: meal.name_arabic || null,
-    //   description: displayDescription,
-    //   unit_price: meal.base_price || meal.price || 0,
-    //   quantity: quantity,
-    //   calories: meal.calories || null,
-    //   protein_g: meal.protein_g || null,
-    //   carbs_g: meal.carbs_g || null,
-    //   fat_g: meal.fat_g || null,
-    //   is_selective: meal.is_selective || false
-    // };
 
     onAddToCart();
     if (onClose) onClose();
@@ -717,12 +878,12 @@ export const MealCard = ({ meal, isModal = false, onClose, quantity = 1, setQuan
 };
 
 // Main Component with Modal System
-export const MealCardWithModal = ({ meal }) => {
+export const MealCardWithModal = ({ meal, colorInHex = MENU_THEMES.cards.default }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [quantity, setQuantity] = useState(1);
   const { t } = useTranslation();
   const { addMealToCart } = useCart();
-  const toast = useToast(); // Add toast hook
+  const toast = useToast();
 
   const handleAddToCart = () => {
     const result = addMealToCart({
@@ -740,21 +901,18 @@ export const MealCardWithModal = ({ meal }) => {
     });
 
     if (result.success) {
-      // Show success toast
-      toast({
-        title: t('cart.addedToCart') || "Added to cart!",
-        description: `${quantity} × ${meal.name} added to your cart`,
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-        position: "top-right",
-      });
+      // toast({
+      //   title: t('cart.addedToCart') || "Added to cart!",
+      //   description: `${quantity} × ${meal.name} added to your cart`,
+      //   status: "success",
+      //   duration: 3000,
+      //   isClosable: true,
+      //   position: "top-right",
+      // });
       
-      // Close modal and reset quantity
       onClose();
       setQuantity(1);
     } else {
-      // Show error toast
       toast({
         title: t('cart.addToCartError') || "Error",
         description: t('cart.failedToAdd') || "Failed to add item to cart",
@@ -768,15 +926,22 @@ export const MealCardWithModal = ({ meal }) => {
 
   return (
     <>
-      <MinimalMealCard meal={meal} onClick={onOpen} />
+      <MinimalMealCard meal={meal} onClick={onOpen} colorInHex={colorInHex} />
       
-      <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered scrollBehavior={'inside'}>
+      <Modal isOpen={isOpen} onClose={onClose} size="md" isCentered scrollBehavior={'inside'}>
         <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
-        <ModalContent bg="secondary.100" w={'auto'} my={4} py={0} px={1} maxH={'92%'}>
+        <ModalContent
+          bg="secondary.100"
+          w={{ base: '90vw', sm: '400px', md: '500px', lg: '600px' }}
+          my={4}
+          py={0}
+          px={1}
+          maxH={'92%'}
+        >
           <ModalHeader>
             <Flex justify="space-between" align="center">
-              <Text fontSize="xl" fontWeight="bold">
-                {meal.name}
+              <Text fontSize="2xl" fontWeight="bold">
+                {t('menuPage.addToCart')}
               </Text>
               <ModalCloseButton position="relative" />
             </Flex>
@@ -798,123 +963,6 @@ export const MealCardWithModal = ({ meal }) => {
     </>
   );
 };
-
-export const AddToCartModal = ({
-  isOpen,
-  onClose,
-  name,
-  price,
-  quantity,
-  setQuantity,
-  onConfirm,
-  t,
-  hasOffer,
-  discountPercentage,
-  colorMode,
-  currency = 'SAR',
-}) => {
-  
-  const toast = useToast(); // Add toast hook
-
-  const handleConfirm = () => {
-    const result = onConfirm();
-    if (result && result.success) {
-      // Show success toast
-      toast({
-        title: t('cart.addedToCart') || "Added to cart!",
-        description: `${quantity} × ${name} added to your cart`,
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-        position: "top-right",
-      });
-      onClose();
-    } else {
-      // Show error toast if needed
-      toast({
-        title: t('cart.error') || "Error",
-        description: t('cart.failedToAdd') || "Failed to add item to cart",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-        position: "top-right",
-      });
-    }
-  };
-  useEffect(() => {
-    if (!isOpen) {
-      setQuantity(1); 
-    }
-  }, [isOpen, setQuantity]);
-
-  return (
-  <Modal isOpen={isOpen} onClose={onClose} isCentered>
-    <ModalOverlay />
-    <ModalContent
-      width={['90%', '80%', '50%']}
-      maxWidth="90vw"
-      p={1}
-      ml="1vw"
-      mr="4vw"
-      bg={colorMode === 'dark' ? 'gray.800' : 'white'}
-    >
-      <ModalHeader>
-        <Flex align="center">
-          <Text fontSize="xl" fontWeight="bold">
-            {name}
-          </Text>
-          {hasOffer && (
-            <Badge mx={2} colorScheme="green">
-              {discountPercentage}% OFF
-            </Badge>
-          )}
-        </Flex>
-      </ModalHeader>
-      <ModalBody>
-        <Flex direction="column" gap={4}>
-          <Text color={colorMode== "dark"?"brand.300":"brand.600" } fontSize="lg" fontWeight="medium">
-            {t('cart.howManyWouldYouLike')}
-          </Text>
-          <Flex align="center" justify="space-between">
-            <Text>{t('common.quantity')}:</Text>
-            <Flex align="center" gap={3}>
-              <IconButton
-                icon={<MinusIcon />}
-                aria-label="Decrease quantity"
-                onClick={() => setQuantity((prev) => Math.max(prev - 1, 1))}
-                size="sm"
-              />
-              <Text fontSize="xl" fontWeight="bold" minW="2vw" textAlign="center">
-                {quantity}
-              </Text>
-              <IconButton
-                icon={<AddIcon />}
-                aria-label="Increase quantity"
-                onClick={() => setQuantity((prev) => prev + 1)}
-                size="sm"
-              />
-            </Flex>
-          </Flex>
-          <Flex justify="space-between" align="center" mt={4}>
-            <Text fontSize="lg">{t('profile.total')}:</Text>
-            <Text fontSize="xl" fontWeight="bold" color="brand.500">
-              {currency} {(price * quantity).toFixed(2)}
-            </Text>
-          </Flex>
-        </Flex>
-      </ModalBody>
-      <ModalFooter>
-        <Button variant="outline" mx={3} onClick={onClose}>
-          {t('buttons.maybeLater') || t('buttons.cancel')}
-        </Button>
-        <Button colorScheme="brand" onClick={handleConfirm}>
-          {t('buttons.addToCart') || t('buttons.confirm')} ({quantity})
-        </Button>
-      </ModalFooter>
-    </ModalContent>
-  </Modal>
-)};
-
 // Premium Food Card - More detailed with rating, tag, and action buttons
 export const PremiumMealCard = ({ meal }) => {
   const { colorMode } = useColorMode();

@@ -35,7 +35,7 @@ const markerIconSvg = `
   </svg>
 `
 
-const MapBox = ({ onAddressSubmit }) => {
+const MapBox = ({ onAddressSubmit, predefinedLocations, onSelectLocation }) => {
   const mapRef = useRef()
   const popupRef = useRef()
   const mapInstanceRef = useRef()
@@ -156,6 +156,7 @@ const MapBox = ({ onAddressSubmit }) => {
         toast({
           title: 'Location found',
           status: 'success',
+          duration: 2000,
         })
         
         return coordinate
@@ -164,6 +165,7 @@ const MapBox = ({ onAddressSubmit }) => {
           title: 'Address not found',
           description: 'Please try a different address or select the location manually on the map.',
           status: 'error',
+          duration: 3000,
         })
         return null
       }
@@ -172,6 +174,7 @@ const MapBox = ({ onAddressSubmit }) => {
       toast({
         title: 'Error searching address',
         status: 'error',
+        duration: 3000,
       })
       return null
     } finally {
@@ -213,6 +216,8 @@ const MapBox = ({ onAddressSubmit }) => {
   }
 
   useEffect(() => {
+    if (!mapRef.current || !popupRef.current) return
+
     const overlay = new Overlay({
       element: popupRef.current,
       autoPan: {
@@ -234,6 +239,21 @@ const MapBox = ({ onAddressSubmit }) => {
     })
     mapInstanceRef.current = map
 
+    // Add predefined locations as markers
+    if (predefinedLocations && predefinedLocations.length > 0) {
+      predefinedLocations.forEach(location => {
+        if (location.coordinates && location.coordinates.length === 2) {
+          const [lat, lon] = location.coordinates
+          const feature = new Feature({
+            geometry: new Point(fromLonLat([lon, lat])),
+            name: location.label || 'Restaurant Location',
+          })
+          feature.setStyle(iconStyle)
+          vectorSource.addFeature(feature)
+        }
+      })
+    }
+
     // Add click handler to the map
     map.on('singleclick', async function (evt) {
       const coordinate = evt.coordinate
@@ -246,6 +266,11 @@ const MapBox = ({ onAddressSubmit }) => {
       const address = await getAddressFromCoordinates(lonLat[0], lonLat[1])
       const hdms = toStringHDMS(lonLat)
 
+      // Call onSelectLocation callback if provided
+      if (onSelectLocation) {
+        onSelectLocation({ latlng: { lat: lonLat[1], lng: lonLat[0] }, address })
+      }
+
       // Show popup at clicked position
       overlay.setPosition(coordinate)
 
@@ -257,7 +282,7 @@ const MapBox = ({ onAddressSubmit }) => {
             <p>City: ${address.city || 'Not specified'}</p>
             <code>${hdms}</code>
             <div style="margin-top: 8px; padding: 6px; background-color: #fff3e0; border-radius: 4px; font-size: 12px;">
-              <strong>📍 Location Info:</strong> Ready to add as address
+              <strong>📌 Location Info:</strong> Ready to add as address
             </div>
           </div>
         `
@@ -268,7 +293,7 @@ const MapBox = ({ onAddressSubmit }) => {
     return () => {
       map.setTarget(null)
     }
-  }, [])
+  }, [predefinedLocations])
 
   const handleSearch = async (e) => {
     e.preventDefault()
@@ -284,6 +309,7 @@ const MapBox = ({ onAddressSubmit }) => {
       toast({
         title: 'Please select a location on the map',
         status: 'warning',
+        duration: 3000,
       })
       return
     }
@@ -292,6 +318,7 @@ const MapBox = ({ onAddressSubmit }) => {
       toast({
         title: 'Please provide a label for this address',
         status: 'warning',
+        duration: 3000,
       })
       return
     }
@@ -301,6 +328,7 @@ const MapBox = ({ onAddressSubmit }) => {
         external_id: `addr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         label: label.trim(),
         address_line1: addressDetails.address_line1,
+        address_line2: addressDetails.address_line2 || '',
         city: addressDetails.city,
         is_default: isDefault,
         coordinates: addressDetails.coordinates
@@ -312,6 +340,7 @@ const MapBox = ({ onAddressSubmit }) => {
         toast({
           title: 'Address added successfully',
           status: 'success',
+          duration: 2000,
         })
         
         // Reset form
@@ -319,6 +348,7 @@ const MapBox = ({ onAddressSubmit }) => {
         setIsDefault(false)
         setAddressDetails({
           address_line1: '',
+          address_line2: '',
           city: '',
           coordinates: null
         })
@@ -332,6 +362,7 @@ const MapBox = ({ onAddressSubmit }) => {
         title: 'Error adding address',
         description: error.message,
         status: 'error',
+        duration: 3000,
       })
     }
   }
@@ -340,94 +371,101 @@ const MapBox = ({ onAddressSubmit }) => {
     <Box>
       <VStack spacing={4} align="stretch">
         {/* Address Search Input */}
-        <form onSubmit={handleSearch}>
-          <FormControl>
-            <FormLabel>Search for an address</FormLabel>
-            <HStack>
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Enter an address to search..."
-              />
-              <Button 
-                type="submit" 
-                colorScheme="teal"
-                isLoading={isSearching}
-                loadingText="Searching"
-              >
-                Search
-              </Button>
-            </HStack>
-            <FormHelperText>
-              Enter a full address to move the map to that location
-            </FormHelperText>
-          </FormControl>
-        </form>
+        {onAddressSubmit && (
+          <form onSubmit={handleSearch}>
+            <FormControl>
+              <FormLabel>Search for an address</FormLabel>
+              <HStack>
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Enter an address to search..."
+                />
+                <Button 
+                  type="submit" 
+                  colorScheme="teal"
+                  isLoading={isSearching}
+                  loadingText="Searching"
+                >
+                  Search
+                </Button>
+              </HStack>
+              <FormHelperText>
+                Enter a full address to move the map to that location
+              </FormHelperText>
+            </FormControl>
+          </form>
+        )}
 
         <Box>
           <div ref={mapRef} style={{ width: '100%', height: '400px', marginBottom: '16px' }} />
           <div ref={popupRef} className="ol-popup" style={popupStyle} />
           
-          <div style={{ marginBottom: '16px', fontSize: '14px', color: '#666' }}>
-            Click on the map to select a location for the new address
-          </div>
+          {onAddressSubmit && (
+            <div style={{ marginBottom: '16px', fontSize: '14px', color: '#666' }}>
+              Click on the map to select a location for the new address
+            </div>
+          )}
         </Box>
 
-        <form onSubmit={handleSubmit}>
-          <VStack spacing={4} align="stretch">
-            <FormControl isRequired>
-              <FormLabel>Address Label</FormLabel>
-              <Input
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-                placeholder="Home, Office, etc."
-              />
-            </FormControl>
+        {onAddressSubmit && (
+          <form onSubmit={handleSubmit}>
+            <VStack spacing={4} align="stretch">
+              <FormControl isRequired>
+                <FormLabel>Address Label</FormLabel>
+                <Input
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                  placeholder="Home, Office, etc."
+                />
+              </FormControl>
 
-            <FormControl>
-              <FormLabel>Address Line 1</FormLabel>
-              <Input
-                value={addressDetails.address_line1}
-                
-                variant="filled"
-                placeholder="Select a location on the map"
-              />
-            </FormControl>
-            <FormControl>
-            <FormLabel>Address Line 2</FormLabel>
-              <Input
-                value={addressDetails.address_line2}
-                variant="filled"
-                placeholder="Select a location on the map"
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>City</FormLabel>
-              <Input
-                value={addressDetails.city}
-                variant="filled"
-                placeholder="City will be auto-detected"
-              />
-            </FormControl>
+              <FormControl>
+                <FormLabel>Address Line 1</FormLabel>
+                <Input
+                  value={addressDetails.address_line1}
+                  onChange={(e) => setAddressDetails(prev => ({ ...prev, address_line1: e.target.value }))}
+                  placeholder="Select a location on the map"
+                />
+              </FormControl>
 
-            <FormControl>
-              <Checkbox
-                checked={isDefault}
-                onChange={(e) => setIsDefault(e.target.checked)}
+              <FormControl>
+                <FormLabel>Address Line 2</FormLabel>
+                <Input
+                  value={addressDetails.address_line2}
+                  onChange={(e) => setAddressDetails(prev => ({ ...prev, address_line2: e.target.value }))}
+                  placeholder="Apartment, suite, etc. (optional)"
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>City</FormLabel>
+                <Input
+                  value={addressDetails.city}
+                  onChange={(e) => setAddressDetails(prev => ({ ...prev, city: e.target.value }))}
+                  placeholder="City will be auto-detected"
+                />
+              </FormControl>
+
+              <FormControl>
+                <Checkbox
+                  isChecked={isDefault}
+                  onChange={(e) => setIsDefault(e.target.checked)}
+                >
+                  Set as default address
+                </Checkbox>
+              </FormControl>
+
+              <Button
+                type="submit"
+                colorScheme="blue"
+                isDisabled={!addressDetails.coordinates || !label.trim()}
               >
-                Set as default address
-              </Checkbox>
-            </FormControl>
-
-            <Button
-              type="submit"
-              colorScheme="blue"
-              isDisabled={!addressDetails.coordinates || !label.trim()}
-            >
-              Add Address
-            </Button>
-          </VStack>
-        </form>
+                Add Address
+              </Button>
+            </VStack>
+          </form>
+        )}
       </VStack>
     </Box>
   )

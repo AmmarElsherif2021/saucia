@@ -1,4 +1,4 @@
-import { supabase,handleSupabaseError } from "../../supabaseClient"
+import { supabase, handleSupabaseError } from "../../supabaseClient"
 
 export const mealsAPI = {
   // Public endpoints - no authentication required
@@ -9,7 +9,7 @@ export const mealsAPI = {
         .select(`
           *,
           meal_items(
-            items(*)
+            items
           ),
           meal_allergies(
             allergies(*)
@@ -53,16 +53,15 @@ export const mealsAPI = {
 
       const { data, error } = await query;
     
-    if (error) throw error;
+      if (error) throw error;
     
-    // Return empty array 
-    return data || [];
-  } catch (error) {
-    console.error('Failed to fetch meals:', error);
-    handleSupabaseError(error);
-    return []; 
-  }
-},
+      return data || [];
+    } catch (error) {
+      console.error('Failed to fetch meals:', error);
+      handleSupabaseError(error);
+      return []; 
+    }
+  },
 
   async getMealById(mealId) {
     try {
@@ -71,7 +70,7 @@ export const mealsAPI = {
         .select(`
           *,
           meal_items(
-            items(*)
+            items
           ),
           meal_allergies(
             allergies(*)
@@ -85,15 +84,13 @@ export const mealsAPI = {
         .eq('is_available', true)
         .single()
 
-
-    
-    if (error) throw error;
-    return data || null; // Return null if no data
-  } catch (error) {
-    handleSupabaseError(error);
-    return null; // Return null on error
-  }
-},
+      if (error) throw error;
+      return data || null;
+    } catch (error) {
+      handleSupabaseError(error);
+      return null;
+    }
+  },
 
   async getMealsBySection(section) {
     try {
@@ -108,6 +105,37 @@ export const mealsAPI = {
       return data
     } catch (error) {
       handleSupabaseError(error)
+    }
+  },
+
+  // NEW: Get selectable items for a specific meal
+  async getMealSelectableItems(mealId) {
+    try {
+      // Get the meal_items record
+      const { data: mealItemsData, error: mealItemsError } = await supabase
+        .from('meal_items')
+        .select('items')
+        .eq('meal_id', mealId)
+        .single()
+
+      if (mealItemsError) throw mealItemsError
+      if (!mealItemsData || !mealItemsData.items || mealItemsData.items.length === 0) {
+        return []
+      }
+
+      // Get the actual items
+      const { data: itemsData, error: itemsError } = await supabase
+        .from('items')
+        .select('*')
+        .in('id', mealItemsData.items)
+        .eq('is_available', true)
+
+      if (itemsError) throw itemsError
+      return itemsData || []
+    } catch (error) {
+      console.error('Failed to fetch meal selectable items:', error)
+      handleSupabaseError(error)
+      return []
     }
   },
 
@@ -296,35 +324,26 @@ export const mealsAPI = {
       handleSupabaseError(error)
     }
   },
-    // Get allergies for a specific meal
-    async getMealAllergies(mealId) {
-      try {
-        const { data, error } = await supabase
-          .from('meal_allergies')
-          .select(`allergies(*)`)
-          .eq('meal_id', mealId);
-  
-        if (error) throw error;
-        return data.map(item => item.allergies);
-      } catch (error) {
-        handleSupabaseError(error);
-      }
-    },
-  
-    // Get items for a specific meal
-    async getMealItems(mealId) {
-      try {
-        const { data, error } = await supabase
-          .from('meal_items')
-          .select(`items(*)`)
-          .eq('meal_id', mealId);
-  
-        if (error) throw error;
-        return data.map(item => item.items);
-      } catch (error) {
-        handleSupabaseError(error);
-      }
-    },
+
+  // Get allergies for a specific meal
+  async getMealAllergies(mealId) {
+    try {
+      const { data, error } = await supabase
+        .from('meal_allergies')
+        .select(`allergies(*)`)
+        .eq('meal_id', mealId);
+
+      if (error) throw error;
+      return data.map(item => item.allergies);
+    } catch (error) {
+      handleSupabaseError(error);
+    }
+  },
+
+  // UPDATED: Get items for a specific meal (kept for backward compatibility)
+  async getMealItems(mealId) {
+    return this.getMealSelectableItems(mealId);
+  },
     
   async bulkUpdateMeals(updates) {
     try {

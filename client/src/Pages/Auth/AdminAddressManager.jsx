@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Box, Heading, useToast } from '@chakra-ui/react';
 import MapBox from '../../Components/Map/MapBox';
-import { useInsertAddress } from '../../Hooks/useInsertAddress';
+import { useInsertAddress } from '../../Hooks/useRestaurantAddress';
 import { useDebugUser } from '../../Hooks/useDebugUser';
 
 const AdminAddressManager = () => {

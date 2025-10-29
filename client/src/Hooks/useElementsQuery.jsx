@@ -11,6 +11,8 @@ export const elementsKeys = {
   plans: () => [...elementsKeys.all, 'plans'],
   categories: () => [...elementsKeys.all, 'categories'],
   featured: (type) => [...elementsKeys.all, 'featured', type],
+  // NEW: Query key for meal selectable items
+  mealSelectableItems: (mealId) => [...elementsKeys.all, 'meal-selectable-items', mealId],
 };
 
 // Base query configuration
@@ -66,6 +68,17 @@ export const useCategoriesQuery = (options = {}) => useQuery({
   },
   staleTime: 60 * 60 * 1000,
   gcTime: 2 * 60 * 60 * 1000,
+  ...BASE_QUERY_CONFIG,
+  ...options
+});
+
+// NEW: Hook for fetching selectable items for a specific meal
+export const useMealSelectableItemsQuery = (mealId, options = {}) => useQuery({
+  queryKey: elementsKeys.mealSelectableItems(mealId),
+  queryFn: () => mealsAPI.getMealSelectableItems(mealId),
+  enabled: !!mealId, // Only run if mealId is provided
+  staleTime: 15 * 60 * 1000,
+  gcTime: 30 * 60 * 1000,
   ...BASE_QUERY_CONFIG,
   ...options
 });

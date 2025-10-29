@@ -355,7 +355,7 @@ export const CurrentPlanBrief = () => {
               
               <DetailItem 
                 label={t('premium.pricePerMeal')}
-                value={`${currentSubscription.price_per_meal} ${t('currency.sar')}`}
+                value={`${currentSubscription.price_per_meal} ${t('common.currency')}`}
               />
             </Box>
 

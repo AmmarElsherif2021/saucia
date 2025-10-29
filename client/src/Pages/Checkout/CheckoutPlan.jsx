@@ -617,16 +617,16 @@ const CheckoutPlan = () => {
     onCloseConfirmation
   ]);
   
-  const handleSelectLocation = useCallback((addressData) => {
-    console.log('📍 Location selected:', addressData)
-    setBillingInfo(prev => ({ 
-      ...prev, 
-      deliveryAddress: addressData.display_name 
-    }));
-    updateSubscriptionData({
-      delivery_address_id: addressData.id
-    });
-  }, [updateSubscriptionData]);
+  const handleSelectLocation = useCallback((location) => {
+  // Use the restaurant address format
+  const addressDisplay = location.display_name || 
+                        `${location.address_line1}${location.city ? `, ${location.city}` : ''}`;
+      
+      handleOrderInfoChange('deliveryAddress', addressDisplay);
+      handleOrderInfoChange('city', location.city || '');
+      onCloseMap();
+    }, [handleOrderInfoChange, onCloseMap]);
+
 
   // ============================================================================
   // EFFECTS

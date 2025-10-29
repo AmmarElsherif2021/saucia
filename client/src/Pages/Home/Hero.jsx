@@ -40,7 +40,7 @@ const StaticTextContent = ({ currentLanguage }) => {
       transition={{ duration: 0.8, ease: "easeOut" }}
       style={{
         marginBottom:0,
-        //backgroundColor:"#a11aa6"
+        //backgroundColor:"#a11aa6" orange
       }}
     >
       <VStack
@@ -237,7 +237,7 @@ export const Hero = () => {
       h="110vh"
       w="full"
       bgGradient={`linear(to-br, ${bgFrom}, ${bgVia}, ${bgTo})`}
-      //bg={'orange.200'}
+      //bg={'orange.200'} blue
       //p={3}
       position="relative"
       overflow="hidden"
@@ -274,7 +274,7 @@ export const Hero = () => {
               position="relative"
               top={0}
               zIndex={5}
-              //bg={'orange.300'}
+              //bg={'blue.300'}
             >
               <MemoizedFloatingShapesLayout />
             </Box>
@@ -334,7 +334,7 @@ export const Hero = () => {
             </Box>
             
             {/* Floating shapes section */}
-            <Box flex={1} height="100%"zIndex={5}>
+            <Box flex={1} w={"fit-content"} height="auto" zIndex={5} justifyContent={'center'} alignItems={'center'} display={'flex'}>
               <MemoizedFloatingShapesLayout />
             </Box>
           </HStack>

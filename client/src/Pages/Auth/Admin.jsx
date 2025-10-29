@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* global FileReader, alert */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next';
 import {
   Box,
@@ -35,6 +35,8 @@ import {
   ModalBody,
   ModalCloseButton,
   useToast,
+  Checkbox,
+  Text
 } from '@chakra-ui/react'
 import { 
   FaUsers, 
@@ -46,6 +48,16 @@ import {
   FaSync, 
   FaUtensils 
 } from 'react-icons/fa';
+
+// TanStack Table imports
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  flexRender,
+} from '@tanstack/react-table'
 
 import { useAuthContext } from '../../Contexts/AuthContext.jsx'
 import { useAdminFunctions } from '../../Hooks/useAdminFunctions.jsx'
@@ -67,11 +79,166 @@ import {
   FaArrowCircleDown as DownloadIcon, 
   FaPlus as AddIcon, 
   FaArrowCircleUp as UploadIcon, 
-  FaSearch as SearchIcon 
+  FaSearch as SearchIcon,
+  FaSort as SortIcon,
+  FaSortUp as SortUpIcon,
+  FaSortDown as SortDownIcon
 } from 'react-icons/fa'
 import MealDeliveryDashboard from './DailySceduleDashboard.jsx';
 import AdminAddressManager from './AdminAddressManager.jsx';
 import { useDebugUser } from '../../Hooks/useDebugUser.jsx';
+import InstantOrdersMonitoring from './InstantOrdersSchedule.jsx';
+import MenuPDFPortal from './MenPDF.jsx';
+
+// Enhanced Table Component with TanStack
+const EnhancedTable = ({ 
+  data, 
+  columns, 
+  isLoading,
+  onRowClick,
+  enableSorting = true,
+  enablePagination = true,
+  enableRowSelection = false
+}) => {
+  const [sorting, setSorting] = useState([])
+  const [globalFilter, setGlobalFilter] = useState('')
+  const [rowSelection, setRowSelection] = useState({})
+
+  const table = useReactTable({
+    data: data || [],
+    columns,
+    state: {
+      sorting,
+      globalFilter,
+      rowSelection,
+    },
+    enableSorting,
+    enableRowSelection,
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    onRowSelectionChange: setRowSelection,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: enablePagination ? getPaginationRowModel() : undefined,
+  })
+
+  return (
+    <Box>
+      {/* Table Controls */}
+      <Flex justify="space-between" align="center" mb={4}>
+        {enableRowSelection && (
+          <Text fontSize="sm" color="gray.600">
+            {Object.keys(rowSelection).length} of {data?.length} row(s) selected
+          </Text>
+        )}
+        
+        {enablePagination && (
+          <Flex align="center" gap={2}>
+            <Button
+              size="sm"
+              onClick={() => table.previousPage()}
+              isDisabled={!table.getCanPreviousPage()}
+            >
+              Previous
+            </Button>
+            <Text fontSize="sm">
+              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+            </Text>
+            <Button
+              size="sm"
+              onClick={() => table.nextPage()}
+              isDisabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+          </Flex>
+        )}
+      </Flex>
+
+      {/* Table */}
+      <ScrollableTableContainer>
+        <TableContainer>
+          <Table variant="striped" size="sm">
+            <Thead>
+              {table.getHeaderGroups().map(headerGroup => (
+                <Tr key={headerGroup.id}>
+                  {headerGroup.headers.map(header => (
+                    <Th 
+                      key={header.id}
+                      onClick={header.column.getToggleSortingHandler()}
+                      cursor={enableSorting && header.column.getCanSort() ? 'pointer' : 'default'}
+                      userSelect="none"
+                      position="relative"
+                      bg="white"
+                    >
+                      <Flex align="center" gap={2}>
+                        {enableRowSelection && header.id === 'select' ? (
+                          <Checkbox
+                            isChecked={table.getIsAllRowsSelected()}
+                            isIndeterminate={table.getIsSomeRowsSelected()}
+                            onChange={table.getToggleAllRowsSelectedHandler()}
+                          />
+                        ) : (
+                          flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )
+                        )}
+                        
+                        {enableSorting && header.column.getCanSort() && (
+                          <Box color="gray.400" fontSize="xs">
+                            {{
+                              asc: <SortUpIcon />,
+                              desc: <SortDownIcon />,
+                            }[header.column.getIsSorted()] ?? <SortIcon />}
+                          </Box>
+                        )}
+                      </Flex>
+                    </Th>
+                  ))}
+                </Tr>
+              ))}
+            </Thead>
+            <Tbody>
+              {table.getRowModel().rows.map(row => (
+                <Tr 
+                  key={row.id}
+                  onClick={() => onRowClick?.(row.original)}
+                  cursor={onRowClick ? 'pointer' : 'default'}
+                  _hover={onRowClick ? { bg: 'gray.50' } : {}}
+                >
+                  {row.getVisibleCells().map(cell => (
+                    <Td key={cell.id}>
+                      {enableRowSelection && cell.column.id === 'select' ? (
+                        <Checkbox
+                          isChecked={row.getIsSelected()}
+                          onChange={row.getToggleSelectedHandler()}
+                        />
+                      ) : (
+                        flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )
+                      )}
+                    </Td>
+                  ))}
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </TableContainer>
+      </ScrollableTableContainer>
+
+      {/* Empty State */}
+      {!isLoading && table.getRowModel().rows.length === 0 && (
+        <Flex justify="center" align="center" py={8} color="gray.500">
+          <Text>No data available</Text>
+        </Flex>
+      )}
+    </Box>
+  )
+}
 
 // Reusable EntitySection component
 const EntitySection = ({ 
@@ -84,20 +251,77 @@ const EntitySection = ({
   const { config, filterEntities, searchTerm, setSearchTerm, selectedEntity, setSelectedEntity, modals, handlers } = entityManager
   const filteredData = filterEntities(data)
   const { t } = useTranslation(); 
-  const renderCellContent = (item, column) => {
-    const value = item[column.key]
-    if (column.render) {
-      return column.render(value)
+
+  // Transform columns for TanStack Table
+  const tableColumns = useMemo(() => [
+    ...(config?.columns?.map(column => ({
+      accessorKey: column.key,
+      header: column.label,
+      cell: ({ getValue, row }) => {
+        const value = getValue();
+        const rowData = row.original;
+        
+        if (column.render) {
+          try {
+            return column.render(value, rowData);
+          } catch (error) {
+            console.error(`Error rendering ${column.key}:`, error);
+            return <Text color="red">Error</Text>;
+          }
+        }
+        
+        // For nested objects, handle them appropriately
+        if (value && typeof value === 'object') {
+          return <Text>{JSON.stringify(value)}</Text>;
+        }
+        
+        return <Text>{value || 'N/A'}</Text>;
+      },
+      size: column.width ? parseInt(column.width) : 150,
+      enableSorting: true,
+    })) || []),
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <Stack direction="row" spacing={2}>
+          <Button
+            size="sm"
+            colorScheme="brand"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation()
+              setSelectedEntity(row.original)
+              modals.edit.onOpen()
+            }}
+            aria-label="Edit"
+            leftIcon={<EditIcon />}
+          />
+          <Button
+            size="sm"
+            colorScheme="red"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation()
+              setSelectedEntity(row.original)
+              modals.delete.onOpen()
+            }}
+            aria-label="Delete"
+            leftIcon={<DeleteIcon />}
+          />
+        </Stack>
+      ),
+      enableSorting: false,
+      size: 120,
     }
-    return value
-  }
+  ], [config?.columns, setSelectedEntity, modals])
 
   return (
     <Box 
       gap={6} 
       m={6} 
       maxW={'90%'} 
-      //backgroundColor={'#43a433'} 
+      backgroundColor={'#ffffff'} 
       p={6}
       borderRadius="md"
       boxShadow="sm"
@@ -149,80 +373,26 @@ const EntitySection = ({
             onClick={() => handlers.handleExport(data)}
             leftIcon={<DownloadIcon />}
             iconSpacing={0}
-            
           />
         )}
       </Flex>
 
-      <ScrollableTableContainer>
-        <TableContainer overflowX={isTableScrollable ? 'auto' : 'visible'}>
-          <Table 
-            variant="striped"
-            size={{ base: 'sm', md: 'md' }}
-            style={{ overflowY: 'auto', maxHeight: '70vh' }}
-          >
-            <Thead position="sticky" top={0} bg="white" zIndex="1">
-              <Tr>
-                {config?.columns?.map((column) => (
-                  <Th 
-                    key={column.key} 
-                    w={column.width}
-                    color="gray.600"
-                    fontWeight="600"
-                    fontSize="sm"
-                    py={3}
-                  >
-                    {column.label}
-                  </Th>
-                ))}
-                <Th textAlign="right">Actions</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {filteredData?.map((item) => (
-                <Tr key={item.id}>
-                  {config?.columns?.map((column) => (
-                    <Td 
-                      key={column.key} 
-                      w={column.width}
-                      isTruncated={column.truncate}
-                      maxW={column.truncate ? "150px" : undefined}
-                    >
-                      {renderCellContent(item, column)}
-                    </Td>
-                  ))}
-                  <Td>
-                    <Stack direction="row" spacing={2}>
-                      <Button
-                        size="sm"
-                        colorScheme="brand"
-                        variant="ghost"
-                        onClick={() => {
-                          setSelectedEntity(item)
-                          modals.edit.onOpen()
-                        }}
-                        aria-label="Edit"
-                        leftIcon={<EditIcon />}
-                      />
-                      <Button
-                        size="sm"
-                        colorScheme="red"
-                        variant="ghost"
-                        onClick={() => {
-                          setSelectedEntity(item)
-                          modals.delete.onOpen()
-                        }}
-                        aria-label="Delete"
-                        leftIcon={<DeleteIcon />}
-                      />
-                    </Stack>
-                  </Td>
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
-        </TableContainer>
-      </ScrollableTableContainer>
+      {/* Debug info */}
+      <Box mb={2} p={2} bg="gray.50" borderRadius="md">
+        <Text fontSize="sm" color="gray.600">
+          Showing {filteredData?.length || 0} {config.title.toLowerCase()}
+        </Text>
+      </Box>
+
+      {/* Enhanced Table */}
+      <EnhancedTable
+        data={filteredData}
+        columns={tableColumns}
+        isLoading={isLoading || entityManager.isLoading}
+        enableSorting={true}
+        enablePagination={true}
+        enableRowSelection={false}
+      />
 
       {/* Modals */}
       <FormModal
@@ -235,7 +405,7 @@ const EntitySection = ({
         onSubmit={handlers.handleAdd}
         initialData={config.initialData}
         FormComponent={config.FormComponent}
-        isLoading={entityManager.isLoading}
+        isLoading={entityManager.isCreating}
       />
 
       <FormModal
@@ -246,10 +416,10 @@ const EntitySection = ({
           defaultValue: `Edit ${config.singular}`
         })}
         onSubmit={(data) => handlers.handleEdit(selectedEntity?.id, data)}
-        initialData={selectedEntity} // Pass existing data to form
+        initialData={selectedEntity}
         FormComponent={config.FormComponent}
         isEdit={true}
-        isLoading={entityManager.isLoading}
+        isLoading={entityManager.isUpdating}
       />
 
       <ConfirmationModal
@@ -261,6 +431,7 @@ const EntitySection = ({
         })}
         onConfirm={() => handlers.handleDelete(selectedEntity?.id)}
         message={`Are you sure you want to delete this ${config?.title?.slice(0, -1).toLowerCase()}?`}
+        isLoading={entityManager.isDeleting}
       />
     </Box>
   )
@@ -279,40 +450,41 @@ const Admin = () => {
     useGetAllItems,
     useGetAllMeals,
     useGetAllPlans,
-    useGetAllOrders,
-    useGetAllSubscriptions,
     useGetRecentActivity,
     useGetAllAllergies,
     useGetAllDietaryPreferences,
     
     // Mutations
-    setAdminStatus,
-    updateAccountStatus,
-    updateLoyaltyPoints,
-    updateOrderStatus,
-    updateSubscriptionStatus,
+    useSetAdminStatus,
+    useUpdateAccountStatus,
+    useUpdateLoyaltyPoints,
   } = adminFunctions
 
   const { t } = useTranslation();
+  
   // Fetch data using React Query hooks
   const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useGetDashboardStats()
   const { data: users = [], isLoading: usersLoading, error: usersError, refetch: refetchUsers } = useGetAllUsers()
   const { data: items = [], isLoading: itemsLoading, error: itemsQueryError } = useGetAllItems()
-  const { data: meals = [], isLoading: mealsLoading,error: mealsQueryError } = useGetAllMeals();
+  const { data: meals = [], isLoading: mealsLoading, error: mealsQueryError } = useGetAllMeals({
+    limit: 1000,
+  });
   const { data: plans = [], isLoading: plansLoading, error: plansQueryError } = useGetAllPlans()
-  const { data: orders = [], isLoading: ordersLoading, error: ordersError } = useGetAllOrders()
-  const { data: subscriptions = [], isLoading: subsLoading, error: subsError } = useGetAllSubscriptions()
   const { data: allergies = [], isLoading: allergiesLoading, error: allergiesError } = useGetAllAllergies()
   const { data: dietaryPreferences = [], isLoading: dietaryLoading, error: dietaryError } = useGetAllDietaryPreferences()
   const { data: recentActivityResponse, isLoading: activityLoading } = useGetRecentActivity()
   const recentActivity = Array.isArray(recentActivityResponse) ? recentActivityResponse : [];
+  
+  // Mutations
+  const setAdminStatusMutation = useSetAdminStatus()
+  const updateAccountStatusMutation = useUpdateAccountStatus()
+  const updateLoyaltyPointsMutation = useUpdateLoyaltyPoints()
+  
   // Entity managers
   const itemsManager = useEntityManager('items', adminFunctions)
   const mealsManager = useEntityManager('meals', adminFunctions)
   const plansManager = useEntityManager('plans', adminFunctions)
   const usersManager = useEntityManager('users', adminFunctions)
-  //const ordersManager = useEntityManager('orders', adminFunctions)
-  const subsManager = useEntityManager('subscriptions', adminFunctions)
   const allergiesManager = useEntityManager('allergies', adminFunctions)
   const dietaryManager = useEntityManager('dietaryPreferences', adminFunctions)
 
@@ -321,55 +493,31 @@ const Admin = () => {
   const [adminAction, setAdminAction] = useState('')
   const [loyaltyPoints, setLoyaltyPoints] = useState('')
   const [accountStatus, setAccountStatus] = useState('')
-  
-  // Order status update state
-  const [selectedOrder, setSelectedOrder] = useState(null)
-  const [orderStatus, setOrderStatus] = useState('')
-  
-  // Subscription status update state
-  const [selectedSubscription, setSelectedSubscription] = useState(null)
-  const [subStatus, setSubStatus] = useState('')
 
   // Modals
   const userActionModal = useDisclosure()
-  const orderStatusModal = useDisclosure()
-  const subscriptionStatusModal = useDisclosure()
 
   // User search state
   const [userSearch, setUserSearch] = useState('')
-  const [orderSearch, setOrderSearch] = useState('')
-  const [subSearch, setSubSearch] = useState('')
 
   // Responsive table display
   const isTableScrollable = useBreakpointValue({ base: true, lg: false })
 
   // Loading and error states
   const isLoading = dashboardLoading || usersLoading || itemsLoading || 
-                   mealsLoading || plansLoading || ordersLoading || 
-                   subsLoading || allergiesLoading || dietaryLoading || 
+                   mealsLoading || plansLoading || 
+                   allergiesLoading || dietaryLoading || 
                    activityLoading
                    
   const error = dashboardError || usersError || itemsQueryError || 
-                mealsQueryError || plansQueryError || ordersError || 
-                subsError || allergiesError || dietaryError
+                mealsQueryError || plansQueryError || 
+                allergiesError || dietaryError
 
   // Filtered data
   const filteredUsers = users?.filter((user) =>
-    `${user.email} ${user.displayName} ${user.isAdmin ? 'Admin' : 'User'}`
+    `${user.email} ${user.display_name} ${user.is_admin ? 'Admin' : 'User'}`
       .toLowerCase()
       .includes(userSearch.toLowerCase()),
-  )
-
-  const filteredOrders = orders?.filter((order) =>
-    `${order.id} ${order.userId} ${order.status}`
-      .toLowerCase()
-      .includes(orderSearch.toLowerCase()),
-  )
-  
-  const filteredSubs = subscriptions?.filter((sub) =>
-    `${sub.id} ${sub.userId} ${sub.status}`
-      .toLowerCase()
-      .includes(subSearch.toLowerCase()),
   )
 
   // Handle user quick actions
@@ -378,22 +526,22 @@ const Admin = () => {
     
     try {
       if (adminAction === 'setAdmin') {
-        await setAdminStatus({ userId: selectedUser.id, isAdmin: true })
+        await setAdminStatusMutation.mutateAsync({ userId: selectedUser.id, isAdmin: true })
         toast({ title: 'Admin status updated', status: 'success' })
       } 
       else if (adminAction === 'removeAdmin') {
-        await setAdminStatus({ userId: selectedUser.id, isAdmin: false })
+        await setAdminStatusMutation.mutateAsync({ userId: selectedUser.id, isAdmin: false })
         toast({ title: 'Admin status updated', status: 'success' })
       }
       else if (adminAction === 'updateStatus') {
-        await updateAccountStatus({ 
+        await updateAccountStatusMutation.mutateAsync({ 
           userId: selectedUser.id, 
           status: accountStatus 
         })
         toast({ title: 'Account status updated', status: 'success' })
       }
       else if (adminAction === 'updateLoyalty') {
-        await updateLoyaltyPoints({ 
+        await updateLoyaltyPointsMutation.mutateAsync({ 
           userId: selectedUser.id, 
           points: parseInt(loyaltyPoints) 
         })
@@ -410,48 +558,6 @@ const Admin = () => {
       })
     }
   }
-  
-  // Handle order status update
-  const handleOrderStatusUpdate = async () => {
-    if (!selectedOrder || !orderStatus) return
-    
-    try {
-      await updateOrderStatus({ 
-        orderId: selectedOrder.id, 
-        status: orderStatus 
-      })
-      
-      toast({ title: 'Order status updated', status: 'success' })
-      orderStatusModal.onClose()
-    } catch (error) {
-      toast({ 
-        title: 'Failed to update order', 
-        description: error.message, 
-        status: 'error' 
-      })
-    }
-  }
-  
-  // Handle subscription status update
-  const handleSubscriptionStatusUpdate = async () => {
-    if (!selectedSubscription || !subStatus) return
-    
-    try {
-      await updateSubscriptionStatus({ 
-        subscriptionId: selectedSubscription.id, 
-        status: subStatus 
-      })
-      
-      toast({ title: 'Subscription status updated', status: 'success' })
-      subscriptionStatusModal.onClose()
-    } catch (error) {
-      toast({ 
-        title: 'Failed to update subscription', 
-        description: error.message, 
-        status: 'error' 
-      })
-    }
-  }
 
   // Retry function for error handling
   const handleRetry = () => {
@@ -461,11 +567,9 @@ const Admin = () => {
   if (isLoading) return <LoadingSpinner />
   if (error) return <ErrorAlert message={error?.message || 'Failed to load admin data'} retry={handleRetry} />
   if (!user || !userInfo.profile.is_admin) return (
-  <>
-  {/*JSON.stringify(userInfo, null, 2)*/}
-  <ErrorAlert message="Access denied. Admins only." />
-  </>
-)
+    <ErrorAlert message="Access denied. Admins only." />
+  )
+
   return (
     <Box
       sx={{
@@ -545,12 +649,19 @@ const Admin = () => {
           icon={<FaUtensils size={20} />}
         />
       </Grid>
-          <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
-          <AdminAddressManager/>
-          </Box>
-          <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
-          <MealDeliveryDashboard/>
-          </Box>
+
+      <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
+        <AdminAddressManager/>
+      </Box>
+      
+      <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
+        <InstantOrdersMonitoring/>
+      </Box>
+      
+      <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
+        <MealDeliveryDashboard/>
+      </Box>
+
       {/* Recent Activity Section */}
       <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
         <SectionHeading title={t('admin.sections.recent_activity', { defaultValue: "Recent Activity" })} />
@@ -611,33 +722,17 @@ const Admin = () => {
 
       <EntitySection
         entityType="meals"
-        data={meals.map(meal => ({
-          ...meal,
-          image_url: meal.image_url || '',
-          base_price: meal.base_price || 0,
-          calories: meal.calories || 0,
-          protein_g: meal.protein_g || 0,
-          carbs_g: meal.carbs_g || 0,
-          is_available: meal.is_available !== undefined ? meal.is_available : true 
-        }))}
+        data={meals}
         isLoading={mealsLoading}
         entityManager={mealsManager}
         isTableScrollable={isTableScrollable}
       />
+      
       <EntitySection
         entityType="plans"
         data={plans}
         isLoading={plansLoading}
         entityManager={plansManager}
-        isTableScrollable={isTableScrollable}
-      />
-      
-      
-      <EntitySection
-        entityType="subscriptions"
-        data={subscriptions}
-        isLoading={subsLoading}
-        entityManager={subsManager}
         isTableScrollable={isTableScrollable}
       />
       
@@ -657,6 +752,8 @@ const Admin = () => {
         isTableScrollable={isTableScrollable}
       />
       
+      <MenuPDFPortal/>
+      
       {/* User Action Modal */}
       <Modal isOpen={userActionModal.isOpen} onClose={userActionModal.onClose}>
         <ModalOverlay />
@@ -674,7 +771,11 @@ const Admin = () => {
                     defaultValue: `Set Admin Status for ${selectedUser?.email}`
                   })}
                 </Heading>
-                <Button colorScheme="blue" onClick={() => handleUserAction('setAdmin')}>
+                <Button 
+                  colorScheme="blue" 
+                  onClick={() => handleUserAction('setAdmin')}
+                  isLoading={setAdminStatusMutation.isPending}
+                >
                   {t('admin.actions.confirm_make_admin', { defaultValue: "Confirm Make Admin" })}
                 </Button>
               </Box>
@@ -691,6 +792,7 @@ const Admin = () => {
                 <Button 
                   colorScheme="red" 
                   onClick={() => handleUserAction('removeAdmin')}
+                  isLoading={setAdminStatusMutation.isPending}
                 >
                   {t('admin.actions.confirm_remove_admin', { defaultValue: "Confirm Remove Admin" })}
                 </Button>
@@ -738,86 +840,14 @@ const Admin = () => {
                 (adminAction === 'updateStatus' && !accountStatus) ||
                 (adminAction === 'updateLoyalty' && !loyaltyPoints)
               }
+              isLoading={
+                setAdminStatusMutation.isPending || 
+                updateAccountStatusMutation.isPending || 
+                updateLoyaltyPointsMutation.isPending
+              }
             >
+            
               {t('admin.actions.apply_action', { defaultValue: "Apply Action" })}
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      <Modal isOpen={orderStatusModal.isOpen} onClose={orderStatusModal.onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>
-            {t('admin.modals.update_order_status', { defaultValue: "Update Order Status" })}
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <FormControl>
-              <FormLabel>
-                {t('admin.fields.new_status', { defaultValue: "New Status" })}
-              </FormLabel>
-              <Select 
-                value={orderStatus} 
-                onChange={(e) => setOrderStatus(e.target.value)}
-              >
-                <option value="pending">{t('admin.order_status.pending', { defaultValue: "Pending" })}</option>
-                <option value="confirmed">{t('admin.order_status.confirmed', { defaultValue: "Confirmed" })}</option>
-                <option value="preparing">{t('admin.order_status.preparing', { defaultValue: "Preparing" })}</option>
-                <option value="ready">{t('admin.order_status.ready', { defaultValue: "Ready for Pickup" })}</option>
-                <option value="in-transit">{t('admin.order_status.in_transit', { defaultValue: "In Transit" })}</option>
-                <option value="delivered">{t('admin.order_status.delivered', { defaultValue: "Delivered" })}</option>
-                <option value="cancelled">{t('admin.order_status.cancelled', { defaultValue: "Cancelled" })}</option>
-              </Select>
-            </FormControl>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={orderStatusModal.onClose}>
-              {t('admin.actions.cancel', { defaultValue: "Cancel" })}
-            </Button>
-            <Button 
-              colorScheme="blue" 
-              onClick={handleOrderStatusUpdate}
-              isDisabled={!orderStatus}
-            >
-              {t('admin.actions.update_status', { defaultValue: "Update Status" })}
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      {/* Subscription Status Modal */}
-      <Modal isOpen={subscriptionStatusModal.isOpen} onClose={subscriptionStatusModal.onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>
-            {t('admin.modals.update_subscription_status', { defaultValue: "Update Subscription Status" })}
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <FormControl>
-              <FormLabel>
-                {t('admin.fields.new_status', { defaultValue: "New Status" })}
-              </FormLabel>
-              <Select 
-                value={subStatus} 
-                onChange={(e) => setSubStatus(e.target.value)}
-              >
-                <option value="active">{t('admin.subscription_status.active', { defaultValue: "Active" })}</option>
-                <option value="paused">{t('admin.subscription_status.paused', { defaultValue: "Paused" })}</option>
-                <option value="cancelled">{t('admin.subscription_status.cancelled', { defaultValue: "Cancelled" })}</option>
-                <option value="expired">{t('admin.subscription_status.expired', { defaultValue: "Expired" })}</option>
-              </Select>
-            </FormControl>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={subscriptionStatusModal.onClose}>
-              {t('admin.actions.cancel', { defaultValue: "Cancel" })}
-            </Button>
-            <Button 
-              colorScheme="blue" 
-              onClick={handleSubscriptionStatusUpdate}
-              isDisabled={!subStatus}
-            >
-              {t('admin.actions.update_status', { defaultValue: "Update Status" })}
             </Button>
           </ModalFooter>
         </ModalContent>

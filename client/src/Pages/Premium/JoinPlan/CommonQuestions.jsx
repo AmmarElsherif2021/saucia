@@ -552,6 +552,7 @@ const CommonQuestions = ({ onComplete }) => {
             </FormControl>
 
             {/* Nutrition Profile Display */}
+            
             {nutritionProfile && (
               <Box
                 bg={statBg[colorMode]}
@@ -562,10 +563,10 @@ const CommonQuestions = ({ onComplete }) => {
               >
                 <HStack mb={3}>
                   <Heading size="md" color="brand.700">
-                    Your Daily Nutrition Target
+                    {t('premium.nutritionTarget')}
                   </Heading>
                   <Tooltip 
-                    label="Calculated using Mifflin-St Jeor Equation based on your profile"
+                    label={t('premium.nutritionTooltip')}
                     placement="top"
                   >
                     <Icon as={InfoIcon} color="brand.500" />
@@ -574,42 +575,42 @@ const CommonQuestions = ({ onComplete }) => {
                 
                 <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
                   <Stat>
-                    <StatLabel fontSize="sm">BMR</StatLabel>
+                    <StatLabel fontSize="sm">{t('premium.bmr')}</StatLabel>
                     <StatNumber color="brand.700">{nutritionProfile.bmr}</StatNumber>
-                    <StatHelpText fontSize="xs">kcal/day</StatHelpText>
+                    <StatHelpText fontSize="xs">{t('premium.bmrHelp')}</StatHelpText>
                   </Stat>
                   
                   <Stat>
-                    <StatLabel fontSize="sm">TDEE</StatLabel>
+                    <StatLabel fontSize="sm">{t('premium.tdee')}</StatLabel>
                     <StatNumber color="brand.700">{nutritionProfile.tdee}</StatNumber>
-                    <StatHelpText fontSize="xs">kcal/day</StatHelpText>
+                    <StatHelpText fontSize="xs">{t('premium.tdeeHelp')}</StatHelpText>
                   </Stat>
                   
                   <Stat>
-                    <StatLabel fontSize="sm">Target</StatLabel>
+                    <StatLabel fontSize="sm">{t('premium.targetCalories')}</StatLabel>
                     <StatNumber color="green.600">{nutritionProfile.dailyCalories}</StatNumber>
-                    <StatHelpText fontSize="xs">kcal/day</StatHelpText>
+                    <StatHelpText fontSize="xs">{t('premium.targetCaloriesHelp')}</StatHelpText>
                   </Stat>
                   
                   <Stat>
-                    <StatLabel fontSize="sm">Adjustment</StatLabel>
+                    <StatLabel fontSize="sm">{t('premium.adjustment')}</StatLabel>
                     <StatNumber color="teal.600">
                       {nutritionProfile.calculations.goalAdjustment > 0 ? '+' : ''}
                       {(nutritionProfile.calculations.goalAdjustment * 100).toFixed(0)}%
                     </StatNumber>
-                    <StatHelpText fontSize="xs">for goal</StatHelpText>
+                    <StatHelpText fontSize="xs">{t('premium.adjustmentHelp')}</StatHelpText>
                   </Stat>
                 </SimpleGrid>
                 
                 <Divider my={4} borderColor="brand.300" />
                 
                 <Text fontWeight="semibold" mb={3} color="brand.800">
-                  Daily Macronutrients
+                  {t('premium.dailyMacros')}
                 </Text>
                 
                 <SimpleGrid columns={{ base: 3 }} spacing={4}>
                   <Stat>
-                    <StatLabel fontSize="sm" color="blue.600">Protein</StatLabel>
+                    <StatLabel fontSize="sm" color="blue.600">{t('premium.protein')}</StatLabel>
                     <StatNumber fontSize="2xl" color="blue.700">
                       {nutritionProfile.macros.protein}g
                     </StatNumber>
@@ -619,7 +620,7 @@ const CommonQuestions = ({ onComplete }) => {
                   </Stat>
                   
                   <Stat>
-                    <StatLabel fontSize="sm" color="orange.600">Carbs</StatLabel>
+                    <StatLabel fontSize="sm" color="orange.600">{t('premium.carbs')}</StatLabel>
                     <StatNumber fontSize="2xl" color="orange.700">
                       {nutritionProfile.macros.carbs}g
                     </StatNumber>
@@ -629,7 +630,7 @@ const CommonQuestions = ({ onComplete }) => {
                   </Stat>
                   
                   <Stat>
-                    <StatLabel fontSize="sm" color="purple.600">Fat</StatLabel>
+                    <StatLabel fontSize="sm" color="purple.600">{t('premium.fat')}</StatLabel>
                     <StatNumber fontSize="2xl" color="purple.700">
                       {nutritionProfile.macros.fat}g
                     </StatNumber>
@@ -642,8 +643,7 @@ const CommonQuestions = ({ onComplete }) => {
                 <Alert status="info" mt={4} borderRadius="md" fontSize="sm">
                   <AlertIcon />
                   <Text>
-                    These calculations are based on the Mifflin-St Jeor equation and are estimates. 
-                    Consult a healthcare professional for personalized advice.
+                    {t('premium.nutritionDisclaimer')}
                   </Text>
                 </Alert>
               </Box>

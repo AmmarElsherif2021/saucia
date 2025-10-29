@@ -1,3 +1,4 @@
+// AdminComponents.jsx - Enhanced version
 import {
   Box,
   Button,
@@ -18,9 +19,167 @@ import {
   useBreakpointValue,
   TableContainer,
   Input,
+  InputGroup,
+  InputLeftElement,
+  Icon,
 } from '@chakra-ui/react'
-import { AddIcon } from '@chakra-ui/icons'
+import { AddIcon, SearchIcon } from '@chakra-ui/icons'
 
+// Enhanced SearchInput with better UX
+export const SearchInput = ({ value, onChange, placeholder = "Search..." }) => (
+  <InputGroup maxW="300px">
+    <InputLeftElement pointerEvents="none">
+      <Icon as={SearchIcon} color="gray.400" />
+    </InputLeftElement>
+    <Input
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      variant="filled"
+      _focus={{ bg: 'white', borderColor: 'brand.500' }}
+    />
+  </InputGroup>
+)
+
+// Enhanced LoadingSpinner with overlay
+export const LoadingSpinner = ({ text, size = "lg" }) => (
+  <Flex
+    direction="column"
+    justify="center"
+    align="center"
+    py={12}
+    w="100%"
+  >
+    <Spinner 
+      size={size} 
+      thickness="3px" 
+      color="brand.500" 
+      speed="0.65s"
+      mb={4}
+    />
+    {text && (
+      <Text color="gray.600" fontSize="sm">
+        {text}
+      </Text>
+    )}
+  </Flex>
+)
+
+// Enhanced SectionHeading with better spacing
+export const SectionHeading = ({ 
+  title, 
+  description, 
+  onAddClick, 
+  buttonText = 'Add New',
+  children 
+}) => (
+  <Flex
+    justify="space-between"
+    align={{ base: 'flex-start', md: 'center' }}
+    mb={6}
+    direction={{ base: 'column', md: 'row' }}
+    gap={4}
+  >
+    <Box flex={1}>
+      <Heading size="lg" mb={2} color="gray.800">
+        {title}
+      </Heading>
+      {description && (
+        <Text fontSize="md" color="gray.600" maxW="2xl">
+          {description}
+        </Text>
+      )}
+    </Box>
+    
+    <Flex gap={3} align="center">
+      {children}
+      {onAddClick && (
+        <Button 
+          colorScheme="brand" 
+          onClick={onAddClick}
+          size="md"
+          leftIcon={<AddIcon />}
+          minW="auto"
+        >
+          {buttonText}
+        </Button>
+      )}
+    </Flex>
+  </Flex>
+)
+
+// Enhanced table container with better scrolling
+export const ScrollableTableContainer = ({ children, maxHeight = "400px" }) => {
+  const isMobile = useBreakpointValue({ base: true, lg: false })
+  
+  return (
+    <Box
+      border="1px"
+      borderColor="gray.200"
+      borderRadius="lg"
+      overflow="hidden"
+      boxShadow="sm"
+    >
+      <TableContainer
+        maxH={maxHeight}
+        overflowY="auto"
+        overflowX={isMobile ? 'auto' : 'visible'}
+        sx={{
+          '&::-webkit-scrollbar': {
+            width: '8px',
+            height: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'gray.100',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'gray.400',
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            background: 'gray.500',
+          },
+        }}
+      >
+        {children}
+      </TableContainer>
+    </Box>
+  )
+}
+
+// Quick Actions Component for user management
+export const QuickActions = ({ onAction, isLoading = false }) => (
+  <Flex gap={2} wrap="wrap">
+    <Button
+      size="sm"
+      colorScheme="blue"
+      variant="outline"
+      onClick={() => onAction('setAdmin')}
+      isLoading={isLoading}
+      loadingText="Setting..."
+    >
+      Make Admin
+    </Button>
+    <Button
+      size="sm"
+      colorScheme="orange"
+      variant="outline"
+      onClick={() => onAction('removeAdmin')}
+      isLoading={isLoading}
+      loadingText="Removing..."
+    >
+      Remove Admin
+    </Button>
+    <Button
+      size="sm"
+      colorScheme="green"
+      variant="outline"
+      onClick={() => onAction('updateStatus')}
+    >
+      Update Status
+    </Button>
+  </Flex>
+)
 export const ErrorAlert = ({ message, retry }) => (
   <Alert status="error" borderRadius="md" mb={4}>
     <AlertIcon />
@@ -60,6 +219,8 @@ export const ConfirmationModal = ({
     </ModalContent>
   </Modal>
 )
+
+
 export const FormModal = ({
   isOpen,
   onClose,
@@ -68,10 +229,11 @@ export const FormModal = ({
   initialData,
   FormComponent,
   isEdit = false,
+  isLoading = false, 
 }) => (
   <Modal isOpen={isOpen} onClose={onClose}>
     <ModalOverlay />
-    <ModalContent px={2}>
+    <ModalContent px={2} maxH={"90vh"} minW={'70vw'} overflowY="auto">
       <ModalHeader>{title}</ModalHeader>
       <ModalCloseButton />
       <ModalBody>
@@ -80,20 +242,12 @@ export const FormModal = ({
           onCancel={onClose}
           initialData={initialData}
           isEdit={isEdit}
+          isLoading={isLoading} 
         />
       </ModalBody>
     </ModalContent>
   </Modal>
-)
-export const SearchInput = ({ value, onChange }) => (
-  <Input
-    placeholder="Search..."
-    value={value}
-    onChange={(e) => onChange(e.target.value)}
-    mb={4}
-    maxW="300px"
-  />
-)
+);
 
 // Enhanced StatCard with icon and trend indicator
 export const StatCard = ({
@@ -213,73 +367,4 @@ export const StatCard = ({
     />
   </Box>
 );
-// Enhanced LoadingSpinner with text
-export const LoadingSpinner = ({ text }) => (
-  <Flex
-    direction="column"
-    justify="center"
-    align="center"
-    position="fixed"
-    top={0}
-    left={0}
-    padding={"43vw"}
-    w="100vw"
-    h="100vh"
-    zIndex={9999}
-    bg="rgba(255, 255, 255, 0.7)"
-  >
-    <Spinner size="xl" thickness="3px" color="brand.500" alignContent={"center"}/>
-    {text && <Text mt={4}>{text}</Text>}
-  </Flex>
-);
 
-// Improved SectionHeading with description
-export const SectionHeading = ({ 
-  title, 
-  description, 
-  onAddClick, 
-  buttonText = 'Add New' 
-}) => (
-  <Flex
-    justify="space-between"
-    align={{ base: 'flex-start', md: 'center' }}
-    mb={4}
-    direction={{ base: 'column', md: 'row' }}
-    gap={3}
-  >
-    <Box>
-      <Heading size="lg" mb={1}>{title}</Heading>
-      {description && (
-        <Text fontSize="sm" color="gray.600">{description}</Text>
-      )}
-    </Box>
-    {onAddClick && (
-      <Button 
-        colorScheme="brand" 
-        onClick={onAddClick}
-        size="sm"
-        leftIcon={<AddIcon />}
-      >
-        {buttonText}
-      </Button>
-    )}
-  </Flex>
-);
-
-// Enhanced table with striped rows
-export const ScrollableTableContainer = ({ children }) => {
-  const isTableScrollable = useBreakpointValue({ base: true, lg: false });
-  return (
-    <TableContainer
-      maxHeight="55vh"
-      overflowY="auto"
-      overflowX={isTableScrollable ? 'auto' : 'visible'}
-      border="1px"
-      borderColor="gray.100"
-      borderRadius="md"
-      boxShadow="sm"
-    >
-      {children}
-    </TableContainer>
-  );
-};

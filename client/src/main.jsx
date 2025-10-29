@@ -9,31 +9,98 @@ import { ElementsProvider } from './Contexts/ElementsContext.jsx'
 import { ChosenPlanProvider } from './Contexts/ChosenPlanContext.jsx'
 import { Navbar } from './Components/Navbar/Navbar.jsx'
 import './index.css'
-import { Spinner, Center, Box } from '@chakra-ui/react'
+import { Spinner, Center, Box, Text, Button, VStack } from '@chakra-ui/react'
 import { CartProvider } from './Contexts/CartContext.jsx'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 // Import prefetch utilities
 import { PREFETCH_STRATEGIES, networkAwarePrefetch, backgroundSync } from './lib/prefetchQueries'
+
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Center h="100vh">
+          <VStack spacing={4}>
+            <Text color="red.500" fontSize="xl">
+              Something went wrong
+            </Text>
+            <Text fontSize="sm" color="gray.600">
+              {this.state.error?.message || 'Unknown error'}
+            </Text>
+            <Button
+              onClick={() => {
+                this.setState({ hasError: false, error: null });
+                window.location.reload();
+              }}
+              colorScheme="blue"
+            >
+              Reload Page
+            </Button>
+          </VStack>
+        </Center>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// Fixed safeLazy function
 function safeLazy(importFn, componentName) {
   return React.lazy(() =>
-    importFn().catch(err => {
-      console.error(`Failed to load ${componentName}:`, err);
+    importFn()
+      .then(module => ({ default: module.default }))
+      .catch(error => {
+        console.error(`Failed to load ${componentName}:`, error);
+        
+        const hasReloaded = sessionStorage.getItem(`reload-${componentName}`);
+        if (!hasReloaded) {
+          sessionStorage.setItem(`reload-${componentName}`, 'true');
+          window.location.reload();
+          // Return a never-resolving promise to prevent further execution
+          return new Promise(() => {});
+        }
 
-      const hasReloaded = sessionStorage.getItem(`reload-${componentName}`);
-      if (!hasReloaded) {
-        sessionStorage.setItem(`reload-${componentName}`, 'true');
-        window.location.reload();
-      }
-
-      return { default: () => <div>Error loading {componentName}</div> };
-    })
+        // Return a simple error component as default export
+        return { 
+          default: () => (
+            <Center h="100vh">
+              <VStack spacing={4}>
+                <Text color="red.500">Failed to load {componentName}</Text>
+                <Button 
+                  onClick={() => {
+                    sessionStorage.removeItem(`reload-${componentName}`);
+                    window.location.reload();
+                  }}
+                  colorScheme="blue"
+                >
+                  Retry
+                </Button>
+              </VStack>
+            </Center>
+          )
+        };
+      })
   );
 }
 
 // Lazy-loaded pages with better error boundaries
-
 const HomePage = safeLazy(() => import('./Pages/Home/HomePage.jsx'), 'HomePage');
 const MenuPage = safeLazy(() => import('./Pages/Menu/MenuPage.jsx'), 'MenuPage');
 const UserAccountPage = safeLazy(() => import('./Pages/Dashboard/UserAccountPage.jsx'), 'UserAccountPage');
@@ -141,6 +208,7 @@ const queryClient = new QueryClient({
     }
   }
 });
+
 // Enhanced router with prefetching
 const RouterWithPrefetch = ({ router, queryClient }) => {
   const [retryCount, setRetryCount] = React.useState(0)
@@ -186,7 +254,11 @@ const RouterWithPrefetch = ({ router, queryClient }) => {
     }
   }, [queryClient, retryCount])
 
-  return <RouterProvider router={router} />
+  return (
+    <ErrorBoundary>
+      <RouterProvider router={router} />
+    </ErrorBoundary>
+  )
 }
 
 // Route configuration with prefetching hints
@@ -411,15 +483,6 @@ const router = createBrowserRouter([
         </Suspense>
       </Layout>
     )
-    // ,
-  //   loader: async () => {
-  //     // Prefetch plan checkout data
-  //     if (networkAwarePrefetch.shouldPrefetch()) {
-  //       await PREFETCH_STRATEGIES.checkoutPlan(queryClient)
-  //     }
-  //     return null
-  //   }
-  // 
   },
 ])
 
@@ -433,12 +496,10 @@ ReactDOM.createRoot(root).render(
           <ElementsProvider> {/* Single provider here */}
             <CartProvider>
               <ChosenPlanProvider>
-              <AuthProvider>
-                
+                <AuthProvider>
                   <RouterWithPrefetch router={router} queryClient={queryClient} />
                   {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}
-                
-              </AuthProvider>
+                </AuthProvider>
               </ChosenPlanProvider>
             </CartProvider>
           </ElementsProvider>

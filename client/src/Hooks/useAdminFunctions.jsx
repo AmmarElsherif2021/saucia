@@ -1,38 +1,429 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminAPI } from '../API/adminAPI';
-import { useAuthContext } from '../Contexts/AuthContext';
 
 export const useAdminFunctions = () => {
   const queryClient = useQueryClient();
 
-  // ===== USER MANAGEMENT =====
-  
+  // =====================================================
+  // ITEMS MANAGEMENT (with item_allergies junction)
+  // =====================================================
+
+  // Get all items with allergies
+  const useGetAllItems = (options = {}) => {
+    return useQuery({
+      queryKey: ['admin', 'items', options],
+      queryFn: async () => {
+        const items = await adminAPI.getAllItems(options);
+        // Transform data to flatten allergies from junction table
+        return items.map(item => ({
+          ...item,
+          allergies: item.item_allergies?.map(ia => ia.allergies) || [],
+          allergy_ids: item.item_allergies?.map(ia => ia.allergies.id) || []
+        }));
+      },
+      staleTime: 5 * 60 * 1000,
+    });
+  };
+
+  // Get single item details
+  const useGetItemDetails = (itemId) => {
+    return useQuery({
+      queryKey: ['admin', 'item', itemId],
+      queryFn: async () => {
+        const data = await adminAPI.getItemDetails(itemId);
+        return {
+          ...data.item,
+          allergies: data.allergies || [],
+          allergy_ids: data.allergies?.map(a => a.id) || []
+        };
+      },
+      enabled: !!itemId,
+      staleTime: 2 * 60 * 1000,
+    });
+  };
+
+  // Create item with allergies
+  const useCreateItem = () => {
+    return useMutation({
+      mutationFn: async (itemData) => {
+        const { allergy_ids, ...baseItemData } = itemData;
+        const item = await adminAPI.createItem(baseItemData);
+        
+        // Create item_allergies junction records
+        if (allergy_ids && allergy_ids.length > 0) {
+          await adminAPI.updateItemAllergies(item.id, allergy_ids);
+        }
+        
+        return item;
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries(['admin', 'items']);
+      }
+    });
+  };
+
+  // Update item with allergies
+  const useUpdateItem = () => {
+    return useMutation({
+      mutationFn: async ({ itemId, updateData }) => {
+        const { allergy_ids, ...baseItemData } = updateData;
+        const item = await adminAPI.updateItem(itemId, baseItemData);
+        
+        // Update item_allergies junction records if provided
+        if (allergy_ids !== undefined) {
+          await adminAPI.updateItemAllergies(itemId, allergy_ids);
+        }
+        
+        return item;
+      },
+      onSuccess: (_, { itemId }) => {
+        queryClient.invalidateQueries(['admin', 'item', itemId]);
+        queryClient.invalidateQueries(['admin', 'items']);
+      }
+    });
+  };
+
+  // Delete item (CASCADE deletes item_allergies automatically)
+  const useDeleteItem = () => {
+    return useMutation({
+      mutationFn: (itemId) => adminAPI.deleteItem(itemId),
+      onSuccess: () => {
+        queryClient.invalidateQueries(['admin', 'items']);
+      }
+    });
+  };
+
+  // Update item availability
+  const useUpdateItemAvailability = () => {
+    return useMutation({
+      mutationFn: ({ itemId, isAvailable }) => 
+        adminAPI.updateItemAvailability(itemId, isAvailable),
+      onSuccess: (_, { itemId }) => {
+        queryClient.invalidateQueries(['admin', 'item', itemId]);
+        queryClient.invalidateQueries(['admin', 'items']);
+      }
+    });
+  };
+
+  // Bulk update items
+  const useBulkUpdateItems = () => {
+    return useMutation({
+      mutationFn: ({ itemIds, updateData }) => 
+        adminAPI.bulkUpdateItems(itemIds, updateData),
+      onSuccess: () => {
+        queryClient.invalidateQueries(['admin', 'items']);
+      }
+    });
+  };
+
+  // =====================================================
+  // MEALS MANAGEMENT (with meal_allergies & meal_items)
+  // =====================================================
+
+  // Get all meals with allergies and items
+  const useGetAllMeals = (options = {}) => {
+    return useQuery({
+      queryKey: ['admin', 'meals', options],
+      queryFn: async () => {
+        const meals = await adminAPI.getAllMeals(options);
+        return meals.map(meal => ({
+          ...meal,
+          allergies: meal.allergies || [],
+          allergy_ids: meal.allergies?.map(a => a.id) || [],
+          item_ids: meal.item_ids || []
+        }));
+      },
+      staleTime: 5 * 60 * 1000,
+    });
+  };
+
+  // Get single meal details
+  const useGetMealDetails = (mealId) => {
+    return useQuery({
+      queryKey: ['admin', 'meal', mealId],
+      queryFn: async () => {
+        const meal = await adminAPI.getMealDetails(mealId);
+        return {
+          ...meal,
+          allergies: meal.allergies || [],
+          allergy_ids: meal.allergies?.map(a => a.id) || [],
+          item_ids: meal.item_ids || []
+        };
+      },
+      enabled: !!mealId,
+      staleTime: 2 * 60 * 1000,
+    });
+  };
+
+  // Get meal items (for selective meals)
+  const useGetMealItems = (mealId) => {
+    return useQuery({
+      queryKey: ['admin', 'meal', mealId, 'items'],
+      queryFn: () => adminAPI.getMealItems(mealId),
+      enabled: !!mealId,
+      staleTime: 5 * 60 * 1000,
+    });
+  };
+
+  // Create meal with allergies and items
+  const useCreateMeal = () => {
+    return useMutation({
+      mutationFn: async (mealData) => {
+        const { allergy_ids, item_ids, ...baseMealData } = mealData;
+        
+        // Create base meal
+        const meal = await adminAPI.createMeal(baseMealData);
+        
+        // Create meal_allergies junction records
+        if (allergy_ids && allergy_ids.length > 0) {
+          await adminAPI.updateMealAllergies(meal.id, allergy_ids);
+        }
+        
+        // Create meal_items record if selective meal with items
+        if (meal.is_selective && item_ids && item_ids.length > 0) {
+          await adminAPI.updateMealItems(meal.id, item_ids);
+        }
+        
+        return meal;
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries(['admin', 'meals']);
+      }
+    });
+  };
+
+  // Update meal with allergies and items
+  const useUpdateMeal = () => {
+    return useMutation({
+      mutationFn: async ({ mealId, updateData }) => {
+        const { allergy_ids, item_ids, ...baseMealData } = updateData;
+        
+        // Update base meal
+        const meal = await adminAPI.updateMeal(mealId, baseMealData);
+        
+        // Update meal_allergies if provided
+        if (allergy_ids !== undefined) {
+          await adminAPI.updateMealAllergies(mealId, allergy_ids);
+        }
+        
+        // Update meal_items if provided
+        if (item_ids !== undefined) {
+          await adminAPI.updateMealItems(mealId, item_ids);
+        }
+        
+        return meal;
+      },
+      onSuccess: (_, { mealId }) => {
+        queryClient.invalidateQueries(['admin', 'meal', mealId]);
+        queryClient.invalidateQueries(['admin', 'meals']);
+      }
+    });
+  };
+
+  // Delete meal (CASCADE deletes meal_allergies and meal_items)
+  const useDeleteMeal = () => {
+    return useMutation({
+      mutationFn: (mealId) => adminAPI.deleteMeal(mealId),
+      onSuccess: (_, mealId) => {
+        queryClient.invalidateQueries(['admin', 'meals']);
+        queryClient.removeQueries(['admin', 'meal', mealId]);
+      }
+    });
+  };
+
+  // Update meal availability
+  const useUpdateMealAvailability = () => {
+    return useMutation({
+      mutationFn: ({ mealId, isAvailable }) => 
+        adminAPI.updateMealAvailability(mealId, isAvailable),
+      onSuccess: (_, { mealId }) => {
+        queryClient.invalidateQueries(['admin', 'meal', mealId]);
+        queryClient.invalidateQueries(['admin', 'meals']);
+      }
+    });
+  };
+
+  // Bulk update meals
+  const useBulkUpdateMeals = () => {
+    return useMutation({
+      mutationFn: ({ mealIds, updateData }) => 
+        adminAPI.bulkUpdateMeals(mealIds, updateData),
+      onSuccess: (_, { mealIds }) => {
+        mealIds.forEach(id => {
+          queryClient.invalidateQueries(['admin', 'meal', id]);
+        });
+        queryClient.invalidateQueries(['admin', 'meals']);
+      }
+    });
+  };
+
+  // Bulk update meal availability
+  const useBulkUpdateMealAvailability = () => {
+    return useMutation({
+      mutationFn: ({ mealIds, isAvailable }) => 
+        adminAPI.bulkUpdateMealAvailability(mealIds, isAvailable),
+      onSuccess: (_, { mealIds }) => {
+        mealIds.forEach(id => {
+          queryClient.invalidateQueries(['admin', 'meal', id]);
+        });
+        queryClient.invalidateQueries(['admin', 'meals']);
+      }
+    });
+  };
+
+  // =====================================================
+  // PLANS MANAGEMENT (with plan_meals junction)
+  // =====================================================
+
+  // Get all plans
+  const useGetAllPlans = (options = {}) => {
+    return useQuery({
+      queryKey: ['admin', 'plans', options],
+      queryFn: () => adminAPI.getAllPlans(options),
+      staleTime: 5 * 60 * 1000,
+    });
+  };
+
+  // Get single plan details with meals
+  const useGetPlanDetails = (planId) => {
+    return useQuery({
+      queryKey: ['admin', 'plan', planId],
+      queryFn: async () => {
+        const plan = await adminAPI.getPlanDetails(planId);
+        const planMeals = await adminAPI.getPlanMeals(planId);
+        return {
+          ...plan,
+          meal_ids: planMeals.map(pm => pm.meal_id),
+          meals: planMeals
+        };
+      },
+      enabled: !!planId,
+      staleTime: 2 * 60 * 1000,
+    });
+  };
+
+  // Get plan meals
+  const useGetPlanMeals = (planId) => {
+    return useQuery({
+      queryKey: ['admin', 'plan', planId, 'meals'],
+      queryFn: () => adminAPI.getPlanMeals(planId),
+      enabled: !!planId,
+      staleTime: 5 * 60 * 1000,
+    });
+  };
+
+  // Create plan with meals
+  const useCreatePlan = () => {
+    return useMutation({
+      mutationFn: async (planData) => {
+        const { meal_ids, meals, ...basePlanData } = planData;
+        
+        // Create base plan
+        const plan = await adminAPI.createPlan(basePlanData);
+        
+        // Create plan_meals junction records
+        const mealIdsToAdd = meal_ids || meals || [];
+        if (mealIdsToAdd.length > 0) {
+          await adminAPI.updatePlanMeals(plan.id, mealIdsToAdd);
+        }
+        
+        return plan;
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries(['admin', 'plans']);
+      }
+    });
+  };
+
+  // Update plan with meals
+  const useUpdatePlan = () => {
+    return useMutation({
+      mutationFn: async ({ planId, updateData }) => {
+        const { meal_ids, meals, ...basePlanData } = updateData;
+        
+        // Update base plan
+        const plan = await adminAPI.updatePlan(planId, basePlanData);
+        
+        // Update plan_meals junction if provided
+        const mealIdsToUpdate = meal_ids || meals;
+        if (mealIdsToUpdate !== undefined) {
+          await adminAPI.updatePlanMeals(planId, mealIdsToUpdate);
+        }
+        
+        return plan;
+      },
+      onSuccess: (_, { planId }) => {
+        queryClient.invalidateQueries(['admin', 'plan', planId]);
+        queryClient.invalidateQueries(['admin', 'plans']);
+      }
+    });
+  };
+
+  // Delete plan (CASCADE deletes plan_meals)
+  const useDeletePlan = () => {
+    return useMutation({
+      mutationFn: (planId) => adminAPI.deletePlan(planId),
+      onSuccess: () => {
+        queryClient.invalidateQueries(['admin', 'plans']);
+      }
+    });
+  };
+
+  // Update plan status
+  const useUpdatePlanStatus = () => {
+    return useMutation({
+      mutationFn: ({ planId, isActive }) => 
+        adminAPI.updatePlanStatus(planId, isActive),
+      onSuccess: (_, { planId }) => {
+        queryClient.invalidateQueries(['admin', 'plan', planId]);
+        queryClient.invalidateQueries(['admin', 'plans']);
+      }
+    });
+  };
+
+  // =====================================================
+  // USER PROFILES MANAGEMENT (with all user_* junctions)
+  // =====================================================
+
   // Get all users
   const useGetAllUsers = (options = {}) => {
     return useQuery({
       queryKey: ['admin', 'users', options],
       queryFn: () => adminAPI.getAllUsers(options),
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
     });
   };
 
-  // Get user details
+  // Get user details with all relations
   const useGetUserDetails = (userId) => {
     return useQuery({
       queryKey: ['admin', 'user', userId],
-      queryFn: () => adminAPI.getUserDetails(userId),
+      queryFn: async () => {
+        const data = await adminAPI.getUserDetails(userId);
+        return {
+          ...data.profile,
+          health: data.health,
+          addresses: data.addresses || [],
+          subscriptions: data.subscriptions || [],
+          orders: data.orders || [],
+          allergies: data.allergies || [],
+          allergy_ids: data.allergies?.map(a => a.id) || [],
+          dietary_preferences: data.dietaryPreferences || [],
+          dietary_preference_ids: data.dietaryPreferences?.map(dp => dp.id) || []
+        };
+      },
       enabled: !!userId,
-      staleTime: 2 * 60 * 1000, // 2 minutes
+      staleTime: 2 * 60 * 1000,
     });
   };
-  
 
   // Get user allergies
   const useGetUserAllergies = (userId) => {
     return useQuery({
       queryKey: ['admin', 'user', userId, 'allergies'],
       queryFn: () => adminAPI.getUserAllergies(userId),
-      enabled: !!userId
+      enabled: !!userId,
+      staleTime: 5 * 60 * 1000,
     });
   };
 
@@ -41,617 +432,187 @@ export const useAdminFunctions = () => {
     return useQuery({
       queryKey: ['admin', 'user', userId, 'dietary-preferences'],
       queryFn: () => adminAPI.getUserDietaryPreferences(userId),
-      enabled: !!userId
+      enabled: !!userId,
+      staleTime: 5 * 60 * 1000,
     });
   };
 
-  // UNIFIED USER OPERATIONS
-  const updateUserCompleteMutation = useMutation({
-    mutationFn: async ({ userId, updateData }) => {
-      // Extract junction data
-      const { allergy_ids, dietary_preference_ids, ...profileData } = updateData;
-      
-      // Update profile
-      const result = await adminAPI.updateUserProfile(userId, profileData);
-      
-      // Update junctions
-      if (allergy_ids !== undefined) {
-        await adminAPI.updateUserAllergies(userId, allergy_ids);
+  // Update user profile with allergies and preferences
+  const useUpdateUser = () => {
+    return useMutation({
+      mutationFn: async ({ userId, updateData }) => {
+        const { allergy_ids, dietary_preference_ids, ...profileData } = updateData;
+        
+        // Update profile
+        const user = await adminAPI.updateUserProfile(userId, profileData);
+        
+        // Update user_allergies junction if provided
+        if (allergy_ids !== undefined) {
+          await adminAPI.updateUserAllergies(userId, allergy_ids);
+        }
+        
+        // Update user_dietary_preferences junction if provided
+        if (dietary_preference_ids !== undefined) {
+          await adminAPI.updateUserDietaryPreferences(userId, dietary_preference_ids);
+        }
+        
+        return user;
+      },
+      onSuccess: (_, { userId }) => {
+        queryClient.invalidateQueries(['admin', 'user', userId]);
+        queryClient.invalidateQueries(['admin', 'users']);
       }
-      // if (dietary_preference_ids !== undefined) {
-      //   await adminAPI.updateUserDietaryPreferences(userId, dietary_preference_ids);
-      // }
-      return result;
-    },
-    onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries(['admin', 'user', userId]);
-      queryClient.invalidateQueries(['admin', 'users']);
-    }
-  });
+    });
+  };
+
   // Set admin status
-  const setAdminMutation = useMutation({
-    mutationFn: ({ userId, isAdmin }) => adminAPI.setAdminStatus(userId, isAdmin),
-    onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries(['admin', 'user', userId]);
-      queryClient.invalidateQueries(['admin', 'users']);
-    }
-  });
+  const useSetAdminStatus = () => {
+    return useMutation({
+      mutationFn: ({ userId, isAdmin }) => 
+        adminAPI.setAdminStatus(userId, isAdmin),
+      onSuccess: (_, { userId }) => {
+        queryClient.invalidateQueries(['admin', 'user', userId]);
+        queryClient.invalidateQueries(['admin', 'users']);
+      }
+    });
+  };
 
   // Update loyalty points
-  const updateLoyaltyMutation = useMutation({
-    mutationFn: ({ userId, points }) => adminAPI.updateLoyaltyPoints(userId, points),
-    onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries(['admin', 'user', userId]);
-      queryClient.invalidateQueries(['admin', 'users']);
-    }
-  });
+  const useUpdateLoyaltyPoints = () => {
+    return useMutation({
+      mutationFn: ({ userId, points }) => 
+        adminAPI.updateLoyaltyPoints(userId, points),
+      onSuccess: (_, { userId }) => {
+        queryClient.invalidateQueries(['admin', 'user', userId]);
+        queryClient.invalidateQueries(['admin', 'users']);
+      }
+    });
+  };
 
   // Update account status
-  const updateAccountStatusMutation = useMutation({
-    mutationFn: ({ userId, status }) => adminAPI.updateAccountStatus(userId, status),
-    onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries(['admin', 'user', userId]);
-      queryClient.invalidateQueries(['admin', 'users']);
-    }
-  });
+  const useUpdateAccountStatus = () => {
+    return useMutation({
+      mutationFn: ({ userId, status }) => 
+        adminAPI.updateAccountStatus(userId, status),
+      onSuccess: (_, { userId }) => {
+        queryClient.invalidateQueries(['admin', 'user', userId]);
+        queryClient.invalidateQueries(['admin', 'users']);
+      }
+    });
+  };
 
   // Bulk update users
-  const bulkUpdateUsersMutation = useMutation({
-    mutationFn: ({ userIds, updateData }) => adminAPI.bulkUpdateUsers(userIds, updateData),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'users']);
-    }
-  });
-
-  // ===== MEAL MANAGEMENT =====
-  
-  // Get all meals
-  const useGetAllMeals = (options = {}) => {
-    return useQuery({
-      queryKey: ['admin', 'meals', options],
-      queryFn: () => adminAPI.getAllMeals(options),
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      onSuccess: (data) => {
-        //console.log('Fetched meals from useGetAllMeals :', JSON.stringify(data, null, 2));
-      }
-    });
-  };
-
-  // Get meal details
-  const useGetMealDetails = (mealId) => {
-    return useQuery({
-      queryKey: ['admin', 'meal', mealId],
-      queryFn: () => adminAPI.getMealDetails(mealId),
-      enabled: !!mealId,
-      staleTime: 2 * 60 * 1000, // 2 minutes
-    });
-  };
-
-  // UNIFIED MEAL OPERATIONS
-  // Complete meal creation with all related data
-  const createMealCompleteMutation = useMutation({
-    mutationFn: async (mealData) => {
-      const result = await adminAPI.createMealComplete(mealData);
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'meals']);
-    }
-  });
-
-  // Complete meal update with all related data
-const updateMealCompleteMutation = useMutation({
-  mutationFn: async ({ mealId, updateData }) => {
-    // Make sure allergy_ids is passed correctly
-    const { allergy_ids, ...baseData } = updateData;
-    
-    // Filter out null/undefined values
-    const filteredAllergyIds = (allergy_ids || []).filter(id => id != null);
-    
-    const result = await adminAPI.updateMeal(mealId, baseData);
-    
-    // Always update allergies (empty array if none)
-    await adminAPI.updateMealAllergies(mealId, filteredAllergyIds);
-    
-    return result;
-  },
-  onSuccess: (_, { mealId }) => {
-    queryClient.invalidateQueries(['admin', 'meal', mealId]);
-    queryClient.invalidateQueries(['admin', 'meals']);
-  }
-});
-
-  // Complete meal deletion with all related data
-  const deleteMealCompleteMutation = useMutation({
-    mutationFn: async (mealId) => {
-      const result = await adminAPI.deleteMealComplete(mealId);
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'meals']);
-    }
-  });
-
-  // Update meal availability
-  const updateMealAvailabilityMutation = useMutation({
-    mutationFn: ({ mealId, isAvailable }) => adminAPI.updateMealAvailability(mealId, isAvailable),
-    onSuccess: (_, { mealId }) => {
-      queryClient.invalidateQueries(['admin', 'meal', mealId]);
-      queryClient.invalidateQueries(['admin', 'meals']);
-    }
-  });
-
-  // Bulk update meal availability
-  const bulkUpdateMealAvailabilityMutation = useMutation({
-    mutationFn: ({ mealIds, isAvailable }) => adminAPI.bulkUpdateMealAvailability(mealIds, isAvailable),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'meals']);
-    }
-  });
-
-  // Bulk update meals
-  const bulkUpdateMealsMutation = useMutation({
-    mutationFn: ({ mealIds, updateData }) => adminAPI.bulkUpdateMeals(mealIds, updateData),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'meals']);
-    }
-  });
-
-  // ===== ITEM MANAGEMENT =====
-  
-  // Get all items
-  const useGetAllItems = (options = {}) => {
-    return useQuery({
-      queryKey: ['admin', 'items', options],
-      queryFn: () => adminAPI.getAllItems(options),
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    });
-  };
-
-  // Get item details
-  const useGetItemDetails = (itemId) => {
-    return useQuery({
-      queryKey: ['admin', 'item', itemId],
-      queryFn: () => adminAPI.getItemDetails(itemId),
-      enabled: !!itemId,
-      staleTime: 2 * 60 * 1000, // 2 minutes
-    });
-  };
-
-  // UNIFIED ITEM OPERATIONS
-  // Complete item creation with all related data
-  const createItemCompleteMutation = useMutation({
-    mutationFn: async (itemData) => {
-      const result = await adminAPI.createItemComplete(itemData);
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'items']);
-    }
-  });
-
-  // Complete item update with all related data
-  const updateItemCompleteMutation = useMutation({
-  mutationFn: async ({ itemId, updateData }) => {
-    // Extract allergy_ids and base data
-    const { allergy_ids, ...baseData } = updateData;
-    
-    // Update base item data
-    const result = await adminAPI.updateItem(itemId, baseData);
-    
-    // Update allergies separately
-    await adminAPI.updateItemAllergies(itemId, allergy_ids || []);
-    
-    return result;
-  },
-  onSuccess: (_, { itemId }) => {
-    queryClient.invalidateQueries(['admin', 'item', itemId]);
-    queryClient.invalidateQueries(['admin', 'items']);
-  }
-});
-
-  // Complete item deletion with all related data
-  const deleteItemCompleteMutation = useMutation({
-    mutationFn: async (itemId) => {
-      const result = await adminAPI.deleteItemComplete(itemId);
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'items']);
-    }
-  });
-
-  // Update item availability
-  const updateItemAvailabilityMutation = useMutation({
-    mutationFn: ({ itemId, isAvailable }) => adminAPI.updateItemAvailability(itemId, isAvailable),
-    onSuccess: (_, { itemId }) => {
-      queryClient.invalidateQueries(['admin', 'item', itemId]);
-      queryClient.invalidateQueries(['admin', 'items']);
-    }
-  });
-
-  // Bulk update items
-  const bulkUpdateItemsMutation = useMutation({
-    mutationFn: ({ itemIds, updateData }) => adminAPI.bulkUpdateItems(itemIds, updateData),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'items']);
-    }
-  });
-
-  // ===== PLAN MANAGEMENT =====
-  
-  // Get all plans
-  const useGetAllPlans = (options = {}) => {
-    return useQuery({
-      queryKey: ['admin', 'plans', options],
-      queryFn: () => adminAPI.getAllPlans(options),
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    });
-  };
-
-  // Get plan details
-    const useGetPlanDetails = (planId) => {
-      return useQuery({
-        queryKey: ['admin', 'plan', planId],
-        queryFn: async () => {
-          const plan = await adminAPI.getPlanDetails(planId);
-          const meals = await adminAPI.getPlanMeals(planId);
-          return {
-            ...plan,
-            meals: meals.map(m => m.meal_id)
-          };
-        },
-        enabled: !!planId
-      });
-    };
-  // UNIFIED PLAN OPERATIONS
-  // Complete plan creation with all related data
-    const createPlanCompleteMutation = useMutation({
-      mutationFn: async (planData) => {
-        // Process meals and additives
-        const { meals, additives, ...baseData } = planData;
-        
-        // Create plan
-        const result = await adminAPI.createPlanComplete({
-          ...baseData,
-          meals,
-          additives
-        });
-        
-        return result;
-      },
+  const useBulkUpdateUsers = () => {
+    return useMutation({
+      mutationFn: ({ userIds, updateData }) => 
+        adminAPI.bulkUpdateUsers(userIds, updateData),
       onSuccess: () => {
-        queryClient.invalidateQueries(['admin', 'plans']);
+        queryClient.invalidateQueries(['admin', 'users']);
       }
-    });
-
-    // updatePlanComplete mutation
-    const updatePlanCompleteMutation = useMutation({
-      mutationFn: async ({ planId, updateData }) => {
-        // Process meals and additives
-        const { meals, additives, ...baseData } = updateData;
-        
-        return adminAPI.updatePlanComplete(planId, {
-          ...baseData,
-          meals,
-          additives
-        });
-      },
-      onSuccess: (_, { planId }) => {
-        queryClient.invalidateQueries(['admin', 'plan', planId]);
-        queryClient.invalidateQueries(['admin', 'plans']);
-      }
-    });
-
-  // Complete plan deletion with all related data
-  const deletePlanCompleteMutation = useMutation({
-    mutationFn: async (planId) => {
-      const result = await adminAPI.deletePlanComplete(planId);
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'plans']);
-    }
-  });
-
-  // Update plan status
-  const updatePlanStatusMutation = useMutation({
-    mutationFn: ({ planId, isActive }) => adminAPI.updatePlanStatus(planId, isActive),
-    onSuccess: (_, { planId }) => {
-      queryClient.invalidateQueries(['admin', 'plan', planId]);
-      queryClient.invalidateQueries(['admin', 'plans']);
-    }
-  });
-
-  // ===== SUBSCRIPTION MANAGEMENT =====
-
-  // ===== SUBSCRIPTION MANAGEMENT HOOKS =====
-
-// Get all subscriptions
-const useGetAllSubscriptions = (options = {}) => {
-  return useQuery({
-    queryKey: ['admin', 'subscriptions', options],
-    queryFn: () => adminAPI.getAllSubscriptions(options),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
-
-// Get subscription details
-const useGetSubscriptionDetails = (subscriptionId) => {
-  return useQuery({
-    queryKey: ['admin', 'subscription', subscriptionId],
-    queryFn: () => adminAPI.getSubscriptionDetails(subscriptionId),
-    enabled: !!subscriptionId,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-  });
-};
-
-// Get subscription analytics
-const useGetSubscriptionAnalytics = () => {
-  return useQuery({
-    queryKey: ['admin', 'subscriptions', 'analytics'],
-    queryFn: () => adminAPI.getSubscriptionAnalytics(),
-    staleTime: 5 * 60 * 1000,
-    refetchInterval: 5 * 60 * 1000,
-  });
-};
-
-// Get subscriptions needing attention
-const useGetSubscriptionsNeedingAttention = (threshold = 2) => {
-  return useQuery({
-    queryKey: ['admin', 'subscriptions', 'attention', threshold],
-    queryFn: () => adminAPI.getSubscriptionsNeedingAttention(threshold),
-    staleTime: 5 * 60 * 1000,
-    refetchInterval: 10 * 60 * 1000, // Check every 10 minutes
-  });
-};
-
-// SUBSCRIPTION MUTATIONS
-
-// Create subscription
-const createSubscriptionMutation = useMutation({
-  mutationFn: (subscriptionData) => adminAPI.createSubscription(subscriptionData),
-  onSuccess: () => {
-    queryClient.invalidateQueries(['admin', 'subscriptions']);
-    queryClient.invalidateQueries(['admin', 'subscriptions', 'analytics']);
-  }
-});
-
-// Update subscription
-const updateSubscriptionMutation = useMutation({
-  mutationFn: ({ subscriptionId, updateData }) => 
-    adminAPI.updateSubscription(subscriptionId, updateData),
-  onSuccess: (_, { subscriptionId }) => {
-    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
-    queryClient.invalidateQueries(['admin', 'subscriptions']);
-  }
-});
-
-// Update subscription status
-const updateSubscriptionStatusMutation = useMutation({
-  mutationFn: ({ subscriptionId, status }) => 
-    adminAPI.updateSubscriptionStatus(subscriptionId, status),
-  onSuccess: (_, { subscriptionId }) => {
-    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
-    queryClient.invalidateQueries(['admin', 'subscriptions']);
-    queryClient.invalidateQueries(['admin', 'subscriptions', 'analytics']);
-  }
-});
-
-// Progress to next meal
-const progressToNextMealMutation = useMutation({
-  mutationFn: ({ subscriptionId }) => 
-    adminAPI.progressToNextMeal(subscriptionId),
-  onSuccess: (_, { subscriptionId }) => {
-    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
-    queryClient.invalidateQueries(['admin', 'subscriptions']);
-    queryClient.invalidateQueries(['admin', 'subscriptions', 'analytics']);
-  }
-});
-
-// Update subscription meals
-const updateSubscriptionMealsMutation = useMutation({
-  mutationFn: ({ subscriptionId, meals }) => 
-    adminAPI.updateSubscriptionMeals(subscriptionId, meals),
-  onSuccess: (_, { subscriptionId }) => {
-    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
-    queryClient.invalidateQueries(['admin', 'subscriptions']);
-  }
-});
-
-// Bulk update subscriptions
-const bulkUpdateSubscriptionsMutation = useMutation({
-  mutationFn: ({ subscriptionIds, updateData }) => 
-    adminAPI.bulkUpdateSubscriptions(subscriptionIds, updateData),
-  onSuccess: () => {
-    queryClient.invalidateQueries(['admin', 'subscriptions']);
-  }
-});
-
-  
-
-  // Adjust delivery status
-const updateSubscriptionDeliveryStatusMutation = useMutation({
-  mutationFn: ({ subscriptionId, status }) => 
-    adminAPI.updateSubscriptionDeliveryStatus(subscriptionId, status),
-  onSuccess: (result) => {
-    queryClient.invalidateQueries(['admin', 'subscriptions']);
-    // If you need to update specific subscription data
-    if (result && result.subscriptionId) {
-      queryClient.invalidateQueries(['admin', 'subscription', result.subscriptionId]);
-    };
-    console.log('Updated delivery status:', result);
-  }
-});
-// ===== DELIVERY MANAGEMENT QUERIES =====
-
-// Get subscription delivery details
-const useGetSubscriptionDeliveryDetails = (subscriptionId) => {
-  return useQuery({
-    queryKey: ['admin', 'subscription', subscriptionId, 'delivery'],
-    queryFn: () => adminAPI.getSubscriptionDeliveryDetails(subscriptionId),
-    enabled: !!subscriptionId,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-  });
-};
-
-// Get upcoming deliveries
-const useGetUpcomingDeliveries = (daysAhead = 7) => {
-  return useQuery({
-    queryKey: ['admin', 'deliveries', 'upcoming', daysAhead],
-    queryFn: () => adminAPI.getUpcomingDeliveries(daysAhead),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 5 * 60 * 1000, // Auto-refresh every 5 minutes
-  });
-};
-
-// Get overdue deliveries
-const useGetOverdueDeliveries = () => {
-  return useQuery({
-    queryKey: ['admin', 'deliveries', 'overdue'],
-    queryFn: () => adminAPI.getOverdueDeliveries(),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    refetchInterval: 2 * 60 * 1000, // Auto-refresh every 2 minutes
-  });
-};
-
-// Get delivery history
-const useGetDeliveryHistory = (subscriptionId, limit = 50) => {
-  return useQuery({
-    queryKey: ['admin', 'subscription', subscriptionId, 'history', limit],
-    queryFn: () => adminAPI.getDeliveryHistory(subscriptionId, limit),
-    enabled: !!subscriptionId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
-
-// ===== DELIVERY MANAGEMENT MUTATIONS =====
-
-// Update next delivery date
-const updateNextDeliveryDateMutation = useMutation({
-  mutationFn: ({ subscriptionId, newDeliveryDate }) => 
-    adminAPI.updateNextDeliveryDate(subscriptionId, newDeliveryDate),
-  onSuccess: (_, { subscriptionId }) => {
-    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
-    queryClient.invalidateQueries(['admin', 'deliveries']);
-    queryClient.invalidateQueries(['admin', 'subscriptions']);
-  }
-});
-
-// Update delivery address
-const updateDeliveryAddressMutation = useMutation({
-  mutationFn: ({ subscriptionId, addressId }) => 
-    adminAPI.updateDeliveryAddress(subscriptionId, addressId),
-  onSuccess: (_, { subscriptionId }) => {
-    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
-  }
-});
-
-// Complete delivery
-const completeDeliveryMutation = useMutation({
-  mutationFn: ({ subscriptionId, mealsDelivered, deliveryNotes }) => 
-    adminAPI.completeDelivery(subscriptionId, mealsDelivered, deliveryNotes),
-  onSuccess: (_, { subscriptionId }) => {
-    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
-    queryClient.invalidateQueries(['admin', 'deliveries']);
-    queryClient.invalidateQueries(['admin', 'subscriptions']);
-  }
-});
-
-// Reschedule failed delivery
-const rescheduleFailedDeliveryMutation = useMutation({
-  mutationFn: ({ subscriptionId, newDeliveryDate, reason }) => 
-    adminAPI.rescheduleFailedDelivery(subscriptionId, newDeliveryDate, reason),
-  onSuccess: (_, { subscriptionId }) => {
-    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
-    queryClient.invalidateQueries(['admin', 'deliveries']);
-  }
-});
-
-// Skip next delivery
-const skipNextDeliveryMutation = useMutation({
-  mutationFn: ({ subscriptionId, reason }) => 
-    adminAPI.skipNextDelivery(subscriptionId, reason),
-  onSuccess: (_, { subscriptionId }) => {
-    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
-    queryClient.invalidateQueries(['admin', 'deliveries']);
-  }
-});
-
-// Pause subscription
-const pauseSubscriptionMutation = useMutation({
-  mutationFn: ({ subscriptionId, reason, resumeDate }) => 
-    adminAPI.pauseSubscription(subscriptionId, reason, resumeDate),
-  onSuccess: (_, { subscriptionId }) => {
-    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
-    queryClient.invalidateQueries(['admin', 'subscriptions']);
-  }
-});
-
-// Resume subscription
-const resumeSubscriptionMutation = useMutation({
-  mutationFn: ({ subscriptionId }) => 
-    adminAPI.resumeSubscription(subscriptionId),
-  onSuccess: (_, { subscriptionId }) => {
-    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
-    queryClient.invalidateQueries(['admin', 'subscriptions']);
-  }
-});
-
-// Bulk update delivery status
-const bulkUpdateDeliveryStatusMutation = useMutation({
-  mutationFn: ({ subscriptionIds, status }) => 
-    adminAPI.bulkUpdateDeliveryStatus(subscriptionIds, status),
-  onSuccess: () => {
-    queryClient.invalidateQueries(['admin', 'deliveries']);
-    queryClient.invalidateQueries(['admin', 'subscriptions']);
-  }
-});
-
-// Update next delivery meals
-const updateNextDeliveryMealsMutation = useMutation({
-  mutationFn: ({ subscriptionId, mealIds, mealsCount }) => 
-    adminAPI.updateNextDeliveryMeals(subscriptionId, mealIds, mealsCount),
-  onSuccess: (_, { subscriptionId }) => {
-    queryClient.invalidateQueries(['admin', 'subscription', subscriptionId]);
-  }
-});
-  // ===== ORDER MANAGEMENT =====
-  
-  // Get all orders
-  const useGetAllOrders = (options = {}) => {
-    return useQuery({
-      queryKey: ['admin', 'orders', options],
-      queryFn: () => adminAPI.getAllOrders(options),
-      staleTime: 2 * 60 * 1000, // 2 minutes - orders change frequently
     });
   };
 
-  // Update order status
-  const updateOrderStatusMutation = useMutation({
-    mutationFn: ({ orderId, status }) => adminAPI.updateOrderStatus(orderId, status),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'orders']);
-    }
-  });
+  // =====================================================
+  // ALLERGIES MANAGEMENT
+  // =====================================================
 
-  // Update order
-  const updateOrderMutation = useMutation({
-    mutationFn: ({ orderId, updateData }) => adminAPI.updateOrder(orderId, updateData),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'orders']);
-    }
-  });
+  // Get all allergies
+  const useGetAllAllergies = () => {
+    return useQuery({
+      queryKey: ['admin', 'allergies'],
+      queryFn: () => adminAPI.getAllAllergies(),
+      staleTime: 10 * 60 * 1000,
+    });
+  };
 
-  // ===== ANALYTICS & REPORTING =====
-  
+  // Create allergy
+  const useCreateAllergy = () => {
+    return useMutation({
+      mutationFn: (allergyData) => adminAPI.createAllergy(allergyData),
+      onSuccess: () => {
+        queryClient.invalidateQueries(['admin', 'allergies']);
+      }
+    });
+  };
+
+  // Update allergy
+  const useUpdateAllergy = () => {
+    return useMutation({
+      mutationFn: ({ allergyId, updateData }) => 
+        adminAPI.updateAllergy(allergyId, updateData),
+      onSuccess: () => {
+        queryClient.invalidateQueries(['admin', 'allergies']);
+      }
+    });
+  };
+
+  // Delete allergy
+  const useDeleteAllergy = () => {
+    return useMutation({
+      mutationFn: (allergyId) => adminAPI.deleteAllergy(allergyId),
+      onSuccess: () => {
+        queryClient.invalidateQueries(['admin', 'allergies']);
+      }
+    });
+  };
+
+  // =====================================================
+  // DIETARY PREFERENCES MANAGEMENT
+  // =====================================================
+
+  // Get all dietary preferences
+  const useGetAllDietaryPreferences = () => {
+    return useQuery({
+      queryKey: ['admin', 'dietary-preferences'],
+      queryFn: () => adminAPI.getAllDietaryPreferences(),
+      staleTime: 10 * 60 * 1000,
+    });
+  };
+
+  // Create dietary preference
+  const useCreateDietaryPreference = () => {
+    return useMutation({
+      mutationFn: (preferenceData) => 
+        adminAPI.createDietaryPreference(preferenceData),
+      onSuccess: () => {
+        queryClient.invalidateQueries(['admin', 'dietary-preferences']);
+      }
+    });
+  };
+
+  // Update dietary preference
+  const useUpdateDietaryPreference = () => {
+    return useMutation({
+      mutationFn: ({ preferenceId, updateData }) => 
+        adminAPI.updateDietaryPreference(preferenceId, updateData),
+      onSuccess: () => {
+        queryClient.invalidateQueries(['admin', 'dietary-preferences']);
+      }
+    });
+  };
+
+  // Delete dietary preference
+  const useDeleteDietaryPreference = () => {
+    return useMutation({
+      mutationFn: (preferenceId) => 
+        adminAPI.deleteDietaryPreference(preferenceId),
+      onSuccess: () => {
+        queryClient.invalidateQueries(['admin', 'dietary-preferences']);
+      }
+    });
+  };
+
+  // =====================================================
+  // ANALYTICS & REPORTING
+  // =====================================================
+
   // Get dashboard stats
   const useGetDashboardStats = () => {
     return useQuery({
       queryKey: ['admin', 'dashboard', 'stats'],
       queryFn: () => adminAPI.getDashboardStats(),
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchInterval: 5 * 60 * 1000, // Auto-refresh every 5 minutes
+      staleTime: 5 * 60 * 1000,
+      refetchInterval: 5 * 60 * 1000,
     });
   };
 
@@ -660,218 +621,70 @@ const updateNextDeliveryMealsMutation = useMutation({
     return useQuery({
       queryKey: ['admin', 'recent-activity', limit],
       queryFn: () => adminAPI.getRecentActivity(limit),
-      staleTime: 2 * 60 * 1000, // 2 minutes
-      refetchInterval: 2 * 60 * 1000, // Auto-refresh every 2 minutes
+      staleTime: 2 * 60 * 1000,
+      refetchInterval: 2 * 60 * 1000,
     });
   };
 
-  // ===== CONTENT MANAGEMENT =====
-  
-  // Get all allergies
-  const useGetAllAllergies = () => {
-    return useQuery({
-      queryKey: ['admin', 'allergies'],
-      queryFn: () => adminAPI.getAllAllergies(),
-      staleTime: 10 * 60 * 1000, // 10 minutes - allergies don't change often
-    });
-  };
+  // =====================================================
+  // RETURN OBJECT - All hooks and utilities
+  // =====================================================
 
-  // UNIFIED ALLERGY OPERATIONS
-  // Complete allergy creation
-  const createAllergyCompleteMutation = useMutation({
-    mutationFn: async (allergyData) => {
-      const result = await adminAPI.createAllergyComplete(allergyData);
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'allergies']);
-    }
-  });
-
-  // Complete allergy update
-  const updateAllergyCompleteMutation = useMutation({
-    mutationFn: async ({ allergyId, updateData }) => {
-      return adminAPI.updateAllergy(allergyId, updateData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'allergies']);
-    }
-  });
-  
-
-  // Complete allergy deletion
-  const deleteAllergyCompleteMutation = useMutation({
-    mutationFn: async (allergyId) => {
-      const result = await adminAPI.deleteAllergyComplete(allergyId);
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'allergies']);
-    }
-  });
-
-  // Get all dietary preferences
-  const useGetAllDietaryPreferences = () => {
-    return useQuery({
-      queryKey: ['admin', 'dietary-preferences'],
-      queryFn: () => adminAPI.getAllDietaryPreferences(),
-      staleTime: 10 * 60 * 1000, // 10 minutes
-    });
-  };
-
-  // UNIFIED DIETARY PREFERENCE OPERATIONS
-  // Complete dietary preference creation
-  const createDietaryPreferenceCompleteMutation = useMutation({
-    mutationFn: async (preferenceData) => {
-      const result = await adminAPI.createDietaryPreferenceComplete(preferenceData);
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'dietary-preferences']);
-    }
-  });
-
-  // Complete dietary preference update
-  const updateDietaryPreferenceCompleteMutation = useMutation({
-    mutationFn: async ({ preferenceId, updateData }) => {
-      return adminAPI.updateDietaryPreference(preferenceId, updateData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'dietary-preferences']);
-    }
-  });
-
-  // Complete dietary preference deletion
-  const deleteDietaryPreferenceCompleteMutation = useMutation({
-    mutationFn: async (preferenceId) => {
-      const result = await adminAPI.deleteDietaryPreferenceComplete(preferenceId);
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin', 'dietary-preferences']);
-    }
-  });
-
-  // ===== RETURN OBJECT =====
-  
   return {
-    // Queries
-    useGetAllUsers,
-    useGetUserDetails,
-    useGetAllMeals,
-    useGetMealDetails,
+    // ITEMS
     useGetAllItems,
     useGetItemDetails,
+    useCreateItem,
+    useUpdateItem,
+    useDeleteItem,
+    useUpdateItemAvailability,
+    useBulkUpdateItems,
+
+    // MEALS
+    useGetAllMeals,
+    useGetMealDetails,
+    useGetMealItems,
+    useCreateMeal,
+    useUpdateMeal,
+    useDeleteMeal,
+    useUpdateMealAvailability,
+    useBulkUpdateMeals,
+    useBulkUpdateMealAvailability,
+
+    // PLANS
     useGetAllPlans,
     useGetPlanDetails,
-    useGetAllSubscriptions,
-    useGetAllOrders,
-    useGetDashboardStats,
-    useGetRecentActivity,
-    useGetAllAllergies,
-    useGetAllDietaryPreferences,
+    useGetPlanMeals,
+    useCreatePlan,
+    useUpdatePlan,
+    useDeletePlan,
+    useUpdatePlanStatus,
+
+    // USERS
+    useGetAllUsers,
+    useGetUserDetails,
     useGetUserAllergies,
     useGetUserDietaryPreferences,
+    useUpdateUser,
+    useSetAdminStatus,
+    useUpdateLoyaltyPoints,
+    useUpdateAccountStatus,
+    useBulkUpdateUsers,
 
-    // UNIFIED USER OPERATIONS
-    updateUserComplete: updateUserCompleteMutation.mutateAsync,
-    setAdminStatus: setAdminMutation.mutateAsync,
-    updateLoyaltyPoints: updateLoyaltyMutation.mutateAsync,
-    updateAccountStatus: updateAccountStatusMutation.mutateAsync,
-    bulkUpdateUsers: bulkUpdateUsersMutation.mutateAsync,
+    // ALLERGIES
+    useGetAllAllergies,
+    useCreateAllergy,
+    useUpdateAllergy,
+    useDeleteAllergy,
 
-    // UNIFIED MEAL OPERATIONS
-    createMealComplete: createMealCompleteMutation.mutateAsync,
-    updateMealComplete: updateMealCompleteMutation.mutateAsync,
-    deleteMealComplete: deleteMealCompleteMutation.mutateAsync,
-    updateMealAvailability: updateMealAvailabilityMutation.mutateAsync,
-    bulkUpdateMealAvailability: bulkUpdateMealAvailabilityMutation.mutateAsync,
-    bulkUpdateMeals: bulkUpdateMealsMutation.mutateAsync,
+    // DIETARY PREFERENCES
+    useGetAllDietaryPreferences,
+    useCreateDietaryPreference,
+    useUpdateDietaryPreference,
+    useDeleteDietaryPreference,
 
-    // UNIFIED ITEM OPERATIONS
-    createItemComplete: createItemCompleteMutation.mutateAsync,
-    updateItemComplete: updateItemCompleteMutation.mutateAsync,
-    deleteItemComplete: deleteItemCompleteMutation.mutateAsync,
-    updateItemAvailability: updateItemAvailabilityMutation.mutateAsync,
-    bulkUpdateItems: bulkUpdateItemsMutation.mutateAsync,
-
-    // UNIFIED PLAN OPERATIONS
-    createPlanComplete: createPlanCompleteMutation.mutateAsync,
-    updatePlanComplete: updatePlanCompleteMutation.mutateAsync,
-    deletePlanComplete: deletePlanCompleteMutation.mutateAsync,
-    updatePlanStatus: updatePlanStatusMutation.mutateAsync,
-
-
-
-
-    // DELIVERY MANAGEMENT MUTATIONS
-   
-    // Order Management
-    updateOrderStatus: updateOrderStatusMutation.mutateAsync,
-    updateOrder: updateOrderMutation.mutateAsync,
-
-    // UNIFIED CONTENT MANAGEMENT
-    createAllergyComplete: createAllergyCompleteMutation.mutateAsync,
-    updateAllergyComplete: updateAllergyCompleteMutation.mutateAsync,
-    deleteAllergyComplete: deleteAllergyCompleteMutation.mutateAsync,
-    createDietaryPreferenceComplete: createDietaryPreferenceCompleteMutation.mutateAsync,
-    updateDietaryPreferenceComplete: updateDietaryPreferenceCompleteMutation.mutateAsync,
-    deleteDietaryPreferenceComplete: deleteDietaryPreferenceCompleteMutation.mutateAsync,
-
-    // Loading states for unified operations
-    isUpdatingUserComplete: updateUserCompleteMutation.isPending,
-    isSettingAdmin: setAdminMutation.isPending,
-    isUpdatingLoyalty: updateLoyaltyMutation.isPending,
-    isUpdatingAccountStatus: updateAccountStatusMutation.isPending,
-    isBulkUpdatingUsers: bulkUpdateUsersMutation.isPending,
-
-    isCreatingMealComplete: createMealCompleteMutation.isPending,
-    isUpdatingMealComplete: updateMealCompleteMutation.isPending,
-    isDeletingMealComplete: deleteMealCompleteMutation.isPending,
-    isUpdatingMealAvailability: updateMealAvailabilityMutation.isPending,
-    isBulkUpdatingMealAvailability: bulkUpdateMealAvailabilityMutation.isPending,
-    isBulkUpdatingMeals: bulkUpdateMealsMutation.isPending,
-
-    isCreatingItemComplete: createItemCompleteMutation.isPending,
-    isUpdatingItemComplete: updateItemCompleteMutation.isPending,
-    isDeletingItemComplete: deleteItemCompleteMutation.isPending,
-    isUpdatingItemAvailability: updateItemAvailabilityMutation.isPending,
-    isBulkUpdatingItems: bulkUpdateItemsMutation.isPending,
-
-    isCreatingPlanComplete: createPlanCompleteMutation.isPending,
-    isUpdatingPlanComplete: updatePlanCompleteMutation.isPending,
-    isDeletingPlanComplete: deletePlanCompleteMutation.isPending,
-    isUpdatingPlanStatus: updatePlanStatusMutation.isPending,
-
-    
-
-    isCreatingAllergyComplete: createAllergyCompleteMutation.isPending,
-    isUpdatingAllergyComplete: updateAllergyCompleteMutation.isPending,
-    isDeletingAllergyComplete: deleteAllergyCompleteMutation.isPending,
-    isCreatingDietaryPreferenceComplete: createDietaryPreferenceCompleteMutation.isPending,
-    isUpdatingDietaryPreferenceComplete: updateDietaryPreferenceCompleteMutation.isPending,
-    isDeletingDietaryPreferenceComplete: deleteDietaryPreferenceCompleteMutation.isPending,
-    isUpdatingNextDeliveryDate: updateNextDeliveryDateMutation.isPending,
-  isUpdatingDeliveryAddress: updateDeliveryAddressMutation.isPending,
-  isCompletingDelivery: completeDeliveryMutation.isPending,
-  isReschedulingDelivery: rescheduleFailedDeliveryMutation.isPending,
-  isSkippingDelivery: skipNextDeliveryMutation.isPending,
-  isPausingSubscription: pauseSubscriptionMutation.isPending,
-  isResumingSubscription: resumeSubscriptionMutation.isPending,
-  isBulkUpdatingDeliveryStatus: bulkUpdateDeliveryStatusMutation.isPending,
-  isUpdatingNextDeliveryMeals: updateNextDeliveryMealsMutation.isPending,
-
-
-    // Error states for unified operations
-   
-    mealCompleteError: createMealCompleteMutation.error || updateMealCompleteMutation.error || deleteMealCompleteMutation.error,
-    itemCompleteError: createItemCompleteMutation.error || updateItemCompleteMutation.error || deleteItemCompleteMutation.error,
-    planCompleteError: createPlanCompleteMutation.error || updatePlanCompleteMutation.error || deletePlanCompleteMutation.error,
-    orderError: updateOrderStatusMutation.error || updateOrderMutation.error,
-    allergyCompleteError: createAllergyCompleteMutation.error || updateAllergyCompleteMutation.error || deleteAllergyCompleteMutation.error,
-    dietaryPreferenceCompleteError: createDietaryPreferenceCompleteMutation.error || updateDietaryPreferenceCompleteMutation.error || deleteDietaryPreferenceCompleteMutation.error,
-    deliveryError: updateNextDeliveryDateMutation.error || 
-                completeDeliveryMutation.error || 
-                rescheduleFailedDeliveryMutation.error,
+    // ANALYTICS
+    useGetDashboardStats,
+    useGetRecentActivity,
   };
 };

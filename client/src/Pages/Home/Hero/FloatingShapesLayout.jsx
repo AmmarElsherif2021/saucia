@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence, delay } from 'framer-motion';
 import { Box, Image, useBreakpointValue, Spinner, Text, Link } from '@chakra-ui/react';
@@ -47,12 +46,17 @@ const SCALE_RATIOS = {
   mobile: 0.375
 };
 
-// Centralized motion configuration - faster and steeper
+// Centralized motion configuration - faster and steeper with median stage
 const MOTION_CONFIG = {
+  MEDIAN: {
+    DURATION: 800,
+    STAGGER: 20,
+    EASE: [0.6, 0, 0.4, 1]
+  },
   SETTLING: {
-    DURATION: 1200,
-    STAGGER: 0,
-    EASE: [0.8, 0, 0.2, 1]
+    DURATION: 800,
+    STAGGER: 20,
+    EASE: [0.4, 0, 0.2, 1]
   },
   FLOATING: {
     Y_DURATION: 3.2,
@@ -80,12 +84,13 @@ const scaleStyle = (style, ratio) => {
   return scaled;
 };
 
-// Updated shape configuration with composed SVGs
+// Updated shape configuration with composed SVGs and median positions //delay
 const SHAPE_CONFIG = {
   top_left_semi_circle: { 
     component: top_left_semi_circle, 
     finalStyle: { left: '18px', top: '20px', width: '154px', height: '154px' },
-    initialStyle: {  left: '18px', top: '20px', width: '154px', height: '154px' },
+    medianStyle: { left: '50px', top: '40px', width: '100px', height: '100px' },
+    initialStyle: {  left: '50px', top: '40px', width: '50px', height: '50px' },
     path: '/menu',
     section: 'make your own salad',
     label: 'Make Your Salad'
@@ -93,7 +98,8 @@ const SHAPE_CONFIG = {
   circle: { 
     component: circle, 
     finalStyle: { left: '186px', top: '86px', width: '92px', height: '92px' },
-    initialStyle: { left: '186px', top: '86px', width: '6px', height: '6px' },
+    medianStyle: { left: '186px', top: '60px', width: '50px', height: '50px' },
+    initialStyle: { left: '186px', top: '60px', width: '20px', height: '20px' },
     path: '/menu',
     section: 'Soups',
     label: 'Soups'
@@ -101,12 +107,14 @@ const SHAPE_CONFIG = {
   small_circle: { 
     component: small_circle, 
     finalStyle: { left: '168px', top: '25px', width: '52px', height: '52px' },
-    initialStyle: { left: '168px', top: '25px', width: '58px', height: '58px' },
+    medianStyle: { left: '168px', top: '35px', width: '55px', height: '55px' },
+    initialStyle: { left: '168px', top: '40px', width: '20px', height: '20px' },
   },
   extruded_circle: { 
     component: extruded_circle, 
     finalStyle: { left: '286px', top: '15px', width: '91px', height: '252px' },
-    initialStyle: { left: '286px', top: '15px', width: '6px', height: '6px' },
+    medianStyle: { left: '286px', top: '50px', width: '90px', height: '150px' },
+    initialStyle: { left: '286px', top: '60px', width: '90px', height: '50px' },
     path: '/menu',
     section: 'Our signature salad',
     label: 'Signature\n Salads'
@@ -114,7 +122,8 @@ const SHAPE_CONFIG = {
   right_bottom_quarter: { 
     component: right_bottom_quarter, 
     finalStyle: { left: '14px', top: '252px', width: '156px', height: '156px' },
-    initialStyle: { left: '14px', top: '252px', width: '34px', height: '34px' },
+    medianStyle: { left: '10px', top: '252px', width: '100px', height: '100px' },
+    initialStyle: { left: '0px', top: '252px', width: '34px', height: '34px' },
     path: '/menu',
     section: 'Make Your Own Fruit Salad',
     label: 'Make \nYour Fruit Salad'
@@ -122,12 +131,14 @@ const SHAPE_CONFIG = {
   octa_star: { 
     component: octa_star, 
     finalStyle: { left: '186px', top: '204px', width: '77px', height: '77px' },
-    initialStyle: { left: '186px', top: '204px', width: '77px', height: '77px' },
+    medianStyle: { left: '186px', top: '204px', width: '37px', height: '37px' },
+    initialStyle: { left: '186px', top: '204px', width: '7px', height: '7px' },
   },
   teal_semi_circle: { 
     component: teal_semi_circle, 
     finalStyle: { left: '259px', top: '288px', width: '120px', height: '120px' },
-    initialStyle: { left: '259px', top: '288px', width: '154px', height: '77px' },
+    medianStyle: { left: '259px', top: '288px', width: '30px', height: '30px' },
+    initialStyle: { left: '259px', top: '288px', width: '10px', height: '10px' },
     path: '/menu',
     section: 'Juices',
     label: 'Juices'
@@ -135,7 +146,8 @@ const SHAPE_CONFIG = {
   circle2: { 
     component: circle2, 
     finalStyle: { left: '178px', top: '322px', width: '78px', height: '78px' },
-    initialStyle: { left: '360px', top: '120px', width: '96px', height: '96px' },
+    medianStyle: { left: '178px', top: '322px', width: '30px', height: '30px' },
+    initialStyle: { left: '178px', top: '322px', width: '7px', height: '7px' },
     path: '/menu',
     section: 'Desserts',
     label: 'Desserts'
@@ -143,7 +155,8 @@ const SHAPE_CONFIG = {
   small_triangle: { 
     component: small_triangle, 
     finalStyle: { left: '30px', top: '180px', width: '58px', height: '58px' },
-    initialStyle: { left: '180px', top: '360px', width: '58px', height: '58px' },
+    medianStyle: { left: '30px', top: '200px', width: '20px', height: '20px' },
+    initialStyle: { left: '30px', top: '250px', width: '10px', height: '10px' },
   }
 };
 
@@ -456,7 +469,7 @@ const FloatingShapesLayout = () => {
     base: '80vw', 
     sm: '62vw',
     md: '48vw',
-    lg: '45vw'
+    lg: '25vw'
   }) || '80vw';
   const containerRef = useRef(null);
   const { createSpark } = useClickSpark();
@@ -487,14 +500,25 @@ const FloatingShapesLayout = () => {
       opacity: 0,
       scale: 0,
     },
+    median: {
+      ...shape.medianStyle,
+      opacity: 0.7,
+      scale: 0.95,
+      rotate: 0,
+      transition: {
+        delay: 0,
+        duration: MOTION_CONFIG.MEDIAN.DURATION / 50,
+        ease: MOTION_CONFIG.MEDIAN.EASE,
+      }
+    },
     settling: {
       ...shape.finalStyle,
       opacity: 1,
       scale: 1,
       rotate: 0,
       transition: {
-        delay:0,
-        duration: MOTION_CONFIG.SETTLING.DURATION + (index * MOTION_CONFIG.SETTLING.STAGGER),
+        delay: 0,
+        duration: MOTION_CONFIG.SETTLING.DURATION / 1000,
         ease: MOTION_CONFIG.SETTLING.EASE,
       }
     },
@@ -536,12 +560,16 @@ const FloatingShapesLayout = () => {
 
     let timeouts = [];
 
-    // Phase transitions with minimal delays
+    // Phase transitions: initial → median → settling → floating
     const timer1 = setTimeout(() => {
-      setAnimationPhase('settling');
+      setAnimationPhase('median');
     }, 50);
 
     const timer2 = setTimeout(() => {
+      setAnimationPhase('settling');
+    }, MOTION_CONFIG.MEDIAN.DURATION + 100);
+
+    const timer3 = setTimeout(() => {
       setAnimationPhase('floating');
       setJsonData(prev => {
         const updated = {};
@@ -550,18 +578,18 @@ const FloatingShapesLayout = () => {
         });
         return updated;
       });
-    }, MOTION_CONFIG.SETTLING.DURATION + 200);
+    }, MOTION_CONFIG.MEDIAN.DURATION + MOTION_CONFIG.SETTLING.DURATION + 200);
 
-    timeouts.push(timer1, timer2);
+    timeouts.push(timer1, timer2, timer3);
 
     return () => {
       timeouts.forEach(clearTimeout);
     };
   }, [isLoaded]);
 
-  // Progress animation for settling phase
+  // Progress animation for median and settling phases
   useEffect(() => {
-    if (animationPhase !== 'settling') return;
+    if (animationPhase !== 'median' && animationPhase !== 'settling') return;
 
     const interval = setInterval(() => {
       setJsonData(prev => {
@@ -715,6 +743,38 @@ const FloatingShapesLayout = () => {
   }, [animationPhase, jsonData, getShapeVariants, getResponsiveFontSize, currentLanguage, isArabic, handleShapeClick]);
 
   // Memoized particles to prevent re-creation #
+  const MedianParticles = useMemo(() => {
+    if (animationPhase !== 'median') return null;
+    
+    return [...Array(12)].map((_, i) => (
+      <Box
+        as={motion.div}
+        key={`median-${i}`}
+        position="absolute"
+        width="5px"
+        height="5px"
+        bg="teal.400"
+        borderRadius="full"
+        initial={{
+          x: Math.random() * window.innerWidth * 0.5,
+          y: Math.random() * window.innerHeight * 0.5,
+          opacity: 0
+        }}
+        animate={{
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          opacity: [0, 0.8, 0],
+          scale: [0, 1.2, 0]
+        }}
+        transition={{
+          duration: 4,
+          delay: i * 0.06,
+          ease: "easeInOut"
+        }}
+      />
+    ));
+  }, [animationPhase]);
+
   const SettlingParticles = useMemo(() => {
     if (animationPhase !== 'settling') return null;
     
@@ -827,6 +887,7 @@ const FloatingShapesLayout = () => {
 
         {/* Particles */}
         <AnimatePresence>
+          {MedianParticles}
           {SettlingParticles}
           {FloatingParticles}
         </AnimatePresence>

@@ -1,16 +1,13 @@
-import React, { Children,useState, useEffect, useMemo, useCallback, Suspense, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useUserMenuFiltering } from '../../Hooks/setUserMenuFiltering'
 import { useLocation } from 'react-router-dom'
 import { CustomizableMealCard } from './CustomizableCard'
 import { 
   Box, 
   Heading, 
-  SimpleGrid, 
   Text as ChakraText, 
-  Spinner, 
   Center,
   Skeleton,
-  SkeletonText,
   Alert,
   AlertIcon,
   VStack,
@@ -34,7 +31,51 @@ import saladIcon from '../../assets/menu/salad.svg'
 import soupIcon from '../../assets/menu/soup.svg'
 import fruitIcon from '../../assets/menu/fruit.svg'
 import dessertIcon from '../../assets/menu/dessert.svg'
-import MasonryMenuDemo from './MasonryAccordationPanel'
+
+//Menu theming constants
+const MENU_THEMES = {
+  sections: {
+    'Salads': '#da5151',
+    'Soups': '#daba51', 
+    'Proteins': '#da5151',
+    'Cheese': '#62c5b8',
+    'Extras': '#1fa28e',
+    'Dressings': '#d7b741',
+    'Fruits': '#59ac53',
+    'make your own salad': '#da5151',
+    'Make your own fruit salad': '#a8cc6f',
+    'Our signature salad': '#10b26c',
+    'Juices': '#63c15a',
+    'Desserts': '#51c5c3',
+    'Default': '#f179b5'
+  },
+  cards: {
+    customizable: '#03894f',
+    salad: '#2d7d32',
+    protein: '#d32f2f',
+    default: '#03894f'
+  },
+  transparency: {
+    cardBg: '60',
+    border: '80',
+    hover: '70',
+    content: '40',
+    title: 'aa'
+  }
+};
+
+const applyTransparency = (hexColor, transparency = '80') => {
+  return `${hexColor}${transparency}`;
+};
+
+const getSectionTheme = (sectionName) => {
+  return MENU_THEMES.sections[sectionName] || MENU_THEMES.sections.Default;
+};
+
+const getCardTheme = (meal) => {
+  if (MENU_THEMES.sections.hasOwnProperty(meal.section)) return MENU_THEMES.sections[meal.section];
+  return MENU_THEMES.cards.default;
+};
 
 // Memoized section icons map
 const SECTION_ICONS = {
@@ -45,27 +86,22 @@ const SECTION_ICONS = {
   Extras: extrasIcon,
   Dressings: dressingsIcon,
   Fruits: fruitIcon,
-  'Make Your Own Salad': makeSaladIcon,
-  'Make Your Own Fruit Salad': fruitIcon,
+  'make your own salad': makeSaladIcon,
+  'Make your own fruit salad': fruitIcon,
   'Our signature salad': saladIcon,
   Juices: fruitIcon,
   Desserts: dessertIcon,
-}
-
-const SELECTIVE_SECTION_MAP = {
-  'make your own fruit salad': 'salad-fruits',
-  'make your own salad': 'salad-items',
 }
 
 // Loading skeleton component
 const MenuSectionSkeleton = () => (
   <Box p={4}>
     <Skeleton height="40px" mb={4} />
-    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+    <VStack spacing={4}>
       {[...Array(3)].map((_, i) => (
-        <Skeleton key={i} height="200px" borderRadius="md" />
+        <Skeleton key={i} height="200px" borderRadius="md" width="100%" />
       ))}
-    </SimpleGrid>
+    </VStack>
   </Box>
 )
 
@@ -86,8 +122,9 @@ const ErrorFallback = ({ error, resetErrorBoundary }) => (
     </Button>
   </Center>
 );
+
 // Masonry grid component
-const MasonryGrid = ({ children, columns = { base: 1, sm: 3, md: 2, lg: 3 }, gap = 4 }) => {
+const MasonryGrid = ({ children, columns = { base: 1, sm: 2, md: 3, lg: 4 }, gap = 4 }) => {
   const [columnCount, setColumnCount] = useState(1);
   const containerRef = useRef(null);
 
@@ -97,18 +134,31 @@ const MasonryGrid = ({ children, columns = { base: 1, sm: 3, md: 2, lg: 3 }, gap
       const width = containerRef.current.offsetWidth;
       let cols = 1;
       
-      if (width >= 1024) cols = columns.lg || 3;
-      else if (width >= 768) cols = columns.md || 2;
+      if (width >= 1280) cols = columns.xl || columns.lg || 4;
+      else if (width >= 1024) cols = columns.lg || 4;
+      else if (width >= 768) cols = columns.md || 3;
       else if (width >= 480) cols = columns.sm || 2;
       else cols = columns.base || 1;
       
-      setColumnCount(cols);
+      if (cols !== columnCount) {
+        setColumnCount(cols);
+      }
     };
 
     updateColumns();
+    
+    const resizeObserver = new ResizeObserver(updateColumns);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
     window.addEventListener('resize', updateColumns);
-    return () => window.removeEventListener('resize', updateColumns);
-  }, [columns]);
+    
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateColumns);
+    };
+  }, [columns, columnCount]);
 
   const childrenArray = React.Children.toArray(children);
   const columnWrappers = Array.from({ length: columnCount }, () => []);
@@ -118,51 +168,111 @@ const MasonryGrid = ({ children, columns = { base: 1, sm: 3, md: 2, lg: 3 }, gap
   });
 
   return (
-    <Box ref={containerRef} display="flex" gap={gap} width="100%">
+    <Box 
+      ref={containerRef} 
+      display="flex" 
+      gap={gap} 
+      width="100%"
+      minHeight="200px"
+    >
       {columnWrappers.map((column, columnIndex) => (
-        <Box key={columnIndex} flex="1" display="flex" flexDirection="column" gap={gap}>
+        <Box 
+          key={columnIndex} 
+          flex="1" 
+          display="flex" 
+          flexDirection="column" 
+          gap={gap}
+          minWidth="0"
+        >
           {column}
         </Box>
       ))}
     </Box>
   );
 };
-// Optimized meal section component
-const MealSection = ({ section, selectiveItems, handlers, userFiltering }) => {
-  const { handleAddToCart } = handlers
+
+// Updated MealSection component - fetches selectable items per meal
+const MealSection = ({ section, handlers, userFiltering, themeUtils, getMealSelectableItems }) => {
+  const { handleAddToCart } = handlers;
+  const [mealSelectableItems, setMealSelectableItems] = useState({});
+  const [loadingItems, setLoadingItems] = useState({});
   
-  // Safely destructure with defaults
+  const { 
+    applyTransparency = (hexColor, transparency = '80') => `${hexColor}${transparency}`,
+    transparency = MENU_THEMES.transparency
+  } = themeUtils || {};
+  
   const { 
     isMealSafe = () => true,
     isItemSafe = () => true,
     unsafeItemIds = [],
     userAllergies = [],
     getMealAllergens = () => []
-  } = userFiltering || {}
+  } = userFiltering || {};
 
-  // Validate section data
+  // Fetch selectable items for selective meals
+  useEffect(() => {
+    const fetchSelectiveItems = async () => {
+      if (!section?.meals?.length) return;
+      
+      const selectiveMeals = section.meals.filter(meal => meal?.is_selective === true);
+      
+      for (const meal of selectiveMeals) {
+        if (mealSelectableItems[meal.id]) continue; // Already loaded
+        
+        setLoadingItems(prev => ({ ...prev, [meal.id]: true }));
+        
+        try {
+          const items = await getMealSelectableItems(meal.id);
+          setMealSelectableItems(prev => ({
+            ...prev,
+            [meal.id]: items || []
+          }));
+        } catch (error) {
+          console.error(`Failed to fetch selectable items for meal ${meal.id}:`, error);
+          setMealSelectableItems(prev => ({
+            ...prev,
+            [meal.id]: []
+          }));
+        } finally {
+          setLoadingItems(prev => ({ ...prev, [meal.id]: false }));
+        }
+      }
+    };
+    
+    fetchSelectiveItems();
+  }, [section?.meals, getMealSelectableItems]);
+
   if (!section?.meals?.length) {
     return (
       <Box p={4} textAlign="center">
         <ChakraText color="gray.500">No meals available</ChakraText>
       </Box>
-    )
+    );
   }
 
   return (
-     <MasonryGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap={3}>
-        {section.meals.map((meal) => {
-        if (!meal?.id) return null
+    <MasonryGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap={4}>
+      {section.meals.map((meal) => {
+        if (!meal?.id) return null;
         
         const isSelective = meal.is_selective === true;
-        const mealAllergens = getMealAllergens(meal)
-        const isMealUnsafe = !isMealSafe(meal)
-        
-        let selectableItems = []
-        if (isSelective && meal.name) {
-          const itemSection = SELECTIVE_SECTION_MAP[meal.name.toLowerCase()]
-          if (itemSection && selectiveItems) {
-            selectableItems = selectiveItems[itemSection] || []
+        const mealAllergens = getMealAllergens(meal);
+        const isMealUnsafe = !isMealSafe(meal);
+        const cardColor = getCardTheme(meal);
+
+        // For selective meals, get their selectable items
+        let selectableItems = [];
+        if (isSelective) {
+          selectableItems = mealSelectableItems[meal.id] || [];
+          
+          // Show loading state while fetching items
+          if (loadingItems[meal.id]) {
+            return (
+              <Box key={meal.id}>
+                <Skeleton height="370px" borderRadius="xl" />
+              </Box>
+            );
           }
         }
 
@@ -178,61 +288,50 @@ const MealSection = ({ section, selectiveItems, handlers, userFiltering }) => {
                 isItemSafe={isItemSafe}
                 isMealUnsafe={isMealUnsafe}
                 mealAllergens={mealAllergens}
+                colorInHex={cardColor}
+                applyTransparency={applyTransparency}
+                transparency={transparency}
               />
             ) : (
-              <MealCardWithModal meal={meal} />
+              <MealCardWithModal 
+                meal={meal}
+                colorInHex={cardColor}
+                applyTransparency={applyTransparency}
+                transparency={transparency}
+              />
             )}
           </Box>
-        )
+        );
       })}
     </MasonryGrid>
-  )
-}
+  );
+};
 
 const MenuPage = () => {
   const { t } = useTranslation()
   const { currentLanguage } = useI18nContext()
   const { addMealToCart } = useCart()
   const location = useLocation()
+  const themeUtils = {
+    applyTransparency,
+    transparency: MENU_THEMES.transparency
+  };
   
   // State
   const [sections, setSections] = useState([])
   const [expandedIndex, setExpandedIndex] = useState(-1)
-  const [selectiveItems, setSelectiveItems] = useState({
-    'salad-fruits': [],
-    'salad-items': [],
-  })
   const [hasError, setHasError] = useState(false)
 
   // Context hooks
   const userMenuFiltering = useUserMenuFiltering()
   const { 
     meals = [], 
-    fruitItems = [], 
-    saladItems = [], 
     elementsLoading, 
     error: elementsError,
-    isInitialized
+    isInitialized,
+    getMealSelectableItems // NEW: Get function from context
   } = useElements()
-  //Debug console for all used input data and states
-  // useEffect(() => {
-  //   console.log('MenuPage data $$$$$$$$$$$ :', {
-  //     meals,
-  //     fruitItems,
-  //     saladItems,
-  //     elementsLoading,
-  //     elementsError,
-  //     isInitialized,
-  //     userMenuFiltering,
-  //     sections,
-  //     selectiveItems,
-  //     hasError,
-  //     expandedIndex,
-  //     currentLanguage,
-  //     initialLoadAttempted
-  //   })
-  // }, [meals, fruitItems, saladItems, elementsLoading, elementsError, isInitialized, userMenuFiltering, sections, selectiveItems, hasError, expandedIndex, currentLanguage])
-  // Track if we have attempted initial load
+
   const [initialLoadAttempted, setInitialLoadAttempted] = useState(false)
 
   // Filter available meals
@@ -246,14 +345,6 @@ const MenuPage = () => {
       return []
     }
   }, [meals])
-
-  // Update selective items
-  useEffect(() => {
-    setSelectiveItems({
-      'salad-fruits': (fruitItems || []).filter(item => item?.is_available),
-      'salad-items': (saladItems || []).filter(item => item?.is_available)
-    })
-  }, [fruitItems, saladItems])
 
   // Organize meals into sections
   useEffect(() => {
@@ -320,61 +411,25 @@ const MenuPage = () => {
   }, [elementsError])
 
   // Handlers
-   const handleAddToCart = (meal, selectedItems = [], totalPrice = null) => {
-  console.log('📦 MenuPage: Adding meal to cart', {
-    meal: meal.name,
-    selectedItems,
-    totalPrice
-  })
-  
-  // Ensure selectedItems is always an array
-  const safeSelectedItems = Array.isArray(selectedItems) ? selectedItems : []
-  
-  const result = addMealToCart(meal, safeSelectedItems, totalPrice)
-  
-  if (!result.success) {
-    toast({
-      title: t('cart.error') || "Error",
-      description: t('cart.failedToAdd') || "Failed to add item to cart",
-      status: "error",
-      duration: 3000,
-      isClosable: true,
-      position: "top-right",
+  const handleAddToCart = (meal, selectedItems = [], totalPrice = null) => {
+    console.log('📦 MenuPage: Adding meal to cart', {
+      meal: meal.name,
+      selectedItems,
+      totalPrice
     })
+    
+    // Ensure selectedItems is always an array
+    const safeSelectedItems = Array.isArray(selectedItems) ? selectedItems : []
+    
+    const result = addMealToCart(meal, safeSelectedItems, totalPrice)
+    
+    if (!result.success) {
+      // You can add toast notification here if needed
+      console.error('Failed to add meal to cart')
+    }
+    
+    return result
   }
-  
-  return result
-}
-
-// const handleConfirm = (selectedItems, totalPrice) => {
-//   // selectedItems is an object: { itemId: quantity, ... }
-//   const addOnsArray = []
-  
-//   Object.entries(selectedItems).forEach(([itemId, quantity]) => {
-//     if (quantity <= 0) return
-    
-//     // Find the item in groupedItems
-//     let itemDetails = null
-//     for (const section of Object.values(groupedItems)) {
-//       itemDetails = section.find(item => item.id == itemId)
-//       if (itemDetails) break
-//     }
-    
-//     if (!itemDetails) return
-    
-//     // Push ONE entry per item with quantity property
-//     addOnsArray.push({
-//       item_id: itemDetails.id,
-//       name: itemDetails.name,
-//       name_arabic: itemDetails.name_arabic,
-//       category: itemDetails.category,
-//       unit_price: itemDetails.price || 0,
-//       quantity: parseInt(quantity) || 1
-//     })
-//   })
-
-//   onhandleAddToCart(meal, addOnsArray, totalPrice)
-// }
 
   const handleRetry = useCallback(() => {
     setHasError(false)
@@ -445,6 +500,7 @@ const MenuPage = () => {
           sections={sections.map((section, index) => ({
             title: currentLanguage === 'ar' ? section.name_arabic : section.name,
             icon: SECTION_ICONS[section.name] || makeSaladIcon,
+            theme: getSectionTheme(section.name),
             content: (
               <Box 
                 id={`section-${index}`}
@@ -452,9 +508,10 @@ const MenuPage = () => {
               >
                 <MealSection
                   section={section}
-                  selectiveItems={selectiveItems}
                   handlers={{ handleAddToCart }}
                   userFiltering={userMenuFiltering}
+                  themeUtils={themeUtils}
+                  getMealSelectableItems={getMealSelectableItems}
                 />
               </Box>
             )
@@ -464,7 +521,7 @@ const MenuPage = () => {
         />
       </Box>
     </ErrorBoundary>
-  )
-}
+  );
+};
 
 export default MenuPage

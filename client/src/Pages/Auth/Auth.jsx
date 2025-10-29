@@ -250,7 +250,7 @@ export default function OAuth() {
               </Heading>
               <Text color={textColor} fontSize={{ base: 'sm', md: 'md' }}>
                 {pendingRedirect?.reason === 'subscription_flow' 
-                  ? t('auth.signInToContinueSubscription')
+                  ? t('profile.signInToContinueSubscription')
                   : t('profile.signInToContinue')
                 }
               </Text>
@@ -265,16 +265,16 @@ export default function OAuth() {
                   borderRadius="full"
                 >
                   {pendingRedirect.reason === 'subscription_flow' && pendingRedirect.planId && 
-                    t('auth.continuingPlanSubscription')
+                    t('premium.continuingPlanSubscription')
                   }
                   {pendingRedirect.reason === 'subscription_flow' && !pendingRedirect.planId && 
-                    t('auth.continuingPremiumAccess')
+                    t('premium.continuingPremiumAccess')
                   }
                   {pendingRedirect.reason === 'profile_completion' && 
-                    t('auth.continuingProfileSetup')
+                    t('premium.continuingProfileSetup')
                   }
                   {!pendingRedirect.reason && 
-                    t('auth.continuingProcess')
+                    t('premium.continuingProcess')
                   }
                 </Badge>
               )}

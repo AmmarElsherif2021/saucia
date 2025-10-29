@@ -1,5 +1,5 @@
 import { Box, useColorMode, Spinner, Center, Alert, AlertIcon, Button } from '@chakra-ui/react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { Hero } from './Hero'
 import { FeaturedMeals } from './FeaturedSlide'
 import { AboutPage } from './GetAbout'
@@ -7,17 +7,13 @@ import { Footer } from './Footer'
 import { useRef, useEffect } from 'react'
 import { useScrollNavigation } from '../../Hooks/useScrollNavigation'
 import { ScrollingBadgesTrail } from '../../Components/Navbar/ScrollingBadgesTrail'
-import { mealsAPI } from '../../API/mealAPI'
 import { useElements } from '../../Contexts/ElementsContext'
 import { smartPrefetch } from '../../lib/prefetchQueries'
 import { useAuthContext } from '../../Contexts/AuthContext'
 import { useNavigate } from 'react-router'
 import Intro from './Intro'
-import FloatingShapesLayout from './Hero/FloatingShapesLayout'
-import { CurrentPlanBrief } from '../Premium/CurrentPlanBrief'
-import { JoinPremiumTeaser } from '../Premium/JoinPremiumTeaser'
-import { PlanCard } from '../Premium/PlanCard'
-import CompleteProfile from '../Auth/CompleteProfile'
+//import MenuPDFPortal from '../Auth/MenPDF'
+
 // Loading component for better UX
 const FeaturedMealsLoading = () => (
   <Center h="300px">
@@ -46,7 +42,6 @@ const FeaturedMealsError = ({ error, onRetry }) => (
 )
 
 // Optimized featured meals section with its own data fetching
-// In HomePage.jsx, update the FeaturedMealsSection component:
 const FeaturedMealsSection = ({ sectionRef }) => {
   const { featuredMeals, elementsLoading, elementsError, refetchMeals } = useElements();
   if (elementsLoading) {
@@ -117,6 +112,7 @@ const HomePage = () => {
       overflowX={'hidden'}
       ref={sectionRefs.hero}
     >
+      {/* <MenuPDFPortal/> */}
       <ScrollingBadgesTrail />
       {/* Hero section - always renders immediately */}
       <Box overflowX={'hidden'}>

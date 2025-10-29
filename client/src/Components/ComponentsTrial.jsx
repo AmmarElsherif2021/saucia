@@ -24,6 +24,12 @@ import {
 import 'react-datepicker/dist/react-datepicker.css'
 //import { CartDemo } from "./Cart";
 
+
+// Helper function to apply transparency
+const applyTransparency = (hexColor, transparency = '80') => {
+  return `${hexColor}${transparency}`;
+}
+
 // Alert dialogue
 export const ALT = ({
   message,
@@ -103,7 +109,7 @@ const AccIcon = ({
 
   // Color mode values
   const iconBg = useColorModeValue('white', 'gray.100')
-  const shadowColor = useColorModeValue('rgba(0,0,0,0.15)', 'rgba(0,0,0,0.3)')
+  const shadowColor = useColorModeValue('none', 'none')
   const errorBg = useColorModeValue('gray.50', 'gray.700')
 
   const handleImageLoad = useCallback(() => {
@@ -236,22 +242,22 @@ const EnhancedAccordionButton = ({
   isExpanded, 
   index 
 }) => {
-  const buttonBg = `${section.theme}.200` ||'brand.400' //useColorModeValue('brand.500', 'brand.600')
-  const buttonHoverBg = useColorModeValue('secondary.500', 'secondary.600')
-  const expandedBorderColor = `${section.theme}.300` ||'brand.400'//useColorModeValue('brand.500', 'brand.400')
-  
+  // Ensure section.theme has a fallback
+  const themeColor = section.theme || '#03894f';
+  // Use the hex color from section theme with transparency using shared function
+  const buttonBg = applyTransparency(themeColor, '60');
+  const buttonHoverBg = applyTransparency(themeColor, '60');
+  const expandedBorderColor = applyTransparency(themeColor, '0');
   return (
     <AccordionButton
       _expanded={{
         border: `0px solid transparent`,
-        //px:2,
         bg: buttonBg,
         transform: 'translateY(-2px)',
         borderRadius: '15px 15px 0px 0px',
       }}
-      
       sx={{
-        borderColor: expandedBorderColor,
+        borderColor: 'transparent', //expandedBorderColor,
         borderRadius: '15px',
         bg: buttonBg,
         color: 'brand.900',
@@ -259,7 +265,6 @@ const EnhancedAccordionButton = ({
         transition: 'all 0.3s ease',
         position: 'relative',
         overflow: 'hidden',
-        
       }}
       _before={{
         content: '""',
@@ -268,11 +273,11 @@ const EnhancedAccordionButton = ({
         left: '-100%',
         width: '100%',
         height: '100%',
-        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+        //background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)', shadow
         transition: 'left 0.5s ease',
-        //paddingX: 2,
       }}
       _hover={{
+        bg: buttonHoverBg,
         _before: {
           left: '100%'
         }
@@ -280,17 +285,15 @@ const EnhancedAccordionButton = ({
     >
       <Box flex="1" textAlign="left" textStyle="heading">
         <Flex align="center" gap={3}>
-      
-            <Box>
-              <AccIcon
-                src={typeof section.icon === 'string' ? section.icon : section.icon?.props?.src}
-                alt={`${section.title} icon`}
-                fallback={section.iconFallback || "🍽️"}
-                size={32}
-                isExpanded={isExpanded}
-              />
-            </Box>
-   
+          <Box>
+            <AccIcon
+              src={typeof section.icon === 'string' ? section.icon : section.icon?.props?.src}
+              alt={`${section.title} icon`}
+              fallback={section.iconFallback || "🍽️"}
+              size={32}
+              isExpanded={isExpanded}
+            />
+          </Box>
           <Box>
             <Heading 
               size="md" 
@@ -301,16 +304,15 @@ const EnhancedAccordionButton = ({
               {section.title} {''}
               {section.subtitle && (
                <small style={{marginX:'15px'}}>{section.subtitle}</small>        
-            )}
+              )}
             </Heading>
-            
           </Box>
         </Flex>
       </Box>
       <AccordionIcon 
         transition="transform 0.3s ease"
         transform={isExpanded ? 'rotate(180deg) scale(1.1)' : 'rotate(0deg) scale(1)'}
-        color= {useColorModeValue('#04765447','brand.800')}
+        color={section.theme}
         boxSize={'14'}
         p={0}
       />
@@ -320,42 +322,40 @@ const EnhancedAccordionButton = ({
 
 // Main Enhanced Accordion Component
 export const ACC = ({ sections = [], expandedIndex, onToggle }) => {
-  // For proper operation with Chakra UI's Accordion
-  const indexValue = expandedIndex !== undefined && expandedIndex >= 0 ? [expandedIndex] : []
-  // Color mode values
-  const themes = ['teal', 'brand', 'secondary', 'warning', 'green']
-  // Panel background for better visual separation
-  const panelBg = useColorModeValue('gray.50', 'gray.800')
-  const panelBorder = useColorModeValue('gray.200', 'gray.700')
+  const indexValue = expandedIndex !== undefined && expandedIndex >= 0 ? [expandedIndex] : [];
 
-  // Debug log
-  useEffect(() => {
-    // console.log('ACC rendering with expandedIndex:', expandedIndex)
-    // console.log('Using indexValue:', indexValue)
-  }, [expandedIndex, indexValue])
-
-  // Enhanced sections with fallback data
-  const enhancedSections = sections.map((section,i) => ({
+  const enhancedSections = sections.map((section, index) => ({
     ...section,
     iconFallback: getIconFallback(section.title),
     subtitle: getSubtitle(section.title),
-    theme: themes[i % themes.length] || 'teal.400'
-  }))
+    theme: section.theme || '#03894f', // Fallback only
+    // NEW: Extract transparency from section
+    transparency: section.transparency || {
+      cardBg: '70',
+      border: '90',
+      hover: '90',
+      content: '40',
+      title: 'aa'
+    }
+  }));
 
   return (
     <Accordion
       index={indexValue}
       onChange={(indexes) => {
-        // console.log('Accordion onChange triggered with:', indexes)
         if (onToggle) {
-          onToggle(indexes)
+          onToggle(indexes);
         }
       }}
       allowToggle={true}
-      //spacing={16}
     >
       {enhancedSections.map((section, index) => {
-        const isExpanded = indexValue.includes(index)
+        const isExpanded = indexValue.includes(index);
+        
+        // Use section's theme with transparency
+        const applyTransparency = (transparency) => `${section.theme}${transparency}`;
+        const sectionBg = applyTransparency('60');
+        const sectionBorder = applyTransparency('60');
         
         return (
           <AccordionItem
@@ -367,22 +367,23 @@ export const ACC = ({ sections = [], expandedIndex, onToggle }) => {
             overflow="hidden"
             transition="all 0.3s ease"
             mb={4}
-            mx={2} // Added horizontal margin
-            bg={isExpanded ? `${section.theme}.200` : 'transparent'}
+            mx={2}
+            bg={isExpanded ? sectionBg : 'transparent'}
+            borderColor={sectionBorder}
           >
             <h2>
               <EnhancedAccordionButton
-          section={section}
-          isExpanded={isExpanded}
-          index={index}
+                section={section}
+                isExpanded={isExpanded}
+                index={index}
               />
             </h2>
             
             <AccordionPanel
               my={0}
               p={6}
-              bg={`${section.theme}.200` || panelBg}
-              borderTop={`1px solid transparent`}
+              bg={sectionBg}
+              borderTop={`0px dotted transparent`}
               style={{ 
                 overflowY: 'auto', 
                 maxHeight: '50vh',
@@ -392,22 +393,23 @@ export const ACC = ({ sections = [], expandedIndex, onToggle }) => {
               }}
               sx={{
                 '&::-webkit-scrollbar': {
-                  width: '36px', // Wider to accommodate border spacing
+                  width: '36px',
                 },
                 '&::-webkit-scrollbar-track': {
                   background: '#ffffff6f',
                   borderRadius: '15px',
-                  border: '10px solid transparent', // Spacing on sides
+                  border: '10px solid transparent',
                   backgroundClip: 'content-box',
                   width: '8px'
                 },
                 '&::-webkit-scrollbar-thumb': {
-                  background: `${section.theme}.400` || `brand.400`,
+                  background: section.theme,
                   borderRadius: '28px',
-                  border: '15px solid transparent', // Creates spacing around thumb
-                  backgroundClip: 'content-box', // Key property
+                  border: '15px solid transparent',
+                  backgroundClip: 'content-box',
                   '&:hover': {
-                    background: 'brand.500',
+                    background: section.theme,
+                    opacity: 0.8,
                     backgroundClip: 'content-box',
                   }
                 }
@@ -416,12 +418,11 @@ export const ACC = ({ sections = [], expandedIndex, onToggle }) => {
               {section.content}
             </AccordionPanel>
           </AccordionItem>
-        )
+        );
       })}
     </Accordion>
-  )
-}
-
+  );
+};
 // Helper functions for enhanced sections
 function getIconFallback(title) {
   const fallbacks = {
@@ -451,4 +452,3 @@ function getSubtitle(title) {
   
   return subtitles[title] || null
 }
-

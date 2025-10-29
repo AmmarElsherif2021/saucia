@@ -275,14 +275,14 @@ const RESPONSIVE_CONFIG = {
 const transformOrderData = (orderData) => {
   if (!orderData) return [];
   
-  console.log('Raw order data:', orderData);
+  //console.log('Raw order data:', orderData);
   
   return orderData.map(order => {
     const subscriptionData = order.user_subscriptions || {};
     const userProfile = subscriptionData.user_profiles || {};
     const userAddress = subscriptionData.user_addresses || {};
     
-    console.log(`Order #${order.order_number} items:`, order.order_items);
+    //console.log(`Order #${order.order_number} items:`, order.order_items);
     
     const baseData = {
       id: order.id,

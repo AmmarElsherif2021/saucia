@@ -81,7 +81,7 @@ const EnhancedPlanCard = ({
   hasActiveSubscription = false // NEW PROP
 }) => {
   const { isOpen: showDetails, onToggle: toggleDetails } = useDisclosure()
-  const cardBg = useColorModeValue('white', 'brand.800')
+  const cardBg = useColorModeValue('secondary.100', 'brand.800')
   const borderColor = isUserPlan ? 'brand.500' : 'brand.400'
   const badgeBg = useColorModeValue('brand.50', 'brand.900')
   const badgeColor = useColorModeValue('brand.600', 'brand.200')
@@ -219,24 +219,6 @@ const EnhancedPlanCard = ({
           </Badge>
         </Flex>
 
-        {/* Price */}
-        <Flex justify="space-between" align="center" mt="auto" pt={2}>
-          <Text 
-            fontSize="sm" 
-            color={!canSelectPlan && !isUserPlan ? disabledColor : "gray.600"} 
-            fontWeight="medium"
-          >
-            {t('premium.perMonth')}
-          </Text>
-          <Text 
-            fontSize="xl" 
-            fontWeight="bold" 
-            color={!canSelectPlan && !isUserPlan ? disabledColor : "brand.600"}
-          >
-            {plan.price} {t('currency.sar')}
-          </Text>
-        </Flex>
-
         {/* Actions */}
         <Flex direction="column" gap={2}>
           <Button
@@ -294,14 +276,12 @@ const EnhancedPlanCard = ({
                     {t('premium.shortTerm')}
                   </Text>
                   <Badge colorScheme="teal" fontSize="xs" px={2} py={1}>
-                    {plan.short_term_meals || 15} {t('premium.meals')}
+                    {plan.short_term_meals} {t('premium.meals')}
                   </Badge>
                 </Flex>
-                <Text fontSize="xs" color="brand.600">
-                  {t('premium.mealsOver')} {plan.short_term_meals} {t('premium.days')}
-                </Text>
+              
                 <Text fontSize="xs" color="brand.600" fontWeight="bold">
-                  {t('premium.overallPrice')}: {plan.price_per_meal * plan.short_term_meals} {t('currency.sar')}
+                  {t('premium.overallPrice')}: {plan.price_per_meal * plan.short_term_meals} {t('common.currency')}
                 </Text>
               </Box>
 
@@ -321,16 +301,12 @@ const EnhancedPlanCard = ({
                     <Badge colorScheme="teal" fontSize="xs" px={2} py={1}>
                       {plan.medium_term_meals || 30} {t('premium.meals')}
                     </Badge>
-                    <Badge colorScheme="green" fontSize="xs" px={2} py={1}>
-                      10% off
-                    </Badge>
+                   
                   </HStack>
                 </Flex>
-                <Text fontSize="xs" color="brand.600">
-                  {t('premium.mealsOver')} {plan.medium_term_meals} {t('premium.days')}
-                </Text>
+                
                 <Text fontSize="xs" color="brand.600" fontWeight="bold">
-                  {t('premium.overallPrice')}: {plan.price_per_meal * plan.medium_term_meals} {t('currency.sar')}
+                  {t('premium.overallPrice')}: {plan.price_per_meal * plan.medium_term_meals} {t('common.currency')}
                 </Text>
               </Box>
             </Box>
@@ -461,7 +437,7 @@ const LoginModal = ({ isOpen, onClose, selectedPlan = null, selectedTerm = null 
                     <Badge colorScheme="brand" fontSize="sm" px={3} py={1}>
                       {selectedPlan.title}
                     </Badge>
-                    <Text fontSize="sm" color={textColor} textAlign="center">
+                    <Text fontSize="xs" color={'highlight.400'} textAlign="center">
                       {t('premium.selectedPlanWillBeReserved')}
                     </Text>
                   </VStack>
@@ -490,7 +466,7 @@ const LoginModal = ({ isOpen, onClose, selectedPlan = null, selectedTerm = null 
                   borderRadius="md"
                   onClick={handleLoginRedirect}
                 >
-                  {t('buttons.continueWithLogin')}
+                  {t('premium.continueWithLogin')}
                 </Button>
               </motion.div>
             </VStack>
@@ -795,7 +771,7 @@ export const PremiumPage = () => {
 
         {/* Info Alert for Non-authenticated Users */}
         {!user && !explorePlans && (
-          <Alert status="info" borderRadius="lg">
+          <Alert status="warning" borderRadius="lg">
             <AlertIcon />
             <Box>
               <Text fontWeight="bold">{t('premium.readyToStart')}</Text>

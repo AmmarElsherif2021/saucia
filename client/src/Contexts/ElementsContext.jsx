@@ -1,3 +1,4 @@
+// ElementsContext.jsx
 import { createContext, useContext, useMemo, useCallback, useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { 
@@ -5,6 +6,7 @@ import {
   useMealsQuery, 
   usePlansQuery, 
   useFeaturedMealsQuery,
+  useMealSelectableItemsQuery,
   elementsKeys 
 } from '../Hooks/useElementsQuery';
 import { itemsAPI } from '../API/itemAPI';
@@ -93,33 +95,10 @@ export const ElementsProvider = ({ children }) => {
     }
   }, [featuredMealsQuery.data, meals]);
 
+  // REMOVED: saladItems and fruitItems derived states
+  // These are no longer needed due to dynamic meal_items junction table
+
   // Derived data with safety checks
-  const saladItems = useMemo(() => {
-    try {
-      return items.filter(item => 
-        item && 
-        item.is_available && 
-        item.category !== 'salad-fruits'
-      );
-    } catch (error) {
-      console.error('Error filtering salad items:', error);
-      return [];
-    }
-  }, [items]);
-
-  const fruitItems = useMemo(() => {
-    try {
-      return items.filter(item => 
-        item && 
-        item.is_available && 
-        item.category === 'salad-fruits'
-      );
-    } catch (error) {
-      console.error('Error filtering fruit items:', error);
-      return [];
-    }
-  }, [items]);
-
   const availableMeals = useMemo(() => {
     try {
       return meals.filter(meal => meal && meal.is_available);
@@ -183,6 +162,29 @@ export const ElementsProvider = ({ children }) => {
     }
   }, [availableMeals]);
 
+  // NEW: Function to get selectable items for a specific meal
+  const getMealSelectableItems = useCallback(async (mealId) => {
+    try {
+      // Check if we have cached data first
+      const cachedData = queryClient.getQueryData(
+        elementsKeys.mealSelectableItems(mealId)
+      );
+      if (cachedData) return cachedData;
+
+      // Fetch fresh data if not cached
+      const data = await queryClient.fetchQuery({
+        queryKey: elementsKeys.mealSelectableItems(mealId),
+        queryFn: () => mealsAPI.getMealSelectableItems(mealId),
+        staleTime: 15 * 60 * 1000,
+      });
+
+      return data || [];
+    } catch (error) {
+      console.error(`Error fetching selectable items for meal ${mealId}:`, error);
+      return [];
+    }
+  }, [queryClient]);
+
   // Loading and error states
   const isLoading = itemsQuery.isLoading || mealsQuery.isLoading || plansQuery.isLoading;
   const isFetching = itemsQuery.isFetching || mealsQuery.isFetching || plansQuery.isFetching;
@@ -190,31 +192,32 @@ export const ElementsProvider = ({ children }) => {
   
   // Set initialization state based on query statuses
   useEffect(() => {
-  const queries = [
-    itemsQuery, 
-    mealsQuery, 
-    plansQuery,
-    featuredMealsQuery
-  ];
+    const queries = [
+      itemsQuery, 
+      mealsQuery, 
+      plansQuery,
+      featuredMealsQuery
+    ];
 
-  // Check if any query is still loading
-  const isLoading = queries.some(q => q.isLoading);
-  
-  // Check if we have any errors
-  const errors = queries.filter(q => q.error);
-  
-  if (!isLoading) {
-    if (errors.length > 0) {
-      setInitializationError(errors[0].error);
+    // Check if any query is still loading
+    const isLoading = queries.some(q => q.isLoading);
+    
+    // Check if we have any errors
+    const errors = queries.filter(q => q.error);
+    
+    if (!isLoading) {
+      if (errors.length > 0) {
+        setInitializationError(errors[0].error);
+      }
+      setIsInitialized(true);
     }
-    setIsInitialized(true);
-  }
-}, [
-  itemsQuery.status, 
-  mealsQuery.status, 
-  plansQuery.status,
-  featuredMealsQuery.status
-]);
+  }, [
+    itemsQuery.status, 
+    mealsQuery.status, 
+    plansQuery.status,
+    featuredMealsQuery.status
+  ]);
+
   // Enhanced refetch functions with error handling
   const refetchAll = useCallback(async () => {
     try {
@@ -322,12 +325,14 @@ export const ElementsProvider = ({ children }) => {
     meals,
     plans,
     featuredMeals,
-    saladItems,
-    fruitItems,
+    // REMOVED: saladItems, fruitItems
     availableMeals,
     availablePlans,
     categories,
     mealSections,
+    
+    // NEW: Function to get selectable items per meal
+    getMealSelectableItems,
     
     // State
     isLoading,
@@ -347,12 +352,11 @@ export const ElementsProvider = ({ children }) => {
     meals,
     plans,
     featuredMeals,
-    saladItems,
-    fruitItems,
     availableMeals,
     availablePlans,
     categories,
     mealSections,
+    getMealSelectableItems, // NEW dependency
     isLoading,
     isFetching,
     isInitialized,
@@ -379,13 +383,12 @@ export const useElements = () => {
   return context;
 };
 
-// Enhanced hooks with better error handling
+// Updated hooks - removed saladItems and fruitItems
 export const useElementsItems = () => {
-  const { items, saladItems, fruitItems, isLoading, refetchItems, error } = useElements();
+  const { items, isLoading, refetchItems, error } = useElements();
   return { 
     items, 
-    saladItems, 
-    fruitItems, 
+    // REMOVED: saladItems, fruitItems
     loading: isLoading, 
     refetch: refetchItems,
     error
@@ -400,7 +403,8 @@ export const useElementsMeals = () => {
     mealSections, 
     isLoading, 
     refetchMeals,
-    error
+    error,
+    getMealSelectableItems // NEW: Expose the function
   } = useElements();
   return { 
     meals,
@@ -409,7 +413,8 @@ export const useElementsMeals = () => {
     mealSections,
     loading: isLoading, 
     refetch: refetchMeals,
-    error
+    error,
+    getMealSelectableItems // NEW: Include in return
   };
 };
 

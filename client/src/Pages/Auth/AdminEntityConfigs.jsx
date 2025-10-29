@@ -68,21 +68,7 @@ export const useEntityConfigs = () => {
         },
         { key: 'image_url', label: t('admin.Image'), width: '11%', truncate: true },
       ],
-      operations: {
-        useGetAll: 'useGetAllItems',
-        useGetDetails: 'useGetItemDetails',
-        createComplete: 'createItemComplete',
-        updateComplete: 'updateItemComplete',
-        deleteComplete: 'deleteItemComplete',
-        updateAvailability: 'updateItemAvailability',
-        bulkUpdate: 'bulkUpdateItems',
-        isCreating: 'isCreatingItemComplete',
-        isUpdating: 'isUpdatingItemComplete',
-        isDeleting: 'isDeletingItemComplete',
-        isUpdatingAvailability: 'isUpdatingItemAvailability',
-        isBulkUpdating: 'isBulkUpdatingItems',
-        error: 'itemCompleteError'
-      },
+      
       exportName: 'items.json',
       hasImport: true,
       hasExport: true,
@@ -104,6 +90,7 @@ export const useEntityConfigs = () => {
         calories: 0,
         protein_g: 0,
         carbs_g: 0,
+        weight:0,
         ingredients: '',
         ingredients_arabic: '',
         is_available: true,
@@ -119,6 +106,7 @@ export const useEntityConfigs = () => {
         { key: 'calories', label: t('admin.Calories'), render: (value) => value || 0 },
         { key: 'protein_g', label: t('admin.Protein (g)'), render: (value) => value || 0 },
         { key: 'carbs_g', label: t('admin.Carbs (g)'), render: (value) => value || 0 },
+        { key: 'weight', label: t('admin.weight (g)'), render: (value) => value || 0 },
         { key: 'ingredients', label: t('admin.Ingredients'), truncate: true },
         { key: 'description', label: t('admin.description'), truncate: true },
         { key: 'description_arabic', label: t('admin.description_arabic'), truncate: true },
@@ -150,23 +138,7 @@ export const useEntityConfigs = () => {
         },
         { key: 'image_url', label: t('admin.Image'), truncate: true },
       ],
-      operations: {
-        useGetAll: 'useGetAllMeals',
-        useGetDetails: 'useGetMealDetails',
-        createComplete: 'createMealComplete',
-        updateComplete: 'updateMealComplete',
-        deleteComplete: 'deleteMealComplete',
-        updateAvailability: 'updateMealAvailability',
-        bulkUpdate: 'bulkUpdateMeals',
-        bulkUpdateAvailability: 'bulkUpdateMealAvailability',
-        isCreating: 'isCreatingMealComplete',
-        isUpdating: 'isUpdatingMealComplete',
-        isDeleting: 'isDeletingMealComplete',
-        isUpdatingAvailability: 'isUpdatingMealAvailability',
-        isBulkUpdating: 'isBulkUpdatingMeals',
-        isBulkUpdatingAvailability: 'isBulkUpdatingMealAvailability',
-        error: 'mealCompleteError'
-      },
+      
       exportName: 'meals.json',
       hasImport: true,
       hasExport: true,
@@ -223,19 +195,7 @@ export const useEntityConfigs = () => {
           )
         },
       ],
-      operations: {
-        useGetAll: 'useGetAllPlans',
-        useGetDetails: 'useGetPlanDetails',
-        createComplete: 'createPlanComplete',
-        updateComplete: 'updatePlanComplete',
-        deleteComplete: 'deletePlanComplete',
-        updateStatus: 'updatePlanStatus',
-        isCreating: 'isCreatingPlanComplete',
-        isUpdating: 'isUpdatingPlanComplete',
-        isDeleting: 'isDeletingPlanComplete',
-        isUpdatingStatus: 'isUpdatingPlanStatus',
-        error: 'planCompleteError'
-      },
+      
       exportName: 'plans.json',
       hasImport: false,
       hasExport: true,
@@ -244,262 +204,55 @@ export const useEntityConfigs = () => {
     },
 
     users: {
-      title: t('admin.Users'),
-      singular: t('admin.User'),
-      FormComponent: UserForm,
-      searchFields: ['email', 'displayName', 'phone'],
-      initialData: {
-        display_name: '',
-        phone_number: '',
-        is_admin: false,
-        account_status: 'active',
-        loyalty_points: 0
-      },
-      columns: [
-        { key: 'email', label: t('admin.Email') },
-        { key: 'display_name', label: t('admin.Name') },
-        { key: 'phone_number', label: t('admin.Phone') },
-        { key: 'is_admin', label: t('admin.Role') },
-        { key: 'account_status', label: t('admin.Status') },
-        { key: 'loyalty_points', label: t('admin.Loyalty Points') },
-        {
-          key: 'isAdmin',
-          label: t('admin.Role'),
-          render: (value) => (
-            <Badge colorScheme={value ? 'purple' : 'gray'}>
-              {value ? t('admin.Admin') : t('admin.User')}
-            </Badge>
-          )
-        },
-        {
-          key: 'accountStatus',
-          label: t('admin.Status'),
-          render: (value) => (
-            <Badge colorScheme={value === 'active' ? 'green' : 'red'}>
-              {t(value)}
-            </Badge>
-          )
-        },
-        {
-          key: 'loyaltyPoints',
-          label: t('admin.Loyalty Points'),
-          render: (value) => value || 0
-        },
-        {
-          key: 'allergies',
-          label: t('admin.Allergies'),
-          render: (value) => value?.length > 0 ? `${value.length} ${t('admin.allergies')}` : t('admin.None')
-        },
-        {
-          key: 'dietary_preferences',
-          label: t('admin.Dietary Preferences'),
-          render: (value) => value?.length > 0 ? `${value.length} ${t('admin.preferences')}` : t('admin.None')
-        },
-        {
-          key: 'created_at',
-          label: t('admin.Created'),
-          render: (value) => value ? new Date(value).toLocaleDateString() : t('admin.N/A')
-        },
-      ],
-      operations: {
-        useGetAll: 'useGetAllUsers',
-        useGetDetails: 'useGetUserDetails',
-        useGetAllergies: 'useGetUserAllergies',
-        useGetDietaryPreferences: 'useGetUserDietaryPreferences',
-        updateComplete: 'updateUserComplete',
-        setAdminStatus: 'setAdminStatus',
-        updateLoyaltyPoints: 'updateLoyaltyPoints',
-        updateAccountStatus: 'updateAccountStatus',
-        bulkUpdate: 'bulkUpdateUsers',
-        isUpdating: 'isUpdatingUserComplete',
-        isSettingAdmin: 'isSettingAdmin',
-        isUpdatingLoyalty: 'isUpdatingLoyalty',
-        isUpdatingAccountStatus: 'isUpdatingAccountStatus',
-        isBulkUpdating: 'isBulkUpdatingUsers',
-        error: 'userCompleteError'
-      },
+  title: t('admin.Users'),
+  singular: t('admin.User'),
+  FormComponent: UserForm,
+  searchFields: ['email', 'display_name', 'phone_number'], // Fixed field names
+  initialData: {
+    display_name: '',
+    phone_number: '',
+    is_admin: false,
+    account_status: 'active',
+    loyalty_points: 0
+  },
+  columns: [
+    { key: 'email', label: t('admin.Email') },
+    { key: 'display_name', label: t('admin.Name') },
+    { key: 'phone_number', label: t('admin.Phone') },
+    {
+      key: 'is_admin',
+      label: t('admin.Role'),
+      render: (value) => (
+        <Badge colorScheme={value ? 'purple' : 'gray'}>
+          {value ? t('admin.Admin') : t('admin.User')}
+        </Badge>
+      )
+    },
+    {
+      key: 'account_status',
+      label: t('admin.Status'),
+      render: (value) => (
+        <Badge colorScheme={value === 'active' ? 'green' : 'red'}>
+          {t(value)}
+        </Badge>
+      )
+    },
+    {
+      key: 'loyalty_points',
+      label: t('admin.Loyalty Points'),
+      render: (value) => value || 0
+    },
+    {
+      key: 'created_at',
+      label: t('admin.Created'),
+      render: (value) => value ? new Date(value).toLocaleDateString() : t('admin.N/A')
+    },
+  ],
       exportName: 'users.json',
       hasImport: true,
       hasExport: true,
       supportsStatus: true,
       supportsBulkOperations: true,
-    },
-
-    orders: {
-      title: t('admin.Orders'),
-      singular: t('admin.Order'),
-      FormComponent: OrderForm,
-      searchFields: ['id', 'userId', 'status', 'customer_email'],
-      initialData: {
-        userId: '',
-        status: 'pending',
-        totalPrice: 0,
-        isPaid: false,
-        items: [],
-        delivery_address: '',
-        delivery_date: '',
-        notes: '',
-        payment_status: 'unpaid',
-        total_amount: 0
-      },
-      columns: [
-        { key: 'id', label: t('admin.Order ID'), width: '10%' },
-        { key: 'userId', label: t('admin.User ID'), width: '10%' },
-        { key: 'customer_email', label: t('admin.Customer'), width: '15%' },
-        { key: 'totalPrice', label: t('admin.Total Price'), width: '10%', format: value => `$${parseFloat(value).toFixed(2)}` },
-        { key: 'payment_status', label: t('admin.Payment') },
-        { key: 'total_amount', label: t('admin.Total') },
-        {
-          key: 'status',
-          label: t('admin.Status'),
-          width: '10%',
-          render: (value) => (
-            <Badge
-              colorScheme={
-                value === 'completed' ? 'green' :
-                  value === 'processing' ? 'blue' :
-                    value === 'cancelled' ? 'red' : 'gray'
-              }
-            >
-              {t(value)}
-            </Badge>
-          )
-        },
-        {
-          key: 'isPaid',
-          label: t('admin.Payment'),
-          width: '10%',
-          render: (value) => (
-            <Badge colorScheme={value ? 'green' : 'orange'}>
-              {value ? t('admin.Paid') : t('admin.Unpaid')}
-            </Badge>
-          )
-        },
-        {
-          key: 'delivery_date',
-          label: t('admin.Delivery Date'),
-          width: '12%',
-          render: (value) => value ? new Date(value).toLocaleDateString() : t('admin.N/A')
-        },
-        {
-          key: 'created_at',
-          label: t('admin.Created'),
-          width: '12%',
-          render: (value) => value ? new Date(value).toLocaleDateString() : t('admin.N/A')
-        },
-        {
-          key: 'items',
-          label: t('admin.Items'),
-          width: '11%',
-          render: (value) => value?.length > 0 ? `${value.length} ${t('admin.items')}` : t('admin.None')
-        },
-      ],
-      operations: {
-        useGetAll: 'useGetAllOrders',
-        updateStatus: 'updateOrderStatus',
-        update: 'updateOrder',
-        isUpdatingStatus: 'isUpdatingOrderStatus',
-        isUpdating: 'isUpdatingOrder',
-        error: 'orderError'
-      },
-      exportName: 'orders.json',
-      hasImport: false,
-      hasExport: true,
-      supportsStatus: true,
-      supportsBulkOperations: false,
-    },
-
-    subscriptions: {
-      title: t('admin.Subscriptions'),
-      singular: t('admin.Subscription'),
-      FormComponent: SubscriptionForm,
-      searchFields: ['id', 'userId', 'status', 'planId'],
-      initialData: {
-        userId: '',
-        planId: '',
-        start_date: new Date().toISOString().split('admin.T')[0],
-        end_date: '',
-        status: 'active',
-        price: 0,
-        auto_renew: true,
-        meals: [],
-        additives: []
-      },
-      columns: [
-        { key: 'id', label: t('admin.ID'), width: '10%' },
-        { key: 'userId', label: t('admin.User ID'), width: '12%' },
-        { key: 'planId', label: t('admin.Plan ID'), width: '12%' },
-        { key: 'plan_title', label: t('admin.Plan Name'), width: '15%' },
-        {
-          key: 'meals',
-          label: t('admin.Meals'),
-          width: '10%',
-          render: value => value?.length ? `${value.length} meals` : t('admin.None')
-        },
-        {
-          key: 'additives',
-          label: t('admin.Additives'),
-          width: '10%',
-          render: value => value?.length ? `${value.length} items` : t('admin.None')
-        },
-        {
-          key: 'status',
-          label: t('admin.Status'),
-          width: '10%',
-          render: (value) => (
-            <Badge
-              colorScheme={
-                value === 'active' ? 'green' :
-                  value === 'paused' ? 'yellow' :
-                    value === 'cancelled' ? 'red' : 'gray'
-              }
-            >
-              {t(value)}
-            </Badge>
-          )
-        },
-        {
-          key: 'start_date',
-          label: t('admin.Start Date'),
-          width: '12%',
-          render: (value) => value ? new Date(value).toLocaleDateString() : t('admin.N/A')
-        },
-        {
-          key: 'end_date',
-          label: t('admin.End Date'),
-          width: '12%',
-          render: (value) => value ? new Date(value).toLocaleDateString() : t('admin.N/A')
-        },
-        {
-          key: 'price',
-          label: t('admin.Price'),
-          width: '10%',
-          format: value => `$${parseFloat(value).toFixed(2)}`
-        },
-        {
-          key: 'auto_renew',
-          label: t('admin.Auto Renew'),
-          width: '7%',
-          render: (value) => (
-            <Badge colorScheme={value ? 'green' : 'gray'}>
-              {value ? t('admin.Yes') : t('admin.No')}
-            </Badge>
-          )
-        },
-      ],
-      operations: {
-        useGetAll: 'useGetAllSubscriptions',
-        updateStatus: 'updateSubscriptionStatus',
-        update: 'updateSubscription',
-        isUpdatingStatus: 'isUpdatingSubscriptionStatus',
-        isUpdating: 'isUpdatingSubscription',
-        error: 'subscriptionError'
-      },
-      exportName: 'subscriptions.json',
-      hasImport: false,
-      hasExport: true,
-      supportsStatus: true,
-      supportsBulkOperations: false,
     },
 
     allergies: {
@@ -526,16 +279,7 @@ export const useEntityConfigs = () => {
           }
         }
       ],
-      operations: {
-        useGetAll: 'useGetAllAllergies',
-        createComplete: 'createAllergyComplete',
-        updateComplete: 'updateAllergyComplete',
-        deleteComplete: 'deleteAllergyComplete',
-        isCreating: 'isCreatingAllergyComplete',
-        isUpdating: 'isUpdatingAllergyComplete',
-        isDeleting: 'isDeletingAllergyComplete',
-        error: 'allergyCompleteError'
-      },
+     
       exportName: 'allergies.json',
       hasImport: true,
       hasExport: true,
@@ -557,16 +301,7 @@ export const useEntityConfigs = () => {
         { key: 'name_arabic', label: t('admin.Name (AR)'), width: '35%' },
         { key: 'description', label: t('admin.Description'), width: '30%' }
       ],
-      operations: {
-        useGetAll: 'useGetAllDietaryPreferences',
-        createComplete: 'createDietaryPreferenceComplete',
-        updateComplete: 'updateDietaryPreferenceComplete',
-        deleteComplete: 'deleteDietaryPreferenceComplete',
-        isCreating: 'isCreatingDietaryPreferenceComplete',
-        isUpdating: 'isUpdatingDietaryPreferenceComplete',
-        isDeleting: 'isDeletingDietaryPreferenceComplete',
-        error: 'dietaryPreferenceCompleteError'
-      },
+   
       exportName: 'dietary-preferences.json',
       hasImport: true,
       hasExport: true,
@@ -599,11 +334,7 @@ export const useEntityConfigs = () => {
       .map(([entityType, _]) => entityType);
   };
 
-  // Helper function to get operation method name for an entity
-  const getOperationMethod = (entityType, operationType) => {
-    const config = ENTITY_CONFIGS[entityType];
-    return config?.operations?.[operationType] || null;
-  };
+ 
 
   // Validation helper for entity data
   const validateEntityData = (entityType, data) => {
@@ -632,7 +363,6 @@ export const useEntityConfigs = () => {
     getEntityConfig,
     getEntityTypes,
     getEntitiesWithFeature,
-    getOperationMethod,
     validateEntityData
   };
 };

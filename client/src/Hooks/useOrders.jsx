@@ -64,7 +64,7 @@ export function useOrders() {
     setLoading(true);
     setError(null);
     try {
-      const newOrder = await ordersAPI.createOrder(orderData);
+      const newOrder = await ordersAPI.createCompleteOrder(orderData);
       if (newOrder) {
         setOrders(prev => [newOrder, ...prev]);
       }

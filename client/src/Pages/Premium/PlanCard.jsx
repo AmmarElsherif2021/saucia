@@ -224,14 +224,7 @@ export const PlanCard = ({
 
         {/* Price and Action Button */}
         <Box mt="auto" pt={3}>
-          <Flex justify="space-between" align="center" mb={3}>
-            <Text fontSize="sm" color="gray.500" fontWeight="medium">
-              {t('premium.perMonth')}
-            </Text>
-            <Text fontSize="lg" fontWeight="bold" color={useColorModeValue('gray.800', 'white')}>
-              {plan.price} {t('currency.sar')}
-            </Text>
-          </Flex>
+         
           
           <Button
             size="sm"

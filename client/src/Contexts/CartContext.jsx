@@ -1,11 +1,12 @@
 import { createContext, useEffect, useState, useContext } from 'react'
 import { useToast } from '@chakra-ui/react'
+import { useTranslation } from 'react-i18next'
 
 const CartContext = createContext()
 
 export const CartProvider = ({ children }) => {
-  const toast = useToast()
-  
+  const toast = useToast();
+  const {t}= useTranslation();  
   const [cart, setCart] = useState({
     meals: [],
     orderMetadata: {
@@ -137,7 +138,7 @@ export const CartProvider = ({ children }) => {
 
       // Show success toast
       toast({
-        title: 'Added to cart!',
+        title: t('cart.addToCart')||'Added to cart!',
         description: `${meal.name} has been added to your cart`,
         status: 'success',
         duration: 2000,
