@@ -230,6 +230,7 @@ export const FormModal = ({
   FormComponent,
   isEdit = false,
   isLoading = false, 
+  key=null
 }) => (
   <Modal isOpen={isOpen} onClose={onClose}>
     <ModalOverlay />
@@ -242,7 +243,8 @@ export const FormModal = ({
           onCancel={onClose}
           initialData={initialData}
           isEdit={isEdit}
-          isLoading={isLoading} 
+          isLoading={isLoading}
+          key={key} 
         />
       </ModalBody>
     </ModalContent>

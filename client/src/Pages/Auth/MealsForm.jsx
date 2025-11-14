@@ -1,10 +1,8 @@
-// Enhanced MealsForm.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   FormControl,
   FormLabel,
   Input,
-  Select,
   Button,
   Stack,
   Checkbox,
@@ -27,7 +25,6 @@ import {
   Card,
   CardBody,
   Heading,
-  Badge,
   Divider,
   Wrap,
   WrapItem,
@@ -37,8 +34,9 @@ import {
 } from '@chakra-ui/react';
 import { useAdminFunctions } from '../../Hooks/useAdminFunctions';
 
-const MealsForm = ({ initialData, onSubmit, isLoading, isEdit, onCancel }) => {
+const MealsForm = ({ initialData, onSubmit, isLoading, isEdit, onCancel}) => {
   const [formData, setFormData] = useState({
+    id:'',
     name: '',
     name_arabic: '',
     description: '',
@@ -50,7 +48,7 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit, onCancel }) => {
     protein_g: 0,
     carbs_g: 0,
     fat_g: 0,
-    weight:0,
+    weight: 0,
     ingredients: '',
     ingredients_arabic: '',
     image_url: '',
@@ -59,84 +57,164 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit, onCancel }) => {
     is_vegetarian: false,
     is_vegan: false,
     is_gluten_free: false,
+    is_selective: false,
     allergy_ids: [],
     item_ids: []
   });
 
-  const { useGetAllItems, useGetAllAllergies } = useAdminFunctions();
+  const adminFunctions = useAdminFunctions();
+  const { useGetAllItems, useGetAllAllergies, useGetMealItems } = adminFunctions;
   const { data: items = [] } = useGetAllItems();
   const { data: allergies = [] } = useGetAllAllergies();
   
-  const [imageFile, setImageFile] = useState(null);
+  // Fetch meal items only when editing a meal with an ID
+  const { data: mealItemIds = [], isLoading: loadingMealItems } = useGetMealItems(
+    isEdit && formData.id ? formData.id : null
+  );
+
   const [imagePreview, setImagePreview] = useState('');
   const [selectedItems, setSelectedItems] = useState([]);
   const toast = useToast();
 
-  // Initialize form data
+  // Memoized initialization to prevent unnecessary re-renders
+  const initializeFormData = useCallback((data) => {
+    if (!data) return;
+
+    //console.log('Initializing form with data:', data);
+
+    // Extract allergy_ids - already provided by transformed data
+    const allergyIds = data.allergy_ids || [];
+    
+    // Extract item_ids - already provided by transformed data
+    const itemIds = data.item_ids || [];
+    
+    const newFormData = {
+      id: data.id || '',
+      name: data.name || '',
+      name_arabic: data.name_arabic || '',
+      description: data.description || '',
+      description_arabic: data.description_arabic || '',
+      section: data.section || '',
+      section_arabic: data.section_arabic || '',
+      base_price: data.base_price || 0,
+      calories: data.calories || 0,
+      protein_g: data.protein_g || 0,
+      carbs_g: data.carbs_g || 0,
+      fat_g: data.fat_g || 0,
+      weight: data.weight || 0,
+      ingredients: data.ingredients || '',
+      ingredients_arabic: data.ingredients_arabic || '',
+      image_url: data.image_url || '',
+      is_available: data.is_available ?? true,
+      is_featured: data.is_featured ?? false,
+      is_vegetarian: data.is_vegetarian ?? false,
+      is_vegan: data.is_vegan ?? false,
+      is_gluten_free: data.is_gluten_free ?? false,
+      is_selective: data.is_selective ?? false,
+      allergy_ids: allergyIds,
+      item_ids: itemIds,
+    };
+
+    setFormData(newFormData);
+    //console.log('Form data set:', newFormData);
+    
+    // Set image preview
+    if (data.image_url) {
+      setImagePreview(data.image_url);
+    }
+  }, []);
+
+  // Update selected items when mealItemIds or items change
   useEffect(() => {
-    if (initialData) {
-      const allergyIds = initialData.meal_allergies?.map(ma => ma.allergies?.id) || initialData.allergy_ids || [];
-      const itemIds = initialData.meal_items?.[0]?.items || initialData.item_ids || [];
+    if (mealItemIds.length > 0 && items.length > 0) {
+      //console.log('Meal item IDs from API:', mealItemIds);
+      const preSelectedItems = items.filter(item => mealItemIds.includes(item.id));
+      //console.log('Pre-selected items:', preSelectedItems);
+      setSelectedItems(preSelectedItems);
       
+      // Update form data with the item IDs
       setFormData(prev => ({
         ...prev,
-        ...initialData,
-        allergy_ids: allergyIds,
-        item_ids: itemIds
+        item_ids: mealItemIds
       }));
-      
-      setSelectedItems(items.filter(item => itemIds.includes(item.id)));
-      
-      if (initialData.image_url) {
-        setImagePreview(initialData.image_url);
-      }
     }
-  }, [initialData, items]);
+  }, [mealItemIds, items]);
 
-  const handleChange = (field, value) => {
+  // Initialize form data when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      //console.log('useEffect triggered - initializing form');
+      //console.log('Initial data:', initialData);
+      initializeFormData(initialData);
+    }
+  }, [initialData, initializeFormData]);
+
+  // Cleanup image preview URLs
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
+
+
+  const handleChange = useCallback((field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  }, []);
 
-  const handleNumberChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
-  };
+  const handleNumberChange = useCallback((field, value) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      [field]: value === '' ? '' : parseFloat(value) || 0 
+    }));
+  }, []);
 
-  const handleSwitchChange = (field, value) => {
+  const handleSwitchChange = useCallback((field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  }, []);
 
-  const handleAllergyToggle = (allergyId) => {
+  const handleAllergyToggle = useCallback((allergyId) => {
     setFormData(prev => ({
       ...prev,
       allergy_ids: prev.allergy_ids.includes(allergyId)
         ? prev.allergy_ids.filter(id => id !== allergyId)
         : [...prev.allergy_ids, allergyId]
     }));
-  };
+  }, []);
 
-  const handleItemToggle = (item) => {
-    const newSelectedItems = selectedItems.some(selected => selected.id === item.id)
-      ? selectedItems.filter(selected => selected.id !== item.id)
-      : [...selectedItems, item];
-    
-    setSelectedItems(newSelectedItems);
-    setFormData(prev => ({
-      ...prev,
-      item_ids: newSelectedItems.map(item => item.id)
-    }));
-  };
+  const handleItemToggle = useCallback((item) => {
+    setSelectedItems(prev => {
+      const isSelected = prev.some(selected => selected.id === item.id);
+      const newSelectedItems = isSelected
+        ? prev.filter(selected => selected.id !== item.id)
+        : [...prev, item];
+      
+      // Update form data with just the IDs
+      setFormData(formPrev => ({
+        ...formPrev,
+        item_ids: newSelectedItems.map(item => item.id)
+      }));
+      
+      return newSelectedItems;
+    });
+  }, []);
 
-  const removeSelectedItem = (itemId) => {
-    const newSelectedItems = selectedItems.filter(item => item.id !== itemId);
-    setSelectedItems(newSelectedItems);
-    setFormData(prev => ({
-      ...prev,
-      item_ids: newSelectedItems.map(item => item.id)
-    }));
-  };
+  const removeSelectedItem = useCallback((itemId) => {
+    setSelectedItems(prev => {
+      const newSelectedItems = prev.filter(item => item.id !== itemId);
+      
+      setFormData(formPrev => ({
+        ...formPrev,
+        item_ids: newSelectedItems.map(item => item.id)
+      }));
+      
+      return newSelectedItems;
+    });
+  }, []);
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
+  const handleImageChange = useCallback((e) => {
+    const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         toast({
@@ -148,16 +226,19 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit, onCancel }) => {
         return;
       }
       
-      setImageFile(file);
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+      
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
+      setFormData(prev => ({ ...prev, image_url: previewUrl }));
     }
-  };
+  }, [imagePreview, toast]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = useCallback((e) => {
     e.preventDefault();
     
-    // Basic validation
     if (!formData.name.trim()) {
       toast({
         title: 'Missing required field',
@@ -178,10 +259,30 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit, onCancel }) => {
       return;
     }
 
-    onSubmit(formData);
-  };
+    if (formData.is_selective && formData.item_ids.length === 0) {
+      toast({
+        title: 'Missing items',
+        description: 'Selective meals must have at least one item',
+        status: 'warning',
+        duration: 3000,
+      });
+      return;
+    }
 
-  const FormSection = ({ title, children, ...props }) => (
+    const cleanedData = {
+      ...formData,
+      base_price: parseFloat(formData.base_price) || 0,
+      calories: parseFloat(formData.calories) || 0,
+      protein_g: parseFloat(formData.protein_g) || 0,
+      carbs_g: parseFloat(formData.carbs_g) || 0,
+      fat_g: parseFloat(formData.fat_g) || 0,
+      weight: parseFloat(formData.weight) || 0,
+    };
+
+    onSubmit(cleanedData);
+  }, [formData, onSubmit, toast]);
+
+  const FormSection = useCallback(({ title, children, ...props }) => (
     <Card variant="outline" {...props}>
       <CardBody>
         <Heading size="md" mb={4} color="brand.600">
@@ -190,7 +291,16 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit, onCancel }) => {
         {children}
       </CardBody>
     </Card>
-  );
+  ), []);
+
+  // Show loading state while fetching meal items
+  if (isEdit && loadingMealItems) {
+    return (
+      <Box textAlign="center" py={10}>
+        <Text>Loading meal details...</Text>
+      </Box>
+    );
+  }
 
   return (
     <Box as="form" onSubmit={handleSubmit} maxW="6xl" mx="auto">
@@ -368,19 +478,21 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit, onCancel }) => {
 
         {/* Nutritional Information */}
         <FormSection title="Nutritional Information">
-          <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
+          <SimpleGrid columns={{ base: 2, md: 5 }} spacing={4}>
             <FormControl isRequired>
               <FormLabel fontWeight="medium">Price (SAR)</FormLabel>
               <NumberInput 
                 value={formData.base_price}
-                onChange={(v) => handleNumberChange('base_price', v)}
+                onChange={(value) => handleNumberChange('base_price', value)}
                 min={0}
                 precision={2}
+                keepWithinRange={false}
+                clampValueOnBlur={false}
               >
                 <NumberInputField focusBorderColor="brand.500" />
                 <NumberInputStepper>
-                  {/* <NumberIncrementStepper />
-                  <NumberDecrementStepper /> */}
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
                 </NumberInputStepper>
               </NumberInput>
             </FormControl>
@@ -389,8 +501,10 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit, onCancel }) => {
               <FormLabel fontWeight="medium">Calories</FormLabel>
               <NumberInput 
                 value={formData.calories}
-                onChange={(v) => handleNumberChange('calories', v)}
+                onChange={(value) => handleNumberChange('calories', value)}
                 min={0}
+                keepWithinRange={false}
+                clampValueOnBlur={false}
               >
                 <NumberInputField focusBorderColor="brand.500" />
               </NumberInput>
@@ -400,18 +514,10 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit, onCancel }) => {
               <FormLabel fontWeight="medium">Protein (g)</FormLabel>
               <NumberInput 
                 value={formData.protein_g}
-                onChange={(v) => handleNumberChange('protein_g', v)}
+                onChange={(value) => handleNumberChange('protein_g', value)}
                 min={0}
-              >
-                <NumberInputField focusBorderColor="brand.500" />
-              </NumberInput>
-            </FormControl>
-            <FormControl>
-              <FormLabel fontWeight="medium">Weight(g)</FormLabel>
-              <NumberInput 
-                value={formData.weight}
-                onChange={(v) => handleNumberChange('weight', v)}
-                min={0}
+                keepWithinRange={false}
+                clampValueOnBlur={false}
               >
                 <NumberInputField focusBorderColor="brand.500" />
               </NumberInput>
@@ -421,8 +527,23 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit, onCancel }) => {
               <FormLabel fontWeight="medium">Carbs (g)</FormLabel>
               <NumberInput 
                 value={formData.carbs_g}
-                onChange={(v) => handleNumberChange('carbs_g', v)}
+                onChange={(value) => handleNumberChange('carbs_g', value)}
                 min={0}
+                keepWithinRange={false}
+                clampValueOnBlur={false}
+              >
+                <NumberInputField focusBorderColor="brand.500" />
+              </NumberInput>
+            </FormControl>
+            
+            <FormControl>
+              <FormLabel fontWeight="medium">Weight (g)</FormLabel>
+              <NumberInput 
+                value={formData.weight}
+                onChange={(value) => handleNumberChange('weight', value)}
+                min={0}
+                keepWithinRange={false}
+                clampValueOnBlur={false}
               >
                 <NumberInputField focusBorderColor="brand.500" />
               </NumberInput>
@@ -430,48 +551,68 @@ const MealsForm = ({ initialData, onSubmit, isLoading, isEdit, onCancel }) => {
           </SimpleGrid>
         </FormSection>
 
-        {/* Meal Items */}
-        <FormSection title="Meal Items">
+        {/* Meal Type & Items */}
+        <FormSection title="Meal Type & Items">
           <VStack align="stretch" spacing={4}>
-            {/* Selected Items */}
-            {selectedItems.length > 0 && (
-              <Box>
-                <FormLabel fontWeight="medium">Selected Items:</FormLabel>
-                <Wrap spacing={2}>
-                  {selectedItems.map(item => (
-                    <WrapItem key={item.id}>
-                      <Tag size="md" colorScheme="brand" borderRadius="full">
-                        <TagLabel>{item.name}</TagLabel>
-                        <TagCloseButton onClick={() => removeSelectedItem(item.id)} />
-                      </Tag>
-                    </WrapItem>
-                  ))}
-                </Wrap>
-              </Box>
-            )}
+            {/* Selective Meal Toggle */}
+            <FormControl display="flex" alignItems="center" justifyContent="space-between">
+              <FormLabel mb="0" fontWeight="medium">Selective Meal (Build Your Own)</FormLabel>
+              <Switch
+                isChecked={formData.is_selective}
+                onChange={(e) => handleSwitchChange('is_selective', e.target.checked)}
+                colorScheme="brand"
+              />
+            </FormControl>
 
-            {/* Available Items */}
-            <Box 
-              borderWidth="1px" 
-              borderRadius="lg" 
-              p={4} 
-              bg="gray.50"
-              maxH="200px"
-              overflowY="auto"
-            >
-              <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={2}>
-                {items.map(item => (
-                  <Checkbox
-                    key={item.id}
-                    isChecked={selectedItems.some(selected => selected.id === item.id)}
-                    onChange={() => handleItemToggle(item)}
-                    colorScheme="brand"
+            {/* Show items selection only if selective */}
+            {formData.is_selective && (
+              <>
+                <Divider />
+                
+                {/* Selected Items */}
+                {selectedItems.length > 0 && (
+                  <Box>
+                    <FormLabel fontWeight="medium">Selected Items:</FormLabel>
+                    <Wrap spacing={2}>
+                      {selectedItems.map(item => (
+                        <WrapItem key={item.id}>
+                          <Tag size="md" colorScheme="brand" borderRadius="full">
+                            <TagLabel>{item.name}</TagLabel>
+                            <TagCloseButton onClick={() => removeSelectedItem(item.id)} />
+                          </Tag>
+                        </WrapItem>
+                      ))}
+                    </Wrap>
+                  </Box>
+                )}
+
+                {/* Available Items */}
+                <Box>
+                  <FormLabel fontWeight="medium">Available Items:</FormLabel>
+                  <Box 
+                    borderWidth="1px" 
+                    borderRadius="lg" 
+                    p={4} 
+                    bg="gray.50"
+                    maxH="200px"
+                    overflowY="auto"
                   >
-                    <Text fontSize="sm">{item.name} - SAR {item.price}</Text>
-                  </Checkbox>
-                ))}
-              </SimpleGrid>
-            </Box>
+                    <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={2}>
+                      {items.map(item => (
+                        <Checkbox
+                          key={item.id}
+                          isChecked={selectedItems.some(selected => selected.id === item.id)}
+                          onChange={() => handleItemToggle(item)}
+                          colorScheme="brand"
+                        >
+                          <Text fontSize="sm">{item.name} - SAR {item.price}</Text>
+                        </Checkbox>
+                      ))}
+                    </SimpleGrid>
+                  </Box>
+                </Box>
+              </>
+            )}
           </VStack>
         </FormSection>
 

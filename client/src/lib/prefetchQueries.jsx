@@ -248,7 +248,7 @@ export const smartPrefetch = {
 
   prefetchCritical: async (queryClient) => {
     if (!smartPrefetch.shouldPrefetch()) {
-      console.log('Skipping critical prefetch due to connection constraints');
+      //console.log('Skipping critical prefetch due to connection constraints');
       return;
     }
     
@@ -261,7 +261,7 @@ export const smartPrefetch = {
 
   onRouteChange: async (route, queryClient) => {
     if (!smartPrefetch.shouldPrefetch()) {
-      console.log('Skipping route prefetch due to connection constraints');
+      //console.log('Skipping route prefetch due to connection constraints');
       return;
     }
     
@@ -288,7 +288,7 @@ export const smartPrefetch = {
     const priority = networkAwarePrefetch.getPrefetchPriority();
     
     if (priority === 'low') {
-      console.log('Skipping predictive prefetch due to low connection priority');
+      //console.log('Skipping predictive prefetch due to low connection priority');
       return;
     }
     

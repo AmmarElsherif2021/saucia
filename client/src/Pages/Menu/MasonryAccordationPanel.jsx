@@ -234,7 +234,7 @@ const MasonryMenuDemo = () => {
   ];
 
   const handleMealClick = (meal) => {
-    console.log('Clicked meal:', meal);
+    //console.log('Clicked meal:', meal);
   };
 
   return (

@@ -346,8 +346,7 @@ export default function CheckoutPage() {
     refetch: refetchAddresses
   } = useGetAddresses() // Pass the external_id here
   
-  const { createOrder } = useOrders()
-  
+  const { createOrder,createInstantOrder } = useOrders()
   const [state, dispatch] = useReducer(checkoutReducer, initialState)
   const { isSubmitting, paymentMethod, deliveryOption, selectedPickupAddress, orderInfo, orderSummary } = state
   
@@ -370,13 +369,13 @@ export default function CheckoutPage() {
   // Log addresses for debugging
   useEffect(() => {
     if (addresses) {
-      console.log('📍 Available restaurant addresses:', addresses);
+      //console.log('📍 Available restaurant addresses:', addresses);
       
       // Auto-select default address if none selected and addresses are loaded
       if (!selectedPickupAddress && addresses.length > 0) {
         const defaultAddr = addresses.find(addr => addr.is_default) || addresses[0];
         if (defaultAddr) {
-          console.log('🔄 Auto-selecting default address:', defaultAddr);
+          //console.log('🔄 Auto-selecting default address:', defaultAddr);
           handleSelectPickupAddress(defaultAddr);
         }
       }
@@ -458,130 +457,197 @@ export default function CheckoutPage() {
   }, [handleOrderInfoChange, toast])
 
   const handleOpenConfirmation = useCallback(() => {
-    // Validate required fields
-    if (!orderInfo.fullName || orderInfo.fullName.trim().length < 3) {
-      toast({
-        title: t('checkout.nameRequired') || 'Name Required',
-        description: t('checkout.pleaseEnterName') || 'Please enter your full name',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      })
-      return
+  // Validate required fields
+  if (!orderInfo.fullName || orderInfo.fullName.trim().length < 3) {
+    toast({
+      title: t('checkout.nameRequired') || 'Name Required',
+      description: t('checkout.pleaseEnterName') || 'Please enter your full name',
+      status: 'warning',
+      duration: 3000,
+      isClosable: true,
+    })
+    return
+  }
+
+  // Validate phone number (Saudi format) - REQUIRED for all orders
+  const phoneRegex = /^(\+966|00966|966)?5\d{8}$/
+  const cleanPhone = orderInfo.phoneNumber.replace(/\s+/g, '')
+  
+  if (!orderInfo.phoneNumber || !phoneRegex.test(cleanPhone)) {
+    toast({
+      title: t('checkout.invalidPhone') || 'Phone Number Required',
+      description: t('checkout.saudiPhoneRequired') || 'Please enter a valid Saudi phone number starting with +966 5 (required for order confirmation)',
+      status: 'warning',
+      duration: 4000,
+      isClosable: true,
+    })
+    return
+  }
+
+  // Validate pickup address is selected
+  if (!selectedPickupAddress) {
+    toast({
+      title: t('checkout.pickupLocationRequired') || 'Pickup Location Required',
+      description: t('checkout.pleaseSelectPickupLocation') || 'Please select a pickup location',
+      status: 'warning',
+      duration: 3000,
+      isClosable: true,
+    })
+    return
+  }
+
+  // Validate cart has items
+  if (!cart?.meals || cart.meals.length === 0) {
+    toast({
+      title: t('checkout.emptyCart') || 'Empty Cart',
+      description: t('checkout.addItemsToCart') || 'Please add items to your cart before checkout',
+      status: 'warning',
+      duration: 3000,
+      isClosable: true,
+    })
+    return
+  }
+
+  onOpenConfirmation()
+}, [orderInfo, selectedPickupAddress, cart, toast, t, onOpenConfirmation])
+
+  // Replace the handleConfirmOrder function in CheckoutPage.jsx
+
+const handleConfirmOrder = async () => {
+  dispatch({ type: 'START_SUBMISSION' });
+  onCloseConfirmation();
+
+  try {
+    if (!orderInfo.fullName || !orderInfo.phoneNumber) {
+      throw new Error('Contact information is required');
     }
 
-    // Validate phone number (Saudi format)
-    const phoneRegex = /^(\+966|00966|966)?5\d{8}$/
-    const cleanPhone = orderInfo.phoneNumber.replace(/\s+/g, '')
-    
-    if (!phoneRegex.test(cleanPhone)) {
-      toast({
-        title: t('checkout.invalidPhone') || 'Invalid Phone Number',
-        description: t('checkout.saudiPhoneRequired') || 'Please enter a valid Saudi phone number starting with +966 5',
-        status: 'warning',
-        duration: 4000,
-        isClosable: true,
-      })
-      return
-    }
-
-    if (!selectedPickupAddress && !orderInfo.deliveryAddress) {
-      toast({
-        title: t('checkout.pickupLocationRequired') || 'Pickup Location Required',
-        description: t('checkout.pleaseSelectPickupLocation') || 'Please select a pickup location',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      })
-      return
+    if (!selectedPickupAddress) {
+      throw new Error('Pickup location is required');
     }
 
     if (!cart?.meals || cart.meals.length === 0) {
-      toast({
-        title: t('checkout.emptyCart') || 'Empty Cart',
-        description: t('checkout.addItemsToCart') || 'Please add items to your cart before checkout',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      })
-      return
+      throw new Error('Cart is empty');
     }
 
-    onOpenConfirmation()
-  }, [orderInfo, selectedPickupAddress, cart, toast, t, onOpenConfirmation])
+    // Prepare order_meals with all required fields
+    const orderMeals = cart.meals.map(meal => ({
+      meal_id: meal.meal_id,
+      quantity: meal.quantity || 1,
+      unit_price: parseFloat(meal.unit_price || meal.base_price || 0),
+      total_price: parseFloat(meal.total_price || (meal.unit_price * meal.quantity) || 0),
+      name: meal.name || '',
+      name_arabic: meal.name_arabic || null,
+      description: meal.description || null,
+      calories: meal.calories || 0,
+      protein_g: meal.protein_g || 0,
+      carbs_g: meal.carbs_g || 0,
+      fat_g: meal.fat_g || 0,
+      customization_notes: meal.customization_notes || null,
+    }));
 
-  const handleConfirmOrder = async () => {
-    dispatch({ type: 'START_SUBMISSION' });
-    onCloseConfirmation();
+    // Prepare order_items if any (additives/sides)
+    const orderItems = cart.meals.flatMap(meal => 
+      (meal.selectedItems || []).map(item => ({
+        item_id: item.item_id || item.id,
+        meal_id: meal.meal_id, // Link to parent meal
+        quantity: item.quantity || 1,
+        unit_price: parseFloat(item.unit_price || item.price || 0),
+        total_price: parseFloat(item.total_price || (item.unit_price * item.quantity) || 0),
+        name: item.name || '',
+        name_arabic: item.name_arabic || null,
+        category: item.category || null,
+      }))
+    );
 
-    try {
-      if (!orderInfo.fullName || !orderInfo.phoneNumber) {
-        throw new Error('Error submission');
-      }
+    // Calculate totals
+    const subtotal = parseFloat(orderSummary.subtotal || 0);
+    const deliveryFee = parseFloat(orderSummary.deliveryFee || 0);
+    const discount = parseFloat(orderSummary.discount || 0);
+    const taxAmount = parseFloat(orderSummary.tax_amount || 0);
+    const total = subtotal + deliveryFee + taxAmount - discount;
 
-      // Prepare order data
-      const orderData = {
-        user_id: user?.id? user.id : 'guest',
-        items: cart?.meals?.flatMap(meal => 
-          meal.selectedItems?.map(item => ({
-            item_id: item.item_id,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-          })) || []
-        ) || [],
-        meals: cart?.meals?.map(meal => ({
-          meal_id: meal.meal_id,
-          quantity: meal.quantity,
-          unit_price: meal.unit_price,
-          customization_notes: meal.customization_notes,
-        })) || [],
-        subtotal: orderSummary.subtotal,
-        delivery_fee: orderSummary.deliveryFee,
-        discount_amount: orderSummary.discount,
-        total_amount: orderSummary.total,
-        status: 'pending',
-        payment_method: paymentMethod,
-        payment_status: 'pending',
-        delivery_address: selectedPickupAddress ? 
-          `${selectedPickupAddress.address_line1}, ${selectedPickupAddress.city}` : 
-          orderInfo.deliveryAddress,
-        contact_phone: orderInfo.phoneNumber,
-        special_instructions: orderInfo.notes || '',
-        order_type: 'pickup',
-        restaurant_location: selectedPickupAddress?.label || 'Custom Location',
-      };
+    // Prepare order data - DO NOT include order_number
+    const orderData = {
+      // User info (null for guest orders)
+      user_id: user?.id || null,
+      subscription_id: null,
+      
+      // Items and meals
+      order_meals: orderMeals,
+      order_items: orderItems,
+      
+      // Pricing
+      subtotal: subtotal,
+      delivery_fee: deliveryFee,
+      discount_amount: discount,
+      tax_amount: taxAmount,
+      total_amount: total,
+      
+      // Order status
+      status: 'pending',
+      payment_status: 'pending',
+      payment_method: paymentMethod === 'cash-on-delivery' ? 'cash' : paymentMethod,
+      
+      // REQUIRED: Contact phone
+      contact_phone: orderInfo.phoneNumber,
+      
+      // Delivery/Pickup information
+      delivery_address_id: selectedPickupAddress.id,
+      delivery_instructions: orderInfo.notes || null,
+      special_instructions: orderInfo.notes || null,
+      
+      // Optional fields
+      coupon_code: null,
+      loyalty_points_used: 0,
+      loyalty_points_earned: 0,
+      scheduled_delivery_date: null,
+      subscription_meal_index: null,
+    };
 
-      //console.log('📦 Creating order:', orderData);
-      const createdOrder = ()=>console.log(`Prepared orderData ${orderData}`) //await createOrder(orderData);
+    console.log('📦 Creating order with data:', {
+      user_id: orderData.user_id,
+      contact_phone: orderData.contact_phone,
+      meals_count: orderData.order_meals.length,
+      items_count: orderData.order_items.length,
+      total: orderData.total_amount
+    });
+    
+    // Call the createInstantOrder API
+    const createdOrder = await createInstantOrder(orderData);
+    
+    console.log('✅ Order created successfully:', {
+      id: createdOrder.id,
+      order_number: createdOrder.order_number
+    });
 
-      // Clear cart after successful order
-      clearCart();
+    // Clear cart after successful order
+    clearCart();
 
-      toast({
-        title: t('checkout.orderPlacedSuccessfully') || 'Order Placed Successfully',
-        description: t('checkout.pickupConfirmation') || 'Your order is ready for pickup',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
+    toast({
+      title: t('checkout.orderPlacedSuccessfully') || 'Order Placed Successfully',
+      description: `Order #${createdOrder.order_number} is ready for pickup`,
+      status: 'success',
+      duration: 5000,
+      isClosable: true,
+    });
 
-      //navigate(`/order-confirmation/${createdOrder.id}`);
-      navigate(`/`);
+    // Navigate to menu or order confirmation
+    navigate('/menu');
 
-    } catch (error) {
-      console.error('❌ Error placing order:', error);
-      dispatch({ type: 'END_SUBMISSION' });
+  } catch (error) {
+    console.error('❌ Error placing order:', error);
+    dispatch({ type: 'END_SUBMISSION' });
 
-      toast({
-        title: t('checkout.orderFailed') || 'Order Failed',
-        description: error.message || t('checkout.failedToPlaceOrder') || 'Failed to place order',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    }
-  };
-
+    toast({
+      title: t('checkout.orderFailed') || 'Order Failed',
+      description: error.message || 'Failed to place order. Please try again.',
+      status: 'error',
+      duration: 5000,
+      isClosable: true,
+    });
+  }
+};
   const gridColumns = useBreakpointValue({ base: 1, md: 3 })
 
   return (

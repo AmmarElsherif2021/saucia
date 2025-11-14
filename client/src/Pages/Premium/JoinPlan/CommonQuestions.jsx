@@ -113,7 +113,7 @@ const CommonQuestions = ({ onComplete }) => {
   // Debug all loaded data
   useEffect(() => {
     if (!hasInitialized && (userProfile || healthProfile || userDietaryPreferences || userAllergies)) {
-      console.log('🎯 CommonQuestions - All Data Loaded:');
+      //console.log('🎯 CommonQuestions - All Data Loaded:');
       logDataState('User Profile', {
         userProfile,
         hasAge: !!userProfile?.age,
@@ -145,11 +145,11 @@ const CommonQuestions = ({ onComplete }) => {
   // Initialize form with user data
   const initializeFormData = useCallback(() => {
     if (!userProfile && !healthProfile && !userDietaryPreferences && !userAllergies) {
-      console.log('⏳ Waiting for data to initialize form...');
+      //console.log('⏳ Waiting for data to initialize form...');
       return;
     }
 
-    console.log('🔄 Initializing form with user data...');
+    //console.log('🔄 Initializing form with user data...');
     
     const newFormData = getInitialFormData();
 
@@ -173,7 +173,7 @@ const CommonQuestions = ({ onComplete }) => {
         .map(p => p.preference_id)
         .filter(id => id != null);
       newFormData.healthProfile.dietaryPreferences = preferenceIds;
-      console.log('📋 Setting dietary preferences:', preferenceIds);
+      //console.log('📋 Setting dietary preferences:', preferenceIds);
     }
 
     if (userAllergies && Array.isArray(userAllergies)) {
@@ -181,13 +181,13 @@ const CommonQuestions = ({ onComplete }) => {
         .map(a => a.allergy_id)
         .filter(id => id != null);
       newFormData.healthProfile.allergies = allergyIds;
-      console.log('⚠️ Setting allergies:', allergyIds);
+      //console.log('⚠️ Setting allergies:', allergyIds);
     }
 
     setFormData(newFormData);
     setHasInitialized(true);
     
-    console.log('✅ Form initialized with:', newFormData);
+    //console.log('✅ Form initialized with:', newFormData);
   }, [userProfile, healthProfile, userDietaryPreferences, userAllergies]);
 
   useEffect(() => {
@@ -213,7 +213,7 @@ const CommonQuestions = ({ onComplete }) => {
         ? currentValues.filter(v => v !== value)
         : [...currentValues, value]
       
-      console.log(`🔄 ${type} updated:`, newValues);
+      //console.log(`🔄 ${type} updated:`, newValues);
       
       return {
         ...prev,
@@ -227,7 +227,7 @@ const CommonQuestions = ({ onComplete }) => {
     setFormError(null)
     setIsSubmitting(true)
 
-    console.log('🚀 Submitting form data:', formData);
+    //console.log('🚀 Submitting form data:', formData);
 
     try {
       if (!user?.id) throw new Error('User not authenticated')
@@ -258,7 +258,7 @@ const CommonQuestions = ({ onComplete }) => {
       }
 
       if (updates.profile) {
-        console.log('👤 Updating profile:', profileData);
+        //console.log('👤 Updating profile:', profileData);
         await updateProfile(profileData)
       }
 
@@ -285,7 +285,7 @@ const CommonQuestions = ({ onComplete }) => {
       }
 
       if (updates.health) {
-        console.log('💪 Updating health profile:', healthData);
+        //console.log('💪 Updating health profile:', healthData);
         await updateHealthProfile(healthData)
       }
 
@@ -298,7 +298,7 @@ const CommonQuestions = ({ onComplete }) => {
           allergy_id: allergyId,
           severity_override: 1
         }))
-        console.log('⚠️ Updating allergies:', allergiesData);
+        //console.log('⚠️ Updating allergies:', allergiesData);
         await bulkUpdateAllergies(allergiesData)
         updates.allergies = true
       }
@@ -311,12 +311,12 @@ const CommonQuestions = ({ onComplete }) => {
         const preferencesData = newPrefIds.map(prefId => ({
           preference_id: prefId
         }))
-        console.log('📋 Updating dietary preferences:', preferencesData);
+        //console.log('📋 Updating dietary preferences:', preferencesData);
         await bulkUpdatePreferences(preferencesData)
         updates.preferences = true
       }
 
-      console.log('✅ All updates completed:', updates);
+      //console.log('✅ All updates completed:', updates);
 
       toast({
         title: t('profile.profileUpdated'),
@@ -349,16 +349,16 @@ const CommonQuestions = ({ onComplete }) => {
   const hasError = profileError || healthError || 
                   allergiesError || preferencesError
 
-  useEffect(() => {
-    if (isLoading) {
-      console.log('⏳ CommonQuestions Loading States:', {
-        isLoadingProfile,
-        isLoadingHealth,
-        isLoadingAllergies,
-        isLoadingPreferences
-      });
-    }
-  }, [isLoading, isLoadingProfile, isLoadingHealth, isLoadingAllergies, isLoadingPreferences]);
+  // useEffect(() => {
+  //   if (isLoading) {
+  //     //console.log('⏳ CommonQuestions Loading States:', {
+  //       isLoadingProfile,
+  //       isLoadingHealth,
+  //       isLoadingAllergies,
+  //       isLoadingPreferences
+  //     });
+  //   }
+  // }, [isLoading, isLoadingProfile, isLoadingHealth, isLoadingAllergies, isLoadingPreferences]);
 
   // Theme variables
   const bgColor = { light: 'white', dark: 'gray.800' }

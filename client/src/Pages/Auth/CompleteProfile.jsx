@@ -311,7 +311,7 @@ const CompleteProfile = ({ useMockData = false }) => {
   // Centralized form submission with proper API integration
 const handleSubmit = async (e) => {
   //debug
-  console.log('Submitting form with data:', formData);
+  //console.log('Submitting form with data:', formData);
   e.preventDefault(); 
   setLoading(true);
   setError('');
@@ -334,7 +334,7 @@ const handleSubmit = async (e) => {
       
       // Use AuthContext's completeProfile method
       result = await completeProfile(profileData);
-      //console.log('Profile completion result:', result);
+      ////console.log('Profile completion result:', result);
     }
     
     if (result) {
@@ -355,10 +355,10 @@ const handleSubmit = async (e) => {
         try {
           // Check for pending redirect
           const pendingRedirect = consumePendingRedirect();
-          console.log('Pending redirect result:', pendingRedirect);
+          //console.log('Pending redirect result:', pendingRedirect);
           
           if (pendingRedirect && pendingRedirect.path) {
-            console.log('Navigating to pending redirect path:', pendingRedirect.path);
+            //console.log('Navigating to pending redirect path:', pendingRedirect.path);
             navigate(pendingRedirect.path, { 
               state: { 
                 from: 'complete-profile',
@@ -368,7 +368,7 @@ const handleSubmit = async (e) => {
             });
           } else {
             // Default redirect to account dashboard
-            console.log('No pending redirect, navigating to account dashboard');
+            //console.log('No pending redirect, navigating to account dashboard');
             navigate('/account', {
               state: { 
                 from: 'complete-profile',

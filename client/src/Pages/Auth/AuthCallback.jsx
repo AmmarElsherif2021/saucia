@@ -23,7 +23,7 @@ const AuthCallback = () => {
         // Consume the pending redirect
         const pendingRedirect = consumePendingRedirect();
         
-        console.log('Auth callback - pending redirect:', pendingRedirect);
+        //console.log('Auth callback - pending redirect:', pendingRedirect);
         
         if (pendingRedirect) {
           const { path, planId, selectedTerm, reason } = pendingRedirect;

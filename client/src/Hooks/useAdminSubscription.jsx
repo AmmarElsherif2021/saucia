@@ -109,7 +109,7 @@ const useBaseList = (apiCall, initialOptions = {}, realtimeConfig = null) => {
     if (!realtimeConfig?.subscribe) return;
 
     const subscription = realtimeConfig.subscribe((payload) => {
-      console.log('🔔 Real-time update:', payload);
+      //console.log('🔔 Real-time update:', payload);
       
       // Update local data based on event type
       if (payload.eventType === 'INSERT') {

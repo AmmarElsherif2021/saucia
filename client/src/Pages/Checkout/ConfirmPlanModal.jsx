@@ -669,7 +669,6 @@ const ConfirmPlanModal = ({
         auto_renewal: false,
         payment_method_id: subscriptionData.payment_method_id,
         meals: subscriptionData.meals,
-        next_delivery_meal: 0,
       };
       
       await createSubscription(subscription);

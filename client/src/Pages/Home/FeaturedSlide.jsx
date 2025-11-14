@@ -29,7 +29,7 @@ export const FeaturedMeals = ({
   const { t } = useTranslation()
   //Debug console
   // useEffect(() => {
-  //   console.log('FeaturedMeals component mounted with props:', {
+  //   //console.log('FeaturedMeals component mounted with props:', {
   //     featuredMeals, visibleCount, autoPlay, transitionDuration, pauseOnHover, carouselBg, baseWidth, round, style, spacing
   //   })
   // }, [featuredMeals, visibleCount, autoPlay, transitionDuration, pauseOnHover, carouselBg, baseWidth, round, style, spacing])

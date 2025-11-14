@@ -49,7 +49,7 @@ import { MdPerson, MdLocationOn, MdAttachMoney, MdLocalShipping, MdRefresh } fro
 // ===== SUPABASE API INTEGRATION =====
 const instantOrdersAPI = {
   async getInstantOrders(options = {}) {
-    console.log('📡 [API] Fetching instant orders with options:', options);
+    //console.log('📡 [API] Fetching instant orders with options:', options);
     
     try {
       // In production, this would use Supabase
@@ -97,7 +97,7 @@ const instantOrdersAPI = {
         });
       }
       
-      console.log('✅ [API] Orders fetched:', orders.length);
+      //console.log('✅ [API] Orders fetched:', orders.length);
       return orders;
     } catch (error) {
       console.error('❌ [API] Error fetching orders:', error);
@@ -106,7 +106,7 @@ const instantOrdersAPI = {
   },
 
   async updateOrderStatus(orderId, newStatus, notes = '') {
-    console.log(`🔄 [API] Updating order ${orderId} to:`, newStatus);
+    //console.log(`🔄 [API] Updating order ${orderId} to:`, newStatus);
     
     try {
       // In production:
@@ -142,7 +142,7 @@ const instantOrdersAPI = {
   },
 
   async updateOrderDeliveryDate(orderId, newDate) {
-    console.log(`📅 [API] Updating delivery date for order ${orderId}`);
+    //console.log(`📅 [API] Updating delivery date for order ${orderId}`);
     
     try {
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -163,7 +163,7 @@ const instantOrdersAPI = {
   },
 
   async getOrderStats() {
-    console.log('📊 [API] Fetching order statistics');
+    //console.log('📊 [API] Fetching order statistics');
     
     try {
       await new Promise(resolve => setTimeout(resolve, 200));
@@ -186,7 +186,7 @@ const instantOrdersAPI = {
           .reduce((sum, o) => sum + parseFloat(o.total_amount), 0)
       };
       
-      console.log('✅ [API] Stats:', stats);
+      //console.log('✅ [API] Stats:', stats);
       return stats;
     } catch (error) {
       console.error('❌ [API] Error fetching stats:', error);
@@ -375,7 +375,7 @@ const useInstantOrders = (options = {}) => {
   const [lastFetch, setLastFetch] = useState(null);
 
   const fetchOrders = useCallback(async () => {
-    console.log('🎣 [Hook] Fetching orders with options:', options);
+    //console.log('🎣 [Hook] Fetching orders with options:', options);
     setLoading(true);
     setError(null);
     
@@ -383,7 +383,7 @@ const useInstantOrders = (options = {}) => {
       const data = await instantOrdersAPI.getInstantOrders(options);
       setOrders(data);
       setLastFetch(new Date());
-      console.log('✅ [Hook] Orders updated:', data.length);
+      //console.log('✅ [Hook] Orders updated:', data.length);
     } catch (err) {
       console.error('❌ [Hook] Error:', err);
       setError(err.message);
@@ -477,7 +477,7 @@ const OrderCard = ({ order, onStatusUpdate }) => {
   };
 
   const executeStatusChange = async (newStatus, notes) => {
-    console.log(`🔄 [OrderCard] Changing order ${order.order_number} to:`, newStatus);
+    //console.log(`🔄 [OrderCard] Changing order ${order.order_number} to:`, newStatus);
     setUpdating(true);
     
     try {

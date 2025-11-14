@@ -84,18 +84,27 @@ export const useEntityConfigs = () => {
       initialData: {
         name: '',
         name_arabic: '',
+        description: '',
+        description_arabic: '',
         section: '',
         section_arabic: '',
         base_price: 0,
         calories: 0,
         protein_g: 0,
         carbs_g: 0,
-        weight:0,
+        fat_g: 0,
+        weight: 0,
         ingredients: '',
         ingredients_arabic: '',
-        is_available: true,
         image_url: '',
-        allergy_ids: []
+        is_available: true,
+        is_featured: false,
+        is_vegetarian: false,
+        is_vegan: false,
+        is_gluten_free: false,
+        is_selective: false,
+        allergy_ids: [],
+        item_ids: []
       },
       columns: [
         { key: 'name', label: t('admin.Name') },
@@ -128,14 +137,14 @@ export const useEntityConfigs = () => {
             </Badge>
           )
         },
-        {
-          key: 'meal_allergies', 
-          label: t('admin.Allergies'),
-          width: '15%',
-          render: value => value?.length > 0 
-            ? value.map(ma => ma.allergies.name).join(', ') 
-            : t('admin.None')
-        },
+       {
+        key: 'allergies', // Use 'allergies' from transformed data
+        label: t('admin.Allergies'),
+        width: '15%',
+        render: (value) => value?.length > 0 
+          ? value.map(a => a.name).join(', ') 
+          : t('admin.None')
+      },
         { key: 'image_url', label: t('admin.Image'), truncate: true },
       ],
       

@@ -173,7 +173,7 @@ const totalPrice = useMemo(() => {
    */
   const handleSelectItem = (item) => {
     const isSafe = isItemSafe(item)
-    console.log(JSON.stringify(`JSON of Item ${JSON.stringify(item)}`))
+    //console.log(JSON.stringify(`JSON of Item ${JSON.stringify(item)}`))
     // If selecting an unsafe item for the first time, show warning
     if (!isSafe && !selectedItems[item.id]) {
       setShowAllergenWarning(true)

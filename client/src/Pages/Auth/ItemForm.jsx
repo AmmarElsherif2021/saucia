@@ -25,7 +25,7 @@ import {
 import { useState, useEffect } from 'react';
 import { useAdminFunctions } from '../../Hooks/useAdminFunctions';
 
-const ItemForm = ({ onSubmit, onCancel, initialData = {}, isEdit = false }) => {
+const ItemForm = ({ onSubmit, onCancel, initialData = {}, isEdit = false, key }) => {
   const { useGetAllAllergies } = useAdminFunctions();
   const { data: allAllergies = [] } = useGetAllAllergies();
   const toast = useToast();

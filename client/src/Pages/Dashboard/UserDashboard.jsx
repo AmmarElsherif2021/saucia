@@ -132,17 +132,17 @@ export const UserDashboard = () => {
 
   // Debug: Log JSON data from selected hooks
   useEffect(() => {
-    console.log('profile:', JSON.stringify(profile, null, 2));
-    console.log('healthProfile:', JSON.stringify(healthProfile, null, 2));
-    console.log('addresses:', JSON.stringify(addresses, null, 2));
-    console.log('orders:', JSON.stringify(orders, null, 2));
-    console.log('subscription:', JSON.stringify(subscription, null, 2));
-    console.log('paymentMethods:', JSON.stringify(paymentMethods, null, 2));
-    console.log('allergies:', JSON.stringify(allergies, null, 2));
-    console.log('dietaryPreferences:', JSON.stringify(dietaryPreferences, null, 2));
-    console.log('favoriteMeals:', JSON.stringify(favoriteMeals, null, 2));
-    console.log('favoriteItems:', JSON.stringify(favoriteItems, null, 2));
-    console.log('reviews:', JSON.stringify(reviews, null, 2));
+    //console.log('profile:', JSON.stringify(profile, null, 2));
+    //console.log('healthProfile:', JSON.stringify(healthProfile, null, 2));
+    //console.log('addresses:', JSON.stringify(addresses, null, 2));
+    //console.log('orders:', JSON.stringify(orders, null, 2));
+    //console.log('subscription:', JSON.stringify(subscription, null, 2));
+    //console.log('paymentMethods:', JSON.stringify(paymentMethods, null, 2));
+    //console.log('allergies:', JSON.stringify(allergies, null, 2));
+    //console.log('dietaryPreferences:', JSON.stringify(dietaryPreferences, null, 2));
+    //console.log('favoriteMeals:', JSON.stringify(favoriteMeals, null, 2));
+    //console.log('favoriteItems:', JSON.stringify(favoriteItems, null, 2));
+    //console.log('reviews:', JSON.stringify(reviews, null, 2));
   }, [
     profile,
     healthProfile,

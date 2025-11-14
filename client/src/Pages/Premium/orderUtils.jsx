@@ -27,13 +27,6 @@ export const useOrderItems = () => {
   const { t } = useTranslation();
 
   const renderOrderItems = (order, isArabic, showCategory = false) => {
-    console.log('🔍 Order data for items:', {
-      orderId: order?.id,
-      orderMeals: order?.order_meals?.length || 0,
-      orderItems: order?.order_items?.length || 0,
-      status: order?.status
-    });
-
     const hasMeals = order?.order_meals && order.order_meals.length > 0;
     const hasItems = order?.order_items && order.order_items.length > 0;
 
@@ -104,4 +97,26 @@ export const formatDeliveryDate = (dateString, isArabic) => {
 export const formatDeliveryTime = (timeString, t) => {
   if (!timeString) return t('premium.notSet');
   return timeString.slice(0, 5); // Remove seconds if present
+};
+
+// NEW: Generic date formatter (for order cards)
+export const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+// NEW: Generic time formatter (for order cards)
+export const formatTime = (dateString) => {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
 };

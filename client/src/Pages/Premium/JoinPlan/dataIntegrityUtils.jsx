@@ -4,11 +4,11 @@ export const useDataIntegrity = () => {
     console.group(`🔍 ${componentName} Data State`);
     Object.entries(data).forEach(([key, value]) => {
       if (Array.isArray(value)) {
-        console.log(`${key}:`, value.length, 'items', value);
+        //console.log(`${key}:`, value.length, 'items', value);
       } else if (typeof value === 'object' && value !== null) {
-        console.log(`${key}:`, value);
+        //console.log(`${key}:`, value);
       } else {
-        console.log(`${key}:`, value);
+        //console.log(`${key}:`, value);
       }
     });
     console.groupEnd();

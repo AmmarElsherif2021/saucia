@@ -41,42 +41,42 @@ const EnhancedProfileModal = ({
   const { colorMode } = useColorMode();
   
   // Debugging logs for retrieved data
-  useEffect(() => {
-    if (isOpen && formData) {
-      console.log('🔍 [EnhancedProfileModal] Retrieved formData:', {
-        basicInfo: {
-          display_name: formData.display_name,
-          phone_number: formData.phone_number,
-          age: formData.age,
-          gender: formData.gender,
-          language: formData.language,
-          notes: formData.notes,
-        },
-        healthProfile: formData.healthProfile,
-        notificationPreferences: formData.notificationPreferences,
-        defaultAddress: formData.defaultAddress,
-        deliveryTime: formData.deliveryTime,
-      });
+  // useEffect(() => {
+  //   if (isOpen && formData) {
+  //     //console.log('🔍 [EnhancedProfileModal] Retrieved formData:', {
+  //       basicInfo: {
+  //         display_name: formData.display_name,
+  //         phone_number: formData.phone_number,
+  //         age: formData.age,
+  //         gender: formData.gender,
+  //         language: formData.language,
+  //         notes: formData.notes,
+  //       },
+  //       healthProfile: formData.healthProfile,
+  //       notificationPreferences: formData.notificationPreferences,
+  //       defaultAddress: formData.defaultAddress,
+  //       deliveryTime: formData.deliveryTime,
+  //     });
       
-      // Log field-by-field for detailed debugging
-      console.log('📋 [EnhancedProfileModal] Field values preset:');
-      console.log('- display_name:', formData.display_name);
-      console.log('- phone_number:', formData.phone_number);
-      console.log('- age:', formData.age);
-      console.log('- gender:', formData.gender);
-      console.log('- language:', formData.language);
-      console.log('- notes:', formData.notes);
-      console.log('- healthProfile.height_cm:', formData.healthProfile?.height_cm);
-      console.log('- healthProfile.weight_kg:', formData.healthProfile?.weight_kg);
-      console.log('- healthProfile.fitness_goal:', formData.healthProfile?.fitness_goal);
-      console.log('- healthProfile.activity_level:', formData.healthProfile?.activity_level);
-      console.log('- notificationPreferences.email:', formData.notificationPreferences?.email);
-      console.log('- notificationPreferences.sms:', formData.notificationPreferences?.sms);
-      console.log('- notificationPreferences.push:', formData.notificationPreferences?.push);
-      console.log('- defaultAddress:', formData.defaultAddress);
-      console.log('- deliveryTime:', formData.deliveryTime);
-    }
-  }, [isOpen, formData]);
+  //     // Log field-by-field for detailed debugging
+  //     //console.log('📋 [EnhancedProfileModal] Field values preset:');
+  //     //console.log('- display_name:', formData.display_name);
+  //     //console.log('- phone_number:', formData.phone_number);
+  //     //console.log('- age:', formData.age);
+  //     //console.log('- gender:', formData.gender);
+  //     //console.log('- language:', formData.language);
+  //     //console.log('- notes:', formData.notes);
+  //     //console.log('- healthProfile.height_cm:', formData.healthProfile?.height_cm);
+  //     //console.log('- healthProfile.weight_kg:', formData.healthProfile?.weight_kg);
+  //     //console.log('- healthProfile.fitness_goal:', formData.healthProfile?.fitness_goal);
+  //     //console.log('- healthProfile.activity_level:', formData.healthProfile?.activity_level);
+  //     //console.log('- notificationPreferences.email:', formData.notificationPreferences?.email);
+  //     //console.log('- notificationPreferences.sms:', formData.notificationPreferences?.sms);
+  //     //console.log('- notificationPreferences.push:', formData.notificationPreferences?.push);
+  //     //console.log('- defaultAddress:', formData.defaultAddress);
+  //     //console.log('- deliveryTime:', formData.deliveryTime);
+  //   }
+  // }, [isOpen, formData]);
 
   // Calculate completion percentage based on filled fields
   const calculateCompletion = () => {
@@ -101,9 +101,9 @@ const EnhancedProfileModal = ({
   // Log when modal opens/closes
   useEffect(() => {
     if (isOpen) {
-      console.log('🚀 [EnhancedProfileModal] Modal opened with data:', formData);
+      //console.log('🚀 [EnhancedProfileModal] Modal opened with data:', formData);
     } else {
-      console.log('🔒 [EnhancedProfileModal] Modal closed');
+      //console.log('🔒 [EnhancedProfileModal] Modal closed');
     }
   }, [isOpen]);
 
@@ -233,7 +233,7 @@ const EnhancedProfileModal = ({
               <Button
                 colorScheme="brand"
                 onClick={() => {
-                  console.log('💾 [EnhancedProfileModal] Saving changes:', formData);
+                  //console.log('💾 [EnhancedProfileModal] Saving changes:', formData);
                   handleSubmit();
                 }}
                 isLoading={isLoading}

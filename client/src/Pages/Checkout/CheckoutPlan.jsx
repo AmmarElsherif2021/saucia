@@ -79,7 +79,7 @@ const INVALID_DELIVERY_DAYS = [5, 6] // Friday and Saturday
  * Calculate delivery date skipping Fridays and Saturdays
  */
 const calculateDeliveryDate = (startDate, mealIndex) => {
-  console.log('📅 calculateDeliveryDate called:', { startDate, mealIndex })
+  //console.log('📅 calculateDeliveryDate called:', { startDate, mealIndex })
   
   const date = new Date(startDate);
   let validDays = 0;
@@ -98,7 +98,7 @@ const calculateDeliveryDate = (startDate, mealIndex) => {
     }
   }
   
-  console.log('📅 Calculated delivery date:', date)
+  //console.log('📅 Calculated delivery date:', date)
   return date;
 }
 
@@ -133,7 +133,7 @@ const Section = ({ title, children, bgColor = 'brand', titleColor, icon, isLoadi
   const iconBorder = useColorModeValue(`${bgColor}.200`, 'gray.500')
   const headingColor = titleColor || useColorModeValue(`${bgColor}.700`, 'white')
 
-  console.log('🎨 Section rendered:', { title, bgColor, isLoading, colorMode })
+  //console.log('🎨 Section rendered:', { title, bgColor, isLoading, colorMode })
   
   if (isLoading) {
     return (
@@ -226,7 +226,7 @@ const InfoAlert = ({ status = 'info', title, message, colorMode }) => {
     error: 'red.500',
   }
 
-  console.log('⚠️ InfoAlert rendered:', { status, title })
+  //console.log('⚠️ InfoAlert rendered:', { status, title })
 
   return (
     <Alert 
@@ -256,7 +256,7 @@ const InfoAlert = ({ status = 'info', title, message, colorMode }) => {
  * Payment Method Inputs Component
  */
 const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
-  console.log('💳 PaymentMethodInputs rendered:', { paymentMethod, colorMode })
+  //console.log('💳 PaymentMethodInputs rendered:', { paymentMethod, colorMode })
 
   const ComingSoonAlert = ({ methodName }) => (
     <VStack spacing={4} align="stretch" maxW={{ base: "100%", md: "90%" }}>
@@ -334,7 +334,7 @@ const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
 // ============================================================================
 
 const CheckoutPlan = () => {
-  console.log('🚀 CheckoutPlan component mounted')
+  //console.log('🚀 CheckoutPlan component mounted')
 
   // ============================================================================
   // HOOKS - ALL AT TOP LEVEL
@@ -396,21 +396,21 @@ const CheckoutPlan = () => {
   useEffect(() => {
     console.group('📊 CheckoutPlan - Data State')
     console.log('👤 User:', user)
-    console.log('📝 Profile:', profile)
-    console.log('📍 User Addresses:', userAddresses)
-    console.log('🏪 Restaurant Addresses:', restaurantAddresses)
-    console.log('🥗 Signature Salads:', signatureSalads)
-    console.log('📦 Subscription Data:', subscriptionData)
-    console.log('💳 Payment Method:', paymentMethod)
-    console.log('📋 Billing Info:', billingInfo)
-    console.log('✅ Is Subscription Valid:', isSubscriptionValid)
-    console.log('🌐 Current Language:', currentLanguage)
-    console.log('🎨 Color Mode:', colorMode)
-    console.log('⏳ Loading States:', { 
-      isLoadingAddresses, 
-      isLoadingRestaurantAddresses,
-      isSubmitting 
-    })
+    //console.log('📝 Profile:', profile)
+    //console.log('📍 User Addresses:', userAddresses)
+    //console.log('🏪 Restaurant Addresses:', restaurantAddresses)
+    //console.log('🥗 Signature Salads:', signatureSalads)
+    //console.log('📦 Subscription Data:', subscriptionData)
+    //console.log('💳 Payment Method:', paymentMethod)
+    //console.log('📋 Billing Info:', billingInfo)
+    //console.log('✅ Is Subscription Valid:', isSubscriptionValid)
+    //console.log('🌐 Current Language:', currentLanguage)
+    //console.log('🎨 Color Mode:', colorMode)
+    //console.log('⏳ Loading States:', { 
+    //   isLoadingAddresses, 
+    //   isLoadingRestaurantAddresses,
+    //   isSubmitting 
+    // })
     console.groupEnd()
   }, [
     user, 
@@ -435,7 +435,7 @@ const CheckoutPlan = () => {
   
   const defaultAddress = useMemo(() => {
     const result = userAddresses?.find(addr => addr.is_default) || userAddresses?.[0]
-    console.log('🏠 Default Address:', result)
+    //console.log('🏠 Default Address:', result)
     return result
   }, [userAddresses]);
 
@@ -464,7 +464,7 @@ const CheckoutPlan = () => {
       day: 'numeric',
     });
 
-    console.log('📅 Date Calculations:', { today, startDate, endDate: endDateObj, formattedEndDate })
+    //console.log('📅 Date Calculations:', { today, startDate, endDate: endDateObj, formattedEndDate })
 
     return { today, startDate, endDate: endDateObj, formattedEndDate };
   }, [subscriptionData?.start_date, subscriptionData?.end_date, subscriptionData?.total_meals]);
@@ -474,7 +474,7 @@ const CheckoutPlan = () => {
       ?.map(id => signatureSalads?.find(meal => meal.id === id))
       .filter(Boolean) || [];
     
-    console.log('🍽️ Selected Meal Objects:', result)
+    //console.log('🍽️ Selected Meal Objects:', result)
     return result
   }, [subscriptionData?.meals, signatureSalads]);
 
@@ -499,12 +499,12 @@ const CheckoutPlan = () => {
   // ============================================================================
   
   const handleBillingInfoChange = useCallback((field, value) => {
-    console.log('📝 Billing Info Changed:', { field, value })
+    //console.log('📝 Billing Info Changed:', { field, value })
     setBillingInfo(prev => ({ ...prev, [field]: value }));
   }, []);
 
   const showToast = useCallback((title, description, status, duration = 3000) => {
-    console.log('🔔 Toast shown:', { title, description, status })
+    //console.log('🔔 Toast shown:', { title, description, status })
     toast({
       title,
       description,
@@ -515,7 +515,7 @@ const CheckoutPlan = () => {
   }, [toast]);
 
   const handleOpenConfirmation = useCallback(() => {
-    console.log('🎯 Handle Open Confirmation called')
+    //console.log('🎯 Handle Open Confirmation called')
     
     if (!paymentMethod) {
       showToast(
@@ -536,22 +536,22 @@ const CheckoutPlan = () => {
       return
     }
 
-    console.log('✅ Validation passed, opening confirmation modal')
+    //console.log('✅ Validation passed, opening confirmation modal')
     onOpenConfirmation()
   }, [paymentMethod, billingInfo, showToast, t, onOpenConfirmation]);
 
   const handleAddSignatureSalad = useCallback((mealId) => {
-    console.log('➕ Adding meal:', mealId)
+    //console.log('➕ Adding meal:', mealId)
     addMeal(mealId);
   }, [addMeal]);
 
   const handleRemoveMeal = useCallback((mealId) => {
-    console.log('➖ Removing meal:', mealId)
+    //console.log('➖ Removing meal:', mealId)
     removeMeal(mealId);
   }, [removeMeal]);
 
   const handleConfirmSubscription = useCallback(async () => {
-    console.log('🎯 Confirming subscription...')
+    //console.log('🎯 Confirming subscription...')
     setIsSubmitting(true);
     onCloseConfirmation();
 
@@ -564,7 +564,7 @@ const CheckoutPlan = () => {
         ? SUBSCRIPTION_STATUS.PENDING 
         : SUBSCRIPTION_STATUS.ACTIVE;
 
-      console.log('📦 Updating subscription data with status:', subscriptionStatus)
+      //console.log('📦 Updating subscription data with status:', subscriptionStatus)
       
       updateSubscriptionData({
         delivery_address_id: subscriptionData?.delivery_address_id,
@@ -574,7 +574,7 @@ const CheckoutPlan = () => {
       });
 
       const subscriptionPayload = getSubscriptionPayload(user.id);
-      console.log('📤 Subscription Payload:', subscriptionPayload)
+      //console.log('📤 Subscription Payload:', subscriptionPayload)
 
       await createSubscription(subscriptionPayload);
 
@@ -591,7 +591,7 @@ const CheckoutPlan = () => {
         ? '/account?subscription=pending' 
         : '/account?subscription=success'
       
-      console.log('🔄 Navigating to:', redirectPath)
+      //console.log('🔄 Navigating to:', redirectPath)
       navigate(redirectPath);
     } catch (error) {
       console.error('❌ Error confirming subscription:', error);
@@ -617,15 +617,22 @@ const CheckoutPlan = () => {
     onCloseConfirmation
   ]);
   
+  
   const handleSelectLocation = useCallback((location) => {
   // Use the restaurant address format
   const addressDisplay = location.display_name || 
                         `${location.address_line1}${location.city ? `, ${location.city}` : ''}`;
-      
-      handleOrderInfoChange('deliveryAddress', addressDisplay);
-      handleOrderInfoChange('city', location.city || '');
-      onCloseMap();
-    }, [handleOrderInfoChange, onCloseMap]);
+  
+  // Use handleBillingInfoChange instead of handleOrderInfoChange
+  handleBillingInfoChange('deliveryAddress', addressDisplay);
+  
+  // Update subscription data with the selected location
+  updateSubscriptionData({
+    delivery_address_id: location.id
+  });
+  
+  onCloseMap();
+}, [handleBillingInfoChange, updateSubscriptionData, onCloseMap]);
 
 
   // ============================================================================
@@ -634,7 +641,7 @@ const CheckoutPlan = () => {
   
   useEffect(() => {
     if (profile && restaurantAddresses && restaurantAddresses.length > 0) {
-      console.log('🔄 Initializing billing info from profile and restaurant addresses')
+      //console.log('🔄 Initializing billing info from profile and restaurant addresses')
       
       setBillingInfo({
         fullName: profile.display_name || '',
@@ -655,7 +662,7 @@ const CheckoutPlan = () => {
   
   // Early return for loading state
   if (!subscriptionData) {
-    console.log('⏳ No subscription data, showing loading skeleton')
+    //console.log('⏳ No subscription data, showing loading skeleton')
     return (
       <Box
         minHeight="100vh"
@@ -673,7 +680,7 @@ const CheckoutPlan = () => {
     );
   }
 
-  console.log('✅ Rendering main checkout content')
+  //console.log('✅ Rendering main checkout content')
 
   return (
     <Box
@@ -835,7 +842,7 @@ const CheckoutPlan = () => {
                   borderWidth="2px"
                   borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.300'}
                   onChange={(e) => {
-                    console.log('💳 Payment method changed:', e.target.value)
+                    //console.log('💳 Payment method changed:', e.target.value)
                     setPaymentMethod(e.target.value)
                   }}
                   value={paymentMethod}

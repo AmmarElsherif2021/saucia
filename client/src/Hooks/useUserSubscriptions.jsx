@@ -1,239 +1,275 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAuthContext } from '../Contexts/AuthContext';
 import { userAPI } from '../API/userAPI';
+import { itemsAPI } from '../API/itemAPI';
+import { ordersAPI } from '../API/orderAPI';
 
 export const useUserSubscriptions = () => {
     const { user } = useAuthContext();
     const queryClient = useQueryClient();
+    const creatingRef = useRef(false); // Prevent double submission
     
-    // Get active subscription with orders and items
+    // Get subscription summary (includes orders stats)
     const subscriptionQuery = useQuery({
         queryKey: ['userSubscription', user?.id],
-        queryFn: () => userAPI.getUserActiveSubscription(user.id),
+        queryFn: async () => {
+            console.log('🔄 Fetching subscription for user:', user?.id);
+            const activeSubscription = await userAPI.getUserActiveSubscription(user.id);
+            
+            if (!activeSubscription) {
+                console.log('⚠️ No active subscription found');
+                return null;
+            }
+            
+            console.log('✅ Active subscription found:', activeSubscription.id);
+            
+            try {
+                const summary = await userAPI.getSubscriptionSummary(activeSubscription.id);
+                console.log('✅ Subscription summary retrieved:', {
+                    hasSubscription: !!summary?.subscription,
+                    hasMeals: !!summary?.subscription?.meals,
+                    mealsLength: summary?.subscription?.meals?.length,
+                    summary
+                });
+                return summary;
+            } catch (error) {
+                console.error('❌ Error getting subscription summary:', error);
+                // Return a minimal structure to prevent complete failure
+                return {
+                    subscription: activeSubscription,
+                    stats: null,
+                    nextOrder: null
+                };
+            }
+        },
         enabled: !!user?.id,
-        onSuccess: (data) => {
-            console.log('📋 Subscription Query Result:', {
-                hasSubscription: !!data,
-                subscriptionId: data?.id,
-                status: data?.status,
-                canCreateNew: !data || ['completed', 'cancelled'].includes(data?.status)
-            });
+        retry: 2,
+        retryDelay: 1000,
+        onError: (error) => {
+            console.error('❌ Subscription query error:', error);
         }
     });
 
-    // Get all user subscriptions to check for active ones
-    const allSubscriptionsQuery = useQuery({
-        queryKey: ['allUserSubscriptions', user?.id],
-        queryFn: () => userAPI.getAllUserSubscriptions(user.id),
-        enabled: !!user?.id,
-        onSuccess: (data) => {
-            console.log('📊 All Subscriptions:', {
-                total: data?.length || 0,
-                active: data?.filter(s => !['completed', 'cancelled'].includes(s.status))?.length || 0,
-                statuses: data?.map(s => s.status) || []
+    // Get subscription orders
+    const ordersQuery = useQuery({
+        queryKey: ['subscriptionOrders', user?.id, subscriptionQuery.data?.subscription?.id],
+        queryFn: () => {
+            console.log('🔄 Fetching subscription orders for:', subscriptionQuery.data?.subscription?.id);
+            return ordersAPI.getSubscriptionOrders(subscriptionQuery.data.subscription.id);
+        },
+        enabled: !!subscriptionQuery.data?.subscription?.id,
+        retry: 2,
+        retryDelay: 1000
+    });
+
+    // Get detailed meal items - ENHANCED WITH BETTER DEBUGGING AND RETRY
+    const mealsQuery = useQuery({
+        queryKey: ['subscriptionItems', user?.id, subscriptionQuery.data?.subscription?.id],
+        queryFn: async () => {
+            console.log('🍽️ Starting meal items fetch...');
+            
+            // Direct access to subscription from the summary
+            const summaryData = subscriptionQuery.data;
+            const subscription = summaryData?.subscription;
+            const meals = subscription?.meals;
+            
+            console.log('🔍 Subscription data check:', {
+                hasSummaryData: !!summaryData,
+                hasSubscription: !!subscription,
+                subscriptionId: subscription?.id,
+                meals: meals,
+                mealsType: typeof meals,
+                isArray: Array.isArray(meals),
+                mealsLength: meals?.length,
+                rawMealsValue: JSON.stringify(meals)
             });
+            
+            // Return empty array immediately if no meals or empty array
+            if (!Array.isArray(meals) || meals.length === 0) {
+                console.log('📭 No meals found in subscription, returning empty array');
+                return [];
+            }
+
+            console.log(`🔄 Processing ${meals.length} meal groups...`);
+            console.log('📋 Meal structure sample:', meals[0]);
+            
+            const mealPromises = meals.map(async (mealObj, index) => {
+                console.log(`🔍 Processing meal group ${index + 1}:`, mealObj);
+                
+                if (!mealObj || typeof mealObj !== 'object') {
+                    console.log(`⚠️ Invalid meal object at index ${index}`);
+                    return [];
+                }
+
+                // Extract item IDs from the meal object
+                // The structure is: { "item_id": quantity, ... }
+                const itemIds = Object.keys(mealObj)
+                    .map((k) => Number(k))
+                    .filter((n) => Number.isFinite(n) && n > 0);
+
+                console.log(`📋 Meal group ${index + 1} item IDs:`, itemIds);
+
+                if (itemIds.length === 0) {
+                    console.log(`⚠️ No valid item IDs in meal group ${index + 1}`);
+                    return [];
+                }
+
+                const itemPromises = itemIds.map(async (itemId) => {
+                    try {
+                        console.log(`🔄 Fetching item ${itemId}...`);
+                        const item = await itemsAPI.getItemById(itemId);
+                        console.log(`✅ Fetched item ${itemId}:`, item?.name);
+                        return item;
+                    } catch (error) {
+                        console.error(`❌ Failed to fetch item ${itemId}:`, error);
+                        return null;
+                    }
+                });
+                
+                const detailedItems = await Promise.all(itemPromises);
+                const validItems = detailedItems.filter(Boolean);
+                console.log(`✅ Meal group ${index + 1} complete: ${validItems.length}/${itemIds.length} items fetched`);
+                return validItems;
+            });
+            
+            const result = await Promise.all(mealPromises);
+            console.log('✅ All meal groups fetched:', {
+                totalGroups: result.length,
+                itemsPerGroup: result.map(group => group.length),
+                result
+            });
+            
+            return result;
+        },
+        // Enable query when subscription exists in the summary
+        enabled: !!subscriptionQuery.data?.subscription,
+        // Add retry logic for failed fetches
+        retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+        // Keep data fresh
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        // Refetch on window focus
+        refetchOnWindowFocus: true,
+        onSuccess: (data) => {
+            console.log('✅ Meals query success:', data);
+        },
+        onError: (error) => {
+            console.error('❌ Meals query error:', error);
         }
     });
 
-    // Real-time subscription for subscription updates
+    // Real-time subscription updates
     useEffect(() => {
         if (!user?.id) return;
 
         const subscription = userAPI.subscribeToUserSubscriptions(user.id, (payload) => {
-            console.log('🔔 Subscription update:', payload);
-            
-            // Update active subscription query
-            if (payload.eventType === 'UPDATE') {
-                queryClient.setQueryData(['userSubscription', user.id], (old) => {
-                    if (old?.id === payload.new.id) {
-                        return payload.new;
-                    }
-                    return old;
-                });
-            } else if (payload.eventType === 'INSERT') {
-                queryClient.invalidateQueries(['userSubscription', user.id]);
-            }
-            
-            // Always invalidate all subscriptions list
-            queryClient.invalidateQueries(['allUserSubscriptions', user.id]);
+            console.log('🔔 Subscription update received:', payload);
+            queryClient.invalidateQueries(['userSubscription', user.id]);
         });
 
-        return () => {
-            subscription?.unsubscribe();
-        };
+        return () => subscription?.unsubscribe();
     }, [user?.id, queryClient]);
 
-    // Get subscription orders (pending meals)
-    const ordersQuery = useQuery({
-        queryKey: ['subscriptionOrders', user?.id, subscriptionQuery.data?.id],
-        queryFn: () => userAPI.getSubscriptionOrders(subscriptionQuery.data?.id),
-        enabled: !!subscriptionQuery.data?.id
-    });
-
-    // Real-time subscription for order updates within subscriptions
+    // Real-time order updates
     useEffect(() => {
-        if (!user?.id || !subscriptionQuery.data?.id) return;
+        if (!user?.id || !subscriptionQuery.data?.subscription?.id) return;
 
-        const subscription = userAPI.subscribeToUserSubscriptionOrders?.(subscriptionQuery.data.id, (payload) => {
-            console.log('🔔 Subscription order update:', payload);
-            queryClient.invalidateQueries(['subscriptionOrders', user.id]);
-            queryClient.invalidateQueries(['nextMeal', user.id]);
-        });
-
-        return () => {
-            subscription?.unsubscribe();
-        };
-    }, [user?.id, subscriptionQuery.data?.id, queryClient]);
-
-    // Get next scheduled meal
-    const nextMealQuery = useQuery({
-        queryKey: ['nextMeal', user?.id, subscriptionQuery.data?.id],
-        queryFn: () => userAPI.getNextScheduledMeal(subscriptionQuery.data?.id),
-        enabled: !!subscriptionQuery.data?.id
-    });
-
-    // Check if user can create new subscription
-    const canCreateSubscription = () => {
-        if (!subscriptionQuery.data) return true;
-        
-        const currentStatus = subscriptionQuery.data.status;
-        const allowedStatuses = ['completed', 'cancelled'];
-        const canCreate = allowedStatuses.includes(currentStatus);
-        
-        console.log('🎯 Can Create Subscription Check:', {
-            currentStatus,
-            allowedStatuses,
-            canCreate,
-            hasSubscription: !!subscriptionQuery.data
-        });
-        
-        return canCreate;
-    };
-
-    // Enhanced create mutation with validation
-    const createMutation = useMutation({
-        mutationFn: (subscriptionData) => {
-            // Check if user can create subscription
-            if (!canCreateSubscription()) {
-                throw new Error('USER_HAS_ACTIVE_SUBSCRIPTION');
+        const subscription = ordersAPI.subscribeToUserOrders(user.id, (payload) => {
+            console.log('🔔 Order update received:', payload);
+            if (payload.new?.subscription_id === subscriptionQuery.data.subscription.id) {
+                queryClient.invalidateQueries(['subscriptionOrders', user.id]);
             }
-            return userAPI.createUserSubscription(user.id, subscriptionData);
+        });
+
+        return () => subscription?.unsubscribe();
+    }, [user?.id, subscriptionQuery.data?.subscription?.id, queryClient]);
+
+    // Create subscription with orders - WITH DOUBLE SUBMISSION PREVENTION
+    const createMutation = useMutation({
+        mutationFn: async (subscriptionData) => {
+            // Prevent double submission
+            if (creatingRef.current) {
+                console.log('⏸️ Subscription creation already in progress, ignoring duplicate call');
+                throw new Error('CREATION_IN_PROGRESS');
+            }
+            
+            creatingRef.current = true;
+            
+            try {
+                const result = await userAPI.createUserSubscription(user.id, subscriptionData);
+                return result;
+            } finally {
+                // Reset the flag after a short delay to allow for UI updates
+                setTimeout(() => {
+                    creatingRef.current = false;
+                }, 1000);
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['userSubscription', user.id]);
-            queryClient.invalidateQueries(['allUserSubscriptions', user.id]);
             queryClient.invalidateQueries(['subscriptionOrders', user.id]);
+            queryClient.invalidateQueries(['subscriptionValidation', user.id]);
         },
         onError: (error) => {
-            console.error('❌ Subscription Creation Error:', error);
-        }
-    });
-    
-    const updateMutation = useMutation({
-        mutationFn: ({ subscriptionId, subscriptionData }) => 
-            userAPI.updateUserSubscription(subscriptionId, subscriptionData),
-        onSuccess: () => {
-            queryClient.invalidateQueries(['userSubscription', user.id]);
-            queryClient.invalidateQueries(['allUserSubscriptions', user.id]);
-            queryClient.invalidateQueries(['subscriptionOrders', user.id]);
+            // Reset the flag on error
+            creatingRef.current = false;
+            
+            // Don't show error for duplicate submissions
+            if (error.message !== 'CREATION_IN_PROGRESS') {
+                console.error('❌ Subscription creation error:', error);
+            }
         }
     });
 
-    const updateOrderMutation = useMutation({
-        mutationFn: ({ orderId, orderData }) => 
-            userAPI.updateOrder(orderId, orderData),
+    // Activate next order
+    const activateNextOrderMutation = useMutation({
+        mutationFn: ({ subscriptionId }) =>
+            ordersAPI.activateNextSubscriptionOrder(subscriptionId),
         onSuccess: () => {
-            queryClient.invalidateQueries(['subscriptionOrders', user.id]);
-            queryClient.invalidateQueries(['nextMeal', user.id]);
-        }
-    });
-
-    const activateOrderMutation = useMutation({
-        mutationFn: ({ orderId, deliveryTime, deliveryDate }) =>
-            userAPI.activateOrder(orderId, { 
-                scheduled_delivery_date: deliveryDate,
-                status: 'active'
-            }),
-        onSuccess: () => {
-            queryClient.invalidateQueries(['subscriptionOrders', user.id]);
-            queryClient.invalidateQueries(['nextMeal', user.id]);
-        }
-    });
-    
-    const pauseMutation = useMutation({
-        mutationFn: ({ subscriptionId, pauseReason }) => 
-            userAPI.pauseUserSubscription(subscriptionId, pauseReason),
-        onSuccess: () => {
-            queryClient.invalidateQueries(['userSubscription', user.id]);
-            queryClient.invalidateQueries(['allUserSubscriptions', user.id]);
             queryClient.invalidateQueries(['subscriptionOrders', user.id]);
         }
     });
     
-    const resumeMutation = useMutation({
-        mutationFn: ({ subscriptionId }) => 
-            userAPI.resumeUserSubscription(subscriptionId),
-        onSuccess: () => {
-            queryClient.invalidateQueries(['userSubscription', user.id]);
-            queryClient.invalidateQueries(['allUserSubscriptions', user.id]);
-            queryClient.invalidateQueries(['subscriptionOrders', user.id]);
-        }
-    });
-
-    // Cancel subscription mutation
-    const cancelMutation = useMutation({
-        mutationFn: ({ subscriptionId, cancelReason }) => 
-            userAPI.cancelUserSubscription(subscriptionId, cancelReason),
-        onSuccess: () => {
-            queryClient.invalidateQueries(['userSubscription', user.id]);
-            queryClient.invalidateQueries(['allUserSubscriptions', user.id]);
-            queryClient.invalidateQueries(['subscriptionOrders', user.id]);
-        }
+    // Debug logging for returned values
+    console.log('🎯 useUserSubscriptions return values:', {
+        hasSubscription: !!subscriptionQuery.data?.subscription,
+        subscriptionId: subscriptionQuery.data?.subscription?.id,
+        mealsCount: mealsQuery.data?.length,
+        isSubLoading: subscriptionQuery.isLoading || mealsQuery.isLoading,
+        subscriptionQueryStatus: subscriptionQuery.status,
+        mealsQueryStatus: mealsQuery.status,
+        mealsQueryEnabled: !!subscriptionQuery.data?.subscription
     });
     
     return {
         // Data
-        subscription: subscriptionQuery.data || null,
-        allSubscriptions: allSubscriptionsQuery.data || [],
-        orders: ordersQuery.data || [],
-        nextMeal: nextMealQuery.data || null,
+        subscription: subscriptionQuery.data?.subscription || null,
+        subscriptionStats: subscriptionQuery.data?.stats || null,
+        nextOrder: subscriptionQuery.data?.nextOrder || null,
+        subscriptionOrders: ordersQuery.data || [],
+        subscriptionMeals: mealsQuery.data || [],
         
         // Loading states
-        isLoading: subscriptionQuery.isLoading,
-        allSubscriptionsLoading: allSubscriptionsQuery.isLoading,
+        isSubLoading: subscriptionQuery.isLoading || mealsQuery.isLoading,
         ordersLoading: ordersQuery.isLoading,
-        nextMealLoading: nextMealQuery.isLoading,
         
-        // Error states
-        isError: subscriptionQuery.isError,
-        error: subscriptionQuery.error,
+        // Query states for debugging
+        subscriptionQueryStatus: subscriptionQuery.status,
+        mealsQueryStatus: mealsQuery.status,
+        mealsQueryError: mealsQuery.error,
         
-        // Validation
-        canCreateSubscription: canCreateSubscription(),
-        hasActiveSubscription: subscriptionQuery.data && !['completed', 'cancelled'].includes(subscriptionQuery.data.status),
-        subscriptionStatus: subscriptionQuery.data?.status,
+        // Refetch functions
+        refetchMeals: mealsQuery.refetch,
+        refetchSubscription: subscriptionQuery.refetch,
         
         // Mutations
         createSubscription: createMutation.mutateAsync,
-        updateSubscription: updateMutation.mutateAsync,
-        updateOrder: updateOrderMutation.mutateAsync,
-        activateOrder: activateOrderMutation.mutateAsync,
-        pauseSubscription: pauseMutation.mutateAsync,
-        resumeSubscription: resumeMutation.mutateAsync,
-        cancelSubscription: cancelMutation.mutateAsync,
+        activateNextOrder: activateNextOrderMutation.mutateAsync,
         
-        // Mutation loading states
+        // Mutation states
         isCreating: createMutation.isPending,
-        isUpdating: updateMutation.isPending,
-        isActivatingOrder: activateOrderMutation.isPending,
-        isPausing: pauseMutation.isPending,
-        isResuming: resumeMutation.isPending,
-        isCancelling: cancelMutation.isPending,
-
-        // Refetch functions
-        refetchSubscription: subscriptionQuery.refetch,
-        refetchAllSubscriptions: allSubscriptionsQuery.refetch
+        isActivating: activateNextOrderMutation.isPending
     };
 };
 
@@ -246,7 +282,7 @@ export const useSubscriptionValidation = () => {
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 5, // 5 minutes
     onSuccess: (data) => {
-      console.log('✅ Subscription Validation Result:', data);
+      //console.log('✅ Subscription Validation Result:', data);
     },
     onError: (error) => {
       console.error('❌ Subscription Validation Error:', error);

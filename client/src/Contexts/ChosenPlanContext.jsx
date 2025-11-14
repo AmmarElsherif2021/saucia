@@ -135,7 +135,7 @@ export const ChosenPlanProvider = ({ children }) => {
   // Fetch additives function
   const fetchPlanAdditives = useCallback(async (additiveIds) => {
     if (!additiveIds || additiveIds.length === 0) return [];
-    console.log(`Additives from chosenPlanContext: ${additiveIds}`);
+    //console.log(`Additives from chosenPlanContext: ${additiveIds}`);
     try {
       const { data } = await supabase
         .from('items')
@@ -305,7 +305,7 @@ export const ChosenPlanProvider = ({ children }) => {
 
   // Get API payload
   const getSubscriptionPayload = useCallback((userId) => {
-  const { selected_term, plan, delivery_schedule, next_delivery_meal, ...apiData } = subscriptionData;
+  const { selected_term, plan, delivery_schedule, ...apiData } = subscriptionData;
   return {
     user_id: userId,
     ...apiData,

@@ -32,7 +32,6 @@ export const CurrentPlanBrief = () => {
   
   const { 
     orders: subscriptionOrders, 
-    nextMeal, 
     isLoading: ordersLoading 
   } = useUserSubscriptions()
   
@@ -41,22 +40,22 @@ export const CurrentPlanBrief = () => {
   const avatarSize = useBreakpointValue({ base: '70px', md: '85px' })
 
   // Debug logging for data integrity
-  useEffect(() => {
-    console.log('🔍 CurrentPlanBrief Data Debug:', {
-      hasSubscription: !!currentSubscription,
-      subscriptionStatus: currentSubscription?.status,
-      subscriptionId: currentSubscription?.id,
-      ordersCount: subscriptionOrders?.length,
-      nextMeal: nextMeal,
-      isLoading: isSubscriptionLoading || ordersLoading
-    });
-  }, [currentSubscription, subscriptionOrders, nextMeal, isSubscriptionLoading, ordersLoading]);
+  // useEffect(() => {
+  //   //console.log('🔍 CurrentPlanBrief Data Debug:', {
+  //     hasSubscription: !!currentSubscription,
+  //     subscriptionStatus: currentSubscription?.status,
+  //     subscriptionId: currentSubscription?.id,
+  //     ordersCount: subscriptionOrders?.length,
+  //     nextMeal: nextMeal,
+  //     isLoading: isSubscriptionLoading || ordersLoading
+  //   });
+  // }, [currentSubscription, subscriptionOrders, nextMeal, isSubscriptionLoading, ordersLoading]);
 
   // Calculate subscription statistics using shared utility
   useEffect(() => {
     if (subscriptionOrders && currentSubscription) {
       const stats = useSubscriptionStats(subscriptionOrders, currentSubscription);
-      console.log('📊 Subscription Stats:', stats);
+      //console.log('📊 Subscription Stats:', stats);
       setSubscriptionStats(stats);
     }
   }, [subscriptionOrders, currentSubscription]);
@@ -103,7 +102,7 @@ export const CurrentPlanBrief = () => {
     ['active', 'confirmed', 'preparing', 'out_for_delivery'].includes(order.status)
   )
 
-  console.log('🎯 Next Order:', nextOrder);
+  //console.log('🎯 Next Order:', nextOrder);
 
   return (
     <Box 

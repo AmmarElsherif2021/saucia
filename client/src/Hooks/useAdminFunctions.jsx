@@ -63,7 +63,7 @@ export const useAdminFunctions = () => {
   };
 
   // Update item with allergies
-  const useUpdateItem = () => {
+const useUpdateItem = () => {
     return useMutation({
       mutationFn: async ({ itemId, updateData }) => {
         const { allergy_ids, ...baseItemData } = updateData;
@@ -122,38 +122,30 @@ export const useAdminFunctions = () => {
 
   // Get all meals with allergies and items
   const useGetAllMeals = (options = {}) => {
-    return useQuery({
-      queryKey: ['admin', 'meals', options],
-      queryFn: async () => {
-        const meals = await adminAPI.getAllMeals(options);
-        return meals.map(meal => ({
-          ...meal,
-          allergies: meal.allergies || [],
-          allergy_ids: meal.allergies?.map(a => a.id) || [],
-          item_ids: meal.item_ids || []
-        }));
-      },
-      staleTime: 5 * 60 * 1000,
-    });
-  };
+  return useQuery({
+    queryKey: ['admin', 'meals', options],
+    queryFn: async () => {
+      const meals = await adminAPI.getAllMeals(options);
+      // Data is already transformed by adminAPI.getAllMeals
+      return meals;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+};
 
-  // Get single meal details
-  const useGetMealDetails = (mealId) => {
-    return useQuery({
-      queryKey: ['admin', 'meal', mealId],
-      queryFn: async () => {
-        const meal = await adminAPI.getMealDetails(mealId);
-        return {
-          ...meal,
-          allergies: meal.allergies || [],
-          allergy_ids: meal.allergies?.map(a => a.id) || [],
-          item_ids: meal.item_ids || []
-        };
-      },
-      enabled: !!mealId,
-      staleTime: 2 * 60 * 1000,
-    });
-  };
+// Get single meal details
+const useGetMealDetails = (mealId) => {
+  return useQuery({
+    queryKey: ['admin', 'meal', mealId],
+    queryFn: async () => {
+      const meal = await adminAPI.getMealDetails(mealId);
+      // Data is already transformed by adminAPI.getMealDetails
+      return meal;
+    },
+    enabled: !!mealId,
+    staleTime: 2 * 60 * 1000,
+  });
+};
 
   // Get meal items (for selective meals)
   const useGetMealItems = (mealId) => {
@@ -284,23 +276,6 @@ export const useAdminFunctions = () => {
     });
   };
 
-  // Get single plan details with meals
-  const useGetPlanDetails = (planId) => {
-    return useQuery({
-      queryKey: ['admin', 'plan', planId],
-      queryFn: async () => {
-        const plan = await adminAPI.getPlanDetails(planId);
-        const planMeals = await adminAPI.getPlanMeals(planId);
-        return {
-          ...plan,
-          meal_ids: planMeals.map(pm => pm.meal_id),
-          meals: planMeals
-        };
-      },
-      enabled: !!planId,
-      staleTime: 2 * 60 * 1000,
-    });
-  };
 
   // Get plan meals
   const useGetPlanMeals = (planId) => {
@@ -314,51 +289,69 @@ export const useAdminFunctions = () => {
 
   // Create plan with meals
   const useCreatePlan = () => {
-    return useMutation({
-      mutationFn: async (planData) => {
-        const { meal_ids, meals, ...basePlanData } = planData;
-        
-        // Create base plan
-        const plan = await adminAPI.createPlan(basePlanData);
-        
-        // Create plan_meals junction records
-        const mealIdsToAdd = meal_ids || meals || [];
-        if (mealIdsToAdd.length > 0) {
-          await adminAPI.updatePlanMeals(plan.id, mealIdsToAdd);
-        }
-        
-        return plan;
-      },
-      onSuccess: () => {
-        queryClient.invalidateQueries(['admin', 'plans']);
+  return useMutation({
+    mutationFn: async (planData) => {
+      console.log('🔄 useCreatePlan called with:', planData);
+      
+      const { meal_ids, meals, ...basePlanData } = planData;
+      
+      // Create base plan
+      const plan = await adminAPI.createPlan(basePlanData);
+      console.log('✅ Base plan created:', plan);
+      
+      // Determine which meals data to use
+      const mealsToAdd = meals || meal_ids || [];
+      
+      if (mealsToAdd.length > 0) {
+        console.log('🔄 Creating plan_meals with:', mealsToAdd);
+        await adminAPI.updatePlanMeals(plan.id, mealsToAdd);
+        console.log('✅ Plan meals created');
       }
-    });
-  };
+      
+      return plan;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['admin', 'plans']);
+    }
+  });
+};
 
   // Update plan with meals
   const useUpdatePlan = () => {
-    return useMutation({
-      mutationFn: async ({ planId, updateData }) => {
-        const { meal_ids, meals, ...basePlanData } = updateData;
-        
-        // Update base plan
-        const plan = await adminAPI.updatePlan(planId, basePlanData);
-        
-        // Update plan_meals junction if provided
-        const mealIdsToUpdate = meal_ids || meals;
-        if (mealIdsToUpdate !== undefined) {
-          await adminAPI.updatePlanMeals(planId, mealIdsToUpdate);
-        }
-        
-        return plan;
-      },
-      onSuccess: (_, { planId }) => {
-        queryClient.invalidateQueries(['admin', 'plan', planId]);
-        queryClient.invalidateQueries(['admin', 'plans']);
+  return useMutation({
+    mutationFn: async ({ planId, updateData }) => {
+      console.log('🔄 useUpdatePlan called with:', { planId, updateData });
+      console.log('📋 Meals data in updatePlan:', updateData.meals);
+      
+      const { meal_ids, meals, ...basePlanData } = updateData;
+      
+      // Update base plan first
+      const plan = await adminAPI.updatePlan(planId, basePlanData);
+      console.log('✅ Base plan updated:', plan);
+      
+      // CRITICAL: Always update meals, even if empty array
+      // This ensures meal deletions are processed
+      const mealsToUpdate = meals !== undefined ? meals : meal_ids;
+      
+      console.log('📋 Meals to update in plan:', mealsToUpdate);
+      console.log('🔍 Meals type:', Array.isArray(mealsToUpdate) ? 'array' : typeof mealsToUpdate);
+      
+      if (mealsToUpdate !== undefined) {
+        console.log('🔄 Updating plan_meals with:', mealsToUpdate);
+        const result = await adminAPI.updatePlanMeals(planId, mealsToUpdate);
+        console.log('✅ Plan meals updated result:', result);
+      } else {
+        console.log('⚠️ No meals to update for plan');
       }
-    });
-  };
-
+      
+      return plan;
+    },
+    onSuccess: (_, { planId }) => {
+      queryClient.invalidateQueries(['admin', 'plan', planId]);
+      queryClient.invalidateQueries(['admin', 'plans']);
+    }
+  });
+};
   // Delete plan (CASCADE deletes plan_meals)
   const useDeletePlan = () => {
     return useMutation({
@@ -380,6 +373,53 @@ export const useAdminFunctions = () => {
       }
     });
   };
+  // Add meal to plan
+const useAddMealToPlan = () => {
+  return useMutation({
+    mutationFn: ({ planId, mealId, isSubstitutable }) => 
+      adminAPI.addMealToPlan(planId, mealId, isSubstitutable),
+    onSuccess: (_, { planId }) => {
+      queryClient.invalidateQueries(['admin', 'plan', planId]);
+      queryClient.invalidateQueries(['admin', 'plan', planId, 'meals']);
+    }
+  });
+};
+
+// Remove meal from plan
+const useRemoveMealFromPlan = () => {
+  return useMutation({
+    mutationFn: ({ planId, mealId }) => 
+      adminAPI.removeMealFromPlan(planId, mealId),
+    onSuccess: (_, { planId }) => {
+      queryClient.invalidateQueries(['admin', 'plan', planId]);
+      queryClient.invalidateQueries(['admin', 'plan', planId, 'meals']);
+    }
+  });
+};
+
+// Update meal substitutability
+const useUpdatePlanMealSubstitutability = () => {
+  return useMutation({
+    mutationFn: ({ planId, mealId, isSubstitutable }) => 
+      adminAPI.updatePlanMealSubstitutability(planId, mealId, isSubstitutable),
+    onSuccess: (_, { planId }) => {
+      queryClient.invalidateQueries(['admin', 'plan', planId]);
+      queryClient.invalidateQueries(['admin', 'plan', planId, 'meals']);
+    }
+  });
+};
+
+// UPDATE the useGetPlanDetails hook
+const useGetPlanDetails = (planId) => {
+  return useQuery({
+    queryKey: ['admin', 'plan', planId],
+    queryFn: async () => {
+      return await adminAPI.getPlanDetails(planId);
+    },
+    enabled: !!planId,
+    staleTime: 2 * 60 * 1000,
+  });
+};
 
   // =====================================================
   // USER PROFILES MANAGEMENT (with all user_* junctions)
@@ -659,6 +699,9 @@ export const useAdminFunctions = () => {
     useUpdatePlan,
     useDeletePlan,
     useUpdatePlanStatus,
+    useAddMealToPlan,
+    useRemoveMealFromPlan,
+    useUpdatePlanMealSubstitutability,
 
     // USERS
     useGetAllUsers,

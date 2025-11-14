@@ -281,25 +281,38 @@ async getUserActiveSubscription(userId) {
 
   if (error) throw error;
   
-  console.log('🔍 Active Subscription Query:', {
-    userId,
-    found: !!data?.[0],
-    status: data?.[0]?.status,
-    subscriptionId: data?.[0]?.id
-  });
+  //console.log('🔍 Active Subscription Query:', {
+  //   userId,
+  //   found: !!data?.[0],
+  //   status: data?.[0]?.status,
+  //   subscriptionId: data?.[0]?.id
+  // });
   
   return data?.[0] || null;
 },
 
+// Replace the createUserSubscription and createUserSubscriptionWithOrders methods in userAPI.jsx
+
 async createUserSubscription(userId, subscriptionData) {
-  console.log('🚀 Creating subscription for user:', userId, subscriptionData);
+  console.log('🚀 Creating subscription for user:', userId);
   
-  // Check if user already has an active subscription
-  const activeSubscription = await this.getUserActiveSubscription(userId);
-  if (activeSubscription) {
+  // Use a transaction-like approach with unique constraint check
+  const { data: existingActive, error: checkError } = await supabase
+    .from('user_subscriptions')
+    .select('id, status')
+    .eq('user_id', userId)
+    .not('status', 'in', '("completed","cancelled")')
+    .maybeSingle(); // Use maybeSingle to handle no results gracefully
+
+  if (checkError) {
+    console.error('❌ Error checking active subscription:', checkError);
+    throw checkError;
+  }
+
+  if (existingActive) {
     console.error('❌ User already has active subscription:', {
-      existingSubscriptionId: activeSubscription.id,
-      existingStatus: activeSubscription.status,
+      existingSubscriptionId: existingActive.id,
+      existingStatus: existingActive.status,
       userId: userId
     });
     throw new Error('USER_HAS_ACTIVE_SUBSCRIPTION');
@@ -315,11 +328,72 @@ async createUserSubscription(userId, subscriptionData) {
   };
 
   console.log('✅ Creating new subscription:', newSubscription);
-  return createRecord('user_subscriptions', newSubscription);
+  
+  const { data, error } = await supabase
+    .from('user_subscriptions')
+    .insert([newSubscription])
+    .select()
+    .single();
+
+  if (error) {
+    // Check if it's a duplicate key error (race condition caught by DB)
+    if (error.code === '23505') {
+      console.error('❌ Duplicate subscription detected by database');
+      throw new Error('USER_HAS_ACTIVE_SUBSCRIPTION');
+    }
+    throw error;
+  }
+
+  return data;
+},
+
+async createUserSubscriptionWithOrders(userId, subscriptionData) {
+  try {
+    console.log('🚀 [userAPI] Creating subscription with orders:', userId);
+
+    // Create subscription record (with built-in duplicate check)
+    const subscription = await this.createUserSubscription(userId, subscriptionData);
+    
+    // 3. Create all pending orders for the subscription
+    const { ordersAPI } = await import('../API/orderAPI');
+    const orders = await ordersAPI.createSubscriptionOrders(
+      subscription.id,
+      {
+        ...subscriptionData,
+        total_meals: subscriptionData.total_meals,
+        meals: subscriptionData.meals,
+        contact_phone: subscriptionData.contact_phone
+      }
+    );
+
+    // 4. Activate first order if subscription is active
+    if (subscription.status === 'active') {
+      await ordersAPI.activateNextSubscriptionOrder(subscription.id);
+    }
+
+    console.log('✅ [userAPI] Subscription created with orders:', {
+      subscriptionId: subscription.id,
+      ordersCreated: orders.length
+    });
+
+    return {
+      subscription,
+      orders
+    };
+  } catch (error) {
+    console.error('❌ [userAPI] createUserSubscriptionWithOrders error:', error);
+    
+    // Provide more user-friendly error message
+    if (error.message === 'USER_HAS_ACTIVE_SUBSCRIPTION') {
+      throw new Error('You already have an active subscription. Please complete or cancel it before creating a new one.');
+    }
+    
+    throw error;
+  }
 },
 
 async cancelUserSubscription(subscriptionId, cancelReason) {
-  console.log('🛑 Cancelling subscription:', { subscriptionId, cancelReason });
+  //console.log('🛑 Cancelling subscription:', { subscriptionId, cancelReason });
   
   return updateRecord('user_subscriptions', subscriptionId, {
     status: 'cancelled',
@@ -328,6 +402,8 @@ async cancelUserSubscription(subscriptionId, cancelReason) {
     updated_at: new Date().toISOString(),
   });
 },
+//Live subscription
+// Add this to the "Hot updates" section of userAPI
 
 // Enhanced subscription validation
 async validateSubscriptionCreation(userId) {
@@ -340,107 +416,12 @@ async validateSubscriptionCreation(userId) {
     allowedStatuses: ['completed', 'cancelled']
   };
 
-  console.log('🔍 Subscription Creation Validation:', validationResult);
+  //console.log('🔍 Subscription Creation Validation:', validationResult);
   
   return validationResult;
 },
 
-  async getSubscriptionOrders(subscriptionId) {
-  const { data, error } = await supabase
-    .from('orders')
-    .select(`
-      *,
-      order_meals (
-        id,
-        meal_id,
-        name,
-        name_arabic,
-        quantity,
-        unit_price,
-        total_price,
-        meals (
-          id,
-          name,
-          name_arabic,
-          description,
-          description_arabic,
-          image_url,
-          thumbnail_url,
-          calories,
-          protein_g,
-          carbs_g,
-          fat_g
-        )
-      ),
-      order_items (
-        id,
-        item_id,
-        name,
-        name_arabic,
-        category,
-        quantity,
-        unit_price,
-        total_price
-      ),
-      user_addresses!delivery_address_id (
-        id,
-        label,
-        address_line1,
-        city,
-        state
-      )
-    `)
-    .eq('subscription_id', subscriptionId)
-    .order('scheduled_delivery_date', { ascending: true });
 
-  if (error) throw error;
-  return data || [];
-},
-async getNextScheduledMeal(subscriptionId) {
-  const { data, error } = await supabase
-    .from('orders')
-    .select(`
-      *,
-      order_meals (
-        id,
-        meal_id,
-        name,
-        name_arabic,
-        quantity,
-        unit_price,
-        total_price,
-        meals (
-          id,
-          name,
-          name_arabic,
-          image_url,
-          thumbnail_url
-        )
-      )
-    `)
-    .eq('subscription_id', subscriptionId)
-    .in('status', ['preparing','out_for_delivery', 'confirmed','pending'])
-    .order('scheduled_delivery_date', { ascending: true })
-    .limit(1);
-
-  if (error) throw error;
-  return data?.[0] || null;
-},
-async updateOrder(orderId, orderData) {
-  const updatedOrder = {
-    ...orderData,
-    updated_at: new Date().toISOString(),
-  };
-
-  // Remove undefined values
-  Object.keys(updatedOrder).forEach(key => {
-    if (updatedOrder[key] === undefined) {
-      delete updatedOrder[key];
-    }
-  });
-
-  return updateRecord('orders', orderId, updatedOrder);
-},
   async updateUserSubscription(subscriptionId, subscriptionData) {
     const updatedSubscription = {
       ...subscriptionData,
@@ -456,41 +437,9 @@ async updateOrder(orderId, orderData) {
 
     return updateRecord('user_subscriptions', subscriptionId, updatedSubscription);
   },
-  async activateOrder(orderId, orderData) {
-  const activatedOrder = {
-    status: 'active',
-    scheduled_delivery_date: orderData.scheduled_delivery_date,
-    updated_at: new Date().toISOString(),
-  };
 
-  return updateRecord('orders', orderId, activatedOrder);
-},
 
-async getOrderItems(orderId) {
-  return fetchList('order_items', {
-    field: 'order_id',
-    value: orderId,
-    select: `*,
-      items (
-        id,
-        name,
-        name_arabic,
-        description,
-        category,
-        price,
-        image_url
-      )`
-  });
-},
 
-async updateOrderItem(orderItemId, itemData) {
-  const updatedItem = {
-    ...itemData,
-    total_price: itemData.unit_price * itemData.quantity, // Ensure total is calculated
-  };
-
-  return updateRecord('order_items', orderItemId, updatedItem);
-},
 
 // Enhanced subscription methods
 async getSubscriptionStats(subscriptionId) {
@@ -986,7 +935,7 @@ async resumeUserSubscription(subscriptionId) {
   // Enhanced subscription creation with real-time setup
   async createUserSubscriptionWithRealtime(userId, subscriptionData) {
     try {
-      console.log('🚀 Creating subscription with real-time setup:', { userId, subscriptionData });
+      //console.log('🚀 Creating subscription with real-time setup:', { userId, subscriptionData });
       
       // Validate subscription creation
       const validation = await this.validateSubscriptionCreation(userId);
@@ -1005,7 +954,7 @@ async resumeUserSubscription(subscriptionId) {
 
       const createdSubscription = await createRecord('user_subscriptions', newSubscription);
       
-      console.log('✅ Subscription created with real-time setup:', createdSubscription);
+      //console.log('✅ Subscription created with real-time setup:', createdSubscription);
       
       return createdSubscription;
     } catch (error) {

@@ -36,7 +36,8 @@ import {
   ModalCloseButton,
   useToast,
   Checkbox,
-  Text
+  Text,
+  IconButton
 } from '@chakra-ui/react'
 import { 
   FaUsers, 
@@ -48,7 +49,7 @@ import {
   FaSync, 
   FaUtensils 
 } from 'react-icons/fa';
-
+import { ArrowUpDownIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon } from '@chakra-ui/icons';
 // TanStack Table imports
 import {
   useReactTable,
@@ -89,21 +90,24 @@ import AdminAddressManager from './AdminAddressManager.jsx';
 import { useDebugUser } from '../../Hooks/useDebugUser.jsx';
 import InstantOrdersMonitoring from './InstantOrdersSchedule.jsx';
 import MenuPDFPortal from './MenPDF.jsx';
+import { useI18nContext } from '../../Contexts/I18nContext.jsx';
 
 // Enhanced Table Component with TanStack
 const EnhancedTable = ({ 
   data, 
   columns, 
-  isLoading,
+  isLoading = false,
   onRowClick,
   enableSorting = true,
   enablePagination = true,
-  enableRowSelection = false
+  enableRowSelection = false,
+  maxHeight = '500px'
 }) => {
-  const [sorting, setSorting] = useState([])
-  const [globalFilter, setGlobalFilter] = useState('')
-  const [rowSelection, setRowSelection] = useState({})
-
+  const [sorting, setSorting] = useState([]);
+  const [globalFilter, setGlobalFilter] = useState('');
+  const [rowSelection, setRowSelection] = useState({});
+  const {currentLanguage}=useI18nContext();
+  const isArabic = currentLanguage==='ar'
   const table = useReactTable({
     data: data || [],
     columns,
@@ -121,7 +125,7 @@ const EnhancedTable = ({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: enablePagination ? getPaginationRowModel() : undefined,
-  })
+  });
 
   return (
     <Box>
@@ -135,100 +139,142 @@ const EnhancedTable = ({
         
         {enablePagination && (
           <Flex align="center" gap={2}>
-            <Button
+            <IconButton 
+              icon={<ChevronLeftIcon/>}
               size="sm"
+              borderRadius={'full'}
               onClick={() => table.previousPage()}
               isDisabled={!table.getCanPreviousPage()}
-            >
-              Previous
-            </Button>
+            />
+             
             <Text fontSize="sm">
               Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
             </Text>
-            <Button
+            <IconButton 
+              icon={<ChevronRightIcon/>}
               size="sm"
+              borderRadius={'full'}
               onClick={() => table.nextPage()}
               isDisabled={!table.getCanNextPage()}
-            >
-              Next
-            </Button>
+            />
+             
           </Flex>
         )}
       </Flex>
 
-      {/* Table */}
-      <ScrollableTableContainer>
-        <TableContainer>
+      {/* Table Container with Sticky Headers & Actions */}
+      <Box 
+        position="relative" 
+        border="2px" 
+        borderColor="brand.600" 
+        borderRadius="md" 
+        overflow="hidden"
+      >
+        <Box 
+          overflowX="auto"
+          overflowY="auto"
+          maxHeight={maxHeight}
+        >
           <Table variant="striped" size="sm">
             <Thead>
               {table.getHeaderGroups().map(headerGroup => (
                 <Tr key={headerGroup.id}>
-                  {headerGroup.headers.map(header => (
-                    <Th 
-                      key={header.id}
-                      onClick={header.column.getToggleSortingHandler()}
-                      cursor={enableSorting && header.column.getCanSort() ? 'pointer' : 'default'}
-                      userSelect="none"
-                      position="relative"
-                      bg="white"
-                    >
-                      <Flex align="center" gap={2}>
-                        {enableRowSelection && header.id === 'select' ? (
-                          <Checkbox
-                            isChecked={table.getIsAllRowsSelected()}
-                            isIndeterminate={table.getIsSomeRowsSelected()}
-                            onChange={table.getToggleAllRowsSelectedHandler()}
-                          />
-                        ) : (
-                          flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )
-                        )}
-                        
-                        {enableSorting && header.column.getCanSort() && (
-                          <Box color="gray.400" fontSize="xs">
-                            {{
-                              asc: <SortUpIcon />,
-                              desc: <SortDownIcon />,
-                            }[header.column.getIsSorted()] ?? <SortIcon />}
-                          </Box>
-                        )}
-                      </Flex>
-                    </Th>
-                  ))}
+                  {headerGroup.headers.map((header) => {
+                    const isActionsColumn = header.id === 'actions';
+                    return (
+                      <Th 
+                        key={header.id}
+                        onClick={!isActionsColumn ? header.column.getToggleSortingHandler() : undefined}
+                        cursor={enableSorting && header.column.getCanSort() && !isActionsColumn ? 'pointer' : 'default'}
+                        userSelect="none"
+                        position="sticky"
+                        top={0}
+                        right={isActionsColumn && !isArabic ? 0 : 'auto'}
+                        left={isActionsColumn && isArabic ? 0 : 'auto'}
+                        borderRight={isActionsColumn && isArabic && 'dashed #039156ff 2px'}
+                        bg="white"
+                        zIndex={isActionsColumn ? 30 : 10}
+                        boxShadow={isActionsColumn ? '-2px 0 4px rgba(0,0,0,0.1)' : 'none'}
+                        color={'brand.700'}
+                        minW={isActionsColumn ? '140px' : '150px'}
+                        whiteSpace="nowrap"
+                        _hover={enableSorting && header.column.getCanSort() && !isActionsColumn ? { bg: 'gray.100' } : {}}
+                      >
+                        <Flex align="center" gap={2}>
+                          {enableRowSelection && header.id === 'select' ? (
+                            <Checkbox
+                              isChecked={table.getIsAllRowsSelected()}
+                              isIndeterminate={table.getIsSomeRowsSelected()}
+                              onChange={table.getToggleAllRowsSelectedHandler()}
+                            />
+                          ) : (
+                            flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )
+                          )}
+                          
+                          {enableSorting && header.column.getCanSort() && !isActionsColumn && (
+                            <Box color="gray.400" fontSize="xs">
+                              {header.column.getIsSorted() === 'asc' ? (
+                                <ChevronUpIcon />
+                              ) : header.column.getIsSorted() === 'desc' ? (
+                                <ChevronDownIcon />
+                              ) : (
+                                <ArrowUpDownIcon />
+                              )}
+                            </Box>
+                          )}
+                        </Flex>
+                      </Th>
+                    );
+                  })}
                 </Tr>
               ))}
             </Thead>
             <Tbody>
-              {table.getRowModel().rows.map(row => (
+              {table.getRowModel().rows.map((row, rowIndex) => (
                 <Tr 
                   key={row.id}
                   onClick={() => onRowClick?.(row.original)}
                   cursor={onRowClick ? 'pointer' : 'default'}
-                  _hover={onRowClick ? { bg: 'gray.50' } : {}}
+                  _hover={onRowClick ? { bg: 'gray.100' } : {}}
                 >
-                  {row.getVisibleCells().map(cell => (
-                    <Td key={cell.id}>
-                      {enableRowSelection && cell.column.id === 'select' ? (
-                        <Checkbox
-                          isChecked={row.getIsSelected()}
-                          onChange={row.getToggleSelectedHandler()}
-                        />
-                      ) : (
-                        flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )
-                      )}
-                    </Td>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const isActionsColumn = cell.column.id === 'actions';
+                    return (
+                      <Td 
+                        key={cell.id}
+                        position={isActionsColumn ? 'sticky' : 'relative'}
+                        right={isActionsColumn && !isArabic ? 0 : 'auto'}
+                        left={isActionsColumn && isArabic ? 0 : 'auto'}
+                        bg={isActionsColumn ? (rowIndex % 2 === 0 ? 'white' : 'gray.50') : 'inherit'}
+                        zIndex={isActionsColumn ? 10 : 0}
+                        boxShadow={isActionsColumn ? '-2px 0 4px rgba(0,0,0,0.05)' : 'none'}
+                        whiteSpace="nowrap"
+                        py={0}
+                        
+                      >
+                        {enableRowSelection && cell.column.id === 'select' ? (
+                          <Checkbox
+                            isChecked={row.getIsSelected()}
+                            onChange={row.getToggleSelectedHandler()}
+                          />
+                        ) : (
+                          flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )
+                        )}
+                      </Td>
+                    );
+                  })}
                 </Tr>
               ))}
             </Tbody>
           </Table>
-        </TableContainer>
-      </ScrollableTableContainer>
+        </Box>
+      </Box>
 
       {/* Empty State */}
       {!isLoading && table.getRowModel().rows.length === 0 && (
@@ -237,9 +283,8 @@ const EnhancedTable = ({
         </Flex>
       )}
     </Box>
-  )
-}
-
+  );
+};
 // Reusable EntitySection component
 const EntitySection = ({ 
   entityType, 
@@ -251,7 +296,8 @@ const EntitySection = ({
   const { config, filterEntities, searchTerm, setSearchTerm, selectedEntity, setSelectedEntity, modals, handlers } = entityManager
   const filteredData = filterEntities(data)
   const { t } = useTranslation(); 
-
+  const {currentLanguage}=useI18nContext();
+  const isArabic = currentLanguage==='ar'
   // Transform columns for TanStack Table
   const tableColumns = useMemo(() => [
     ...(config?.columns?.map(column => ({
@@ -282,9 +328,9 @@ const EntitySection = ({
     })) || []),
     {
       id: 'actions',
-      header: 'Actions',
+      header: <span style={{backgroundColor:'#ffffff'}}>Actions</span>,
       cell: ({ row }) => (
-        <Stack direction="row" spacing={2}>
+        <Stack direction="row" spacing={2} borderLeft={!isArabic && 'dashed #24857dff 1px'} borderRight={isArabic && 'dashed #24857dff 1px'} my={0}>
           <Button
             size="sm"
             colorScheme="brand"
@@ -409,13 +455,14 @@ const EntitySection = ({
       />
 
       <FormModal
+        key={selectedEntity?.id}
         isOpen={modals.edit.isOpen}
         onClose={modals.edit.onClose}
         title={t('admin.modals.edit_entity', {
           entity: t(config.singularKey || `admin.entities.${entityType}.singular`, { defaultValue: config.singular }),
           defaultValue: `Edit ${config.singular}`
         })}
-        onSubmit={(data) => handlers.handleEdit(selectedEntity?.id, data)}
+        onSubmit={(data) => handlers.handleEdit(selectedEntity?.id, data)}  // Make sure this passes the ID
         initialData={selectedEntity}
         FormComponent={config.FormComponent}
         isEdit={true}
@@ -566,9 +613,9 @@ const Admin = () => {
 
   if (isLoading) return <LoadingSpinner />
   if (error) return <ErrorAlert message={error?.message || 'Failed to load admin data'} retry={handleRetry} />
-  if (!user || !userInfo.profile.is_admin) return (
-    <ErrorAlert message="Access denied. Admins only." />
-  )
+  // if (!user || !userInfo.profile.is_admin) return (
+  //   <ErrorAlert message="Access denied. Admins only." />
+  // )
 
   return (
     <Box
@@ -644,7 +691,7 @@ const Admin = () => {
 
         <StatCard 
           title={t('admin.stats.available_meals', { defaultValue: "Available Meals" })} 
-          value={dashboardData?.availableMeals || 0} 
+          value={dashboardData?.totalMeals || 0} 
           colorScheme='blue'
           icon={<FaUtensils size={20} />}
         />

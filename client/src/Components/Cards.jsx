@@ -110,7 +110,7 @@ export const AddToCartModal = ({
       //   isClosable: true,
       //   position: "top-right",
       // });
-      console.log(`${quantity} × ${name} added to your cart`);
+      //console.log(`${quantity} × ${name} added to your cart`);
       onClose();
     } else {
       // Show error toast if needed
@@ -1637,7 +1637,7 @@ export const PlanCard = ({ plan }) => {
       if (plan?.title?.includes('Salad')) return saladsPlanImage
       return dailyMealPlanImage
     })()
-  //useEffect(()=>console.log(` from PlanCard ${JSON.stringify(plan)}`),[])
+  //useEffect(()=>//console.log(` from PlanCard ${JSON.stringify(plan)}`),[])
   // Construct description from plan data - with null checks
   const description = plan
     ? `${plan.carb || 0}g ${t('premium.carbs')} • ${plan.protein || 0}g ${t('premium.protein')} • ${plan.kcal || 0}${t('premium.kcal')}`
@@ -1645,8 +1645,8 @@ export const PlanCard = ({ plan }) => {
   const macros = description?.split(' • ')
 
   // Debug logs - remove in production
-  // console.log('PlanCard received plan:', plan);
-  // console.log('Image URL being used:', imageUrl);
+  // //console.log('PlanCard received plan:', plan);
+  // //console.log('Image URL being used:', imageUrl);
 
   return (
     <Box

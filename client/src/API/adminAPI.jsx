@@ -37,7 +37,7 @@ const fetchList = async (table, query = {}) => {
 
   const { data, error } = await request;
   if (error) throw error;
-  //console.log(`Table ${table} data ${data}`)
+  ////console.log(`Table ${table} data ${data}`)
   return data || [];
 };
 
@@ -158,10 +158,9 @@ export const adminAPI = {
 
 // GET ALL MEALS
 async getAllMeals(options = {}) {
-  console.log('=== adminAPI.getAllMeals called ===');
-  console.log('Options:', options);
+  //console.log('=== adminAPI.getAllMeals called ===');
+  //console.log('Options:', options);
   
-  // Build the select query - fetch meal_items as a separate relation
   const query = {
     select: options.select || `
       *, 
@@ -173,9 +172,8 @@ async getAllMeals(options = {}) {
     limit: options.limit || 100,
   };
 
-  console.log('Query being executed:', query);
+  //console.log('Query being executed:', query);
 
-  // Add filters
   if (options.section) {
     query.filters = [{ field: 'section', value: options.section }];
   }
@@ -187,16 +185,16 @@ async getAllMeals(options = {}) {
   
   const data = await fetchList('meals', query);
   
-  console.log('=== adminAPI.getAllMeals result ===');
-  console.log('Total meals returned:', data?.length);
+  //console.log('=== adminAPI.getAllMeals result sample===');
+  //console.log('Total meals returned:', data?.length);
   
   // Transform the data to flatten the structure
   const transformedData = data?.map(meal => {
     // Extract allergies from junction table
     const allergies = meal.meal_allergies?.map(ma => ma.allergies) || [];
+    const allergy_ids = meal.meal_allergies?.map(ma => ma.allergy_id) || [];
     
     // Extract items array from meal_items table
-    // meal_items is an array with one object containing the items array
     const items = meal.meal_items?.[0]?.items || [];
     
     // Remove junction table data and add flattened versions
@@ -205,28 +203,19 @@ async getAllMeals(options = {}) {
     return {
       ...mealData,
       allergies,
+      allergy_ids,
       item_ids: items
     };
   });
   
-  // Log selective meals and their items
-  const selectiveMeals = transformedData?.filter(m => m.is_selective) || [];
-  console.log('Selective meals count:', selectiveMeals.length);
-  
-  selectiveMeals.forEach((meal, idx) => {
-    if (idx < 3) {
-      console.log(`\nSelective meal ${idx + 1}: ${meal.name} (ID: ${meal.id})`);
-      console.log('  item_ids:', meal.item_ids);
-      console.log('  items count:', meal.item_ids?.length || 0);
-    }
-  });
+  //console.log('Sample transformed meal:', transformedData?.[0]);
   
   return transformedData;
 },
 
 // GET MEAL ITEMS
 async getMealItems(mealId) {
-  console.log(`=== adminAPI.getMealItems called for meal ${mealId} ===`);
+  //console.log(`=== adminAPI.getMealItems called for meal ${mealId} ===`);
   
   const { data, error } = await supabase
     .from('meal_items')
@@ -234,7 +223,7 @@ async getMealItems(mealId) {
     .eq('meal_id', mealId)
     .single();
 
-  console.log('Result:', { data, error });
+  //console.log('Result:', { data, error });
 
   if (error && error.code !== 'PGRST116') {
     console.error('Error fetching meal items:', error);
@@ -242,14 +231,14 @@ async getMealItems(mealId) {
   }
   
   const items = data?.items || [];
-  console.log(`Returning ${items?.length || 0} items for meal ${mealId}`);
+  //console.log(`Returning ${items?.length || 0} items for meal ${mealId}`);
   
   return items;
 },
 
 // GET MEAL DETAILS
 async getMealDetails(mealId) {
-  console.log(`=== adminAPI.getMealDetails called for meal ${mealId} ===`);
+  //console.log(`=== adminAPI.getMealDetails called for meal ${mealId} ===`);
   
   // Fetch meal with its relations
   const { data: meal, error: mealError } = await supabase
@@ -269,6 +258,7 @@ async getMealDetails(mealId) {
 
   // Transform the data
   const allergies = meal.meal_allergies?.map(ma => ma.allergies) || [];
+  const allergy_ids = meal.meal_allergies?.map(ma => ma.allergy_id) || [];
   const items = meal.meal_items?.[0]?.items || [];
   
   const { meal_allergies, meal_items, ...mealData } = meal;
@@ -276,23 +266,20 @@ async getMealDetails(mealId) {
   const result = {
     ...mealData,
     allergies,
+    allergy_ids,
     item_ids: items
   };
 
-  console.log('Meal details result:', {
-    id: result.id,
-    name: result.name,
-    allergies_count: result.allergies?.length,
-    items_count: result.item_ids?.length
-  });
+
+  //console.log('Meal details result from adminAPI:', JSON.stringify(result));
 
   return result;
 },
 
 // CREATE MEAL
 async createMeal(mealData) {
-  console.log('=== adminAPI.createMeal called ===');
-  console.log('Input data:', mealData);
+  //console.log('=== adminAPI.createMeal called ===');
+  //console.log('Input data:', mealData);
   
   // Separate related data from base meal data
   const { allergy_ids, item_ids, ...baseMealData } = mealData;
@@ -304,69 +291,69 @@ async createMeal(mealData) {
     updated_at: new Date().toISOString()
   };
 
-  console.log('Creating meal with base data:', newMeal);
+  //console.log('Creating meal with base data:', newMeal);
 
   // Create the meal record
   const meal = await createRecord('meals', newMeal);
   
-  console.log('Meal created with ID:', meal.id);
+  //console.log('Meal created with ID:', meal.id);
 
   // Handle allergies junction table
   if (allergy_ids && allergy_ids.length > 0) {
-    console.log('Creating meal allergies for IDs:', allergy_ids);
+    //console.log('Creating meal allergies for IDs:', allergy_ids);
     await this.updateMealAllergies(meal.id, allergy_ids);
   }
   
   // Handle items if this is a selective meal
   if (meal.is_selective && item_ids && item_ids.length > 0) {
-    console.log('Creating meal items for selective meal:', item_ids);
+    //console.log('Creating meal items for selective meal:', item_ids);
     await this.updateMealItems(meal.id, item_ids);
   }
   
-  console.log('Meal creation complete');
+  //console.log('Meal creation complete');
   
   return meal;
 },
 
 // UPDATE MEAL
 async updateMeal(mealId, updateData) {
-  console.log('=== adminAPI.updateMeal called ===');
-  console.log('Meal ID:', mealId);
-  console.log('Update data:', updateData);
+  //console.log('=== adminAPI.updateMeal called ===');
+  //console.log('Meal ID:', mealId);
+  //console.log('Update data:', updateData);
   
   // Separate related data from base meal data
   const { allergy_ids, item_ids, ...baseMealData } = updateData;
   
-  console.log('Base meal data to update:', baseMealData);
-  console.log('Allergy IDs:', allergy_ids);
-  console.log('Item IDs:', item_ids);
+  //console.log('Base meal data to update:', baseMealData);
+  //console.log('Allergy IDs:', allergy_ids);
+  //console.log('Item IDs:', item_ids);
   
   // Update base meal record
   const meal = await updateWithTimestamp('meals', mealId, baseMealData);
   
-  console.log('Base meal updated');
+  //console.log('Base meal updated');
 
   // Update allergies junction table if provided
   if (allergy_ids !== undefined) {
-    console.log('Updating meal allergies');
+    //console.log('Updating meal allergies');
     await this.updateMealAllergies(mealId, allergy_ids);
   }
 
   // Update meal_items table if provided
   if (item_ids !== undefined) {
-    console.log('Updating meal items');
+    //console.log('Updating meal items');
     await this.updateMealItems(mealId, item_ids);
   }
 
-  console.log('Meal update complete');
+  //console.log('Meal update complete');
   
   return meal;
 },
 
 // UPDATE MEAL ALLERGIES (Junction Table)
 async updateMealAllergies(mealId, allergyIds) {
-  console.log(`=== adminAPI.updateMealAllergies for meal ${mealId} ===`);
-  console.log('Allergy IDs:', allergyIds);
+  //console.log(`=== adminAPI.updateMealAllergies for meal ${mealId} ===`);
+  //console.log('Allergy IDs:', allergyIds);
   
   // Delete existing meal_allergies
   const { error: deleteError } = await supabase
@@ -380,7 +367,7 @@ async updateMealAllergies(mealId, allergyIds) {
   }
 
   if (!allergyIds || allergyIds.length === 0) {
-    console.log('No allergies to insert');
+    //console.log('No allergies to insert');
     return { success: true };
   }
 
@@ -399,14 +386,14 @@ async updateMealAllergies(mealId, allergyIds) {
     throw insertError;
   }
 
-  console.log('Meal allergies updated successfully');
+  //console.log('Meal allergies updated successfully');
   return { success: true };
 },
 
 // UPDATE MEAL ITEMS (Separate Table with Array)
 async updateMealItems(mealId, itemIds) {
-  console.log(`=== adminAPI.updateMealItems for meal ${mealId} ===`);
-  console.log('Item IDs:', itemIds);
+  //console.log(`=== adminAPI.updateMealItems for meal ${mealId} ===`);
+  //console.log('Item IDs:', itemIds);
   
   // Delete existing meal_items record
   const { error: deleteError } = await supabase
@@ -420,7 +407,7 @@ async updateMealItems(mealId, itemIds) {
   }
 
   if (!itemIds || itemIds.length === 0) {
-    console.log('No items to insert');
+    //console.log('No items to insert');
     return { success: true };
   }
 
@@ -437,34 +424,34 @@ async updateMealItems(mealId, itemIds) {
     throw insertError;
   }
 
-  console.log('Meal items updated successfully');
+  //console.log('Meal items updated successfully');
   return { success: true };
 },
 
 // DELETE MEAL
 async deleteMeal(mealId) {
-  console.log(`=== adminAPI.deleteMeal for meal ${mealId} ===`);
+  //console.log(`=== adminAPI.deleteMeal for meal ${mealId} ===`);
   
   // The foreign keys have CASCADE delete, so related records will be deleted automatically
   const result = await deleteRecord('meals', mealId);
   
-  console.log('Meal deleted successfully');
+  //console.log('Meal deleted successfully');
   return result;
 },
 
 // UPDATE MEAL AVAILABILITY
 async updateMealAvailability(mealId, isAvailable) {
-  console.log(`=== adminAPI.updateMealAvailability for meal ${mealId} ===`);
-  console.log('Is available:', isAvailable);
+  //console.log(`=== adminAPI.updateMealAvailability for meal ${mealId} ===`);
+  //console.log('Is available:', isAvailable);
   
   return updateWithTimestamp('meals', mealId, { is_available: isAvailable });
 },
 
 // BULK UPDATE MEALS
 async bulkUpdateMeals(mealIds, updateData) {
-  console.log('=== adminAPI.bulkUpdateMeals ===');
-  console.log('Meal IDs:', mealIds);
-  console.log('Update data:', updateData);
+  //console.log('=== adminAPI.bulkUpdateMeals ===');
+  //console.log('Meal IDs:', mealIds);
+  //console.log('Update data:', updateData);
   
   const { error } = await supabase
     .from('meals')
@@ -479,13 +466,13 @@ async bulkUpdateMeals(mealIds, updateData) {
     throw error;
   }
 
-  console.log('Bulk update successful');
+  //console.log('Bulk update successful');
   return { success: true, updatedCount: mealIds.length };
 },
 
 // BULK UPDATE MEAL AVAILABILITY
 async bulkUpdateMealAvailability(mealIds, isAvailable) {
-  console.log('=== adminAPI.bulkUpdateMealAvailability ===');
+  //console.log('=== adminAPI.bulkUpdateMealAvailability ===');
   return this.bulkUpdateMeals(mealIds, { is_available: isAvailable });
 },
   // ===== ITEM MANAGEMENT =====
@@ -582,22 +569,23 @@ async updateItem(itemId, updateData) {
     return fetchList('plans', query);
   },
 
-  async getPlanDetails(planId) {
-    const [plan, planMeals] = await Promise.all([
-      fetchSingle('plans', { field: 'id', value: planId }),
-      fetchList('plan_meals', { 
-        field: 'plan_id', 
-        value: planId,
-        select: `meal_id`
-      })
-    ]);
+ async getPlanDetails(planId) {
+  const [plan, planMeals] = await Promise.all([
+    fetchSingle('plans', { field: 'id', value: planId }),
+    this.getPlanMealsWithDetails(planId)
+  ]);
 
-    return {
-      ...plan,
-      meals: planMeals.map(pm => pm.meal_id),
-      additives: plan.additives || []
-    };
-  },
+  return {
+    ...plan,
+    meals: planMeals.map(pm => ({
+      id: pm.meal_id,
+      is_substitutable: pm.is_substitutable,
+      ...pm.meals
+    })),
+    meal_ids: planMeals.map(pm => pm.meal_id),
+    additives: plan.additives || []
+  };
+},
 
   async createPlan(planData) {
     const newPlan = {
@@ -629,26 +617,130 @@ async updateItem(itemId, updateData) {
     });
   },
 
-  async updatePlanMeals(planId, meals) {
-    await supabase
+// PLAN MEALS with better logging and error handling
+async updatePlanMeals(planId, meals) {
+  console.log(`🔄 updatePlanMeals called for plan ${planId}:`, meals);
+  
+  try {
+    // Delete existing plan_meals
+    const { error: deleteError } = await supabase
       .from('plan_meals')
       .delete()
       .eq('plan_id', planId);
 
-    const newRelations = meals.map(mealId => ({
+    if (deleteError) {
+      console.error('❌ Error deleting plan_meals:', deleteError);
+      throw deleteError;
+    }
+
+    console.log('✅ Existing plan_meals deleted');
+
+    if (!meals || meals.length === 0) {
+      console.log('ℹ️ No meals to insert, returning early');
+      return { success: true };
+    }
+
+    // Handle both array of IDs and array of objects with is_substitutable
+    const newRelations = meals.map(meal => {
+      if (typeof meal === 'object' && meal.meal_id !== undefined) {
+        return {
+          plan_id: planId,
+          meal_id: meal.meal_id,
+          is_substitutable: meal.is_substitutable ?? false
+        };
+      } else if (typeof meal === 'object' && meal.id !== undefined) {
+        return {
+          plan_id: planId,
+          meal_id: meal.id,
+          is_substitutable: meal.is_substitutable ?? false
+        };
+      }
+      return {
+        plan_id: planId,
+        meal_id: meal,
+        is_substitutable: false
+      };
+    });
+
+    console.log('📝 Inserting plan_meals relations:', newRelations);
+
+    const { data, error } = await supabase
+      .from('plan_meals')
+      .insert(newRelations)
+      .select();
+
+    if (error) {
+      console.error('❌ Error inserting plan_meals:', error);
+      throw error;
+    }
+
+    console.log('✅ Plan meals inserted successfully:', data);
+    return { success: true, data };
+  } catch (error) {
+    console.error('💥 updatePlanMeals failed:', error);
+    throw error;
+  }
+},
+// ===== PLAN_MEALS JUNCTION TABLE OPERATIONS =====
+
+// Get plan meals with meal details
+async getPlanMealsWithDetails(planId) {
+  const { data, error } = await supabase
+    .from('plan_meals')
+    .select(`
+      id,
+      meal_id,
+      is_substitutable,
+      meals(id, name, name_arabic, base_price, calories, image_url)
+    `)
+    .eq('plan_id', planId);
+
+  if (error) throw error;
+  return data || [];
+},
+
+
+// Add a single meal to plan
+async addMealToPlan(planId, mealId, isSubstitutable = false) {
+  const { data, error } = await supabase
+    .from('plan_meals')
+    .insert({
       plan_id: planId,
       meal_id: mealId,
-      is_substitutable: false
-    }));
+      is_substitutable: isSubstitutable
+    })
+    .select()
+    .single();
 
-    const { error } = await supabase
-      .from('plan_meals')
-      .insert(newRelations);
-    
-    if (error) throw error;
-    return { success: true };
-  },
+  if (error) throw error;
+  return data;
+},
 
+// Remove a single meal from plan
+async removeMealFromPlan(planId, mealId) {
+  const { error } = await supabase
+    .from('plan_meals')
+    .delete()
+    .eq('plan_id', planId)
+    .eq('meal_id', mealId);
+
+  if (error) throw error;
+  return { success: true };
+},
+
+// Update meal substitutability in plan
+async updatePlanMealSubstitutability(planId, mealId, isSubstitutable) {
+  const { data, error } = await supabase
+    .from('plan_meals')
+    .update({ is_substitutable: isSubstitutable })
+    .eq('plan_id', planId)
+    .eq('meal_id', mealId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+},
 
   // ===== ORDER MANAGEMENT =====
   async getAllOrders(options = {}) {
@@ -676,9 +768,10 @@ async updateItem(itemId, updateData) {
 
   // ===== ANALYTICS & REPORTING =====
   async getDashboardStats() {
-    const [users, meals, orders, activeSubs, revenue] = await Promise.all([
+    const [users,admins, meals, orders, activeSubs, revenue] = await Promise.all([
       supabase.from('user_profiles').select('id', { count: 'exact' }),
-      supabase.from('meals').select('id', { count: 'exact' }),
+      supabase.from('user_profiles').select('id', { count: 'exact' }).eq('is_admin', 'true'),
+      supabase.from('meals').select('id', { count: 'exact' }).eq('is_available', 'true'),
       supabase.from('orders').select('id', { count: 'exact' }),
       supabase.from('user_subscriptions').select('id', { count: 'exact' }).eq('status', 'active'),
       supabase.from('orders').select('total_amount').eq('payment_status', 'paid')
@@ -688,6 +781,7 @@ async updateItem(itemId, updateData) {
 
     return {
       totalUsers: users.count || 0,
+      totalAdmins: admins.count|| 0,
       totalMeals: meals.count || 0,
       totalOrders: orders.count || 0,
       activeSubscriptions: activeSubs.count || 0,

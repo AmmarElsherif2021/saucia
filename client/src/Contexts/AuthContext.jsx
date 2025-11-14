@@ -55,8 +55,8 @@ export const AuthProvider = ({ children }) => {
   // Enhanced auth handler that fetches profile from database
   const handleAuthChange = useCallback(async (event, session) => {
     console.groupCollapsed(`Auth Event: ${event}`);
-    console.log('Session:', session);
-    console.log('Pending redirect:', pendingRedirect);
+    //console.log('Session:', session);
+    //console.log('Pending redirect:', pendingRedirect);
     console.groupEnd();
     
     try {
@@ -186,7 +186,7 @@ export const AuthProvider = ({ children }) => {
       ...redirectData
     };
     
-    console.log('Setting pending redirect:', redirect);
+    //console.log('Setting pending redirect:', redirect);
     
     // Store in both state and localStorage for persistence
     setPendingRedirect(redirect);
@@ -198,7 +198,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const clearPendingRedirect = useCallback(() => {
-    console.log('Clearing pending redirect');
+    //console.log('Clearing pending redirect');
     setPendingRedirect(null);
     try {
       localStorage.removeItem('auth_pending_redirect');
@@ -226,12 +226,12 @@ export const AuthProvider = ({ children }) => {
     if (redirect) {
       const maxAge = 30 * 60 * 1000;
       if (Date.now() - redirect.timestamp > maxAge) {
-        console.log('Redirect expired, clearing');
+        //console.log('Redirect expired, clearing');
         clearPendingRedirect();
         return null;
       }
       
-      console.log('Consuming pending redirect:', redirect);
+      //console.log('Consuming pending redirect:', redirect);
       clearPendingRedirect();
       return redirect;
     }
@@ -248,10 +248,10 @@ export const AuthProvider = ({ children }) => {
         
         const maxAge = 60 * 1000;
         if (Date.now() - redirect.timestamp < maxAge) {
-          console.log('Restoring pending redirect from localStorage:', redirect);
+          //console.log('Restoring pending redirect from localStorage:', redirect);
           setPendingRedirect(redirect);
         } else {
-          console.log('Clearing expired redirect from localStorage');
+          //console.log('Clearing expired redirect from localStorage');
           localStorage.removeItem('auth_pending_redirect');
         }
       }

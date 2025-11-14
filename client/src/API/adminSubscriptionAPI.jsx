@@ -88,7 +88,6 @@ export const adminSubscriptionAPI = {
           auto_renewal,
           payment_method_id,
           meals,
-          next_delivery_meal,
           created_at,
           updated_at,
           user_profiles!inner(id, display_name, email),
@@ -189,7 +188,84 @@ export const adminSubscriptionAPI = {
       throw error;
     }
   },
+  // Add this method to userAPI.jsx
 
+async getSubscriptionSummary(subscriptionId) {
+  try {
+    console.log('📊 Fetching subscription summary for:', subscriptionId);
+    
+    // Fetch subscription with plan details
+    const { data: subscription, error: subError } = await supabase
+      .from('user_subscriptions')
+      .select(`
+        *,
+        plans (
+          id,
+          title,
+          title_arabic,
+          description,
+          description_arabic,
+          price_per_meal,
+          duration_days,
+          kcal,
+          protein,
+          carb,
+          avatar_url
+        )
+      `)
+      .eq('id', subscriptionId)
+      .single();
+
+    if (subError) {
+      console.error('❌ Error fetching subscription:', subError);
+      throw subError;
+    }
+
+    if (!subscription) {
+      console.log('⚠️ No subscription found with ID:', subscriptionId);
+      return null;
+    }
+
+    console.log('✅ Subscription fetched:', {
+      id: subscription.id,
+      status: subscription.status,
+      hasMeals: !!subscription.meals,
+      mealsType: typeof subscription.meals,
+      mealsIsArray: Array.isArray(subscription.meals),
+      mealsLength: subscription.meals?.length
+    });
+
+    // Get subscription stats
+    const stats = await this.getSubscriptionStats(subscriptionId);
+    
+    console.log('✅ Subscription stats:', stats);
+
+    // Get next order
+    const { data: nextOrder, error: orderError } = await supabase
+      .from('orders')
+      .select('id, order_number, status, scheduled_delivery_date, subscription_meal_index')
+      .eq('subscription_id', subscriptionId)
+      .in('status', ['pending', 'active', 'confirmed'])
+      .order('subscription_meal_index', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (orderError) {
+      console.error('❌ Error fetching next order:', orderError);
+    }
+
+    console.log('📦 Next order:', nextOrder);
+
+    return {
+      subscription,
+      stats,
+      nextOrder: nextOrder || null
+    };
+  } catch (error) {
+    console.error('❌ getSubscriptionSummary error:', error);
+    throw error;
+  }
+},
   // Create subscription
   async createSubscription(subscriptionData) {
     try {
@@ -213,7 +289,6 @@ export const adminSubscriptionAPI = {
       const newSubscription = {
         ...subscriptionData,
         consumed_meals: 0,
-        next_delivery_meal: 0,
         status: subscriptionData.status || 'pending',
         auto_renewal: subscriptionData.auto_renewal || false,
         preferred_delivery_time: subscriptionData.preferred_delivery_time || '12:00:00',
@@ -487,11 +562,11 @@ async getSubscriptionOrders(options = {}) {
     if (error) throw error;
     
     // Debugging: Log order items
-    console.log('Subscription orders with items:', data?.map(order => ({
-      id: order.id,
-      order_number: order.order_number,
-      items_count: order.order_items?.length || 0
-    })));
+    //console.log('Subscription orders with items:', data?.map(order => ({
+    //   id: order.id,
+    //   order_number: order.order_number,
+    //   items_count: order.order_items?.length || 0
+    // })));
     
     return data || [];
   } catch (error) {

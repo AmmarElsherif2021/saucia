@@ -70,9 +70,13 @@ const menuPDFTheme = {
     secondaryGradient: 'linear(to-r, #a8c97a, #7faf41)',
   },
   sizes: {
-    page: {
-      width: '297mm',  // A4 width in landscape
-      height: '210mm', // A4 height in landscape
+    A4: {
+      width: '297mm',
+      height: '210mm',
+    },
+    A5: {
+      width: '210mm',
+      height: '148mm',
     },
     logo: {
       width: '60px',
@@ -87,6 +91,24 @@ const menuPDFTheme = {
     tiktok: '@salad.saucia',
     address_1: '',
     address_2: ''
+  },
+  arabicText: {
+    regularMenu: "قائمة وجبات سالاد صوصيا",
+    buildYourOwn: "اصنع طبقك المفضل",
+    selectUpTo: "اختر حتى",
+    freeItems: "عناصر مجانية",
+    extraItem: "للعنصر الإضافي",
+    sar: "ريال ",
+    scanToOrder: "امسح للطلب السريع",
+    contactUs: "تواصل معنا",
+    followUs: "تابعنا على",
+    generatedOn: "تم الإنشاء في",
+    inside: "داخلي",
+    external: "خارجي",
+    vegan: "نباتي",
+    glutenFree: "خالي من الجلوتين",
+    calories: "سعرة حرارية",
+    weight: "جرام"
   }
 };
 
@@ -157,6 +179,104 @@ const badgeStyles = {
   })
 };
 
+
+
+// ============================================================================
+// UPDATED CONTROL HEADER WITH PRINT SIZE OPTION
+// ============================================================================
+
+/**
+ * Control Header Component
+ * Displays the control panel with refresh, print buttons and size selection
+ */
+const ControlHeader = ({ 
+  handleRefresh, 
+  handlePrint, 
+  isRefetching, 
+  isPrinting,
+  printSize,
+  onPrintSizeChange 
+}) => {
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.600');
+
+  return (
+    <Flex 
+      justify="space-between" 
+      align="center" 
+      mb={2} 
+      p={4} 
+      bg={bgColor} 
+      borderRadius="lg" 
+      border="1px" 
+      borderColor={borderColor} 
+      boxShadow="sm" 
+      className="no-print"
+    >
+      <VStack align="start" spacing={1}>
+        <Heading size="lg" color="brand.600" bgGradient="linear(to-r, brand.500, brand.700)" bgClip="text">
+          Menu Print Portal
+        </Heading>
+        <Text color="gray.600">بوابة طباعة القوائم</Text>
+        <Text fontSize="sm" color="gray.500">
+          Generate printable menu in A4 or A5 format
+        </Text>
+      </VStack>
+      
+      <HStack spacing={3}>
+        {/* Print Size Selection */}
+        <HStack spacing={2}>
+          <Text fontSize="sm" fontWeight="medium" color="gray.700">
+            Size:
+          </Text>
+          <Button
+            size="sm"
+            variant={printSize === 'A4' ? 'solid' : 'outline'}
+            colorScheme={printSize === 'A4' ? 'brand' : 'gray'}
+            onClick={() => onPrintSizeChange('A4')}
+          >
+            A4
+          </Button>
+          <Button
+            size="sm"
+            variant={printSize === 'A5' ? 'solid' : 'outline'}
+            colorScheme={printSize === 'A5' ? 'brand' : 'gray'}
+            onClick={() => onPrintSizeChange('A5')}
+          >
+            A5
+          </Button>
+        </HStack>
+
+        <IconButton
+          icon={<RepeatIcon />}
+          onClick={handleRefresh}
+          isLoading={isRefetching}
+          aria-label="Refresh data / تحديث البيانات"
+          colorScheme="brand"
+          variant="outline"
+        />
+        <Button
+          leftIcon={<DownloadIcon />}
+          onClick={handlePrint}
+          isLoading={isPrinting}
+          loadingText="جاري التحضير..."
+          colorScheme="brand"
+          size="lg"
+          bgGradient="linear(to-r, brand.400, brand.600)"
+          _hover={{
+            bgGradient: 'linear(to-r, brand.500, brand.700)',
+            transform: 'translateY(-2px)',
+            boxShadow: 'lg'
+          }}
+          transition="all 0.2s"
+        >
+          Print {printSize} / طباعة {printSize}
+        </Button>
+      </HStack>
+    </Flex>
+  );
+};
+
 // ============================================================================
 // REUSABLE UI COMPONENTS
 // ============================================================================
@@ -169,15 +289,16 @@ const badgeStyles = {
  * @param {string} gradient - Background gradient
  * @param {string} icon - Icon image source
  */
-const PageHeader = ({ title, titleArabic, gradient, icon }) => (
+// ============================================================================
+// UPDATED PAGE HEADER WITH ENHANCED ARABIC TEXT
+// ============================================================================
+
+const PageHeader = ({ title, titleArabic, gradient, icon, isA5 }) => (
   <Flex 
     align="center" 
     justify="space-between" 
-    mb={2}
-    p={2}
-    //borderRadius="lg"
-    //color="white"
-    boxShadow="none"
+    mb={isA5 ? 1 : 2}
+    p={isA5 ? 1 : 2}
     position="relative"
     overflow="hidden"
     _before={{
@@ -190,10 +311,10 @@ const PageHeader = ({ title, titleArabic, gradient, icon }) => (
       zIndex: 0,
     }}
   >
-    {/* Logo Box */}
+    {/* Logo Box - Smaller for A5 */}
     <Box
-      width={menuPDFTheme.sizes.logo.width}
-      height={menuPDFTheme.sizes.logo.height}
+      width={isA5 ? '50px' : menuPDFTheme.sizes.logo.width}
+      height={isA5 ? '50px' : menuPDFTheme.sizes.logo.height}
       bg="white"
       borderRadius="lg"
       display="flex"
@@ -202,42 +323,49 @@ const PageHeader = ({ title, titleArabic, gradient, icon }) => (
       border="2px solid"
       borderColor={'brand.600'}
       fontWeight="bold"
-      fontSize="xs"
+      fontSize={isA5 ? '2xs' : 'xs'}
       color={gradient.includes('brand') ? 'brand.500' : 'secondary.500'}
       textAlign="center"
       lineHeight="1.2"
       flexShrink={0}
       zIndex={1}
+      pl={'4px'}
     >
-      <Image src={logoIcon} sx={{width:'50px'}}/>
+      <Image src={logoIcon} sx={{width: isA5 ? '40px' : '50px'}}/>
     </Box>
 
     {/* Title Container */}
     <HStack 
-      spacing={4} 
+      spacing={isA5 ? 2 : 4} 
       justify={'space-between'} 
       flex="1" 
-      mx={3} 
-      zIndex={1} 
-      //borderWidth={'2px'} 
-      //borderColor={'secondary.400'} 
-      //bg={"rgba(236, 245, 232, 0.99)"} 
+      mx={isA5 ? 2 : 3} 
+      zIndex={1}
       borderRadius={"md"} 
-      p={2} 
+      p={isA5 ? 1 : 2} 
       width={'100%'}
     >
-      <Heading size="md" color={'brand.700'} letterSpacing="tight" fontFamily="'Outfit', sans-serif">
+      <Heading 
+        size={isA5 ? "sm" : "md"} 
+        color={'brand.700'} 
+        letterSpacing="tight" 
+        fontFamily="'Outfit', sans-serif"
+      >
         {title}
       </Heading>
-      <Heading size="md" fontFamily={"'Lalezar', sans-serif"} color={'brand.700'} dir="rtl" textAlign={'right'}>
+      <Heading 
+        size={isA5 ? "sm" : "md"} 
+        fontFamily={"'Lalezar', sans-serif"} 
+        color={'brand.700'} 
+        dir="rtl" 
+        textAlign={'right'}
+      >
         {titleArabic}
       </Heading>
     </HStack>
 
     {/* Icon Box */}
-    
-      <Box boxSize={14} p={0}><Image src={icon}/></Box>
-   
+    <Box boxSize={isA5 ? 12 : 14} p={0}><Image src={icon}/></Box>
   </Flex>
 );
 
@@ -253,7 +381,7 @@ const SectionHeader = ({ title, titleArabic, gradient }) => (
     //bgGradient={gradient}
     p={1.5}
     borderRadius="md"
-    mb={1.5}
+    mb={0.5}
     position="relative"
     overflow="hidden"
     _before={{
@@ -267,13 +395,12 @@ const SectionHeader = ({ title, titleArabic, gradient }) => (
     }}
   >
     <HStack justify={'space-between'} position="relative" zIndex={1}>
-      <Heading size="xs" color={'brand.700'} fontWeight="bold" dir="rtl" fontFamily={"'Lalezar', sans-serif"}>
-        {titleArabic}
-      </Heading>
       <Heading size="xs" color={'brand.700'} fontWeight="bold" fontFamily={'"Outfit", sans_serif'}>
         {title}
       </Heading>
-      
+      <Heading size="xs" color={'brand.700'} fontWeight="bold" dir="rtl" fontFamily={"'Lalezar', sans-serif"}>
+        {titleArabic}
+      </Heading>
     </HStack>
   </Box>
 );
@@ -284,13 +411,11 @@ const SectionHeader = ({ title, titleArabic, gradient }) => (
  * @param {Object} meal - Meal object with nutritional data
  */
 const NutritionBadges = ({ meal }) => (
-  <HStack spacing={1} flexWrap="wrap">
-    <Badge {...badgeStyles.fat}>
-      {meal.weight || 0}gm
-    </Badge>
+  <HStack spacing={1} flexWrap="wrap" justify={'center'}>
+    {meal.weight && meal.weight>0 && (
     <Badge {...badgeStyles.nutrition}>
       KCal {meal.calories || 0}
-    </Badge>
+    </Badge>)}
     {meal.is_vegan && (
       <Badge bg="teal.100" color="teal.700" fontSize="3xs" size={'3xs'} px={1}>
         <Icon as={StarIcon} boxSize={2} mr={0.5} /> Veg
@@ -303,7 +428,6 @@ const NutritionBadges = ({ meal }) => (
     )}
   </HStack>
 );
-
 /**
  * Price Display Component
  * Shows price with currency in styled format
@@ -312,32 +436,33 @@ const NutritionBadges = ({ meal }) => (
  * @param {string} size - Font size variant
  */
 const PriceDisplay = ({ price, currency = "ريال", size = "md" }) => (
-  <HStack spacing={0.25}>
-    <Box 
+  <HStack spacing={0.25} m={'3px'}>
+    
+    <Text 
+    fontSize={size === "md" ? "2xs" : "2xs"} 
+    color={size === "md" ? "brand.700" : "secondary.800"}
+    fontWeight="bold"
+    fontFamily={"'Lalezar', sans-serif"}
+  >
+    <Image src={currencyIcon} ml={2} boxSize={4} minW={'20px'} alt="SAR" />
+  </Text>
+  <Box 
       justifyContent={"center"} 
       bg={'warning.200'} 
       borderRadius={"md"} 
       width={'fit-content'} 
       height={"30px"} 
-      p={'5px'}
+      px={'5px'}
       mr={'15px'}
     >
       <Text 
         fontSize={size} 
         fontWeight="black" 
-        color={size === "md" ? "brand.600" : "secondary.600"}
+        color={size === "md" ? "brand.600" : "secondary.800"}
       >
         {price || 0}
       </Text>
     </Box>
-    <Text 
-    fontSize={size === "md" ? "2xs" : "2xs"} 
-    color={size === "md" ? "brand.600" : "secondary.600"}
-    fontWeight="bold"
-    fontFamily={"'Lalezar', sans-serif"}
-  >
-    <Image src={currencyIcon} boxSize={4} minW={'20px'} alt="SAR" />
-  </Text>
   </HStack>
 );
 
@@ -410,36 +535,67 @@ const RegularMealCard = ({ meal }) => (
           <VStack align="start" spacing={0} width="full">
             <Flex 
               justify={"space-between"} 
-              minW={'123%'} 
-              flexDirection={meal.ingredients ? "row" : "column"}
+              minW={'120%'} 
+              flexDirection={meal.ingredients ? "row" : "column-reverse"}
+              align={'center'}
+              //bg={'orange'}
+              px={0}
+              mr={0}
+              //borderRight={'2px dashed #42ac8376'}
             >  
+             <Text 
+             p={0} 
+             textAlign={meal?.ingredients?'left':'right'} 
+             w={'100%'} 
+             fontSize="2xs" 
+             fontWeight="bold" 
+             color="brand.700" 
+             fontFamily={'"Outfit", sans_serif'}
+             sx={{
+                lineHeight:'12px'
+              }}
+             >
+                {meal.name}
+              </Text>
               <Text 
-                fontSize="xs" 
+                fontSize="sm" 
                 fontWeight="bold" 
                 color="brand.600" 
                 dir="rtl" 
+                p={0}
+                mr={0}
+                w={'100%'}
                 fontFamily={"'Lalezar', sans-serif"}
+                textAlign={'right'}
+                sx={{
+                lineHeight:'16px'
+              }}
               >
                 {meal.name_arabic || meal.name} 
-              </Text>
-              <Text textAlign={'left'} fontSize="2xs" fontWeight="bold" color="brand.700" fontFamily={'"Outfit", sans_serif'}>
-                {meal.name}
               </Text>
               
             </Flex>
             <Text 
               fontSize={"2xs"} 
-              fontWeight={'light'} 
+              fontWeight={'bold'} 
               color={"secondary.800"} 
               fontFamily={"'Lalezar', sans_serif"}
+              lineHeight={'3'}
+              textAlign={'right'}
             >
               {meal.ingredients_arabic}
             </Text>
             <Text 
               fontSize={"3xs"} 
-              fontWeight={'light'} 
+              fontWeight={800} 
               color={"secondary.800"} 
-              fontFamily={"'Lalezar', sans_serif"}
+              fontFamily={"'Outfit', sans_serif"}
+              textAlign={'right'}
+              mb={'2px'}
+              sx={{
+                lineHeight:'10px',
+
+              }}
             >
               {meal.ingredients}
             </Text>
@@ -455,7 +611,7 @@ const RegularMealCard = ({ meal }) => (
             h={3} 
             border={'solid 2px'} 
             borderColor={'brand.600'} 
-            mr={"5px"}
+            mr={"1px"}
           />
         </Flex>
       </HStack>
@@ -474,41 +630,36 @@ const SelectiveMealCard = ({ meal }) => (
     size="sm"
     variant="outline"
     {...cardStyles.selective}
-    width="full"
+    width="auto"
     mb={1}
     _hover={{
       transform: 'translateY(-1px)',
     }}
     transition="all 0.2s"
+    px={4}
   >
     <CardBody p={0.5}>
       <VStack align="stretch" spacing={0.5}>
         <HStack justify="space-between">
-          <VStack align="start" spacing={0}>
+           <VStack spacing={0} align="end">
+            <PriceDisplay price={meal.base_price} currency="ريال" size="md" />
+          </VStack>
+          <VStack align="end" spacing={0}>
             <Text 
               fontSize="xs" 
               fontFamily={"'Lalezar',sans_serif"} 
               fontWeight="bold" 
               color="secondary.700" 
               dir="rtl"
+              textAlign={'right'}
             >
               {meal.name_arabic || meal.name}
             </Text>
-            <Text fontSize="2xs" fontWeight="bold" color="secondary.800">
+            <Text fontSize="2xs" fontWeight="bold" color="secondary.800" >
               {meal.name}
             </Text>
           </VStack>
-          <VStack spacing={0} align="end">
-            <PriceDisplay price={meal.base_price} currency="ريال" size="md" />
-            <Text 
-              fontSize="3xs" 
-              color="secondary.600" 
-              fontFamily={'"Lalezar",sans_serif'} 
-              dir="rtl"
-            >
-              + إضافات
-            </Text>
-          </VStack>
+         
         </HStack>
         <NutritionBadges meal={meal} />
       </VStack>
@@ -523,58 +674,69 @@ const SelectiveMealCard = ({ meal }) => (
  * @param {string} categoryArabic - Category name in Arabic
  * @param {number} maxFreeItems - Maximum free items allowed
  */
-const ItemCategoryHeader = ({ category, categoryArabic, maxFreeItems, price }) => (
+
+const ItemCategoryHeader = ({ category, categoryArabic, maxFreeItems, price, isA5 }) => (
   <Flex 
     justify="space-between" 
     align="center" 
     p={0.5}
-    bgGradient={`linear(to-r, secondary.900 , brand.700)`} //${'brand.700'}
+    bgGradient={`linear(to-r,brand.800, secondary.800 , brand.700)`}
     borderRadius="sm"
     mb={0.5}
-         dir='rtl'
-
+    dir='rtl'
+    minH={isA5 ? "20px" : "24px"}
   >
-    <HStack justifyContent="space-between" w="100%">
-      
-      <Text 
-        fontSize="xs" 
-        color="secondary.50" 
-        dir="rtl" 
-        fontFamily={"'Lalezar',sans_serif"} 
-        textAlign="right"
-        mb={0}
-        pb={0}
-      >
-        {categoryArabic}
-        {' '}
+    <HStack justifyContent="space-between" w="100%" spacing={1} align="center">
+      {/* Arabic Section - More Compact */}
+      <Box alignContent={'right'} textAlign="right" dir='rtl' flex={1}>
+        <Text 
+          fontSize={isA5 ? "2xs" : "xs"} 
+          color="secondary.50" 
+          fontFamily={"'Lalezar',sans_serif"} 
+          lineHeight="1.1"
+          mb={0}
+          textAlign="right"
+        >
+          {categoryArabic}
+        </Text>
         {maxFreeItems > 0 && (
           <Text
-            as="span"
-            display="inline-block"
-            dir="rtl"
-            style={{ direction: 'rtl', unicodeBidi: 'isolate', textAlign: 'right' }}
-            fontSize="2xs"
-            fontWeight={600}
-            mr={1}
+            fontSize={isA5 ? "3xs" : "2xs"}
+            color="secondary.100"
+            fontFamily={'"Lalezar",sans_serif'}
+            lineHeight="1"
             mt={0}
-            pt={0}
-            color={'secondary.50'}
-            fontFamily={'"harmattan",sans_serif'}
+            textAlign="right"
           >
-            اختر حتى {maxFreeItems} عنصر مجاني، الزيادة بـ {price} ريال
+            {menuPDFTheme.arabicText.selectUpTo} {maxFreeItems} {menuPDFTheme.arabicText.freeItems}، +{price} {menuPDFTheme.arabicText.sar}
           </Text>
         )}
-      </Text>
+      </Box>
 
-      <Text fontFamily={'"Outfit", sans_serif'} fontSize="xs" fontWeight="bold" color="secondary.50" textAlign={'left'} pb={0} mb={0}>
-        {category}
-        {' '}
+      {/* English Section - More Compact */}
+      <Box textAlign="left" flex={1}>
+        <Text 
+          fontFamily={'"Outfit", sans_serif'} 
+          fontSize={isA5 ? "2xs" : "xs"} 
+          fontWeight="bold" 
+          color="secondary.50" 
+          lineHeight="1.1"
+          mb={0}
+        >
+          {category}
+        </Text>
         {maxFreeItems > 0 && (
-          <Text as="span" fontFamily={'"Outfit", sans_serif'} display="inline-block" ml={1} fontSize="2xs" color="secondary.50">
-            pick up to {maxFreeItems} free items, extra item {price} SAR
+          <Text 
+            fontFamily={'"Outfit", sans_serif'} 
+            fontSize={isA5 ? "3xs" : "2xs"} 
+            color="secondary.100"
+            lineHeight="1"
+            mt={0}
+          >
+            pick {maxFreeItems} free, +{price} SAR
           </Text>
         )}
-      </Text>
+      </Box>
     </HStack>
   </Flex>
 );
@@ -669,20 +831,19 @@ const AdditiveItem = ({ item }) => (
  * Displays all regular meals organized by section in masonry layout
  * @param {Object} regularMealsBySection - Object containing meals grouped by section
  */
-const RegularMealsSection = ({ regularMealsBySection }) => (
+const RegularMealsSection = ({ regularMealsBySection, isA5 }) => (
   <Box 
     flex="1"
     overflow="hidden"
-    maxHeight="calc(100% - 70px)"
-    
+    maxHeight={isA5 ? "calc(100% - 60px)" : "calc(100% - 70px)"}
   >
     <Box 
       sx={{
-        columnCount: 2,
-        columnGap: '8px',
+        columnCount: isA5 ? 1 : 2,
+        columnGap: isA5 ? '6px' : '8px',
         height: '100%',
         '@media print': {
-          columnCount: 2,
+          columnCount: isA5 ? 1 : 2,
         }
       }}
     >
@@ -696,34 +857,35 @@ const RegularMealsSection = ({ regularMealsBySection }) => (
               pageBreakInside: 'avoid',
               display: 'inline-block',
               width: '100%',
-              marginBottom: '3px'
+              marginBottom: isA5 ? '2px' : '3px'
             }}
           >
             <SectionHeader
               title={section}
               titleArabic={sectionData.section_arabic}
               gradient={menuPDFTheme.gradients.brandGradient}
+              isA5={isA5}
             />
 
             {/* Meals Grid */}
             <Box
               className="masonry-grid"
-                  borderRadius="md"
-                  border={'dashed'}
-                  borderColor={'secondary.300'}
-                  p={1}
+              borderRadius="md"
+              border={'dashed'}
+              borderColor={'secondary.300'}
+              p={isA5 ? 0.5 : 1}
               sx={{
                 height: 'fit-content',
-                columnCount: sectionData.meals[0].ingredients ? 2 : 3,
-                columnGap: '2px',
+                columnCount: isA5 ? 3 : (sectionData.meals[0].ingredients ? 2 : 3),
+                columnGap: isA5 ? '1px' : '2px',
                 '& > *': {
                   breakInside: 'avoid',
-                  mb: '2px',
+                  mb: isA5 ? '1px' : '2px',
                 }
               }}
             >
               {sectionData.meals.map((meal) => (
-                <RegularMealCard key={meal.id} meal={meal} />
+                <RegularMealCard key={meal.id} meal={meal} isA5={isA5} />
               ))}
             </Box>
           </Box>
@@ -753,7 +915,7 @@ const SelectiveMealsSection = ({ selectiveMealsWithItems }) => (
             className="masonry-grid"
             sx={{
               columnCount: { base: 1 },
-              columnGap: '8px',
+              columnGap: '4px',
               '& > *': {
                 breakInside: 'avoid',
                 mb: '8px',
@@ -867,21 +1029,22 @@ const SelectiveMealsSection = ({ selectiveMealsWithItems }) => (
  * Footer Component
  * Displays contact information and QR code placeholder
  */
-const Footer = () => (
-  <Box mt={0.5} p={0.5} h={'5mm'}>
-    <Grid templateColumns="1fr auto" gap={2} alignItems="center" >
+
+const Footer = ({ isA5 }) => (
+  <Box mb={6} pb={3} pt={0} h={isA5 ? '4mm' : '5mm'} borderTop={'2px dashed rgba(5, 182, 143, 0.92)'}>
+    <Grid templateColumns="1fr auto" gap={2} alignItems="center">
       {/* Contact Information */}
-      <Box p={1.5}>
-        <SimpleGrid columns={2} spacing={1} fontSize="xs">
+      <Box p={isA5 ? 1 : 1.5}>
+        <SimpleGrid columns={2} spacing={0.5} fontSize={isA5 ? "2xs" : "xs"}>
           {/* Left Column */}
           <Box textAlign="left">
             <VStack align="start" spacing={0}>
-              <Text color="brand.600" fontSize="sm">
-                <Icon as={FaWhatsapp} boxSize={3} ml={2} />
+              <Text color="brand.600" fontSize={isA5 ? "2xs" : "sm"}>
+                <Icon as={FaWhatsapp} boxSize={3} mr={2} />
                 {menuPDFTheme.contactInfo.whatsapp}
               </Text>
-              <Text color="brand.600" fontSize="sm">
-                <Icon as={EmailIcon} boxSize={3} ml={2} />
+              <Text color="brand.600" fontSize={isA5 ? "2xs" : "sm"}>
+                <Icon as={EmailIcon} boxSize={3} mr={2} />
                 {menuPDFTheme.contactInfo.email}
               </Text>
             </VStack>
@@ -889,15 +1052,15 @@ const Footer = () => (
           {/* Right Column */}
           <Box textAlign="right">
             <VStack align="end" spacing={0}>
-              <Text color="brand.600" fontSize="sm">
+              <Text color="brand.600" fontSize={isA5 ? "2xs" : "sm"}>
                 {menuPDFTheme.contactInfo.instagram}{` `}
                 <Icon as={FaInstagram} boxSize={3} mr={1}/>
               </Text>
-              <Text color="brand.600" fontSize="sm">
+              <Text color="brand.600" fontSize={isA5 ? "2xs" : "sm"}>
                 {menuPDFTheme.contactInfo.snapchat}{` `}
                 <Icon as={FaSnapchat} boxSize={3} mr={1}/>
               </Text>
-              <Text color="brand.600" fontSize="sm">
+              <Text color="brand.600" fontSize={isA5 ? "2xs" : "sm"}>
                 {menuPDFTheme.contactInfo.tiktok} {` `}
                 <Icon as={FaTiktok} boxSize={3} mr={1}/>
               </Text>
@@ -905,41 +1068,21 @@ const Footer = () => (
           </Box>
         </SimpleGrid>
       </Box>
-     
-      {/* QR Code Placeholder */}
-      {/* <VStack spacing={0.5}>
-        <Box
-          width="40px"
-          height="40px"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <Text color="gray.500" fontSize="3xs" textAlign="center" fontWeight="bold">
-            QR
-            <br />
-            كود
-          </Text>
-        </Box>
-        <Text fontSize="3xs" fontWeight="bold" color="gray.700">
-          امسح للطلب
-        </Text>
-      </VStack> */}
     </Grid>
    
     <Divider my={1} borderColor="gray.200" />
    
     {/* Generation Date */}
     <VStack spacing={0}>
-      <Text fontSize="3xs" color="gray.600" textAlign="center">
+      <Text fontSize={isA5 ? "2xs" : "3xs"} color="gray.600" textAlign="center">
         Generated: {new Date().toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'short',
           day: 'numeric'
         })}
       </Text>
-      <Text fontSize="3xs" color="gray.600" textAlign="center" dir="rtl">
-        تاريخ الإنشاء: {new Date().toLocaleDateString('ar-SA', {
+      <Text fontSize={isA5 ? "2xs" : "3xs"} color="gray.600" textAlign="center" dir="rtl">
+        {menuPDFTheme.arabicText.generatedOn}: {new Date().toLocaleDateString('ar-SA', {
           year: 'numeric',
           month: 'long',
           day: 'numeric'
@@ -958,127 +1101,76 @@ const Footer = () => (
  * Displays all regular (non-selective) meals in 2-column masonry layout
  * @param {Object} regularMealsBySection - Regular meals grouped by section
  */
-const RegularMealsPage = ({ regularMealsBySection }) => (
-  <Box 
-    {...menuPDFTheme.sizes.page}
-    bg="white"
-    padding={2}
-    position="relative"
-    overflow="hidden"
-    sx={{
-      '@media print': {
-        pageBreakAfter: 'always',
-        overflow: 'hidden !important',
-      }
-    }}
-  >
-    <BackgroundPattern />
-    
-    <Box position="relative" zIndex="1" p={3} height="100%" display="flex" flexDirection="column">
-      <PageHeader
-        title="Meal Service Menu"
-        titleArabic="قائمة خدمة الوجبات"
-        gradient={menuPDFTheme.gradients.brandGradient}
-        icon={menuIcon}
-      />
+const RegularMealsPage = ({ regularMealsBySection, printSize }) => {
+  const isA5 = printSize === 'A5';
+  
+  return (
+    <Box 
+      {...menuPDFTheme.sizes[printSize]}
+      bg="white"
+      padding={isA5 ? 1 : 2}
+      position="relative"
+      overflow="hidden"
+      sx={{
+        '@media print': {
+          pageBreakAfter: 'always',
+          overflow: 'hidden !important',
+        }
+      }}
+    >
+      <BackgroundPattern />
       
-      <RegularMealsSection regularMealsBySection={regularMealsBySection} />
+      <Box position="relative" zIndex="1" p={isA5 ? 2 : 3} height="100%" display="flex" flexDirection="column">
+        <PageHeader
+          title="Salad Saucia Meal Service Menu"
+          titleArabic={menuPDFTheme.arabicText.regularMenu}
+          gradient={menuPDFTheme.gradients.brandGradient}
+          icon={menuIcon}
+          isA5={isA5}
+        />
+        
+        <RegularMealsSection 
+          regularMealsBySection={regularMealsBySection} 
+          isA5={isA5}
+        />
+      </Box>
     </Box>
-  </Box>
-);
-
+  );
+};
 /**
  * Page 2: Selective Meals Page
  * Displays all selective (build-your-own) meals with their categorized items
  * @param {Object} selectiveMealsWithItems - Selective meals with items grouped by category
  */
-const SelectiveMealsPage = ({ selectiveMealsWithItems }) => (
-  <Box 
-    {...menuPDFTheme.sizes.page}
-    bg="white"
-    position="relative"
-    overflow="hidden"
-  >
-    <BackgroundPattern />
-    
-    <Box position="relative" zIndex="1" p={3} height="100%" display="flex" flexDirection="column">
-      <PageHeader
-        title="Build Your Own"
-        titleArabic="اصنع وجبتك الخاصة"
-        gradient={menuPDFTheme.gradients.secondaryGradient}
-        icon={customIcon}
-      />
-      
-      <SelectiveMealsSection selectiveMealsWithItems={selectiveMealsWithItems} />
-      
-      <Footer />
-    </Box>
-  </Box>
-);
-
-/**
- * Control Header Component
- * Displays the control panel with refresh and print buttons
- * @param {Function} handleRefresh - Function to refresh data
- * @param {Function} handlePrint - Function to trigger print
- * @param {boolean} isRefetching - Loading state for refresh
- * @param {boolean} isPrinting - Loading state for printing
- */
-const ControlHeader = ({ handleRefresh, handlePrint, isRefetching, isPrinting }) => {
-  const bgColor = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
-
+const SelectiveMealsPage = ({ selectiveMealsWithItems, printSize }) => {
+  const isA5 = printSize === 'A5';
+  
   return (
-    <Flex 
-      justify="space-between" 
-      align="center" 
-      mb={2} 
-      p={4} 
-      bg={bgColor} 
-      borderRadius="lg" 
-      border="1px" 
-      borderColor={borderColor} 
-      boxShadow="sm" 
-      className="no-print"
+    <Box 
+      {...menuPDFTheme.sizes[printSize]}
+      bg="white"
+      position="relative"
+      overflow="hidden"
     >
-      <VStack align="start" spacing={1}>
-        <Heading size="lg" color="brand.600" bgGradient="linear(to-r, brand.500, brand.700)" bgClip="text">
-          A4 Landscape Menu Print Portal
-        </Heading>
-        <Text color="gray.600">بوابة قائمة الطباعة بحجم A4 أفقي</Text>
-        <Text fontSize="sm" color="gray.500">
-          Generate stunning printable menu (2 A4 landscape pages)
-        </Text>
-      </VStack>
+      <BackgroundPattern />
       
-      <HStack spacing={3}>
-        <IconButton
-          icon={<RepeatIcon />}
-          onClick={handleRefresh}
-          isLoading={isRefetching}
-          aria-label="Refresh data / تحديث البيانات"
-          colorScheme="brand"
-          variant="outline"
+      <Box position="relative" zIndex="1" p={isA5 ? 2 : 3} height="100%" display="flex" flexDirection="column">
+        <PageHeader
+          title="Build Your Own"
+          titleArabic={menuPDFTheme.arabicText.buildYourOwn}
+          gradient={menuPDFTheme.gradients.secondaryGradient}
+          icon={customIcon}
+          isA5={isA5}
         />
-        <Button
-          leftIcon={<DownloadIcon />}
-          onClick={handlePrint}
-          isLoading={isPrinting}
-          loadingText="جاري التحضير..."
-          colorScheme="brand"
-          size="lg"
-          bgGradient="linear(to-r, brand.400, brand.600)"
-          _hover={{
-            bgGradient: 'linear(to-r, brand.500, brand.700)',
-            transform: 'translateY(-2px)',
-            boxShadow: 'lg'
-          }}
-          transition="all 0.2s"
-        >
-          Print Menu / طباعة
-        </Button>
-      </HStack>
-    </Flex>
+        
+        <SelectiveMealsSection 
+          selectiveMealsWithItems={selectiveMealsWithItems} 
+          isA5={isA5}
+        />
+        
+        <Footer isA5={isA5} />
+      </Box>
+    </Box>
   );
 };
 
@@ -1106,7 +1198,7 @@ const useMealItemsData = (selectiveMealIds) => {
           // or create a new function in adminAPI that can be called directly
           const items = await adminAPI.getMealItems(mealId);
           itemsMap[mealId] = items;
-          console.log(`Fetched ${items.length} items for meal ${mealId}`);
+          //console.log(`Fetched ${items.length} items for meal ${mealId}`);
         } catch (error) {
           console.error(`Error fetching items for meal ${mealId}:`, error);
           itemsMap[mealId] = [];
@@ -1186,16 +1278,16 @@ const useMenuData = () => {
       let mealItems = [];
       const mealItemIds = mealItemsMap[meal.id] || [];
       
-      console.log(`Processing meal ${meal.id} (${meal.name}) with item IDs:`, mealItemIds);
+      //console.log(`Processing meal ${meal.id} (${meal.name}) with item IDs:`, mealItemIds);
       
       if (mealItemIds.length > 0) {
         mealItems = mealItemIds
           .map(itemId => itemsData.find(item => item.id === itemId))
           .filter(item => item && item.is_available);
           
-        console.log(`Found ${mealItems.length} items for meal ${meal.name}`, mealItems);
+        //console.log(`Found ${mealItems.length} items for meal ${meal.name}`, mealItems);
       } else {
-        console.log(`No meal items found for meal: ${meal.name} (${meal.id})`);
+        //console.log(`No meal items found for meal: ${meal.name} (${meal.id})`);
         
         // Fallback: try to use meal.item_ids if available
         if (meal.item_ids && Array.isArray(meal.item_ids)) {
@@ -1228,7 +1320,7 @@ const useMenuData = () => {
       });
     });
     
-    console.log('Processed selective meals with items:', result);
+    //console.log('Processed selective meals with items:', result);
     return result;
   }, [mealsData, itemsData, mealItemsMap]);
 
@@ -1269,13 +1361,14 @@ const useMenuData = () => {
  * @param {React.RefObject} menuRef - Reference to menu content
  * @returns {Object} Print handler and state
  */
-const usePrintHandler = (menuRef) => {
+
+const usePrintHandler = (menuRef, printSize) => {
   const toast = useToast();
   const [isPrinting, setIsPrinting] = useState(false);
 
   const handlePrint = useReactToPrint({
     contentRef: menuRef,
-    documentTitle: `Menu-A4-Landscape-${new Date().toISOString().split('T')[0]}`,
+    documentTitle: `Menu-${printSize}-${new Date().toISOString().split('T')[0]}`,
     onBeforeGetContent: () => {
       setIsPrinting(true);
       return Promise.resolve();
@@ -1284,7 +1377,7 @@ const usePrintHandler = (menuRef) => {
       setIsPrinting(false);
       toast({
         title: 'تم التحضير للطباعة بنجاح',
-        description: 'Print dialog opened successfully',
+        description: `Print dialog opened successfully for ${printSize}`,
         status: 'success',
         duration: 3000,
       });
@@ -1301,7 +1394,7 @@ const usePrintHandler = (menuRef) => {
     },
     pageStyle: `
       @page {
-        size: A4 landscape;
+        size: ${printSize} landscape;
         margin: 0;
       }
       @media print {
@@ -1327,6 +1420,7 @@ const usePrintHandler = (menuRef) => {
 const MenuPDFPortal = () => {
   const toast = useToast();
   const menuRef = useRef();
+  const [printSize, setPrintSize] = useState('A4'); // Default to A4
 
   // Fetch and organize menu data
   const {
@@ -1338,11 +1432,9 @@ const MenuPDFPortal = () => {
     refetchItems
   } = useMenuData();
 
-  // Handle printing
-  const { handlePrint, isPrinting } = usePrintHandler(menuRef);
-  useEffect(()=>{
-    console.log(`Items data from menuPDF ${JSON.stringify(selectiveMealsWithItems)}`)
-  },[]) // returns empty object
+  // Handle printing with current size
+  const { handlePrint, isPrinting } = usePrintHandler(menuRef, printSize);
+
   // Refresh data handler
   const handleRefresh = async () => {
     try {
@@ -1363,6 +1455,11 @@ const MenuPDFPortal = () => {
     }
   };
 
+  // Handle print size change
+  const handlePrintSizeChange = (size) => {
+    setPrintSize(size);
+  };
+
   // Show loading spinner while fetching initial data
   if (isLoading) {
     return <LoadingSpinner />;
@@ -1376,15 +1473,23 @@ const MenuPDFPortal = () => {
         handlePrint={handlePrint}
         isRefetching={isRefetching}
         isPrinting={isPrinting}
+        printSize={printSize}
+        onPrintSizeChange={handlePrintSizeChange}
       />
 
-      {/* Menu Content for Print - 2 A4 Landscape Pages */}
+      {/* Menu Content for Print */}
       <Box ref={menuRef}>
         {/* Page 1: Regular Meals */}
-        <RegularMealsPage regularMealsBySection={regularMealsBySection} />
+        <RegularMealsPage 
+          regularMealsBySection={regularMealsBySection} 
+          printSize={printSize}
+        />
 
         {/* Page 2: Selective Meals */}
-        <SelectiveMealsPage selectiveMealsWithItems={selectiveMealsWithItems} />
+        <SelectiveMealsPage 
+          selectiveMealsWithItems={selectiveMealsWithItems} 
+          printSize={printSize}
+        />
       </Box>
 
       {/* Print Styles */}

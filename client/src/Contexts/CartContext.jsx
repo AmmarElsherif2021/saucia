@@ -40,9 +40,9 @@ export const CartProvider = ({ children }) => {
 
   const addMealToCart = (meal, selectedItems = [], totalPrice = null) => {
     console.group('🍽️ ADD MEAL TO CART')
-    console.log('Meal input:', meal)
-    console.log('Selected items input:', selectedItems)
-    console.log('Total price input:', totalPrice)
+    //console.log('Meal input:', meal)
+    //console.log('Selected items input:', selectedItems)
+    //console.log('Total price input:', totalPrice)
 
     try {
       const mealId = meal.meal_id || meal.id
@@ -62,7 +62,7 @@ export const CartProvider = ({ children }) => {
 
       // Generate a temporary UUID for the cart meal
       const tempMealId = `temp_${mealId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      console.log('Generated temp meal ID:', tempMealId)
+      //console.log('Generated temp meal ID:', tempMealId)
 
       const unit_price = Number(totalPrice || meal.unit_price || meal.base_price || meal.price || 0)
       if (unit_price <= 0) {
@@ -88,12 +88,12 @@ export const CartProvider = ({ children }) => {
           const itemUnitPrice = Number(item.unit_price || item.price || 0)
           const itemTotalPrice = Number((itemUnitPrice * itemQty).toFixed(2))
         
-          console.log('Processing item:', {
-            name: item.name,
-            quantity: itemQty,
-            unit_price: itemUnitPrice,
-            total_price: itemTotalPrice
-          })
+          //console.log('Processing item:', {
+          //   name: item.name,
+          //   quantity: itemQty,
+          //   unit_price: itemUnitPrice,
+          //   total_price: itemTotalPrice
+          // })
           
           return {
             item_id: item.item_id || item.id,
@@ -107,7 +107,7 @@ export const CartProvider = ({ children }) => {
           }
         }).filter(item => item.quantity > 0) // Only include items with positive quantity
 
-        console.log('Processed items:', processedItems)
+        //console.log('Processed items:', processedItems)
 
       const safeMeal = {
         meal_id: mealId,
@@ -128,11 +128,11 @@ export const CartProvider = ({ children }) => {
         selectedItems: processedItems // Link items to this meal via temp_meal_id
       }
 
-      console.log('Final meal object:', safeMeal)
+      //console.log('Final meal object:', safeMeal)
 
       setCart(prevCart => {
         const newMeals = [...prevCart.meals, safeMeal]
-        console.log('Updated cart meals:', newMeals)
+        //console.log('Updated cart meals:', newMeals)
         return { ...prevCart, meals: newMeals }
       })
 
@@ -146,7 +146,7 @@ export const CartProvider = ({ children }) => {
         position: 'top'
       })
 
-      console.log('✅ Meal added successfully')
+      //console.log('✅ Meal added successfully')
       console.groupEnd()
       return { success: true, meal: safeMeal }
 
@@ -165,7 +165,7 @@ export const CartProvider = ({ children }) => {
   }
 
   const removeMealFromCart = (temp_meal_id) => {
-    console.log('🗑️ Removing meal:', temp_meal_id)
+    //console.log('🗑️ Removing meal:', temp_meal_id)
     try {
       setCart(prevCart => ({
         ...prevCart,
@@ -183,7 +183,7 @@ export const CartProvider = ({ children }) => {
   }
 
   const removeItemFromCart = (temp_meal_id, item_id) => {
-    console.log('🗑️ Removing item:', { temp_meal_id, item_id })
+    //console.log('🗑️ Removing item:', { temp_meal_id, item_id })
     try {
       setCart(prevCart => ({
         ...prevCart,
@@ -208,7 +208,7 @@ export const CartProvider = ({ children }) => {
   }
 
   const updateMealQuantity = (temp_meal_id, newQuantity) => {
-    console.log('🔄 Updating meal quantity:', { temp_meal_id, newQuantity })
+    //console.log('🔄 Updating meal quantity:', { temp_meal_id, newQuantity })
     try {
       if (newQuantity <= 0) {
         removeMealFromCart(temp_meal_id)
@@ -231,7 +231,7 @@ export const CartProvider = ({ children }) => {
   }
 
   const updateItemQuantity = (temp_meal_id, item_id, newQuantity) => {
-    console.log('🔄 Updating item quantity:', { temp_meal_id, item_id, newQuantity })
+    //console.log('🔄 Updating item quantity:', { temp_meal_id, item_id, newQuantity })
     try {
       if (newQuantity <= 0) {
         removeItemFromCart(temp_meal_id, item_id)
@@ -347,7 +347,7 @@ export const CartProvider = ({ children }) => {
         }))
       }
 
-      console.log('Order data prepared:', orderData)
+      //console.log('Order data prepared:', orderData)
       console.groupEnd()
       return orderData
     } catch (err) {

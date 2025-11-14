@@ -347,7 +347,7 @@ export const useRestaurantAddresses = () => {
 
       if (error) throw error;
       
-      console.log('🏪 Restaurant addresses fetched:', data);
+      //console.log('🏪 Restaurant addresses fetched:', data);
       
       // Transform the data to match our component needs
       return data.map(address => ({

@@ -70,7 +70,7 @@ export default function OAuth() {
       const redirect = consumePendingRedirect();
       
       if (redirect) {
-        console.log('Processing pending redirect:', redirect);
+        //console.log('Processing pending redirect:', redirect);
         
         // Handle different redirect scenarios
         switch (redirect.reason) {

@@ -1,15 +1,14 @@
 // src/Hooks/useOrders.js
 import { useState, useCallback } from 'react';
 import { ordersAPI } from '../API/orderAPI';
-import { userAPI } from '../API/userAPI';
 
 export function useOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [itemsLoading,setItemsLoading]=useState(false)
   const [error, setError] = useState(null);
 
-  // User order operations
+  // ===== CORE ORDER FETCH OPERATIONS =====
+  
   const fetchUserOrders = useCallback(async (queryParams = {}) => {
     setLoading(true);
     setError(null);
@@ -26,23 +25,21 @@ export function useOrders() {
     }
   }, []);
 
-  // Get order items 
-  const fetchOrderItems= useCallback(
-    async (orderId)=>{
-      setItemsLoading(true);
-      setError(null);
-      try{
-        const data= await userAPI.getOrderItems(orderId);
-        return data
-      }catch(err) {
-      console.error('Error fetching user orders:', err);
+  const fetchUserOrdersFiltered = useCallback(async (userId = null) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await ordersAPI.getUserOrdersFiltered(userId);
+      setOrders(data || []);
+      return data;
+    } catch (err) {
+      console.error('Error fetching filtered user orders:', err);
       setError(err);
       throw err;
     } finally {
-      setItemsLoading(false);
+      setLoading(false);
     }
-    },[]
-  )
+  }, []);
 
   const fetchOrderById = useCallback(async (orderId) => {
     setLoading(true);
@@ -59,24 +56,156 @@ export function useOrders() {
     }
   }, []);
 
-
-  const createOrder = useCallback(async (orderData) => {
+  const fetchOrderItems = useCallback(async (orderId) => {
     setLoading(true);
     setError(null);
     try {
-      const newOrder = await ordersAPI.createCompleteOrder(orderData);
-      if (newOrder) {
-        setOrders(prev => [newOrder, ...prev]);
-      }
-      return newOrder;
+      const data = await ordersAPI.getOrderItems(orderId);
+      return data;
     } catch (err) {
-      console.error('Error creating order:', err);
+      console.error('Error fetching order items:', err);
       setError(err);
       throw err;
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const fetchAllOrders = useCallback(async (queryParams = {}) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await ordersAPI.getAllOrders(queryParams);
+      setOrders(data || []);
+      return data;
+    } catch (err) {
+      console.error('Error fetching all orders:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // ===== ORDER CREATION OPERATIONS =====
+
+  const createInstantOrder = useCallback(async (orderData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (!orderData.contact_phone) {
+        throw new Error('Contact phone is required for instant orders');
+      }
+      console.log('Creating instant order with data in hook:', Object.keys(orderData));
+      const newOrder = await ordersAPI.createInstantOrder(orderData);
+      if (newOrder) {
+        setOrders(prev => [newOrder, ...prev]);
+      }
+      return newOrder;
+    } catch (err) {
+      console.error('Error creating instant order:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const createUserOrder = useCallback(async (orderData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const newOrder = await ordersAPI.createUserOrder(orderData);
+      if (newOrder) {
+        setOrders(prev => [newOrder, ...prev]);
+      }
+      return newOrder;
+    } catch (err) {
+      console.error('Error creating user order:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // ===== SUBSCRIPTION ORDER OPERATIONS =====
+
+  const fetchSubscriptionOrders = useCallback(async (subscriptionId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await ordersAPI.getSubscriptionOrders(subscriptionId);
+      return data;
+    } catch (err) {
+      console.error('Error fetching subscription orders:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchNextScheduledMeal = useCallback(async (subscriptionId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await ordersAPI.getNextScheduledMeal(subscriptionId);
+      return data;
+    } catch (err) {
+      console.error('Error fetching next scheduled meal:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const activateOrder = useCallback(async (orderId, orderData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const activatedOrder = await ordersAPI.activateOrder(orderId, orderData);
+      if (activatedOrder) {
+        setOrders(prev => 
+          prev.map(order => order.id === orderId ? activatedOrder : order)
+        );
+      }
+      return activatedOrder;
+    } catch (err) {
+      console.error('Error activating order:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const activateNextSubscriptionOrder = useCallback(async (subscriptionId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const activatedOrder = await ordersAPI.activateNextSubscriptionOrder(subscriptionId);
+      if (activatedOrder) {
+        setOrders(prev => {
+          const existingIndex = prev.findIndex(o => o.id === activatedOrder.id);
+          if (existingIndex >= 0) {
+            return prev.map(o => o.id === activatedOrder.id ? activatedOrder : o);
+          }
+          return [activatedOrder, ...prev];
+        });
+      }
+      return activatedOrder;
+    } catch (err) {
+      console.error('Error activating next subscription order:', err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // ===== ORDER UPDATE & MANAGEMENT =====
 
   const updateOrder = useCallback(async (orderId, updates) => {
     setLoading(true);
@@ -122,14 +251,14 @@ export function useOrders() {
     }
   }, []);
 
-  const trackOrder = useCallback(async (orderId) => {
+  const deleteOrder = useCallback(async (orderId) => {
     setLoading(true);
     setError(null);
     try {
-      const trackingData = await ordersAPI.trackOrder(orderId);
-      return trackingData;
+      await ordersAPI.deleteOrder(orderId);
+      setOrders(prev => prev.filter(order => order.id !== orderId));
     } catch (err) {
-      console.error('Error tracking order:', err);
+      console.error('Error deleting order:', err);
       setError(err);
       throw err;
     } finally {
@@ -137,17 +266,23 @@ export function useOrders() {
     }
   }, []);
 
-  const reorderItems = useCallback(async (orderId) => {
+  const updateOrderStatus = useCallback(async (orderId, status, notes = '') => {
     setLoading(true);
     setError(null);
     try {
-      const newOrder = await ordersAPI.reorderItems(orderId);
-      if (newOrder) {
-        setOrders(prev => [newOrder, ...prev]);
+      const result = await ordersAPI.updateOrderStatus(orderId, status, notes);
+      if (result) {
+        setOrders(prev => 
+          prev.map(order => 
+            order.id === orderId 
+              ? { ...order, status, special_instructions: notes }
+              : order
+          )
+        );
       }
-      return newOrder;
+      return result;
     } catch (err) {
-      console.error('Error reordering items:', err);
+      console.error('Error updating order status:', err);
       setError(err);
       throw err;
     } finally {
@@ -155,7 +290,8 @@ export function useOrders() {
     }
   }, []);
 
-  // Payment operations
+  // ===== PAYMENT OPERATIONS =====
+
   const processPayment = useCallback(async (orderId, paymentData) => {
     setLoading(true);
     setError(null);
@@ -214,133 +350,8 @@ export function useOrders() {
     }
   }, []);
 
-  // Admin operations
-  const fetchAllOrders = useCallback(async (queryParams = {}) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await ordersAPI.getAllOrders(queryParams);
-      setOrders(data || []);
-      return data;
-    } catch (err) {
-      console.error('Error fetching all orders:', err);
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // ===== DELIVERY OPERATIONS =====
 
-  const updateOrderStatus = useCallback(async (orderId, status, notes = '') => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await ordersAPI.updateOrderStatus(orderId, status, notes);
-      if (result) {
-        setOrders(prev => 
-          prev.map(order => 
-            order.id === orderId 
-              ? { ...order, status, special_instructions: notes }
-              : order
-          )
-        );
-      }
-      return result;
-    } catch (err) {
-      console.error('Error updating order status:', err);
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const deleteOrder = useCallback(async (orderId) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await ordersAPI.deleteOrder(orderId);
-      setOrders(prev => prev.filter(order => order.id !== orderId));
-    } catch (err) {
-      console.error('Error deleting order:', err);
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const getOrderAnalytics = useCallback(async (timeframe = '30d') => {
-    setLoading(true);
-    setError(null);
-    try {
-      const analytics = await ordersAPI.getOrderAnalytics(timeframe);
-      return analytics;
-    } catch (err) {
-      console.error('Error fetching order analytics:', err);
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const exportOrders = useCallback(async (filters = {}) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const exportData = await ordersAPI.exportOrders(filters);
-      return exportData;
-    } catch (err) {
-      console.error('Error exporting orders:', err);
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const bulkUpdateOrders = useCallback(async (updates) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await ordersAPI.bulkUpdateOrders(updates);
-      // Refresh orders after bulk update
-      if (updates.length > 0) {
-        // Check if we have user orders or admin orders loaded
-        const hasUserOrders = orders.some(order => order.user_id);
-        if (hasUserOrders) {
-          await fetchUserOrders();
-        } else {
-          await fetchAllOrders();
-        }
-      }
-      return result;
-    } catch (err) {
-      console.error('Error bulk updating orders:', err);
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [orders, fetchUserOrders, fetchAllOrders]);
-
-  const getOrdersByUser = useCallback(async (userId, queryParams = {}) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await ordersAPI.getOrdersByUser(userId, queryParams);
-      return data;
-    } catch (err) {
-      console.error('Error fetching user orders:', err);
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Delivery management
   const assignDelivery = useCallback(async (orderId, deliveryData) => {
     setLoading(true);
     setError(null);
@@ -398,25 +409,50 @@ export function useOrders() {
     }
   }, []);
 
-  // Helper functions for filtering orders
+  // ===== REAL-TIME SUBSCRIPTIONS =====
+
+  const subscribeToUserOrders = useCallback((userId, callback) => {
+    return ordersAPI.subscribeToUserOrders(userId, callback);
+  }, []);
+
+  const subscribeToOrder = useCallback((orderId, callback) => {
+    return ordersAPI.subscribeToOrder(orderId, callback);
+  }, []);
+
+  const subscribeToSubscriptionOrders = useCallback((subscriptionId, callback) => {
+    return ordersAPI.subscribeToSubscriptionOrders(subscriptionId, callback);
+  }, []);
+
+  const subscribeToOrderItems = useCallback((orderId, callback) => {
+    return ordersAPI.subscribeToOrderItems(orderId, callback);
+  }, []);
+
+  const subscribeToOrderMeals = useCallback((orderId, callback) => {
+    return ordersAPI.subscribeToOrderMeals(orderId, callback);
+  }, []);
+
+  // ===== UTILITY & HELPER FUNCTIONS =====
+
+  // Order type validation
+  const getOrderType = useCallback((order) => {
+    return ordersAPI.getOrderType(order);
+  }, []);
+
+  // Filter helpers (no API calls, pure functions on local state)
   const getOrdersByStatus = useCallback((status) => {
     return orders.filter(order => order.status === status);
   }, [orders]);
 
-  const getPendingOrders = useCallback(() => {
-    return orders.filter(order => order.status === 'pending');
+  const getInstantOrders = useCallback(() => {
+    return orders.filter(order => !order.user_id && !order.subscription_id && order.contact_phone);
   }, [orders]);
 
-  const getCompletedOrders = useCallback(() => {
-    return orders.filter(order => order.status === 'completed');
+  const getUserOnlyOrders = useCallback(() => {
+    return orders.filter(order => order.user_id && !order.subscription_id);
   }, [orders]);
 
-  const getCancelledOrders = useCallback(() => {
-    return orders.filter(order => order.status === 'cancelled');
-  }, [orders]);
-
-  const getOrdersWithStatus = useCallback((statuses) => {
-    return orders.filter(order => statuses.includes(order.status));
+  const getSubscriptionOrders = useCallback(() => {
+    return orders.filter(order => order.subscription_id);
   }, [orders]);
 
   const getOrdersInDateRange = useCallback((startDate, endDate) => {
@@ -434,42 +470,50 @@ export function useOrders() {
     // State
     orders,
     loading,
-    itemsLoading,
     error,
     
-    // User operations
+    // Fetch operations
     fetchUserOrders,
+    fetchUserOrdersFiltered,
     fetchOrderById,
-    createOrder,
-    updateOrder,
-    cancelOrder,
-    trackOrder,
-    reorderItems,
     fetchOrderItems,
+    fetchAllOrders,
+    fetchSubscriptionOrders,
+    fetchNextScheduledMeal,
+    
+    // Create operations
+    createInstantOrder,
+    createUserOrder,
+    
+    // Update operations
+    updateOrder,
+    updateOrderStatus,
+    cancelOrder,
+    deleteOrder,
+    activateOrder,
+    activateNextSubscriptionOrder,
     
     // Payment operations
     processPayment,
     refundOrder,
     
-    // Admin operations
-    fetchAllOrders,
-    updateOrderStatus,
-    deleteOrder,
-    getOrderAnalytics,
-    exportOrders,
-    bulkUpdateOrders,
-    getOrdersByUser,
-    
     // Delivery operations
     assignDelivery,
     updateDeliveryStatus,
     
-    // Helper functions
+    // Real-time subscriptions
+    subscribeToUserOrders,
+    subscribeToOrder,
+    subscribeToSubscriptionOrders,
+    subscribeToOrderItems,
+    subscribeToOrderMeals,
+    
+    // Utility functions
+    getOrderType,
     getOrdersByStatus,
-    getPendingOrders,
-    getCompletedOrders,
-    getCancelledOrders,
-    getOrdersWithStatus,
+    getInstantOrders,
+    getUserOnlyOrders,
+    getSubscriptionOrders,
     getOrdersInDateRange,
     getOrdersWithPaymentStatus
   };

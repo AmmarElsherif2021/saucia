@@ -113,7 +113,7 @@ export const CustomizableMealCard = ({
   const { colorMode } = useColorMode();
   const isArabic = currentLanguage === 'ar';
   useEffect(() => {
-    console.log(`selectableItems for meal ${meal.id}:`, JSON.stringify(selectableItems));
+    //console.log(`selectableItems for meal ${meal.id}:`, JSON.stringify(selectableItems));
   }, [selectableItems, meal.id]);
   // Default transparency function if not provided
   const defaultApplyTransparency = (hexColor, transparency = '80') => {
@@ -161,8 +161,8 @@ export const CustomizableMealCard = ({
    */
   const handleConfirm = (selectedItems, totalPrice) => {
     console.group('🎯 CUSTOMIZABLE CARD - HANDLE CONFIRM')
-    console.log('Selected items from modal (object):', selectedItems)
-    console.log('Total price:', totalPrice)
+    //console.log('Selected items from modal (object):', selectedItems)
+    //console.log('Total price:', totalPrice)
     
     // Convert selectedItems object to array format expected by cart
     const addOnsArray = Object.entries(selectedItems)
@@ -191,7 +191,7 @@ export const CustomizableMealCard = ({
       })
       .filter(Boolean) // Remove null entries
 
-    console.log('Final addOns array:', addOnsArray)
+    //console.log('Final addOns array:', addOnsArray)
     console.groupEnd()
     
     // Call parent handler with the correct parameters

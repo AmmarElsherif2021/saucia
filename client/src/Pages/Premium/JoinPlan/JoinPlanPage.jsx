@@ -25,15 +25,15 @@ const JoinPlanPage = () => {
     const initializePlan = async () => {
       try {
         const stateData = location.state
-        console.log('JoinPlan - location state:', stateData)
-        console.log('JoinPlan - current chosen plan:', chosenPlan)
+        //console.log('JoinPlan - location state:', stateData)
+        //console.log('JoinPlan - current chosen plan:', chosenPlan)
 
         // Check if we have plan data from navigation state
         if (stateData?.planId && plans?.length > 0) {
           const planFromState = plans.find(plan => plan.id === stateData.planId)
           
           if (planFromState && (!chosenPlan || chosenPlan.id !== planFromState.id)) {
-            console.log('Setting plan from navigation state:', planFromState.title)
+            //console.log('Setting plan from navigation state:', planFromState.title)
             await setSelectedPlan(planFromState)
             
             // Set term if provided
@@ -53,7 +53,7 @@ const JoinPlanPage = () => {
               if (redirectData.planId) {
                 const planFromStorage = plans.find(plan => plan.id === redirectData.planId)
                 if (planFromStorage) {
-                  console.log('Setting plan from stored redirect:', planFromStorage.title)
+                  //console.log('Setting plan from stored redirect:', planFromStorage.title)
                   await setSelectedPlan(planFromStorage)
                 }
               }

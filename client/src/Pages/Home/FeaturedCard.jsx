@@ -37,7 +37,7 @@ const SimpleFeaturedCard = ({ item }) => {
   const displayPrice = price || base_price || 0
   const hasDiscount = is_discount_active && discount_percentage > 0
 
-  console.log('🎨 SimpleFeaturedCard rendering:', { id, displayName, displayPrice })
+  //console.log('🎨 SimpleFeaturedCard rendering:', { id, displayName, displayPrice })
 
   return (
     <Box
@@ -176,7 +176,7 @@ const SimpleFeaturedCard = ({ item }) => {
               borderRadius="full"
               onClick={(e) => {
                 e.stopPropagation()
-                console.log('Add to cart clicked:', displayName)
+                //console.log('Add to cart clicked:', displayName)
               }}
             >
               🛒 Add
@@ -203,14 +203,14 @@ export const FeaturedMeals = ({
 }) => {
   const { t } = useTranslation()
 
-  console.log('🔍 FeaturedMeals received:', featuredMeals)
+  //console.log('🔍 FeaturedMeals received:', featuredMeals)
 
   // Validate and transform data
   const validMeals = Array.isArray(featuredMeals) 
     ? featuredMeals.filter(meal => meal && meal.id && meal.name)
     : []
 
-  console.log('🔍 Valid meals after filtering:', validMeals)
+  //console.log('🔍 Valid meals after filtering:', validMeals)
 
   if (!validMeals || validMeals.length === 0) {
     return (

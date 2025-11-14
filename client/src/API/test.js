@@ -122,7 +122,7 @@ function extractTriggers(output) {
 
 function saveToMarkdownFile(markdownContent, filename = 'database-documentation.md') {
     fs.writeFileSync(filename, markdownContent);
-    console.log(`Documentation saved to ${filename}`);
+    //console.log(`Documentation saved to ${filename}`);
 }
 
 const markdown = generateDatabaseDocumentation(schemaData);

@@ -36,7 +36,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { JoinPremiumTeaser } from './JoinPremiumTeaser';
 import { useTranslation } from 'react-i18next';
 import { useI18nContext } from '../../Contexts/I18nContext';
-import { useUserSubscriptions,useSubscriptionValidation } from '../../Hooks/useUserSubscriptions';
+import { useSubscriptionValidation } from '../../Hooks/useUserSubscriptions';
 import { CardPlanAvatar } from './PlanAvatar'
 import profileIcon from '../../assets/profile-b.svg'
 // Import plan images 
@@ -91,14 +91,14 @@ const EnhancedPlanCard = ({
   // Determine if this plan can be selected
   const canSelectPlan = isUserPlan || canCreateNewSubscription
 
-  console.log('🔍 PlanCard State:', {
-    planId: plan.id,
-    planTitle: plan.title,
-    isUserPlan,
-    canCreateNewSubscription,
-    canSelectPlan,
-    hasActiveSubscription
-  })
+  //console.log('🔍 PlanCard State:', {
+  //   planId: plan.id,
+  //   planTitle: plan.title,
+  //   isUserPlan,
+  //   canCreateNewSubscription,
+  //   canSelectPlan,
+  //   hasActiveSubscription
+  // })
 
   return (
     <Box
@@ -520,17 +520,17 @@ export const PremiumPage = () => {
     : null;
 
   // Debug subscription validation state
-  useEffect(() => {
-    console.log('🔍 PremiumPage Subscription Validation:', {
-      user,
-      hasActiveSubscription,
-      canCreateSubscription,
-      validationLoading,
-      activeSubscription: activeSubscription?.id,
-      currentSubscription: currentSubscription?.id,
-      userPlan: userPlan?.id
-    });
-  }, [user, hasActiveSubscription, canCreateSubscription, validationLoading, activeSubscription, currentSubscription, userPlan]);
+  // useEffect(() => {
+  //   //console.log('🔍 PremiumPage Subscription Validation:', {
+  //     user,
+  //     hasActiveSubscription,
+  //     canCreateSubscription,
+  //     validationLoading,
+  //     activeSubscription: activeSubscription?.id,
+  //     currentSubscription: currentSubscription?.id,
+  //     userPlan: userPlan?.id
+  //   });
+  // }, [user, hasActiveSubscription, canCreateSubscription, validationLoading, activeSubscription, currentSubscription, userPlan]);
 
   useEffect(() => {
     if (userPlan && currentSubscription) {
@@ -558,18 +558,18 @@ export const PremiumPage = () => {
 
   // ENHANCED: handlePlanSelect with subscription validation
   const handlePlanSelect = (plan) => {
-    console.log('🎯 Plan Selection Attempt:', {
-      planId: plan.id,
-      planTitle: plan.title,
-      user,
-      hasActiveSubscription,
-      canCreateSubscription,
-      isUserPlan: userPlan?.id === plan.id
-    });
+    //console.log('🎯 Plan Selection Attempt:', {
+    //   planId: plan.id,
+    //   planTitle: plan.title,
+    //   user,
+    //   hasActiveSubscription,
+    //   canCreateSubscription,
+    //   isUserPlan: userPlan?.id === plan.id
+    // });
 
     // Case 1: User not logged in
     if (!user) {
-      console.log('🔐 User not logged in, showing login modal');
+      //console.log('🔐 User not logged in, showing login modal');
       setLoginModalContext({ plan, term: null });
       setShowLoginModal(true);
       return;
@@ -577,7 +577,7 @@ export const PremiumPage = () => {
 
     // Case 2: User is selecting their current plan
     if (userPlan?.id === plan.id) {
-      console.log('📋 User selecting current plan, allowing view details');
+      //console.log('📋 User selecting current plan, allowing view details');
       setSelectedPlan(plan);
       navigate('/premium/join', { 
         state: { 
@@ -591,7 +591,7 @@ export const PremiumPage = () => {
 
     // Case 3: User has active subscription and tries to select different plan
     if (hasActiveSubscription) {
-      console.log('🚫 User has active subscription, blocking new plan selection');
+      //console.log('🚫 User has active subscription, blocking new plan selection');
       toast({
         title: t('premium.activeSubscriptionExists'),
         description: t('premium.cannotSelectNewPlan'),
@@ -603,7 +603,7 @@ export const PremiumPage = () => {
     }
 
     // Case 4: User can create new subscription
-    console.log('✅ User can create new subscription, proceeding...');
+    //console.log('✅ User can create new subscription, proceeding...');
     setSelectedPlan(plan);
     
     updateSubscriptionData({

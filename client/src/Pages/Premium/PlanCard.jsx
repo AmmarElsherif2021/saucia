@@ -51,7 +51,7 @@ import { PlanAvatar } from './PlanAvatar';
 
 // // Default mock function for onSelect
 // const mockOnSelect = (plan) => {
-//   console.log('Plan selected:', plan);
+//   //console.log('Plan selected:', plan);
 // };
 
 

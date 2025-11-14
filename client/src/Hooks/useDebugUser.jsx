@@ -17,11 +17,11 @@ export const useDebugUser = () => {
         }
 
         if (!session) {
-          console.log('No active session');
+          //console.log('No active session');
           return;
         }
 
-        console.log('Current user ID:', session.user.id);
+        //console.log('Current user ID:', session.user.id);
 
         // Check user profile
         const { data: profile, error: profileError } = await supabase
@@ -35,7 +35,7 @@ export const useDebugUser = () => {
           return;
         }
 
-        console.log('User profile:', profile);
+        //console.log('User profile:', profile);
         setUserInfo({ session: session.user, profile });
 
       } catch (error) {

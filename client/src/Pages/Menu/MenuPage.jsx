@@ -412,11 +412,11 @@ const MenuPage = () => {
 
   // Handlers
   const handleAddToCart = (meal, selectedItems = [], totalPrice = null) => {
-    console.log('📦 MenuPage: Adding meal to cart', {
-      meal: meal.name,
-      selectedItems,
-      totalPrice
-    })
+    //console.log('📦 MenuPage: Adding meal to cart', {
+    //   meal: meal.name,
+    //   selectedItems,
+    //   totalPrice
+    // })
     
     // Ensure selectedItems is always an array
     const safeSelectedItems = Array.isArray(selectedItems) ? selectedItems : []

@@ -48,23 +48,23 @@ const ENTITY_HANDLERS = {
 
 // Enhanced sanitize data function
 const sanitizeData = (data, entityType) => {
-  console.log(`🧹 Sanitizing ${entityType} data:`, data);
+  //console.log(`🧹 Sanitizing ${entityType} data:`, data);
   
   const sanitized = { ...data };
   
   // Remove read-only fields that shouldn't be sent to API
   const fieldsToRemove = [
-    'created_at',
-    'updated_at',
-    'meal_allergies',
-    'item_allergies',
-    'user_profiles',
-    'plans',
-    'allergies', // Will be replaced with allergy_ids
-    'dietary_preferences', // Will be replaced with dietary_preference_ids
-    'meals', // For plans, will be replaced with meal_ids
-    'items', // For meals, will be replaced with item_ids
-  ];
+  'created_at',
+  'updated_at',
+  'meal_allergies',
+  'item_allergies',
+  'user_profiles',
+  'plans',
+  'allergies', // Will be replaced with allergy_ids
+  'dietary_preferences', // Will be replaced with dietary_preference_ids
+  // 'meals', // REMOVED - Keep meals for plans
+  'items', // For meals, will be replaced with item_ids
+];
   
   fieldsToRemove.forEach(field => {
     if (sanitized[field] !== undefined) {
@@ -80,22 +80,37 @@ const sanitizeData = (data, entityType) => {
   });
   
   // Entity-specific transformations
-  if (entityType === 'meals') {
-    // Ensure allergy_ids and item_ids are present (even if empty arrays)
-    if (!sanitized.allergy_ids) sanitized.allergy_ids = [];
-    if (!sanitized.item_ids) sanitized.item_ids = [];
-  }
+if (entityType === 'plans') {
+  // Ensure additives is an array
+  if (!sanitized.additives) sanitized.additives = [];
   
-  if (entityType === 'items') {
-    // Ensure allergy_ids is present
-    if (!sanitized.allergy_ids) sanitized.allergy_ids = [];
+  // CRITICAL: Don't delete meals field for plans
+  // Keep meals data and ensure it's properly formatted
+  if (sanitized.meals && Array.isArray(sanitized.meals)) {
+    const formattedMeals = sanitized.meals.map(meal => {
+      if (typeof meal === 'object' && meal.meal_id) {
+        return {
+          meal_id: meal.meal_id,
+          is_substitutable: meal.is_substitutable || false
+        };
+      } else if (typeof meal === 'object' && meal.id) {
+        return {
+          meal_id: meal.id,
+          is_substitutable: meal.is_substitutable || false
+        };
+      }
+      return {
+        meal_id: meal,
+        is_substitutable: false
+      };
+    });
+    sanitized.meals = formattedMeals;
+    console.log('🔄 Formatted meals for API:', sanitized.meals);
+  } else {
+    // If no meals provided, set empty array
+    sanitized.meals = [];
   }
-  
-  if (entityType === 'plans') {
-    // Ensure meal_ids is present and handle additives array
-    if (!sanitized.meal_ids) sanitized.meal_ids = [];
-    if (!sanitized.additives) sanitized.additives = [];
-  }
+}
   
   if (entityType === 'users') {
     // Ensure allergy_ids and dietary_preference_ids are present
@@ -103,7 +118,7 @@ const sanitizeData = (data, entityType) => {
     if (!sanitized.dietary_preference_ids) sanitized.dietary_preference_ids = [];
   }
   
-  console.log(`✅ Sanitized ${entityType} data:`, sanitized);
+  //console.log(`✅ Sanitized ${entityType} data:`, sanitized);
   return sanitized;
 };
 
@@ -122,7 +137,7 @@ export const useEntityManager = (entityType, adminFunctions) => {
   const handlers = ENTITY_HANDLERS[entityType](adminFunctions);
 
   const handleAdd = async (data) => {
-    console.log(`🚀 Starting ADD for ${entityType}:`, data);
+    //console.log(`🚀 Starting ADD for ${entityType}:`, data);
     
     if (!handlers.create) {
       window.alert(`Creating ${entityType} is not supported`);
@@ -131,54 +146,58 @@ export const useEntityManager = (entityType, adminFunctions) => {
 
     try {
       const sanitizedData = sanitizeData(data, entityType);
-      console.log(`📤 Calling create mutation for ${entityType}:`, sanitizedData);
+      //console.log(`📤 Calling create mutation for ${entityType}:`, sanitizedData);
       
       await handlers.create.mutateAsync(sanitizedData);
       
       modals.add.onClose();
-      console.log(`✅ ADD ${entityType} completed successfully`);
+      //console.log(`✅ ADD ${entityType} completed successfully`);
     } catch (error) {
       console.error(`❌ ADD ${entityType} failed:`, error);
       window.alert(`Failed to add ${ENTITY_CONFIGS[entityType]?.singular || entityType.slice(0, -1)}: ${error.message}`);
     }
   };
 
-  const handleEdit = async (id, data) => {
-    console.log(`🚀 Starting EDIT for ${entityType} ID ${id}:`, data);
-    
-    if (!handlers.update) {
-      window.alert(`Editing ${entityType} is not supported`);
-      return;
-    }
+const handleEdit = async (id, data) => {
+  console.log(`🚀 Starting EDIT for ${entityType} ID ${id}:`, data);
+  
+  if (!handlers.update) {
+    window.alert(`Editing ${entityType} is not supported`);
+    return;
+  }
 
-    try {
-      const idField = ENTITY_ID_MAPPING[entityType];
-      if (!idField) {
-        throw new Error(`No ID mapping found for entity type: ${entityType}`);
-      }
-      
-      if (!id || id === 'undefined') {
-        throw new Error(`Invalid ID provided for ${entityType}: ${id}`);
-      }
-      
-      const sanitizedData = sanitizeData(data, entityType);
-      console.log(`📤 Calling update mutation for ${entityType}:`, { [idField]: id, updateData: sanitizedData });
-      
-      await handlers.update.mutateAsync({ 
-        [idField]: id, 
-        updateData: sanitizedData 
-      });
-      
-      modals.edit.onClose();
-      console.log(`✅ EDIT ${entityType} completed successfully`);
-    } catch (error) {
-      console.error(`❌ EDIT ${entityType} failed:`, error);
-      window.alert(`Failed to edit ${ENTITY_CONFIGS[entityType]?.singular || entityType.slice(0, -1)}: ${error.message}`);
+  try {
+    const idField = ENTITY_ID_MAPPING[entityType];
+    if (!idField) {
+      throw new Error(`No ID mapping found for entity type: ${entityType}`);
     }
-  };
+    
+    if (!id || id === 'undefined') {
+      throw new Error(`Invalid ID provided for ${entityType}: ${id}`);
+    }
+    
+    const sanitizedData = sanitizeData(data, entityType);
+    console.log(`📤 Calling update mutation for ${entityType}:`, { 
+      [idField]: id, 
+      updateData: sanitizedData,
+      mealsData: sanitizedData.meals // Log specifically the meals data
+    });
+    
+    await handlers.update.mutateAsync({ 
+      [idField]: id, 
+      updateData: sanitizedData 
+    });
+    
+    modals.edit.onClose();
+    console.log(`✅ EDIT ${entityType} completed successfully`);
+  } catch (error) {
+    console.error(`❌ EDIT ${entityType} failed:`, error);
+    window.alert(`Failed to edit ${ENTITY_CONFIGS[entityType]?.singular || entityType.slice(0, -1)}: ${error.message}`);
+  }
+};
 
   const handleDelete = async (id) => {
-    console.log(`🚀 Starting DELETE for ${entityType} ID ${id}`);
+    //console.log(`🚀 Starting DELETE for ${entityType} ID ${id}`);
     
     if (!handlers.delete) {
       window.alert(`Deleting ${entityType} is not supported`);
@@ -190,12 +209,12 @@ export const useEntityManager = (entityType, adminFunctions) => {
         throw new Error(`Invalid ID provided for ${entityType}: ${id}`);
       }
       
-      console.log(`📤 Calling delete mutation for ${entityType}:`, id);
+      //console.log(`📤 Calling delete mutation for ${entityType}:`, id);
       await handlers.delete.mutateAsync(id);
       
       modals.delete.onClose();
       setSelectedEntity(null);
-      console.log(`✅ DELETE ${entityType} completed successfully`);
+      //console.log(`✅ DELETE ${entityType} completed successfully`);
     } catch (error) {
       console.error(`❌ DELETE ${entityType} failed:`, error);
       window.alert(`Failed to delete ${ENTITY_CONFIGS[entityType]?.singular || entityType.slice(0, -1)}: ${error.message}`);
@@ -216,7 +235,7 @@ export const useEntityManager = (entityType, adminFunctions) => {
           throw new Error('Import file must contain an array of entities');
         }
 
-        console.log(`📥 Importing ${entitiesData.length} ${entityType}...`);
+        //console.log(`📥 Importing ${entitiesData.length} ${entityType}...`);
         
         // Import each entity one by one
         let successCount = 0;
@@ -255,7 +274,7 @@ export const useEntityManager = (entityType, adminFunctions) => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      console.log(`✅ Exported ${data.length} ${entityType}`);
+      //console.log(`✅ Exported ${data.length} ${entityType}`);
     } catch (error) {
       console.error(`Export failed:`, error);
       window.alert(`Failed to export ${entityType}: ${error.message}`);

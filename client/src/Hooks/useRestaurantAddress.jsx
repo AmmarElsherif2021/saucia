@@ -49,7 +49,7 @@ export const useGetAddresses = (external_id = null) => {
     setError(null);
 
     try {
-      console.log('🔍 Fetching addresses with external_id:', id);
+      //console.log('🔍 Fetching addresses with external_id:', id);
       
       let query = supabase
         .from('addresses')
@@ -67,7 +67,7 @@ export const useGetAddresses = (external_id = null) => {
         throw error;
       }
 
-      console.log('✅ Addresses fetched:', data);
+      //console.log('✅ Addresses fetched:', data);
       setAddresses(data || []);
       
       // Find default address

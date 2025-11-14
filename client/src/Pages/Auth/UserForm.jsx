@@ -10,7 +10,7 @@ import {
 } from '@chakra-ui/react'
 import { useState } from 'react'
 
-const UserForm = ({ onSubmit, onCancel, initialData = {} }) => {
+const UserForm = ({ onSubmit, onCancel, initialData = {}, key }) => {
   const [formData, setFormData] = useState({
     email: initialData.email || '',
     display_name: initialData.display_name || '',

@@ -58,7 +58,7 @@ export const ImagePreloader = ({ children }) => {
   // Optional: Log preload status for debugging
   useEffect(() => {
     if (isComplete) {
-      console.log(`Plan images preloaded: ${successCount}/${totalCount}`)
+      //console.log(`Plan images preloaded: ${successCount}/${totalCount}`)
     }
   }, [isComplete, successCount, totalCount])
   

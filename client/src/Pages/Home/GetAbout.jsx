@@ -92,7 +92,7 @@ const SupportForm = () => {
   
   const handleSubmit = (e) => {
     e.preventDefault()
-    //console.log('Support message submitted:', message)
+    ////console.log('Support message submitted:', message)
     // Here you would typically send the message to your backend
     setMessage('')
   }
@@ -129,7 +129,7 @@ export const AboutPage = ({ contactUs }) => {
 
   // Navigation handler function - consistent with Navbar
   const handleSectionNavigation = (section) => {
-    //console.log('AboutPage requesting navigation to:', section)
+    ////console.log('AboutPage requesting navigation to:', section)
     return { scrollTo: section }
   }
 
