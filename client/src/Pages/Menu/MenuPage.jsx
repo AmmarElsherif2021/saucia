@@ -476,10 +476,10 @@ const MenuPage = () => {
       <Center height="300px">
         <Box textAlign="center">
           <ChakraText fontSize="lg" mb={2}>
-            {t('menuPage.noMenuItems', 'No menu items available')}
+            {t('noMenuItems', 'No menu items available')}
           </ChakraText>
           <ChakraText fontSize="sm" color="gray.500">
-            {t('menuPage.checkBackLater', 'Please check back later')}
+            {t('checkBackLater', 'Please check back later')}
           </ChakraText>
         </Box>
       </Center>
@@ -494,7 +494,7 @@ const MenuPage = () => {
     >
       <Box p={4}>
         <Heading mb={6} textStyle="heading">
-          {t('menuPage.title', 'Menu')}
+          {t('title', 'Menu')}
         </Heading>
         <ACC
           sections={sections.map((section, index) => ({

@@ -544,14 +544,14 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {}, isEdit = false, key })
                   {imagePreview ? (
                     <Image
                       src={imagePreview}
-                      alt={t('admin.modals.planPreview')}
+                      alt={t('modals.planPreview')}
                       w="100%"
                       h="100%"
                       objectFit="cover"
                     />
                   ) : (
                     <Text color="gray.500" textAlign="center" px={2}>
-                      {t('admin.modals.noImage')}
+                      {t('modals.noImage')}
                     </Text>
                   )}
                 </Box>
@@ -562,10 +562,10 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {}, isEdit = false, key })
                     colorScheme="blue"
                     cursor="pointer"
                     isLoading={isUploading}
-                    loadingText={t('admin.modals.uploading')}
+                    loadingText={t('modals.uploading')}
                     size="sm"
                   >
-                    {t('admin.modals.chooseImage')}
+                    {t('modals.chooseImage')}
                     <Input
                       type="file"
                       accept="image/*"
@@ -581,7 +581,7 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {}, isEdit = false, key })
                   </Button>
                 </Box>
                 <Text fontSize="sm" color="gray.500" textAlign="center">
-                  {t('admin.modals.imageHint')}
+                  {t('modals.imageHint')}
                 </Text>
               </VStack>
             </CardBody>
@@ -593,49 +593,49 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {}, isEdit = false, key })
               <Heading size="md" mb={4} color="gray.700">Basic Information</Heading>
               <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={4}>
                 <FormControl isRequired>
-                  <FormLabel fontWeight="medium">{t('admin.modals.titleEn')}</FormLabel>
+                  <FormLabel fontWeight="medium">{t('modals.titleEn')}</FormLabel>
                   <Input
                     type="text"
                     name="title"
                     value={formData.title}
                     onChange={handleChange}
-                    placeholder={t('admin.modals.titleEn')}
+                    placeholder={t('modals.titleEn')}
                     focusBorderColor="blue.500"
                   />
                 </FormControl>
 
                 <FormControl isRequired>
-                  <FormLabel fontWeight="medium">{t('admin.modals.titleAr')}</FormLabel>
+                  <FormLabel fontWeight="medium">{t('modals.titleAr')}</FormLabel>
                   <Input
                     type="text"
                     name="title_arabic"
                     value={formData.title_arabic}
                     onChange={handleChange}
-                    placeholder={t('admin.modals.titleAr')}
+                    placeholder={t('modals.titleAr')}
                     dir="rtl"
                     focusBorderColor="blue.500"
                   />
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel fontWeight="medium">{t('admin.modals.descriptionEn')}</FormLabel>
+                  <FormLabel fontWeight="medium">{t('modals.descriptionEn')}</FormLabel>
                   <Textarea
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
-                    placeholder={t('admin.modals.descriptionEn')}
+                    placeholder={t('modals.descriptionEn')}
                     rows={3}
                     focusBorderColor="blue.500"
                   />
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel fontWeight="medium">{t('admin.modals.descriptionAr')}</FormLabel>
+                  <FormLabel fontWeight="medium">{t('modals.descriptionAr')}</FormLabel>
                   <Textarea
                     name="description_arabic"
                     value={formData.description_arabic}
                     onChange={handleChange}
-                    placeholder={t('admin.modals.descriptionAr')}
+                    placeholder={t('modals.descriptionAr')}
                     dir="rtl"
                     rows={3}
                     focusBorderColor="blue.500"
@@ -649,10 +649,10 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {}, isEdit = false, key })
         {/* Nutritional Information */}
         <Card>
           <CardBody>
-            <Heading size="md" mb={4} color="gray.700">{t('admin.modals.nutritionalInfo')}</Heading>
+            <Heading size="md" mb={4} color="gray.700">{t('modals.nutritionalInfo')}</Heading>
             <Grid templateColumns={{ base: '1fr', sm: '1fr 1fr', lg: 'repeat(4, 1fr)' }} gap={4}>
               <FormControl isRequired>
-                <FormLabel fontWeight="medium">{t('admin.modals.carbs')} (g)</FormLabel>
+                <FormLabel fontWeight="medium">{t('modals.carbs')} (g)</FormLabel>
                 <Input
                   type="number"
                   name="carb"
@@ -664,7 +664,7 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {}, isEdit = false, key })
               </FormControl>
 
               <FormControl isRequired>
-                <FormLabel fontWeight="medium">{t('admin.modals.protein')} (g)</FormLabel>
+                <FormLabel fontWeight="medium">{t('modals.protein')} (g)</FormLabel>
                 <Input
                   type="number"
                   name="protein"
@@ -676,7 +676,7 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {}, isEdit = false, key })
               </FormControl>
 
               <FormControl isRequired>
-                <FormLabel fontWeight="medium">{t('admin.modals.calories')} (kcal)</FormLabel>
+                <FormLabel fontWeight="medium">{t('modals.calories')} (kcal)</FormLabel>
                 <Input
                   type="number"
                   name="kcal"
@@ -688,7 +688,7 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {}, isEdit = false, key })
               </FormControl>
 
               <FormControl isRequired>
-                <FormLabel fontWeight="medium">{t('admin.modals.pricePerMeal')} (SAR)</FormLabel>
+                <FormLabel fontWeight="medium">{t('modals.pricePerMeal')} (SAR)</FormLabel>
                 <Input
                   type="number"
                   name="price_per_meal"
@@ -706,10 +706,10 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {}, isEdit = false, key })
         {/* Meal Terms */}
         <Card>
           <CardBody>
-            <Heading size="md" mb={4} color="gray.700">{t('admin.modals.mealTerms')}</Heading>
+            <Heading size="md" mb={4} color="gray.700">{t('modals.mealTerms')}</Heading>
             <Grid templateColumns={{ base: '1fr', sm: '1fr 1fr', lg: 'repeat(4, 1fr)' }} gap={4}>
               <FormControl>
-                <FormLabel fontWeight="medium">{t('admin.modals.shortTermMeals')}</FormLabel>
+                <FormLabel fontWeight="medium">{t('modals.shortTermMeals')}</FormLabel>
                 <Input
                   type="number"
                   name="short_term_meals"
@@ -721,7 +721,7 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {}, isEdit = false, key })
               </FormControl>
 
               <FormControl>
-                <FormLabel fontWeight="medium">{t('admin.modals.mediumTermMeals')}</FormLabel>
+                <FormLabel fontWeight="medium">{t('modals.mediumTermMeals')}</FormLabel>
                 <Input
                   type="number"
                   name="medium_term_meals"
@@ -734,7 +734,7 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {}, isEdit = false, key })
 
               <FormControl display="flex" alignItems="center">
                 <FormLabel htmlFor="is_active" mb="0" fontWeight="medium">
-                  {t('admin.modals.isActive')}
+                  {t('modals.isActive')}
                 </FormLabel>
                 <Switch
                   id="is_active"
@@ -753,7 +753,7 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {}, isEdit = false, key })
         <Card>
           <CardBody>
             <Heading size="md" mb={4} color="gray.700">
-              {t('admin.modals.mealSelection')}
+              {t('modals.mealSelection')}
             </Heading>
             <Alert status="warning" mb={4}>
               <AlertIcon />
@@ -856,7 +856,7 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {}, isEdit = false, key })
         {/* Additives Selection */}
         <Card>
           <CardBody>
-            <Heading size="md" mb={4} color="gray.700">{t('admin.modals.additives')}</Heading>
+            <Heading size="md" mb={4} color="gray.700">{t('modals.additives')}</Heading>
             <Text color="gray.600" mb={4} fontSize="sm">
               Select additional items available with this plan
             </Text>
@@ -935,7 +935,7 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {}, isEdit = false, key })
             width={{ base: '100%', sm: 'auto' }}
             isDisabled={isUploading || isProcessingMeals}
           >
-            {t('admin.modals.cancel')}
+            {t('modals.cancel')}
           </Button>
           <Button
             type="submit"
@@ -943,9 +943,9 @@ const PlanForm = ({ onSubmit, onCancel, initialData = {}, isEdit = false, key })
             size="md"
             width={{ base: '100%', sm: 'auto' }}
             isLoading={isUploading || isProcessingMeals}
-            loadingText={isProcessingMeals ? "Configuring meals..." : t('admin.modals.saving')}
+            loadingText={isProcessingMeals ? "Configuring meals..." : t('modals.saving')}
           >
-            {isEdit ? t('admin.modals.update') : t('admin.modals.save')}
+            {isEdit ? t('modals.update') : t('modals.save')}
           </Button>
         </Flex>
       </VStack>

@@ -140,14 +140,14 @@ const CompactMealSelectionModal = ({
           <HStack justify="space-between">
             <VStack align="start" spacing={0}>
               <Text fontSize="md" fontWeight="bold">
-                {t('checkout.designMealTitle', { number: mealIndex + 1 })}
+                {t('designMealTitle', { number: mealIndex + 1 })}
               </Text>
               <Text fontSize="xs" color="gray.600" fontWeight="normal">
-                {t('checkout.selectOnePerCategory')}
+                {t('selectOnePerCategory')}
               </Text>
             </VStack>
             <Badge colorScheme={selectedCount > 0 ? 'green' : 'gray'} fontSize="sm">
-              {selectedCount} {t('checkout.selected')}
+              {selectedCount} {t('selected')}
             </Badge>
           </HStack>
         </ModalHeader>
@@ -247,7 +247,7 @@ const CompactMealSelectionModal = ({
         <ModalFooter borderTopWidth="1px">
           <HStack spacing={2} w="full" justify="space-between">
             <Button variant="ghost" onClick={onClose} size="sm">
-              {t('common.cancel')}
+              {t('cancel')}
             </Button>
             <HStack>
               {currentCategoryIndex < totalCategories - 1 && (
@@ -256,7 +256,7 @@ const CompactMealSelectionModal = ({
                   size="sm"
                   variant="outline"
                 >
-                  {t('common.next')} →
+                  {t('next')} →
                 </Button>
               )}
               <Button
@@ -265,7 +265,7 @@ const CompactMealSelectionModal = ({
                 isDisabled={selectedCount === 0}
                 size="sm"
               >
-                {t('checkout.saveMeal')}
+                {t('saveMeal')}
               </Button>
             </HStack>
           </HStack>
@@ -294,7 +294,7 @@ const SubscriptionConfirmationModal = ({
         <ModalHeader borderBottomWidth="1px">
           <HStack spacing={2}>
             <CheckCircleIcon color="green.500" boxSize={6} />
-            <Text>{t('checkout.confirmSubscription')}</Text>
+            <Text>{t('confirmSubscription')}</Text>
           </HStack>
         </ModalHeader>
 
@@ -304,27 +304,27 @@ const SubscriptionConfirmationModal = ({
               <AlertIcon />
               <VStack align="start" spacing={1}>
                 <Text fontWeight="bold" fontSize="sm">
-                  {t('checkout.allMealsComplete')}
+                  {t('allMealsComplete')}
                 </Text>
                 <Text fontSize="xs">
-                  {t('checkout.readyToConfirm')}
+                  {t('readyToConfirm')}
                 </Text>
               </VStack>
             </Alert>
 
             <VStack spacing={2} align="stretch" fontSize="sm">
               <Flex justify="space-between">
-                <Text color="gray.600">{t('checkout.plan')}:</Text>
+                <Text color="gray.600">{t('plan')}:</Text>
                 <Text fontWeight="bold">
                   {isArabic ? subscriptionData?.plan?.title_arabic : subscriptionData?.plan?.title}
                 </Text>
               </Flex>
               <Flex justify="space-between">
-                <Text color="gray.600">{t('checkout.totalMeals')}:</Text>
+                <Text color="gray.600">{t('totalMeals')}:</Text>
                 <Text fontWeight="bold">{subscriptionData?.total_meals}</Text>
               </Flex>
               <Flex justify="space-between">
-                <Text color="gray.600">{t('checkout.mealDesigns')}:</Text>
+                <Text color="gray.600">{t('mealDesigns')}:</Text>
                 <Text fontWeight="bold" color="green.500">5/5 ✓</Text>
               </Flex>
             </VStack>
@@ -332,7 +332,7 @@ const SubscriptionConfirmationModal = ({
             <Divider />
 
             <Text fontSize="sm" color="gray.600" textAlign="center">
-              {t('checkout.confirmationMessage')}
+              {t('confirmationMessage')}
             </Text>
           </VStack>
         </ModalBody>
@@ -340,15 +340,15 @@ const SubscriptionConfirmationModal = ({
         <ModalFooter borderTopWidth="1px">
           <HStack spacing={2} w="full" justify="space-between">
             <Button variant="ghost" onClick={onClose} isDisabled={isLoading}>
-              {t('common.cancel')}
+              {t('cancel')}
             </Button>
             <Button
               colorScheme="green"
               onClick={onConfirm}
               isLoading={isLoading}
-              loadingText={t('checkout.processing')}
+              loadingText={t('processing')}
             >
-              {t('checkout.confirmAndPay')}
+              {t('confirmAndPay')}
             </Button>
           </HStack>
         </ModalFooter>
@@ -395,7 +395,7 @@ const MealDesignsPreview = ({ mealDesigns, saladItems, onEditMeal, t, isArabic }
   ).length || 0;
 
   const getIngredientPreview = (mealData) => {
-    if (!mealData?.items?.length) return t('checkout.noIngredients');
+    if (!mealData?.items?.length) return t('noIngredients');
     
     const ingredientNames = mealData.items.map(item => 
       isArabic ? item.name_arabic || item.name : item.name
@@ -422,7 +422,7 @@ const MealDesignsPreview = ({ mealDesigns, saladItems, onEditMeal, t, isArabic }
     >
       <Flex justify="space-between" align="center" mb={4}>
         <Heading size="sm" color="brand.600">
-          {t('checkout.yourMealDesigns')}
+          {t('yourMealDesigns')}
         </Heading>
         <Badge colorScheme={completedMealsCount === 5 ? 'green' : 'orange'} fontSize="xs">
           {completedMealsCount} / 5
@@ -498,7 +498,7 @@ const MealDesignsPreview = ({ mealDesigns, saladItems, onEditMeal, t, isArabic }
                       {getIngredientPreview(mealData)}
                     </Text>
                     <Text fontSize="2xs" color="blue.500" fontStyle="italic">
-                      {t('common.clickToEdit')}
+                      {t('clickToEdit')}
                     </Text>
                   </>
                 ) : (
@@ -516,7 +516,7 @@ const MealDesignsPreview = ({ mealDesigns, saladItems, onEditMeal, t, isArabic }
                       <Text fontSize="lg" color="orange.500">+</Text>
                     </Box>
                     <Text fontSize="2xs" color="orange.600" textAlign="center" fontWeight="medium">
-                      {t('checkout.clickToDesign')}
+                      {t('clickToDesign')}
                     </Text>
                   </VStack>
                 )}
@@ -533,7 +533,7 @@ const MealDesignsPreview = ({ mealDesigns, saladItems, onEditMeal, t, isArabic }
             {completedMealsCount}
           </Text>
           <Text fontSize="xs" color="gray.600">
-            {t('checkout.completed')}
+            {t('completed')}
           </Text>
         </Box>
         <Box>
@@ -541,7 +541,7 @@ const MealDesignsPreview = ({ mealDesigns, saladItems, onEditMeal, t, isArabic }
             {5 - completedMealsCount}
           </Text>
           <Text fontSize="xs" color="gray.600">
-            {t('checkout.remaining')}
+            {t('remaining')}
           </Text>
         </Box>
       </SimpleGrid>
@@ -642,8 +642,8 @@ const ConfirmPlanModal = ({
     updateSubscriptionData({ meals: newMeals });
     
     toast({
-      title: t('checkout.mealSaved'),
-      description: t('checkout.mealSavedDesc', { number: mealIndex + 1 }),
+      title: t('mealSaved'),
+      description: t('mealSavedDesc', { number: mealIndex + 1 }),
       status: 'success',
       duration: 2000,
       isClosable: true,
@@ -674,8 +674,8 @@ const ConfirmPlanModal = ({
       await createSubscription(subscription);
       
       toast({
-        title: t('checkout.subscriptionSuccess'),
-        description: t('checkout.subscriptionCreated'),
+        title: t('subscriptionSuccess'),
+        description: t('subscriptionCreated'),
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -689,8 +689,8 @@ const ConfirmPlanModal = ({
     } catch (error) {
       console.error('Subscription error:', error);
       toast({
-        title: t('checkout.subscriptionError'),
-        description: error.message || t('checkout.subscriptionFailed'),
+        title: t('subscriptionError'),
+        description: error.message || t('subscriptionFailed'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -734,9 +734,9 @@ const ConfirmPlanModal = ({
           <ModalHeader borderBottomWidth="1px" pb={3}>
             <Flex justify="space-between" align="center">
               <VStack align="start" spacing={1}>
-                <Heading size="md">{t('checkout.designYourPlan')}</Heading>
+                <Heading size="md">{t('designYourPlan')}</Heading>
                 <Text fontSize="sm" color="gray.600">
-                  {t('checkout.designPlanSubtitle')}
+                  {t('designPlanSubtitle')}
                 </Text>
               </VStack>
               <IconButton
@@ -759,29 +759,29 @@ const ConfirmPlanModal = ({
               {/* Plan Details */}
               <MotionBox variants={itemVariants}>
                 <Heading size="sm" mb={3}>
-                  {t('checkout.planDetails')}
+                  {t('planDetails')}
                 </Heading>
                 
                 <SimpleGrid columns={2} spacing={3} fontSize="sm">
                   <Flex justify="space-between">
-                    <Text color="gray.600">{t('checkout.plan')}:</Text>
+                    <Text color="gray.600">{t('plan')}:</Text>
                     <Text fontWeight="bold" noOfLines={1}>
                       {isArabic ? userPlan?.title_arabic : userPlan?.title}
                     </Text>
                   </Flex>
                   
                   <Flex justify="space-between">
-                    <Text color="gray.600">{t('checkout.totalMeals')}:</Text>
+                    <Text color="gray.600">{t('totalMeals')}:</Text>
                     <Text fontWeight="bold">{subscriptionData.total_meals}</Text>
                   </Flex>
                   
                   <Flex justify="space-between">
-                    <Text color="gray.600">{t('checkout.startDate')}:</Text>
+                    <Text color="gray.600">{t('startDate')}:</Text>
                     <Text fontWeight="bold">{formattedStartDate}</Text>
                   </Flex>
                   
                   <Flex justify="space-between">
-                    <Text color="gray.600">{t('checkout.endDate')}:</Text>
+                    <Text color="gray.600">{t('endDate')}:</Text>
                     <Text fontWeight="bold">{formattedEndDate}</Text>
                   </Flex>
                 </SimpleGrid>
@@ -793,7 +793,7 @@ const ConfirmPlanModal = ({
               <Alert status="info" borderRadius="md">
                 <AlertIcon />
                 <Text fontSize="sm">
-                  {t('checkout.deliveryInfo')}
+                  {t('deliveryInfo')}
                 </Text>
               </Alert>
 
@@ -815,15 +815,15 @@ const ConfirmPlanModal = ({
           <ModalFooter borderTopWidth="1px">
             <Flex justify="space-between" w="full" align="center">
               <Button variant="outline" onClick={onClose}>
-                {t('common.cancel')}
+                {t('cancel')}
               </Button>
               
               <HStack spacing={2}>
                 {!canConfirmSubscription && (
                   <Text color="orange.500" fontSize="sm">
                     {completedMealsCount < 5 
-                      ? t('checkout.designAllMealsWarning')
-                      : t('checkout.completeRequiredFields')
+                      ? t('designAllMealsWarning')
+                      : t('completeRequiredFields')
                     }
                   </Text>
                 )}
@@ -832,7 +832,7 @@ const ConfirmPlanModal = ({
                   onClick={onConfirmationOpen}
                   isDisabled={!canConfirmSubscription}
                 >
-                  {t('checkout.continue')}
+                  {t('continue')}
                 </Button>
               </HStack>
             </Flex>

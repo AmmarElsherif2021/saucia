@@ -13,7 +13,7 @@ const MealSlotCard = ({
     if (!mealDesign || Object.keys(mealDesign).length === 0) {
       return (
         <Text fontStyle="italic" color="gray.500">
-          {t('checkout.noItemsSelected')}
+          {t('noItemsSelected')}
         </Text>
       );
     }
@@ -37,7 +37,7 @@ const MealSlotCard = ({
         })}
         {remainingCount > 0 && (
           <Text fontSize="sm" color="brand.500">
-            + {remainingCount} {t('checkout.moreItems')}
+            + {remainingCount} {t('moreItems')}
           </Text>
         )}
       </VStack>
@@ -58,10 +58,10 @@ const MealSlotCard = ({
     >
       <Flex justify="space-between" align="center" mb={2}>
         <Text fontWeight="bold" color="brand.700">
-          {t('checkout.mealSlot', { number: index + 1 })}
+          {t('mealSlot', { number: index + 1 })}
         </Text>
         <Badge colorScheme="brand" variant="outline" fontSize="xs">
-          {Object.keys(mealDesign).length} {t('checkout.items')}
+          {Object.keys(mealDesign).length} {t('items')}
         </Badge>
       </Flex>
       

@@ -1,16 +1,8 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import {
   Card,
   CardHeader,
   CardBody,
-  CardFooter,
-  Heading,
-  Spacer,
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -30,13 +22,11 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
-  Flex,
   Icon,
   Select,
   useToast,
   Spinner,
   SimpleGrid,
-  Divider,
   Progress,
   IconButton,
   Tooltip,
@@ -47,22 +37,12 @@ import {
   AlertDialogContent,
   AlertDialogOverlay,
   useDisclosure,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel
+  Divider
 } from '@chakra-ui/react'
-import { 
-  CalendarIcon, 
-  TimeIcon, 
-  RepeatIcon 
-} from '@chakra-ui/icons'
 import {
   FiPlay,
   FiPause,
   FiClock,
-  FiMapPin,
   FiCalendar,
   FiSettings,
   FiTruck,
@@ -79,19 +59,15 @@ import { useI18nContext } from '../../Contexts/I18nContext'
 import { useUserSubscriptions } from '../../Hooks/useUserSubscriptions'
 import { supabase } from '../../../supabaseClient'
 import { ordersAPI } from '../../API/orderAPI'
+
 import { 
   useOrderItems, 
-  useSubscriptionStats, 
   formatDeliveryDate, 
-  formatDeliveryTime,
-  formatDate,         
-  formatTime,           
-  getOrderStatusColor as getStatusColor,
   DELIVERY_TIME_OPTIONS 
 } from './orderUtils'
 import PurchasePortal from './PurchasePortal'
 
-const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscriptionStats }) => {
+const PlanSettingsModal = ({ isOpen, onClose, subscription, subscriptionStats }) => {
   const { t } = useTranslation()
   const { currentLanguage } = useI18nContext()
   const { user, currentSubscription, refreshSubscription } = useAuthContext()
@@ -104,7 +80,6 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
     subscriptionOrders,
     ordersLoading,
     isUpdating,
-    isActivatingOrder,
     isPausing,
     isResuming
   } = useUserSubscriptions()
@@ -116,63 +91,181 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
   const [addresses, setAddresses] = useState([])
   const [isLoadingAddresses, setIsLoadingAddresses] = useState(false)
   const [activatingOrderId, setActivatingOrderId] = useState(null)
-  
-  // Pause confirmation dialog
+  const [liveOrders, setLiveOrders] = useState([])
+  const [realtimeConnected, setRealtimeConnected] = useState(false)
+
+  // Refs
+  const cancelRef = useRef(null)
+  const ordersChannelRef = useRef(null)
+
   const { 
     isOpen: isPauseDialogOpen, 
     onOpen: onPauseDialogOpen, 
     onClose: onPauseDialogClose 
   } = useDisclosure()
-  const cancelRef = useState(null)
 
   const toast = useToast()
   const isArabic = currentLanguage === 'ar'
   const plan = currentSubscription?.plans
   const { renderOrderItems } = useOrderItems()
 
-  // Memoized computed values - consolidated logic
+  // Use live orders if available, fallback to subscriptionOrders
+  const activeOrders = useMemo(() => {
+    return liveOrders.length > 0 ? liveOrders : (subscriptionOrders || [])
+  }, [liveOrders, subscriptionOrders])
+
+  // Computed values
   const { 
-    pendingOrders, 
-    activeOrders, 
-    deliveredOrders, 
-    nonDeliveredOrders,
     hasOrdersInProgress,
     canActivatePendingOrders 
   } = useMemo(() => {
-    if (!orders || !Array.isArray(orders)) {
+    if (!activeOrders || !Array.isArray(activeOrders)) {
       return {
-        pendingOrders: [],
-        activeOrders: [],
-        deliveredOrders: [],
-        nonDeliveredOrders: [],
         hasOrdersInProgress: false,
         canActivatePendingOrders: false
       }
     }
-
-    const pending = orders.filter(order => order.status === 'pending')
-    const active = orders.filter(order => order.status === 'active')
-    const delivered = orders.filter(order => order.status === 'delivered')
-    const nonDelivered = orders.filter(order => order.status !== 'delivered')
     
-    const ordersInProgress = orders.filter(order => 
+    const ordersInProgress = activeOrders.filter(order => 
       order.status !== 'pending' && 
       order.status !== 'delivered' && 
       order.status !== 'cancelled'
     )
     
     const hasInProgress = ordersInProgress.length > 0
-    const canActivate = !hasInProgress
 
     return {
-      pendingOrders: pending,
-      activeOrders: active,
-      deliveredOrders: delivered,
-      nonDeliveredOrders: nonDelivered,
       hasOrdersInProgress: hasInProgress,
-      canActivatePendingOrders: canActivate
+      canActivatePendingOrders: !hasInProgress
     }
-  }, [orders])
+  }, [activeOrders])
+
+  // Realtime subscription for orders
+  useEffect(() => {
+    if (!isOpen || !subscription?.id) return
+
+    console.log('🔴 Setting up realtime subscription for orders')
+
+    // Initial fetch
+    const fetchOrders = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select(`
+            *,
+            order_items (
+              *,
+              items (*)
+            ),
+            addresses (*)
+          `)
+          .eq('subscription_id', subscription.id)
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+        setLiveOrders(data || [])
+        console.log('✅ Initial orders fetched:', data?.length)
+      } catch (error) {
+        console.error('❌ Error fetching orders:', error)
+      }
+    }
+
+    fetchOrders()
+
+    // Setup realtime channel
+    const channel = supabase
+      .channel(`orders:subscription_id=eq.${subscription.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `subscription_id=eq.${subscription.id}`
+        },
+        async (payload) => {
+          console.log('🔄 Order update received:', payload)
+
+          if (payload.eventType === 'INSERT') {
+            // Fetch full order with relations
+            const { data } = await supabase
+              .from('orders')
+              .select(`
+                *,
+                order_items (
+                  *,
+                  items (*)
+                ),
+                addresses (*)
+              `)
+              .eq('id', payload.new.id)
+              .single()
+
+            if (data) {
+              setLiveOrders(prev => [data, ...prev])
+              toast({
+                title: t('newOrder'),
+                description: t('orderCreated', { number: data.order_number }),
+                status: 'info',
+                duration: 3000,
+                isClosable: true
+              })
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            // Fetch updated order
+            const { data } = await supabase
+              .from('orders')
+              .select(`
+                *,
+                order_items (
+                  *,
+                  items (*)
+                ),
+                addresses (*)
+              `)
+              .eq('id', payload.new.id)
+              .single()
+
+            if (data) {
+              setLiveOrders(prev => 
+                prev.map(order => order.id === data.id ? data : order)
+              )
+              
+              // Show toast for status changes
+              if (payload.old.status !== payload.new.status) {
+                toast({
+                  title: t('orderUpdated'),
+                  description: t('orderStatusChanged', { 
+                    number: data.order_number,
+                    status: t(`admin.order_status.${payload.new.status}`)
+                  }),
+                  status: 'success',
+                  duration: 3000,
+                  isClosable: true
+                })
+              }
+            }
+          } else if (payload.eventType === 'DELETE') {
+            setLiveOrders(prev => prev.filter(order => order.id !== payload.old.id))
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Subscription status:', status)
+        setRealtimeConnected(status === 'SUBSCRIBED')
+      })
+
+    ordersChannelRef.current = channel
+
+    return () => {
+      console.log('🔴 Cleaning up realtime subscription')
+      if (ordersChannelRef.current) {
+        supabase.removeChannel(ordersChannelRef.current)
+        ordersChannelRef.current = null
+      }
+      setRealtimeConnected(false)
+    }
+  }, [isOpen, subscription?.id, toast, t])
 
   // Utility functions
   const getNextAvailableDate = useCallback(() => {
@@ -193,7 +286,7 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
 
   const handleError = useCallback((error, errorKey = 'premium.unexpectedError') => {
     console.error('❌ PlanSettingsModal Error:', error)
-    showToast('premium.error', errorKey, 'error')
+    showToast('error', errorKey, 'error')
   }, [showToast])
 
   // Data fetching
@@ -217,7 +310,11 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
   }, [isOpen, handleError])
 
   // Initialize component data
-  const initializeComponentData = useCallback(() => {
+  useEffect(() => {
+    fetchAddresses()
+  }, [fetchAddresses])
+
+  useEffect(() => {
     if (!subscription) return
 
     // Set delivery time
@@ -236,20 +333,10 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
         }
       }
       
-      // Fallback to default or first address
       const defaultAddress = addresses.find(addr => addr.is_default)
       setSelectedAddress(defaultAddress ? defaultAddress.id : addresses[0].id)
     }
   }, [subscription, addresses])
-
-  // Effects
-  useEffect(() => {
-    fetchAddresses()
-  }, [fetchAddresses])
-
-  useEffect(() => {
-    initializeComponentData()
-  }, [initializeComponentData])
 
   // Event handlers
   const handlePlanStatusToggle = useCallback(async () => {
@@ -276,7 +363,7 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
       })
       
       await refreshSubscription()
-      showToast('premium.success', 'premium.planPausedSuccessfully')
+      showToast('success', 'premium.planPausedSuccessfully')
     } catch (error) {
       handleError(error, 'premium.failedToUpdatePlanStatus')
     } finally {
@@ -291,7 +378,7 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
     try {
       await resumeSubscription({ subscriptionId: subscription.id })
       await refreshSubscription()
-      showToast('premium.success', 'premium.planResumedSuccessfully')
+      showToast('success', 'premium.planResumedSuccessfully')
     } catch (error) {
       handleError(error, 'premium.failedToUpdatePlanStatus')
     } finally {
@@ -315,7 +402,7 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
       })
 
       await refreshSubscription()
-      showToast('premium.success', 'premium.deliverySettingsUpdated')
+      showToast('success', 'premium.deliverySettingsUpdated')
     } catch (error) {
       handleError(error, 'premium.failedToUpdateDeliverySettings')
     } finally {
@@ -325,12 +412,11 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
 
   const handleActivateOrderFromList = useCallback(async (orderId) => {
     if (!canActivatePendingOrders) {
-      showToast('premium.error', 'premium.cannotActivateWhileOrderInProgress', 'error')
+      showToast('error', 'premium.cannotActivateWhileOrderInProgress', 'error')
       return
     }
 
     const defaultDate = getNextAvailableDate()
-    
     setActivatingOrderId(orderId)
     
     try {
@@ -348,7 +434,7 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
       })
 
       await refreshSubscription()
-      showToast('premium.success', 'premium.mealActivatedSuccessfully')
+      showToast('success', 'premium.mealActivatedSuccessfully')
     } catch (error) {
       handleError(error, 'premium.failedToActivateMeal')
     } finally {
@@ -356,44 +442,38 @@ const PlanSettingsModal = ({ isOpen, onClose, subscription, orders = [], subscri
     }
   }, [canActivatePendingOrders, getNextAvailableDate, deliveryTime, activateOrder, refreshSubscription, showToast, handleError])
 
-
-// Handle meal confirmation from PurchasePortal
-const handleMealConfirmed = useCallback(async (selectedMeal, mealIndex) => {
-    console.log('🎯 Meal confirmed in PlanSettingsModal');
+  const handleMealConfirmed = useCallback(async (selectedMeal, mealIndex) => {
+    console.log('🎯 Meal confirmed in PlanSettingsModal')
     
     try {
-      setLoading(true);
+      setLoading(true)
 
-      // Calculate totals
       const calculateMealTotals = (mealGroup) => {
-        if (!Array.isArray(mealGroup)) return { calories: 0, protein: 0, carbs: 0, fats: 0, weight: 0 };
+        if (!Array.isArray(mealGroup)) return { calories: 0, protein: 0, carbs: 0, fats: 0, weight: 0 }
         return mealGroup.reduce((totals, item) => ({
           calories: totals.calories + (item.calories || 0),
           protein: totals.protein + (item.protein_g || item.protein || 0),
           carbs: totals.carbs + (item.carbs_g || item.carbs || 0),
           fats: totals.fats + (item.fat_g || item.fats || 0),
           weight: totals.weight + (item.weight || 0)
-        }), { calories: 0, protein: 0, carbs: 0, fats: 0, weight: 0 });
-      };
+        }), { calories: 0, protein: 0, carbs: 0, fats: 0, weight: 0 })
+      }
 
-      const mealTotals = calculateMealTotals(selectedMeal);
+      const mealTotals = calculateMealTotals(selectedMeal)
       
-      // Get next order number
       const { data: existingOrders } = await supabase
         .from('orders')
         .select('order_number')
         .order('order_number', { ascending: false })
-        .limit(1);
+        .limit(1)
       
-      const nextOrderNumber = (existingOrders?.[0]?.order_number || 0) + 1;
+      const nextOrderNumber = (existingOrders?.[0]?.order_number || 0) + 1
       
-      // Calculate pricing (simplified - can be enhanced)
-      const subtotal = mealTotals.calories * 0.01; // Example pricing
-      const taxAmount = subtotal * 0.15;
-      const deliveryFee = 5.00;
-      const totalAmount = subtotal + taxAmount + deliveryFee;
+      const subtotal = mealTotals.calories * 0.01
+      const taxAmount = subtotal * 0.15
+      const deliveryFee = 5.00
+      const totalAmount = subtotal + taxAmount + deliveryFee
 
-      // Prepare order data
       const orderData = {
         user_id: user?.id,
         subscription_id: subscription?.id,
@@ -411,142 +491,67 @@ const handleMealConfirmed = useCallback(async (selectedMeal, mealIndex) => {
         subscription_meal_index: mealIndex,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      };
+      }
 
-      // Map selected items to proper format
       const selectedItemsForOrder = selectedMeal.map(item => ({
         item_id: item.id,
-        meal_id: item.meal_id, // If items are grouped by meal
+        meal_id: item.meal_id,
         quantity: 1,
         unit_price: item.price || 0,
         name: item.name,
         name_arabic: item.name_arabic,
         category: item.category
-      }));
+      }))
 
-      // Use the orderAPI helper to create order with plan meals
-      
       const completeOrder = ordersAPI.createOrderFromPlan(
         orderData,
         subscription?.plan_id,
         selectedItemsForOrder
-      );
+      )
 
-      console.log('📦 Complete order created:', completeOrder);
+      console.log('📦 Complete order created:', completeOrder)
 
-      await refreshSubscription();
-      showToast('premium.success', 'premium.mealPurchasedSuccessfully');
+      await refreshSubscription()
+      showToast('success', 'premium.mealPurchasedSuccessfully')
       
     } catch (error) {
-      console.error('❌ Error:', error);
-      handleError(error, 'premium.failedToPurchaseMeal');
+      console.error('❌ Error:', error)
+      handleError(error, 'premium.failedToPurchaseMeal')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-}, [user, subscription, selectedAddress, deliveryTime, refreshSubscription, showToast, handleError]);
+  }, [user, subscription, selectedAddress, refreshSubscription, showToast, handleError])
+
   // Component renderers
-  const renderOrderCard = useCallback((order, showActivateButton = false) => (
-    <Box
-      key={order.id}
-      p={4}
-      border="1px solid"
-      borderColor={order.status === 'active' ? 'green.200' : 
-                   order.status === 'delivered' ? 'gray.200' : 'gray.200'}
-      borderRadius="md"
-      bg={order.status === 'delivered' ? 'gray.50' : 
-          order.status === 'active' ? 'green.100' : 'white'}
-      opacity={(!canActivatePendingOrders && order.status === 'pending') ? 0.6 : 1}
-    >
-      
-      <HStack justify="space-between" align="start">
-        <VStack align="start" spacing={2} flex={1}>
-          <HStack wrap="wrap">
-            <Text fontWeight="medium">#{order.order_number}</Text>
-            <Badge colorScheme={getOrderStatusColor(order.status)} size="sm">
-              {t(`admin.order_status.${order.status}`)}
-            </Badge>
-            {order.status === 'pending' && !hasOrdersInProgress && (
-              <Badge colorScheme="yellow" size="sm">
-                {t('premium.readyToActivate')}
-              </Badge>
-            )}
-            {order.status === 'pending' && hasOrdersInProgress && (
-              <Badge colorScheme="red" size="sm">
-                <HStack spacing={1}>
-                  <Icon as={FiLock} size="10px" />
-                  <Text>{t('premium.locked')}</Text>
-                </HStack>
-              </Badge>
-            )}
-          </HStack>
-          
-          {renderOrderItems(order, isArabic, true)}
-          
-          <HStack spacing={4} fontSize="sm" color="gray.600">
-            {order.scheduled_delivery_date && (
-              <HStack>
-                <Icon as={FiClock} size="14px" />
-                <Text>
-                  {formatDeliveryDate(order.scheduled_delivery_date, isArabic)}
-                </Text>
-              </HStack>
-            )}
-            {order.created_at && (
-              <HStack>
-                <Icon as={FiCalendar} size="14px" />
-                <Text>
-                  {t('premium.created')}: {formatDeliveryDate(order.created_at, isArabic)}
-                </Text>
-              </HStack>
-            )}
-          </HStack>
-        </VStack>
-
-        {showActivateButton && order.status === 'pending' && (
-          <Tooltip 
-            label={
-              canActivatePendingOrders 
-                ? t('premium.activateThisOrder') 
-                : t('premium.cannotActivateWhileOrderInProgress')
-            } 
-            hasArrow
-          >
-            <IconButton
-              icon={canActivatePendingOrders ? <Icon as={FiCheckCircle} /> : <Icon as={FiLock} />}
-              colorScheme={canActivatePendingOrders ? "green" : "gray"}
-              size="sm"
-              variant="outline"
-              onClick={() => handleActivateOrderFromList(order.id)}
-              isDisabled={!canActivatePendingOrders}
-              isLoading={activatingOrderId === order.id}
-              loadingText={t('premium.activating')}
-              aria-label={t('premium.activateOrder')}
-            />
-          </Tooltip>
-        )}
-      </HStack>
-    </Box>
-  ), [canActivatePendingOrders, hasOrdersInProgress, renderOrderItems, handleActivateOrderFromList, activatingOrderId, t, isArabic])
-
   const renderCurrentPlanOverview = () => (
     <Card>
       <CardHeader>
-        <HStack>
-          <Icon as={FiUser} color="brand.500" />
-          <Text fontWeight="bold">{t('premium.currentPlan')}</Text>
+        <HStack justify="space-between">
+          <HStack>
+            <Icon as={FiUser} color="brand.500" />
+            <Text fontWeight="bold">{t('currentPlan')}</Text>
+          </HStack>
+          {realtimeConnected && (
+            <Badge colorScheme="green" fontSize="xs">
+              <HStack spacing={1}>
+                <Box w={2} h={2} bg="green.500" borderRadius="full" />
+                <Text>Live</Text>
+              </HStack>
+            </Badge>
+          )}
         </HStack>
       </CardHeader>
       <CardBody>
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
           <VStack align="stretch" spacing={3}>
             <HStack justify="space-between">
-              <Text>{t('premium.planName')}:</Text>
+              <Text>{t('planName')}:</Text>
               <Text fontWeight="medium">
                 {isArabic ? plan?.title_arabic || plan?.title : plan?.title}
               </Text>
             </HStack>
             <HStack justify="space-between">
-              <Text>{t('premium.planStatus')}:</Text>
+              <Text>{t('planStatus')}:</Text>
               <Badge colorScheme={subscription.status === 'active' ? 'green' : 'orange'}>
                 {t(subscription.status)}
               </Badge>
@@ -557,19 +562,19 @@ const handleMealConfirmed = useCallback(async (selectedMeal, mealIndex) => {
             {subscriptionStats && (
               <>
                 <HStack justify="space-between">
-                  <Text>{t('premium.totalMeals')}:</Text>
+                  <Text>{t('totalMeals')}:</Text>
                   <Badge colorScheme="blue">{subscriptionStats.totalMeals}</Badge>
                 </HStack>
                 <HStack justify="space-between">
-                  <Text>{t('premium.consumedMeals')}:</Text>
+                  <Text>{t('consumedMeals')}:</Text>
                   <Badge colorScheme="green">{subscriptionStats.consumedMeals}</Badge>
                 </HStack>
                 <HStack justify="space-between">
-                  <Text>{t('premium.remainingMeals')}:</Text>
+                  <Text>{t('remainingMeals')}:</Text>
                   <Badge colorScheme="orange">{subscriptionStats.remainingMeals}</Badge>
                 </HStack>
                 <Box>
-                  <Text fontSize="sm" mb={2}>{t('premium.progress')}:</Text>
+                  <Text fontSize="sm" mb={2}>{t('progress')}:</Text>
                   <Progress
                     value={(subscriptionStats.consumedMeals / subscriptionStats.totalMeals) * 100}
                     colorScheme="brand"
@@ -590,7 +595,7 @@ const handleMealConfirmed = useCallback(async (selectedMeal, mealIndex) => {
       <CardHeader>
         <HStack>
           <Icon as={subscription.status === 'active' ? FiPause : FiPlay} color="brand.500" />
-          <Text fontWeight="bold">{t('premium.planControl')}</Text>
+          <Text fontWeight="bold">{t('planControl')}</Text>
         </HStack>
       </CardHeader>
       <CardBody>
@@ -599,14 +604,14 @@ const handleMealConfirmed = useCallback(async (selectedMeal, mealIndex) => {
             <VStack align="start" spacing={1}>
               <FormLabel mb={0}>
                 {subscription.status === 'active' 
-                  ? t('premium.pausePlan') 
-                  : t('premium.resumePlan')
+                  ? t('pausePlan') 
+                  : t('resumePlan')
                 }
               </FormLabel>
               <Text fontSize="sm" color="gray.500">
                 {subscription.status === 'active'
-                  ? t('premium.temporarilyStopMealDeliveries')
-                  : t('premium.resumeMealDeliveries')
+                  ? t('temporarilyStopMealDeliveries')
+                  : t('resumeMealDeliveries')
                 }
               </Text>
             </VStack>
@@ -624,9 +629,9 @@ const handleMealConfirmed = useCallback(async (selectedMeal, mealIndex) => {
           <Alert status="warning" mt={4}>
             <AlertIcon />
             <Box>
-              <AlertTitle>{t('premium.planCurrentlyPaused')}</AlertTitle>
+              <AlertTitle>{t('planCurrentlyPaused')}</AlertTitle>
               <AlertDescription>
-                {t('premium.pausedSince')}: {new Date(subscription.updated_at).toLocaleDateString()}
+                {t('pausedSince')}: {new Date(subscription.updated_at).toLocaleDateString()}
               </AlertDescription>
             </Box>
           </Alert>
@@ -640,20 +645,20 @@ const handleMealConfirmed = useCallback(async (selectedMeal, mealIndex) => {
       <CardHeader>
         <HStack>
           <Icon as={FiTruck} color="brand.500" />
-          <Text fontWeight="bold">{t('premium.deliverySettings')}</Text>
+          <Text fontWeight="bold">{t('deliverySettings')}</Text>
         </HStack>
       </CardHeader>
       <CardBody>
         <VStack align="stretch" spacing={4}>
           <FormControl>
-            <FormLabel>{t('premium.defaultDeliveryAddress')}</FormLabel>
+            <FormLabel>{t('defaultDeliveryAddress')}</FormLabel>
             {isLoadingAddresses ? (
               <Spinner size="sm" />
             ) : (
               <Select
                 value={selectedAddress}
                 onChange={(e) => setSelectedAddress(e.target.value)}
-                placeholder={t('premium.selectAddress')}
+                placeholder={t('selectAddress')}
               >
                 {addresses.map((address) => (
                   <option key={address.id} value={address.id}>
@@ -664,13 +669,13 @@ const handleMealConfirmed = useCallback(async (selectedMeal, mealIndex) => {
             )}
             {addresses.length === 0 && !isLoadingAddresses && (
               <Text fontSize="sm" color="gray.500" mt={1}>
-                {t('premium.noAddressesAvailable')}
+                {t('noAddressesAvailable')}
               </Text>
             )}
           </FormControl>
 
           <FormControl>
-            <FormLabel>{t('premium.defaultDeliveryTime')}</FormLabel>
+            <FormLabel>{t('defaultDeliveryTime')}</FormLabel>
             <Select
               value={`${deliveryTime.hours}:${deliveryTime.minutes}`}
               onChange={(e) => {
@@ -678,7 +683,7 @@ const handleMealConfirmed = useCallback(async (selectedMeal, mealIndex) => {
                 setDeliveryTime({ hours, minutes })
               }}
             >
-              {DELIVERY_TIME_OPTIONS.map(({ hour, minute, value }) => (
+              {DELIVERY_TIME_OPTIONS.map(({ value }) => (
                 <option key={value} value={value}>
                   {value}
                 </option>
@@ -689,16 +694,17 @@ const handleMealConfirmed = useCallback(async (selectedMeal, mealIndex) => {
           <Button
             onClick={handleDeliverySettingsUpdate}
             isLoading={loading || isUpdating}
-            loadingText={t('premium.updating')}
+            loadingText={t('updating')}
             colorScheme="brand"
             size="sm"
           >
-            {t('premium.updateDeliverySettings')}
+            {t('updateDeliverySettings')}
           </Button>
         </VStack>
       </CardBody>
     </Card>
   )
+
 const renderOrdersList = () => {
   // Order status swim lane configuration
   const swimLaneStages = [
@@ -724,11 +730,11 @@ const renderOrdersList = () => {
         <HStack justify="space-between">
           <HStack>
             <Icon as={FiCalendar} color="brand.500" />
-            <Text fontWeight="bold">{t('premium.orderTracking')}</Text>
+            <Text fontWeight="bold">{t('orderTracking')}</Text>
           </HStack>
           {subscriptionOrders?.length > 0 && (
             <Badge colorScheme="blue">
-              {subscriptionOrders.length} {t('premium.total')}
+              {subscriptionOrders.length} {t('total')}
             </Badge>
           )}
         </HStack>
@@ -737,14 +743,14 @@ const renderOrdersList = () => {
         {ordersLoading ? (
           <HStack justify="center" py={8}>
             <Spinner />
-            <Text>{t('premium.loadingOrders')}</Text>
+            <Text>{t('loadingOrders')}</Text>
           </HStack>
         ) : subscriptionOrders?.length > 0 ? (
           <VStack align="stretch" spacing={6}>
             {/* Swim Lane Visualization */}
             <Box>
               <Text fontSize="sm" color="gray.600" mb={4}>
-                {t('premium.orderJourney')}
+                {t('orderJourney')}
               </Text>
               <Box 
                 overflowX="auto" 
@@ -864,8 +870,8 @@ const renderOrdersList = () => {
                                           <Tooltip 
                                             label={
                                               canActivatePendingOrders 
-                                                ? t('premium.activateThisOrder') 
-                                                : t('premium.cannotActivateWhileOrderInProgress')
+                                                ? t('activateThisOrder') 
+                                                : t('cannotActivateWhileOrderInProgress')
                                             } 
                                             hasArrow
                                           >
@@ -877,7 +883,7 @@ const renderOrdersList = () => {
                                               onClick={() => handleActivateOrderFromList(order.id)}
                                               isDisabled={!canActivatePendingOrders}
                                               isLoading={activatingOrderId === order.id}
-                                              aria-label={t('premium.activateOrder')}
+                                              aria-label={t('activateOrder')}
                                             />
                                           </Tooltip>
                                         )}
@@ -899,7 +905,7 @@ const renderOrdersList = () => {
                               ))
                             ) : (
                               <Text fontSize="xs" color="gray.400" textAlign="center" py={4}>
-                                {t('premium.noOrdersInStage')}
+                                {t('noOrdersInStage')}
                               </Text>
                             )}
                             
@@ -911,10 +917,10 @@ const renderOrdersList = () => {
                                 colorScheme="gray"
                                 onClick={() => {
                                   // Future: Navigate to user profile or expand view
-                                  showToast('premium.info', 'premium.viewMoreInProfile', 'info')
+                                  showToast('info', 'premium.viewMoreInProfile', 'info')
                                 }}
                               >
-                                +{deliveredOrders.length - 3} {t('premium.more')}
+                                +{deliveredOrders.length - 3} {t('more')}
                               </Button>
                             )}
                           </VStack>
@@ -931,7 +937,7 @@ const renderOrdersList = () => {
               <Box>
                 <Divider mb={4} />
                 <Text fontSize="sm" fontWeight="medium" color="gray.600" mb={3}>
-                  {t('premium.cancelledOrders')}
+                  {t('cancelledOrders')}
                 </Text>
                 <VStack align="stretch" spacing={2}>
                   {getOrdersByStatus('cancelled').map(order => (
@@ -947,7 +953,7 @@ const renderOrdersList = () => {
                         <HStack>
                           <Text fontSize="sm" fontWeight="medium">#{order.order_number}</Text>
                           <Badge colorScheme="red" fontSize="xs">
-                            {t('premium.cancelled')}
+                            {t('cancelled')}
                           </Badge>
                         </HStack>
                         {order.created_at && (
@@ -966,9 +972,9 @@ const renderOrdersList = () => {
           <Alert status="info">
             <AlertIcon />
             <Box>
-              <AlertTitle>{t('premium.noOrders')}</AlertTitle>
+              <AlertTitle>{t('noOrders')}</AlertTitle>
               <AlertDescription>
-                {t('premium.noOrdersMessage')}
+                {t('noOrdersMessage')}
               </AlertDescription>
             </Box>
           </Alert>
@@ -981,22 +987,22 @@ const renderOrdersList = () => {
     <Card>
       <CardBody>
         <VStack align="stretch" spacing={3}>
-          <Text fontWeight="medium">{t('premium.subscriptionDuration')}</Text>
+          <Text fontWeight="medium">{t('subscriptionDuration')}</Text>
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
             <HStack justify="space-between">
-              <Text>{t('premium.startDate')}:</Text>
+              <Text>{t('startDate')}:</Text>
               <Text>{new Date(subscription.start_date).toLocaleDateString()}</Text>
             </HStack>
             {subscription.end_date && (
               <HStack justify="space-between">
-                <Text>{t('premium.endDate')}:</Text>
+                <Text>{t('endDate')}:</Text>
                 <Text>{new Date(subscription.end_date).toLocaleDateString()}</Text>
               </HStack>
             )}
             <HStack justify="space-between">
-              <Text>{t('premium.autoRenewal')}:</Text>
+              <Text>{t('autoRenewal')}:</Text>
               <Badge colorScheme={subscription.auto_renewal ? 'green' : 'gray'}>
-                {subscription.auto_renewal ? t('premium.enabled') : t('premium.disabled')}
+                {subscription.auto_renewal ? t('enabled') : t('disabled')}
               </Badge>
             </HStack>
           </SimpleGrid>
@@ -1016,32 +1022,32 @@ const renderOrdersList = () => {
           <AlertDialogHeader fontSize="lg" fontWeight="bold">
             <HStack>
               <Icon as={FiAlertTriangle} color="orange.500" />
-              <Text>{t('premium.pausePlan')}</Text>
+              <Text>{t('pausePlan')}</Text>
             </HStack>
           </AlertDialogHeader>
 
           <AlertDialogBody>
             <VStack align="start" spacing={3}>
-              <Text>{t('premium.pausePlanConfirmationMessage')}</Text>
+              <Text>{t('pausePlanConfirmationMessage')}</Text>
               <Alert status="warning" size="sm">
                 <AlertIcon />
-                <Text fontSize="sm">{t('premium.pausePlanWarning')}</Text>
+                <Text fontSize="sm">{t('pausePlanWarning')}</Text>
               </Alert>
             </VStack>
           </AlertDialogBody>
 
           <AlertDialogFooter>
             <Button ref={cancelRef} onClick={onPauseDialogClose}>
-              {t('premium.cancel')}
+              {t('cancel')}
             </Button>
             <Button 
               colorScheme="orange" 
               onClick={handlePauseConfirmation} 
               ml={3}
               isLoading={loading || isPausing}
-              loadingText={t('premium.pausing')}
+              loadingText={t('pausing')}
             >
-              {t('premium.confirmPause')}
+              {t('confirmPause')}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1055,13 +1061,13 @@ const renderOrdersList = () => {
       <Modal isOpen={isOpen} onClose={onClose} size="lg">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>{t('premium.planSettings')}</ModalHeader>
+          <ModalHeader>{t('planSettings')}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <Alert status="info">
               <AlertIcon />
-              <AlertTitle>{t('premium.noActivePlan')}</AlertTitle>
-              <AlertDescription>{t('premium.pleaseSubscribeToAPlanFirst')}</AlertDescription>
+              <AlertTitle>{t('noActivePlan')}</AlertTitle>
+              <AlertDescription>{t('pleaseSubscribeToAPlanFirst')}</AlertDescription>
             </Alert>
           </ModalBody>
         </ModalContent>
@@ -1077,7 +1083,7 @@ const renderOrdersList = () => {
           <ModalHeader>
             <HStack>
               <Icon as={FiSettings} />
-              <Text>{t('premium.planSettings')}</Text>
+              <Text>{t('planSettings')}</Text>
             </HStack>
           </ModalHeader>
           <ModalCloseButton />
@@ -1091,9 +1097,9 @@ const renderOrdersList = () => {
               <>
               <Alert status="info">
                   <AlertIcon />
-                  <AlertTitle>{t('premium.notAllowedToOrder')}</AlertTitle>
+                  <AlertTitle>{t('notAllowedToOrder')}</AlertTitle>
                   <AlertDescription>
-                    {t('premium.notAllowedToOrderMessage')}
+                    {t('notAllowedToOrderMessage')}
                   </AlertDescription>
                 </Alert>
               </> 

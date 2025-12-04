@@ -20,19 +20,19 @@ export const GetPremium = () => {
     >
       <VStack spacing={6} align="center" maxW="lg" mx="auto">
         <Heading as="h2" size="lg" textAlign="center">
-          {t('premium.joinOurPlans')} {/* Translate "Join Our Premium Plans" */}
+          {t('joinOurPlans')} {/* Translate "Join Our Premium Plans" */}
         </Heading>
         <Text fontSize="md" textAlign="center">
-          {t('premium.elevateExperience')} {/* Translate "Elevate your salad experience..." */}
-          <strong>{t('brandNames.sauciaSalad')}</strong> {/* Translate "SauciaSalad" */}
-          {t('premium.benefitsDescription')} {/* Translate "Enjoy exclusive benefits..." */}
+          {t('elevateExperience')} {/* Translate "Elevate your salad experience..." */}
+          <strong>{t('sauciaSalad')}</strong> {/* Translate "SauciaSalad" */}
+          {t('benefitsDescription')} {/* Translate "Enjoy exclusive benefits..." */}
         </Text>
         <VStack spacing={4}>
           <Button colorScheme="brand" size="md" variant="solid">
-            {t('premium.joinWeeklyPlan')} {/* Translate "Join Weekly Plan" */}
+            {t('joinWeeklyPlan')} {/* Translate "Join Weekly Plan" */}
           </Button>
           <Button colorScheme="brand" size="md" variant="outline">
-            {t('premium.joinMonthlyPlan')} {/* Translate "Join Monthly Plan" */}
+            {t('joinMonthlyPlan')} {/* Translate "Join Monthly Plan" */}
           </Button>
         </VStack>
       </VStack>

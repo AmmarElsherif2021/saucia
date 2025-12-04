@@ -310,8 +310,8 @@ export const UserDashboard = () => {
     ]);
 
     toast({
-      title: t('premium.success'),
-      description: t('premium.mealActivatedSuccessfully'),
+      title: t('success'),
+      description: t('mealActivatedSuccessfully'),
       status: 'success',
       duration: 3000,
       isClosable: true,
@@ -319,8 +319,8 @@ export const UserDashboard = () => {
   } catch (error) {
     console.error('Error activating order:', error);
     toast({
-      title: t('premium.error'),
-      description: t('premium.failedToActivateMeal'),
+      title: t('error'),
+      description: t('failedToActivateMeal'),
       status: 'error',
       duration: 5000,
       isClosable: true,
@@ -336,8 +336,8 @@ export const UserDashboard = () => {
     // Validation
     if (weight && (weight <= 0 || weight >= 500)) {
       toast({
-        title: t('profile.invalidWeight'),
-        description: t('profile.weightRangeError'),
+        title: t('invalidWeight'),
+        description: t('weightRangeError'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -347,8 +347,8 @@ export const UserDashboard = () => {
 
     if (height && (height <= 0 || height >= 300)) {
       toast({
-        title: t('profile.invalidHeight'),
-        description: t('profile.heightRangeError'),
+        title: t('invalidHeight'),
+        description: t('heightRangeError'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -386,7 +386,7 @@ export const UserDashboard = () => {
       }
 
       toast({
-        title: t('profile.profileUpdated'),
+        title: t('profileUpdated'),
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -396,7 +396,7 @@ export const UserDashboard = () => {
       closeModal('profile');
     } catch (error) {
       toast({
-        title: t('profile.updateError'),
+        title: t('updateError'),
         description: error.message,
         status: 'error',
         duration: 5000,
@@ -584,7 +584,7 @@ export const UserDashboard = () => {
               formState={formState}
               modalState={modalState}
               t={t}
-              onOpenModal={openModal}
+              onOpenModal={() => openModal('addresses')}  // ✅ Fixed: wrap in arrow function
               onCloseModal={closeModal}
               setFormState={setFormState}
               addAddress={addAddress}
@@ -601,7 +601,7 @@ export const UserDashboard = () => {
               formState={formState}
               modalState={modalState}
               t={t}
-              onOpenModal={openModal}
+              onOpenModal={() => openModal('payment')}  // ✅ Fixed: wrap in arrow function
               onCloseModal={closeModal}
               setFormState={setFormState}
               addPaymentMethod={addPaymentMethod}
@@ -620,13 +620,12 @@ export const UserDashboard = () => {
               formState={formState}
               modalState={modalState}
               t={t}
-              onOpenModal={openModal}
+              onOpenModal={() => openModal('review')}  // ✅ Fixed: wrap in arrow function
               onCloseModal={closeModal}
               setFormState={setFormState}
               deleteReview={deleteReview}
             />
           </TabPanel>
-
           {/* Favorites Tab */}
           <TabPanel>
             <FavoritesSection

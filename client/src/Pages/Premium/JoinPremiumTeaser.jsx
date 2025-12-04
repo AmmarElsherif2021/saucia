@@ -166,7 +166,7 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
             <Icon as={StarIcon} w={6} h={6} color={accentColor} />
           </Box>
           <Text color={textColor} fontSize="lg">
-            {t('premium.loadingPremiumPlans')}
+            {t('loadingPremiumPlans')}
           </Text>
         </VStack>
       </Box>
@@ -185,10 +185,10 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
       >
         <VStack spacing={6}>
           <Heading as="h2" size="xl" color={textColor} textAlign="center">
-            {newMember ? t('premium.join') : t('premium.change')} {t('premium.premiumPlans')}
+            {newMember ? t('join') : t('change')} {t('premiumPlans')}
           </Heading>
           <Text color="red.300" fontSize="lg">
-            {t('premium.noPremiumPlansFound')}
+            {t('noPremiumPlansFound')}
           </Text>
         </VStack>
       </Box>
@@ -242,13 +242,13 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
                 fontSize="sm"
                 fontWeight="bold"
               >
-                {t('premium.exclusive')}
+                {t('exclusive')}
               </Badge>
               <Heading as="h2" size="xl" color={textColor}>
-                {newMember ? t('premium.join') : t('premium.change')} {t('premium.premiumPlans')}
+                {newMember ? t('join') : t('change')} {t('premiumPlans')}
               </Heading>
               <Text color={textColor} fontSize="lg" maxW="md">
-                {t('premium.unlockExclusiveFeatures')}
+                {t('unlockExclusiveFeatures')}
               </Text>
             </VStack>
           </motion.div>
@@ -319,13 +319,13 @@ export const JoinPremiumTeaser = ({ explorePlans, newMember }) => {
               fontSize="sm"
               fontWeight="bold"
             >
-              {t('premium.exclusive')}
+              {t('exclusive')}
             </Badge>
             <Heading as="h2" size="xl" color={textColor}>
-              {newMember ? t('premium.join') : t('premium.change')} {t('premium.premiumPlans')}
+              {newMember ? t('join') : t('change')} {t('premiumPlans')}
             </Heading>
             <Text color={textColor} fontSize="lg" maxW="md">
-              {t('premium.unlockExclusiveFeatures')}
+              {t('unlockExclusiveFeatures')}
             </Text>
           </VStack>
         </motion.div>

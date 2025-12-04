@@ -52,7 +52,7 @@ export const FeaturedMeals = ({
         transition={{ duration: 0.5 }}
       >
         <Heading mb={6} fontSize="3xl" color="brand.800">
-          {t('featuredSlide.title')}
+          {t('title')}
         </Heading>
         <Text color="gray.500" fontSize="lg" textAlign="center">
           No featured meals available
@@ -77,7 +77,7 @@ export const FeaturedMeals = ({
       transition={{ duration: 0.5 }}
     >
       <Heading mb={6} fontSize="3xl" color="brand.800">
-        {t('featuredSlide.title')}
+        {t('title')}
       </Heading>
 
       <Box 

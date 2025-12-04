@@ -448,7 +448,7 @@ const FilterControls = ({
                 <FiSearch color="gray.300" />
               </InputLeftElement>
               <Input
-                placeholder={t('admin.searchPlaceholder')}
+                placeholder={t('searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
               />
@@ -459,7 +459,7 @@ const FilterControls = ({
               onChange={(e) => onStatusFilterChange(e.target.value)}
               maxW={RESPONSIVE_CONFIG.sizing.select}
             >
-              <option value="all">{t('admin.allStatuses')}</option>
+              <option value="all">{t('allStatuses')}</option>
               {Object.keys(STATUS_CONFIGS.delivery).map(status => (
                 <option key={status} value={status}>
                   {t(`admin.${STATUS_CONFIGS.delivery[status].label}`)}
@@ -519,25 +519,25 @@ const OrderItemsModal = ({ isOpen, onClose, order, t }) => {
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title={`${t('admin.orderItems')} - Order #${order?.order_number}`}
+      title={`${t('orderItems')} - Order #${order?.order_number}`}
       icon={FiPackage}
     >
       <VStack spacing={4} align="stretch">
         <Text fontWeight="semibold">
-          {t('admin.customer')}: {order?.user_profile?.display_name}
+          {t('customer')}: {order?.user_profile?.display_name}
         </Text>
         
         <Box>
-          <Text fontWeight="semibold" mb={2}>{t('admin.items')}:</Text>
+          <Text fontWeight="semibold" mb={2}>{t('items')}:</Text>
           {order?.order_items?.length > 0 ? (
             <Box overflowX="auto">
               <Table variant="simple" size="sm">
                 <Thead>
                   <Tr>
-                    <Th>{t('admin.item')}</Th>
-                    <Th>{t('admin.quantity')}</Th>
-                    <Th>{t('admin.price')}</Th>
-                    <Th>{t('admin.total')}</Th>
+                    <Th>{t('item')}</Th>
+                    <Th>{t('quantity')}</Th>
+                    <Th>{t('price')}</Th>
+                    <Th>{t('total')}</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
@@ -567,12 +567,12 @@ const OrderItemsModal = ({ isOpen, onClose, order, t }) => {
               </Table>
             </Box>
           ) : (
-            <Text color="gray.500">{t('admin.noItems')}</Text>
+            <Text color="gray.500">{t('noItems')}</Text>
           )}
         </Box>
         
         <Box>
-          <Text fontWeight="semibold">{t('admin.orderTotal')}:</Text>
+          <Text fontWeight="semibold">{t('orderTotal')}:</Text>
           <Text fontSize="xl" fontWeight="bold">
             ${order?.total_amount}
           </Text>
@@ -608,7 +608,7 @@ const StatusMenu = ({ currentStatus, onStatusChange, type = 'order', t }) => {
   return (
     <Menu>
       <MenuButton as={Button} size="sm" rightIcon={<ChevronDownIcon />} variant="outline">
-        {t('admin.status')}
+        {t('status')}
       </MenuButton>
       <MenuList>
         {Object.keys(config).map((status) => (
@@ -649,22 +649,22 @@ const DataTableRow = ({ data, onEdit, onStatusChange, type = 'order', isMobile, 
         {type !== 'subscription' && (
           <>
             <Box>
-              <Text fontSize="xs" color="gray.500">{t('admin.date')}</Text>
+              <Text fontSize="xs" color="gray.500">{t('date')}</Text>
               <Text fontSize="sm">{data.delivery_date}</Text>
             </Box>
             <Box>
-              <Text fontSize="xs" color="gray.500">{t('admin.time')}</Text>
+              <Text fontSize="xs" color="gray.500">{t('time')}</Text>
               <Text fontSize="sm">{data.delivery_time}</Text>
             </Box>
             <Box>
-              <Text fontSize="xs" color="gray.500">{t('admin.paymentStatus')}</Text>
+              <Text fontSize="xs" color="gray.500">{t('paymentStatus')}</Text>
               <Text fontSize="sm">{data.payment_status}</Text>
             </Box>
           </>
         )}
         <Box>
           <Text fontSize="xs" color="gray.500">
-            {type === 'subscription' ? t('admin.meals') : t('admin.amount')}
+            {type === 'subscription' ? t('meals') : t('amount')}
           </Text>
           <Text fontSize="sm">
             {type === 'subscription' 
@@ -677,7 +677,7 @@ const DataTableRow = ({ data, onEdit, onStatusChange, type = 'order', isMobile, 
       
       {type !== 'subscription' && (
         <Box>
-          <Text fontSize="xs" color="gray.500">{t('admin.address')}</Text>
+          <Text fontSize="xs" color="gray.500">{t('address')}</Text>
           <Text fontSize="sm" noOfLines={2}>{data.delivery_address}</Text>
         </Box>
       )}
@@ -849,8 +849,8 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
       }
       
       toast({
-        title: t('admin.success'),
-        description: type === 'subscription' ? t('admin.subscriptionUpdated') : t('admin.deliveryUpdated'),
+        title: t('success'),
+        description: type === 'subscription' ? t('subscriptionUpdated') : t('deliveryUpdated'),
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -859,8 +859,8 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
       onClose();
     } catch (error) {
       toast({
-        title: t('admin.error'),
-        description: error.message || t('admin.updateFailed'),
+        title: t('error'),
+        description: error.message || t('updateFailed'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -881,7 +881,7 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title={`${type === 'subscription' ? t('admin.editSubscription') : t('admin.editDelivery')} - ${data?.user_profile?.display_name}`}
+      title={`${type === 'subscription' ? t('editSubscription') : t('editDelivery')} - ${data?.user_profile?.display_name}`}
       icon={FiEdit}
     >
       <form onSubmit={handleSubmit}>
@@ -889,7 +889,7 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
           {type === 'subscription' ? (
             <>
               <FormControl>
-                <FormLabel fontWeight="semibold">{t('admin.status')}</FormLabel>
+                <FormLabel fontWeight="semibold">{t('status')}</FormLabel>
                 <Select
                   value={formData.status}
                   onChange={(e) => handleChange('status', e.target.value)}
@@ -906,7 +906,7 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
 
               <ResponsiveGrid type="form" spacing={4}>
                 <FormControl>
-                  <FormLabel fontWeight="semibold">{t('admin.totalMeals')}</FormLabel>
+                  <FormLabel fontWeight="semibold">{t('totalMeals')}</FormLabel>
                   <NumberInput
                     value={formData.total_meals}
                     onChange={(value) => handleChange('total_meals', parseInt(value) || 0)}
@@ -921,7 +921,7 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel fontWeight="semibold">{t('admin.consumedMeals')}</FormLabel>
+                  <FormLabel fontWeight="semibold">{t('consumedMeals')}</FormLabel>
                   <NumberInput
                     value={formData.consumed_meals}
                     onChange={(value) => handleChange('consumed_meals', parseInt(value) || 0)}
@@ -939,7 +939,7 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
 
               <ResponsiveGrid type="form" spacing={4}>
                 <FormControl>
-                  <FormLabel fontWeight="semibold">{t('admin.startDate')}</FormLabel>
+                  <FormLabel fontWeight="semibold">{t('startDate')}</FormLabel>
                   <Input
                     type="date"
                     value={formData.start_date}
@@ -949,7 +949,7 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel fontWeight="semibold">{t('admin.endDate')}</FormLabel>
+                  <FormLabel fontWeight="semibold">{t('endDate')}</FormLabel>
                   <Input
                     type="date"
                     value={formData.end_date}
@@ -963,7 +963,7 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
             <>
               <ResponsiveGrid type="form" spacing={4}>
                 <FormControl>
-                  <FormLabel fontWeight="semibold">{t('admin.deliveryDate')}</FormLabel>
+                  <FormLabel fontWeight="semibold">{t('deliveryDate')}</FormLabel>
                   <Input
                     type="date"
                     value={formData.delivery_date}
@@ -973,7 +973,7 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
                 </FormControl>
                 
                 <FormControl>
-                  <FormLabel fontWeight="semibold">{t('admin.deliveryTime')}</FormLabel>
+                  <FormLabel fontWeight="semibold">{t('deliveryTime')}</FormLabel>
                   <Select
                     value={formData.delivery_time}
                     onChange={(e) => handleChange('delivery_time', e.target.value)}
@@ -989,7 +989,7 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
               </ResponsiveGrid>
               
               <FormControl>
-                <FormLabel fontWeight="semibold">{t('admin.status')}</FormLabel>
+                <FormLabel fontWeight="semibold">{t('status')}</FormLabel>
                 <Select
                   value={formData.status}
                   onChange={(e) => handleChange('status', e.target.value)}
@@ -1004,11 +1004,11 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
               </FormControl>
               
               <FormControl>
-                <FormLabel fontWeight="semibold">{t('admin.deliveryInstructions')}</FormLabel>
+                <FormLabel fontWeight="semibold">{t('deliveryInstructions')}</FormLabel>
                 <Textarea
                   value={formData.delivery_instructions}
                   onChange={(e) => handleChange('delivery_instructions', e.target.value)}
-                  placeholder={t('admin.addInstructions')}
+                  placeholder={t('addInstructions')}
                   rows={3}
                   focusBorderColor="blue.500"
                 />
@@ -1023,17 +1023,17 @@ const EditModal = ({ isOpen, onClose, data, onSave, type, t }) => {
               variant="outline"
               size="md"
             >
-              {t('admin.cancel')}
+              {t('cancel')}
             </Button>
             <Button
               leftIcon={<FiSave />}
               colorScheme="blue"
               type="submit"
               isLoading={loading}
-              loadingText={t('admin.saving')}
+              loadingText={t('saving')}
               size="md"
             >
-              {t('admin.saveChanges')}
+              {t('saveChanges')}
             </Button>
           </HStack>
         </VStack>
@@ -1088,21 +1088,21 @@ const TabContent = ({
       <Table variant="simple" size="md">
         <Thead>
           <Tr>
-            <Th>{t('admin.customer')}</Th>
-            {type !== 'subscription' && <Th>{t('admin.order')}</Th>}
-            {type !== 'subscription' && <Th>{t('admin.address')}</Th>}
-            {type !== 'subscription' && <Th>{t('admin.dateTime')}</Th>}
-            <Th>{t('admin.status')}</Th>
+            <Th>{t('customer')}</Th>
+            {type !== 'subscription' && <Th>{t('order')}</Th>}
+            {type !== 'subscription' && <Th>{t('address')}</Th>}
+            {type !== 'subscription' && <Th>{t('dateTime')}</Th>}
+            <Th>{t('status')}</Th>
             {type === 'subscription' ? (
               <>
-                <Th>{t('admin.startDate')}</Th>
-                <Th>{t('admin.endDate')}</Th>
-                <Th>{t('admin.meals')}</Th>
+                <Th>{t('startDate')}</Th>
+                <Th>{t('endDate')}</Th>
+                <Th>{t('meals')}</Th>
               </>
             ) : (
               <>
-                <Th>{t('admin.paymentStatus')}</Th>
-                <Th>{t('admin.amount')}</Th>
+                <Th>{t('paymentStatus')}</Th>
+                <Th>{t('amount')}</Th>
               </>
             )}
             <Th>Actions</Th>
@@ -1201,8 +1201,8 @@ const AdminSubscriptionDashboard = () => {
         await updateSubscriptionStatus(itemId, newStatus);
         refetchSubscriptions();
         toast({
-          title: t('admin.success'),
-          description: t('admin.subscriptionStatusUpdated'),
+          title: t('success'),
+          description: t('subscriptionStatusUpdated'),
           status: 'success',
           duration: 3000,
           isClosable: true,
@@ -1212,8 +1212,8 @@ const AdminSubscriptionDashboard = () => {
         if (type === 'delivery') refetchDeliveries();
         else refetchSubscriptionOrders();
         toast({
-          title: t('admin.success'),
-          description: t('admin.orderStatusUpdated'),
+          title: t('success'),
+          description: t('orderStatusUpdated'),
           status: 'success',
           duration: 3000,
           isClosable: true,
@@ -1221,8 +1221,8 @@ const AdminSubscriptionDashboard = () => {
       }
     } catch (error) {
       toast({
-        title: t('admin.error'),
-        description: error.message || t('admin.updateFailed'),
+        title: t('error'),
+        description: error.message || t('updateFailed'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -1257,7 +1257,7 @@ const AdminSubscriptionDashboard = () => {
       <Alert status="error" borderRadius="md">
         <AlertIcon />
         <Box>
-          <Text fontWeight="bold">{t('admin.errorLoading')}</Text>
+          <Text fontWeight="bold">{t('errorLoading')}</Text>
           <Text>{deliveriesError?.message || subscriptionsError?.message || analyticsError?.message}</Text>
         </Box>
       </Alert>
@@ -1270,7 +1270,7 @@ const AdminSubscriptionDashboard = () => {
         <VStack spacing={6} align="stretch">
           {/* Header */}
           <Box> 
-            <Heading size={{ base: 'lg', md: 'xl' }}>{t('admin.subscriptionManagement')}</Heading>
+            <Heading size={{ base: 'lg', md: 'xl' }}>{t('subscriptionManagement')}</Heading>
           </Box>
           
           {/* Analytics Cards */}
@@ -1279,11 +1279,11 @@ const AdminSubscriptionDashboard = () => {
               <ResponsiveCard>
                 <CardBody>
                   <Stat>
-                    <StatLabel fontSize="sm" color="gray.600">{t('admin.totalSubscriptions')}</StatLabel>
+                    <StatLabel fontSize="sm" color="gray.600">{t('totalSubscriptions')}</StatLabel>
                     <StatNumber fontSize={{ base: 'xl', md: '2xl' }}>{analyticsData.total_subscriptions}</StatNumber>
                     <StatHelpText>
                       <StatArrow type="increase" />
-                      {analyticsData.month_growth}% {t('admin.fromLastMonth')}
+                      {analyticsData.month_growth}% {t('fromLastMonth')}
                     </StatHelpText>
                   </Stat>
                 </CardBody>
@@ -1292,11 +1292,11 @@ const AdminSubscriptionDashboard = () => {
               <ResponsiveCard>
                 <CardBody>
                   <Stat>
-                    <StatLabel fontSize="sm" color="gray.600">{t('admin.activeSubscriptions')}</StatLabel>
+                    <StatLabel fontSize="sm" color="gray.600">{t('activeSubscriptions')}</StatLabel>
                     <StatNumber fontSize={{ base: 'xl', md: '2xl' }}>{analyticsData.active_subscriptions}</StatNumber>
                     <StatHelpText>
                       <StatArrow type="increase" />
-                      {analyticsData.active_growth}% {t('admin.fromLastMonth')}
+                      {analyticsData.active_growth}% {t('fromLastMonth')}
                     </StatHelpText>
                   </Stat>
                 </CardBody>
@@ -1305,11 +1305,11 @@ const AdminSubscriptionDashboard = () => {
               <ResponsiveCard>
                 <CardBody>
                   <Stat>
-                    <StatLabel fontSize="sm" color="teal.600">{t('admin.todayDeliveries')}</StatLabel>
+                    <StatLabel fontSize="sm" color="teal.600">{t('todayDeliveries')}</StatLabel>
                     <StatNumber fontSize={{ base: 'xl', md: '2xl' }}>{analyticsData.today_deliveries}</StatNumber>
                     <StatHelpText>
                       <StatArrow type="decrease" />
-                      {analyticsData.delivery_completion_rate}% {t('admin.completed')}
+                      {analyticsData.delivery_completion_rate}% {t('completed')}
                     </StatHelpText>
                   </Stat>
                 </CardBody>
@@ -1318,11 +1318,11 @@ const AdminSubscriptionDashboard = () => {
               <ResponsiveCard>
                 <CardBody>
                   <Stat>
-                    <StatLabel fontSize="sm" color="teal.600">{t('admin.revenue')}</StatLabel>
+                    <StatLabel fontSize="sm" color="teal.600">{t('revenue')}</StatLabel>
                     <StatNumber fontSize={{ base: 'xl', md: '2xl' }}>${analyticsData.monthly_revenue}</StatNumber>
                     <StatHelpText>
                       <StatArrow type="increase" />
-                      {analyticsData.revenue_growth}% {t('admin.fromLastMonth')}
+                      {analyticsData.revenue_growth}% {t('fromLastMonth')}
                     </StatHelpText>
                   </Stat>
                 </CardBody>
@@ -1352,7 +1352,7 @@ const AdminSubscriptionDashboard = () => {
               <Tab whiteSpace="nowrap">
                 <HStack spacing={2}>
                   <FiShoppingBag />
-                  <Text>{t('admin.subscriptionOrders')}</Text>
+                  <Text>{t('subscriptionOrders')}</Text>
                   <Badge colorScheme="blue" borderRadius="full" fontSize="xs">
                     {transformedSubscriptionOrders.length}
                   </Badge>
@@ -1361,7 +1361,7 @@ const AdminSubscriptionDashboard = () => {
               <Tab whiteSpace="nowrap">
                 <HStack spacing={2}>
                   <FiTruck />
-                  <Text>{t('admin.deliveries')}</Text>
+                  <Text>{t('deliveries')}</Text>
                   <Badge colorScheme="blue" borderRadius="full" fontSize="xs">
                     {transformedDeliveries.length}
                   </Badge>
@@ -1370,7 +1370,7 @@ const AdminSubscriptionDashboard = () => {
               <Tab whiteSpace="nowrap">
                 <HStack spacing={2}>
                   <FiUsers />
-                  <Text>{t('admin.subscriptions')}</Text>
+                  <Text>{t('subscriptions')}</Text>
                   <Badge colorScheme="blue" borderRadius="full" fontSize="xs">
                     {subscriptionData?.length || 0}
                   </Badge>
@@ -1379,7 +1379,7 @@ const AdminSubscriptionDashboard = () => {
               <Tab whiteSpace="nowrap">
                 <HStack spacing={2}>
                   <FiBarChart2 />
-                  <Text>{t('admin.analytics')}</Text>
+                  <Text>{t('analytics')}</Text>
                 </HStack>
               </Tab>
             </TabList>
@@ -1395,7 +1395,7 @@ const AdminSubscriptionDashboard = () => {
                   onStatusChange={handleStatusChange}
                   onViewItems={handleViewOrderItems}
                   emptyStateIcon={FiShoppingBag}
-                  emptyStateMessage={t('admin.noSubscriptionOrders')}
+                  emptyStateMessage={t('noSubscriptionOrders')}
                   t={t}
                 />
               </TabPanel>
@@ -1410,7 +1410,7 @@ const AdminSubscriptionDashboard = () => {
                   onStatusChange={handleStatusChange}
                   onViewItems={handleViewOrderItems}
                   emptyStateIcon={FiPackage}
-                  emptyStateMessage={t('admin.noDeliveries')}
+                  emptyStateMessage={t('noDeliveries')}
                   t={t}
                 />
               </TabPanel>
@@ -1425,7 +1425,7 @@ const AdminSubscriptionDashboard = () => {
                   onStatusChange={handleStatusChange}
                   onViewItems={handleViewOrderItems}
                   emptyStateIcon={FiUsers}
-                  emptyStateMessage={t('admin.noSubscriptions')}
+                  emptyStateMessage={t('noSubscriptions')}
                   t={t}
                 />
               </TabPanel>
@@ -1433,7 +1433,7 @@ const AdminSubscriptionDashboard = () => {
               {/* Analytics Tab */}
               <TabPanel>
                 <Text color="gray.500" textAlign="center" py={10}>
-                  {t('admin.analyticsComingSoon')}
+                  {t('analyticsComingSoon')}
                 </Text>
               </TabPanel>
             </TabPanels>

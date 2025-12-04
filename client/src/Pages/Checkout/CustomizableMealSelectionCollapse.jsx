@@ -292,7 +292,7 @@ const CustomizableMealSelectionCollapse = ({
                 py={1}
                 borderRadius="full"
               >
-                {calculateTotalItems()} {t('checkout.itemsSelected')}
+                {calculateTotalItems()} {t('itemsSelected')}
               </Badge>
             </HStack>
             <Text fontSize="xs" color={mutedTextColor}>
@@ -307,10 +307,10 @@ const CustomizableMealSelectionCollapse = ({
               <AlertIcon boxSize={4} />
               <VStack spacing={1} align="start">
                 <Text fontWeight="medium" fontSize="xs" color={textColor}>
-                  {t('checkout.noItemsAvailable')}
+                  {t('noItemsAvailable')}
                 </Text>
                 <Text fontSize="2xs" color={mutedTextColor}>
-                  {t('checkout.noItemsDescription')}
+                  {t('noItemsDescription')}
                 </Text>
               </VStack>
             </Alert>
@@ -337,7 +337,7 @@ const CustomizableMealSelectionCollapse = ({
                     </Text>
                     {selectedInCurrentCategory && (
                       <Badge colorScheme="green" variant="solid" fontSize="2xs">
-                        ✓ {t('checkout.selected')}
+                        ✓ {t('selected')}
                       </Badge>
                     )}
                   </HStack>
@@ -345,13 +345,13 @@ const CustomizableMealSelectionCollapse = ({
                   <Text fontSize="2xs" color={mutedTextColor} noOfLines={1}>
                     {selectedInCurrentCategory ? (
                       <>
-                        {t('checkout.selected')}: {isArabic 
+                        {t('selected')}: {isArabic 
                           ? selectedInCurrentCategory.name_arabic || selectedInCurrentCategory.name 
                           : selectedInCurrentCategory.name}
                       </>
                     ) : (
                       <>
-                        {t('checkout.selectOne')} ({currentItems.length} {t('checkout.itemsAvailable')})
+                        {t('selectOne')} ({currentItems.length} {t('itemsAvailable')})
                       </>
                     )}
                   </Text>
@@ -399,7 +399,7 @@ const CustomizableMealSelectionCollapse = ({
               size="sm"
               colorScheme="brand"
             >
-              {t('common.cancel')}
+              {t('cancel')}
             </Button>
             
             <HStack spacing={2}>
@@ -410,7 +410,7 @@ const CustomizableMealSelectionCollapse = ({
                   variant="outline"
                   colorScheme="brand"
                 >
-                  {t('common.next')} →
+                  {t('next')} →
                 </Button>
               )}
               

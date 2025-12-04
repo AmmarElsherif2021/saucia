@@ -1,37 +1,88 @@
-// src/Hooks/useOrders.js
+// src/Hooks/useOrders.jsx
 import { useState, useCallback } from 'react';
-import { ordersAPI } from '../API/orderAPI';
+import { supabase } from '../../supabaseClient';
+
+// Edge function base URL - FIXED: Use import.meta.env instead of process.env
+const FUNCTIONS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 
 export function useOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Helper function to call edge functions
+  const callEdgeFunction = async (functionName, options = {}) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    const response = await fetch(`${FUNCTIONS_URL}/${functionName}${options.query || ''}`, {
+      method: options.method || 'GET',
+      headers: {
+        'Authorization': `Bearer ${session?.access_token || ''}`,
+        'Content-Type': 'application/json',
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY // FIXED: Use import.meta.env
+      },
+      body: options.body ? JSON.stringify(options.body) : undefined
+    });
+
+    const result = await response.json();
+    
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || 'Request failed');
+    }
+
+    return result;
+  };
+
   // ===== CORE ORDER FETCH OPERATIONS =====
   
-  const fetchUserOrders = useCallback(async (queryParams = {}) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await ordersAPI.getUserOrders(queryParams);
-      setOrders(data || []);
-      return data;
-    } catch (err) {
-      console.error('Error fetching user orders:', err);
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
+// Fixed fetchUserOrders function
+
+const fetchUserOrders = useCallback(async (userId = null, queryParams = {}) => {
+  setLoading(true);
+  setError(null);
+  try {
+    const params = new URLSearchParams();
+    
+    // KEY FIX: Set filter_type based on whether userId is provided
+    if (userId) {
+      params.append('user_id', userId);
+      params.append('filter_type', 'filtered'); // Use 'filtered' when specifying a user
+    } else {
+      params.append('filter_type', 'user'); // Use 'user' for current authenticated user
     }
-  }, []);
+    
+    if (queryParams.status) params.append('status', queryParams.status);
+    if (queryParams.from_date) params.append('from_date', queryParams.from_date);
+    if (queryParams.to_date) params.append('to_date', queryParams.to_date);
+
+    const result = await callEdgeFunction('list-orders', {
+      query: `?${params.toString()}`
+    });
+
+    setOrders(result.orders || []);
+    return result.orders;
+  } catch (err) {
+    console.error('Error fetching user orders:', err);
+    setError(err);
+    throw err;
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   const fetchUserOrdersFiltered = useCallback(async (userId = null) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await ordersAPI.getUserOrdersFiltered(userId);
-      setOrders(data || []);
-      return data;
+      const params = new URLSearchParams({ filter_type: 'filtered' });
+      if (userId) params.append('user_id', userId);
+
+      const result = await callEdgeFunction('list-orders', {
+        query: `?${params.toString()}`
+      });
+
+      setOrders(result.orders || []);
+      return result.orders;
     } catch (err) {
       console.error('Error fetching filtered user orders:', err);
       setError(err);
@@ -41,29 +92,21 @@ export function useOrders() {
     }
   }, []);
 
-  const fetchOrderById = useCallback(async (orderId) => {
+  const fetchLastUserOrder = useCallback(async (userId,subscriptionId=null) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await ordersAPI.getOrderById(orderId);
-      return data;
+      const params = new URLSearchParams({ filter_type: 'filtered' });
+      if (userId) params.append('user_id', userId);
+      if(subscriptionId !== null) params.append('subscription_id', subscriptionId);
+      const result = await callEdgeFunction('track-last-order', {
+        query: `?${params.toString()}`
+      });
+
+      setOrders(result.orders || []);
+      return result.orders;
     } catch (err) {
       console.error('Error fetching order:', err);
-      setError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchOrderItems = useCallback(async (orderId) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await ordersAPI.getOrderItems(orderId);
-      return data;
-    } catch (err) {
-      console.error('Error fetching order items:', err);
       setError(err);
       throw err;
     } finally {
@@ -75,9 +118,18 @@ export function useOrders() {
     setLoading(true);
     setError(null);
     try {
-      const data = await ordersAPI.getAllOrders(queryParams);
-      setOrders(data || []);
-      return data;
+      const params = new URLSearchParams({ filter_type: 'admin' });
+      if (queryParams.status) params.append('status', queryParams.status);
+      if (queryParams.user_id) params.append('user_id', queryParams.user_id);
+      if (queryParams.from_date) params.append('from_date', queryParams.from_date);
+      if (queryParams.to_date) params.append('to_date', queryParams.to_date);
+      
+      const result = await callEdgeFunction('list-orders', {
+        query: `?${params.toString()}`
+      });
+
+      setOrders(result.orders || []);
+      return result.orders;
     } catch (err) {
       console.error('Error fetching all orders:', err);
       setError(err);
@@ -93,15 +145,22 @@ export function useOrders() {
     setLoading(true);
     setError(null);
     try {
-      if (!orderData.contact_phone) {
+      if (!orderData.contact_phone || !orderData.user_id) {
         throw new Error('Contact phone is required for instant orders');
       }
-      console.log('Creating instant order with data in hook:', Object.keys(orderData));
-      const newOrder = await ordersAPI.createInstantOrder(orderData);
-      if (newOrder) {
-        setOrders(prev => [newOrder, ...prev]);
+
+      const result = await callEdgeFunction('process-order', {
+        method: 'POST',
+        body: {
+          ...orderData,
+          subscription_id: null
+        }
+      });
+
+      if (result.order) {
+        setOrders(prev => [result.order, ...prev]);
       }
-      return newOrder;
+      return result.order;
     } catch (err) {
       console.error('Error creating instant order:', err);
       setError(err);
@@ -115,11 +174,15 @@ export function useOrders() {
     setLoading(true);
     setError(null);
     try {
-      const newOrder = await ordersAPI.createUserOrder(orderData);
-      if (newOrder) {
-        setOrders(prev => [newOrder, ...prev]);
+      const result = await callEdgeFunction('process-order', {
+        method: 'POST',
+        body: orderData
+      });
+
+      if (result.order) {
+        setOrders(prev => [result.order, ...prev]);
       }
-      return newOrder;
+      return result.order;
     } catch (err) {
       console.error('Error creating user order:', err);
       setError(err);
@@ -135,8 +198,11 @@ export function useOrders() {
     setLoading(true);
     setError(null);
     try {
-      const data = await ordersAPI.getSubscriptionOrders(subscriptionId);
-      return data;
+      const result = await callEdgeFunction('subscription-orders', {
+        query: `?subscription_id=${subscriptionId}&action=list`
+      });
+
+      return result.orders;
     } catch (err) {
       console.error('Error fetching subscription orders:', err);
       setError(err);
@@ -150,8 +216,11 @@ export function useOrders() {
     setLoading(true);
     setError(null);
     try {
-      const data = await ordersAPI.getNextScheduledMeal(subscriptionId);
-      return data;
+      const result = await callEdgeFunction('subscription-orders', {
+        query: `?subscription_id=${subscriptionId}&action=next_meal`
+      });
+
+      return result.next_meal;
     } catch (err) {
       console.error('Error fetching next scheduled meal:', err);
       setError(err);
@@ -165,13 +234,21 @@ export function useOrders() {
     setLoading(true);
     setError(null);
     try {
-      const activatedOrder = await ordersAPI.activateOrder(orderId, orderData);
-      if (activatedOrder) {
+      const result = await callEdgeFunction('subscription-orders', {
+        method: 'PATCH',
+        query: `?subscription_id=${orderData.subscription_id}`,
+        body: {
+          order_id: orderId,
+          scheduled_delivery_date: orderData.scheduled_delivery_date
+        }
+      });
+
+      if (result.order) {
         setOrders(prev => 
-          prev.map(order => order.id === orderId ? activatedOrder : order)
+          prev.map(order => order.id === orderId ? result.order : order)
         );
       }
-      return activatedOrder;
+      return result.order;
     } catch (err) {
       console.error('Error activating order:', err);
       setError(err);
@@ -185,17 +262,24 @@ export function useOrders() {
     setLoading(true);
     setError(null);
     try {
-      const activatedOrder = await ordersAPI.activateNextSubscriptionOrder(subscriptionId);
-      if (activatedOrder) {
+      const result = await callEdgeFunction('subscription-orders', {
+        method: 'PATCH',
+        query: `?subscription_id=${subscriptionId}`,
+        body: {
+          activate_next: true
+        }
+      });
+
+      if (result.order) {
         setOrders(prev => {
-          const existingIndex = prev.findIndex(o => o.id === activatedOrder.id);
+          const existingIndex = prev.findIndex(o => o.id === result.order.id);
           if (existingIndex >= 0) {
-            return prev.map(o => o.id === activatedOrder.id ? activatedOrder : o);
+            return prev.map(o => o.id === result.order.id ? result.order : o);
           }
-          return [activatedOrder, ...prev];
+          return [result.order, ...prev];
         });
       }
-      return activatedOrder;
+      return result.order;
     } catch (err) {
       console.error('Error activating next subscription order:', err);
       setError(err);
@@ -211,13 +295,18 @@ export function useOrders() {
     setLoading(true);
     setError(null);
     try {
-      const updatedOrder = await ordersAPI.updateOrder(orderId, updates);
-      if (updatedOrder) {
+      const result = await callEdgeFunction('manage-order', {
+        method: 'PATCH',
+        query: `?order_id=${orderId}`,
+        body: updates
+      });
+
+      if (result.order) {
         setOrders(prev => 
-          prev.map(order => order.id === orderId ? updatedOrder : order)
+          prev.map(order => order.id === orderId ? result.order : order)
         );
       }
-      return updatedOrder;
+      return result.order;
     } catch (err) {
       console.error('Error updating order:', err);
       setError(err);
@@ -231,17 +320,21 @@ export function useOrders() {
     setLoading(true);
     setError(null);
     try {
-      const result = await ordersAPI.cancelOrder(orderId, reason);
-      if (result) {
+      const result = await callEdgeFunction('manage-order', {
+        method: 'PATCH',
+        query: `?order_id=${orderId}`,
+        body: {
+          status: 'cancelled',
+          special_instructions: reason
+        }
+      });
+
+      if (result.order) {
         setOrders(prev => 
-          prev.map(order => 
-            order.id === orderId 
-              ? { ...order, status: 'cancelled', special_instructions: reason }
-              : order
-          )
+          prev.map(order => order.id === orderId ? result.order : order)
         );
       }
-      return result;
+      return result.order;
     } catch (err) {
       console.error('Error cancelling order:', err);
       setError(err);
@@ -255,7 +348,11 @@ export function useOrders() {
     setLoading(true);
     setError(null);
     try {
-      await ordersAPI.deleteOrder(orderId);
+      await callEdgeFunction('manage-order', {
+        method: 'DELETE',
+        query: `?order_id=${orderId}`
+      });
+
       setOrders(prev => prev.filter(order => order.id !== orderId));
     } catch (err) {
       console.error('Error deleting order:', err);
@@ -270,17 +367,21 @@ export function useOrders() {
     setLoading(true);
     setError(null);
     try {
-      const result = await ordersAPI.updateOrderStatus(orderId, status, notes);
-      if (result) {
+      const result = await callEdgeFunction('manage-order', {
+        method: 'PATCH',
+        query: `?order_id=${orderId}`,
+        body: {
+          status,
+          special_instructions: notes
+        }
+      });
+
+      if (result.order) {
         setOrders(prev => 
-          prev.map(order => 
-            order.id === orderId 
-              ? { ...order, status, special_instructions: notes }
-              : order
-          )
+          prev.map(order => order.id === orderId ? result.order : order)
         );
       }
-      return result;
+      return result.order;
     } catch (err) {
       console.error('Error updating order status:', err);
       setError(err);
@@ -291,27 +392,30 @@ export function useOrders() {
   }, []);
 
   // ===== PAYMENT OPERATIONS =====
+  // NOTE: These functions reference 'order-payment' which doesn't exist yet
+  // You need to either create this function or handle payments differently
 
   const processPayment = useCallback(async (orderId, paymentData) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await ordersAPI.processPayment(orderId, paymentData);
-      if (result) {
+      // Option 1: Use manage-order to update payment status
+      const result = await callEdgeFunction('manage-order', {
+        method: 'PATCH',
+        query: `?order_id=${orderId}`,
+        body: {
+          payment_status: 'completed',
+          payment_method: paymentData.method || 'card',
+          skipAuth: true // Admin operation
+        }
+      });
+
+      if (result.order) {
         setOrders(prev => 
-          prev.map(order => 
-            order.id === orderId 
-              ? { 
-                  ...order, 
-                  payment_status: 'paid',
-                  payment_reference: paymentData.reference,
-                  paid_at: new Date().toISOString()
-                }
-              : order
-          )
+          prev.map(order => order.id === orderId ? result.order : order)
         );
       }
-      return result;
+      return result.order;
     } catch (err) {
       console.error('Error processing payment:', err);
       setError(err);
@@ -325,22 +429,23 @@ export function useOrders() {
     setLoading(true);
     setError(null);
     try {
-      const result = await ordersAPI.refundOrder(orderId, refundData);
-      if (result) {
+      // Use manage-order to update payment status to refunded
+      const result = await callEdgeFunction('manage-order', {
+        method: 'PATCH',
+        query: `?order_id=${orderId}`,
+        body: {
+          payment_status: 'refunded',
+          special_instructions: refundData.reason,
+          skipAuth: true // Admin operation
+        }
+      });
+
+      if (result.order) {
         setOrders(prev => 
-          prev.map(order => 
-            order.id === orderId 
-              ? { 
-                  ...order, 
-                  payment_status: 'refunded',
-                  status: 'refunded',
-                  special_instructions: refundData.reason
-                }
-              : order
-          )
+          prev.map(order => order.id === orderId ? result.order : order)
         );
       }
-      return result;
+      return result.order;
     } catch (err) {
       console.error('Error processing refund:', err);
       setError(err);
@@ -356,21 +461,21 @@ export function useOrders() {
     setLoading(true);
     setError(null);
     try {
-      const result = await ordersAPI.assignDelivery(orderId, deliveryData);
-      if (result) {
+      const result = await callEdgeFunction('order-delivery', {
+        method: 'PATCH',
+        body: {
+          order_id: orderId,
+          action: 'assign',
+          driver_id: deliveryData.driver_id
+        }
+      });
+
+      if (result.order) {
         setOrders(prev => 
-          prev.map(order => 
-            order.id === orderId 
-              ? { 
-                  ...order, 
-                  delivery_driver_id: deliveryData.driver_id,
-                  status: 'out_for_delivery'
-                }
-              : order
-          )
+          prev.map(order => order.id === orderId ? result.order : order)
         );
       }
-      return result;
+      return result.order;
     } catch (err) {
       console.error('Error assigning delivery:', err);
       setError(err);
@@ -384,22 +489,22 @@ export function useOrders() {
     setLoading(true);
     setError(null);
     try {
-      const result = await ordersAPI.updateDeliveryStatus(orderId, status, location);
-      if (result) {
-        const updates = { status };
-        if (status === 'delivered') {
-          updates.actual_delivery_date = new Date().toISOString();
+      const result = await callEdgeFunction('order-delivery', {
+        method: 'PATCH',
+        body: {
+          order_id: orderId,
+          action: 'update_status',
+          status,
+          location
         }
-        
+      });
+
+      if (result.order) {
         setOrders(prev => 
-          prev.map(order => 
-            order.id === orderId 
-              ? { ...order, ...updates }
-              : order
-          )
+          prev.map(order => order.id === orderId ? result.order : order)
         );
       }
-      return result;
+      return result.order;
     } catch (err) {
       console.error('Error updating delivery status:', err);
       setError(err);
@@ -409,36 +514,109 @@ export function useOrders() {
     }
   }, []);
 
-  // ===== REAL-TIME SUBSCRIPTIONS =====
+  // ===== REAL-TIME SUBSCRIPTIONS (Keep using Supabase directly) =====
 
   const subscribeToUserOrders = useCallback((userId, callback) => {
-    return ordersAPI.subscribeToUserOrders(userId, callback);
+    return supabase
+      .channel(`user-${userId}-orders-changes`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `user_id=eq.${userId}`
+        },
+        callback
+      )
+      .subscribe();
   }, []);
 
   const subscribeToOrder = useCallback((orderId, callback) => {
-    return ordersAPI.subscribeToOrder(orderId, callback);
+    return supabase
+      .channel(`order-${orderId}-changes`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `id=eq.${orderId}`
+        },
+        callback
+      )
+      .subscribe();
   }, []);
 
   const subscribeToSubscriptionOrders = useCallback((subscriptionId, callback) => {
-    return ordersAPI.subscribeToSubscriptionOrders(subscriptionId, callback);
+    return supabase
+      .channel(`subscription-${subscriptionId}-orders-changes`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `subscription_id=eq.${subscriptionId}`
+        },
+        callback
+      )
+      .subscribe();
   }, []);
 
   const subscribeToOrderItems = useCallback((orderId, callback) => {
-    return ordersAPI.subscribeToOrderItems(orderId, callback);
+    return supabase
+      .channel(`order-${orderId}-items-changes`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'order_items',
+          filter: `order_id=eq.${orderId}`
+        },
+        callback
+      )
+      .subscribe();
   }, []);
 
   const subscribeToOrderMeals = useCallback((orderId, callback) => {
-    return ordersAPI.subscribeToOrderMeals(orderId, callback);
+    return supabase
+      .channel(`order-${orderId}-meals-changes`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'order_meals',
+          filter: `order_id=eq.${orderId}`
+        },
+        callback
+      )
+      .subscribe();
   }, []);
 
   // ===== UTILITY & HELPER FUNCTIONS =====
 
-  // Order type validation
   const getOrderType = useCallback((order) => {
-    return ordersAPI.getOrderType(order);
+    if (order.subscription_id) {
+      return {
+        type: 'subscription',
+        isValid: order.subscription_meal_index !== null && order.user_id !== null
+      };
+    } else if (order.user_id) {
+      return {
+        type: 'user',
+        isValid: true
+      };
+    } else {
+      return {
+        type: 'instant',
+        isValid: order.contact_phone !== null
+      };
+    }
   }, []);
 
-  // Filter helpers (no API calls, pure functions on local state)
   const getOrdersByStatus = useCallback((status) => {
     return orders.filter(order => order.status === status);
   }, [orders]);
@@ -475,8 +653,7 @@ export function useOrders() {
     // Fetch operations
     fetchUserOrders,
     fetchUserOrdersFiltered,
-    fetchOrderById,
-    fetchOrderItems,
+    fetchLastUserOrder,
     fetchAllOrders,
     fetchSubscriptionOrders,
     fetchNextScheduledMeal,

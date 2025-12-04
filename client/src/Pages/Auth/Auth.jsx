@@ -25,7 +25,7 @@ import { useNavigate } from 'react-router'
 import { useAuthContext } from '../../Contexts/AuthContext'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CheckCircleIcon } from '@chakra-ui/icons'
+import { CheckCircleIcon, PhoneIcon } from '@chakra-ui/icons'
 
 export default function OAuth() {
   const { 
@@ -161,10 +161,10 @@ export default function OAuth() {
               <VStack spacing={4}>
                 <Spinner size="xl" color="brand.500" thickness="4px" />
                 <Text fontSize="lg" fontWeight="medium">
-                  {t('common.loading')}
+                  {t('loading')}
                 </Text>
                 <Text fontSize="sm" color={textColor}>
-                  {pendingRedirect ? t('auth.preparingRedirect') : t('common.pleaseWait')}
+                  {pendingRedirect ? t('auth.preparingRedirect') : t('pleaseWait')}
                 </Text>
                 {pendingRedirect && (
                   <Badge colorScheme="blue" fontSize="xs">
@@ -201,7 +201,7 @@ export default function OAuth() {
               <Alert status="error" borderRadius="lg" flexDirection="column" textAlign="center">
                 <AlertIcon boxSize="40px" mr={0} mb={4} />
                 <AlertTitle fontSize="lg" mb={2}>
-                  {t('profile.authenticationError')}
+                  {t('authenticationError')}
                 </AlertTitle>
                 <AlertDescription fontSize="sm" textAlign="center">
                   {error}
@@ -213,7 +213,7 @@ export default function OAuth() {
                   onClick={() => window.location.reload()}
                   size={buttonSize}
                 >
-                  {t('profile.refresh')}
+                  {t('refresh')}
                 </Button>
               </Alert>
             </Box>
@@ -246,12 +246,12 @@ export default function OAuth() {
             {/* Header */}
             <VStack spacing={3} align={'center'} textAlign="center">
               <Heading size={headingSize} color="brand.500" textAlign="center">
-                {t('common.welcome')}
+                {t('welcome')}
               </Heading>
               <Text color={textColor} fontSize={{ base: 'sm', md: 'md' }}>
                 {pendingRedirect?.reason === 'subscription_flow' 
-                  ? t('profile.signInToContinueSubscription')
-                  : t('profile.signInToContinue')
+                  ? t('signInToContinueSubscription')
+                  : t('signInToContinue')
                 }
               </Text>
               
@@ -265,16 +265,16 @@ export default function OAuth() {
                   borderRadius="full"
                 >
                   {pendingRedirect.reason === 'subscription_flow' && pendingRedirect.planId && 
-                    t('premium.continuingPlanSubscription')
+                    t('continuingPlanSubscription')
                   }
                   {pendingRedirect.reason === 'subscription_flow' && !pendingRedirect.planId && 
-                    t('premium.continuingPremiumAccess')
+                    t('continuingPremiumAccess')
                   }
                   {pendingRedirect.reason === 'profile_completion' && 
-                    t('premium.continuingProfileSetup')
+                    t('continuingProfileSetup')
                   }
                   {!pendingRedirect.reason && 
-                    t('premium.continuingProcess')
+                    t('continuingProcess')
                   }
                 </Badge>
               )}
@@ -301,25 +301,35 @@ export default function OAuth() {
                 }}
                 providers={['google']}
                 onlyThirdPartyProviders
-                redirectTo={window.location.origin}
+                redirectTo={`${window.location.origin}/auth/callback`}
                 localization={{
                   variables: {
                     sign_in: {
-                      button_label: t('profile.signIn'),
-                      loading_button_label: t('profile.signingIn'),
+                      button_label: t('signIn'),
+                      loading_button_label: t('signingIn'),
                     },
                     sign_up: {
-                      button_label: t('profile.signUp'),
-                      loading_button_label: t('profile.signingUp'),
+                      button_label: t('signUp'),
+                      loading_button_label: t('signingUp'),
                     }
                   }
                 }}
               />
+              <Button
+                variant="outline"
+                colorScheme="brand"
+                size="lg"
+                onClick={() => navigate('/auth/otp')}
+                leftIcon={<PhoneIcon />}
+                w="full"
+              >
+                {t('auth.signInWithPhone') || 'Sign in with Phone'}
+              </Button>
             </Box>
 
             {/* Footer text */}
             <Text fontSize="xs" color={textColor} textAlign="center">
-              {t('profile.termsAgreement')}
+              {t('termsAgreement')}
             </Text>
           </VStack>
         </Box>
@@ -348,10 +358,10 @@ export default function OAuth() {
               <VStack spacing={3} textAlign="center">
                 <Icon as={CheckCircleIcon} boxSize={12} color="green.500" />
                 <Heading size={headingSize} color="green.500">
-                  {t('profile.successfullyLoggedIn')} 🎉
+                  {t('successfullyLoggedIn')} 🎉
                 </Heading>
                 <Text fontSize="lg" fontWeight="medium">
-                  {t('profile.welcomeBack', { name: user.displayName || user.email })}
+                  {t('welcomeBack', { name: user.displayName || user.email })}
                 </Text>
                 
                 {/* Show pending action context */}
@@ -389,16 +399,16 @@ export default function OAuth() {
               >
                 <Stack spacing={2} fontSize="sm">
                   <Text>
-                    <Text as="span" fontWeight="bold">{t('profile.email')}:</Text> {user.email}
+                    <Text as="span" fontWeight="bold">{t('email')}:</Text> {user.email}
                   </Text>
                   <Text>
-                    <Text as="span" fontWeight="bold">{t('profile.name')}:</Text> {user.displayName || t('profile.notProvided')}
+                    <Text as="span" fontWeight="bold">{t('name')}:</Text> {user.displayName || t('notProvided')}
                   </Text>
                   <Text>
-                    <Text as="span" fontWeight="bold">{t('profile.role')}:</Text> {user.isAdmin ? t('profile.administrator') : t('profile.user')}
+                    <Text as="span" fontWeight="bold">{t('role')}:</Text> {user.isAdmin ? t('administrator') : t('user')}
                   </Text>
                   <Text>
-                    <Text as="span" fontWeight="bold">{t('profile.profileStatus')}:</Text> {user.profileCompleted ? t('profile.complete') : t('profile.incomplete')}
+                    <Text as="span" fontWeight="bold">{t('profileStatus')}:</Text> {user.profileCompleted ? t('complete') : t('incomplete')}
                   </Text>
                 </Stack>
               </Box>
@@ -409,10 +419,10 @@ export default function OAuth() {
                   <AlertIcon />
                   <Box>
                     <AlertTitle fontSize="md">
-                      {t('profile.profileIncomplete')}
+                      {t('profileIncomplete')}
                     </AlertTitle>
                     <AlertDescription fontSize="sm">
-                      {t('profile.completeProfileMessage')}
+                      {t('completeProfileMessage')}
                     </AlertDescription>
                   </Box>
                 </Alert>
@@ -431,8 +441,8 @@ export default function OAuth() {
                   {pendingRedirect?.reason === 'subscription_flow' 
                     ? t('auth.continueSubscription')
                     : requiresProfileCompletion() 
-                      ? t('profile.completeProfile') 
-                      : t('profile.goToDashboard')
+                      ? t('completeProfile') 
+                      : t('goToDashboard')
                   }
                 </Button>
                 
@@ -460,7 +470,7 @@ export default function OAuth() {
                   w="full"
                   borderRadius="lg"
                 >
-                  {t('profile.logout')}
+                  {t('logout')}
                 </Button>
               </VStack>
             </VStack>

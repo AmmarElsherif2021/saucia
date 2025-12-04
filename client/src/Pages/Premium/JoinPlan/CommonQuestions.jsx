@@ -319,7 +319,7 @@ const CommonQuestions = ({ onComplete }) => {
       //console.log('✅ All updates completed:', updates);
 
       toast({
-        title: t('profile.profileUpdated'),
+        title: t('profileUpdated'),
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -329,10 +329,10 @@ const CommonQuestions = ({ onComplete }) => {
       navigate('/checkout-plan')
     } catch (error) {
       console.error('❌ Update error:', error)
-      const errorMessage = error.message || t('premium.errorUpdatingProfile')
+      const errorMessage = error.message || t('errorUpdatingProfile')
       setFormError(errorMessage)
       toast({
-        title: t('premium.error'),
+        title: t('error'),
         description: errorMessage,
         status: 'error',
         duration: 5000,
@@ -379,10 +379,10 @@ const CommonQuestions = ({ onComplete }) => {
       <Box p={6} borderRadius="lg" bg={bgColor[colorMode]} borderWidth="2px" borderColor={borderColor[colorMode]}>
         <Alert status="error" borderRadius="md" mb={4}>
           <AlertIcon />
-          {t('premium.errorLoadingData')}
+          {t('errorLoadingData')}
         </Alert>
         <Button onClick={() => window.location.reload()} colorScheme="brand">
-          {t('common.retry')}
+          {t('retry')}
         </Button>
       </Box>
     )
@@ -403,7 +403,7 @@ const CommonQuestions = ({ onComplete }) => {
         <form onSubmit={handleSubmit}>
           <VStack spacing={6} align="stretch">
             <Heading as="h2" size="lg" mb={2} color="brand.700" textAlign={isArabic ? "right" : "left"}>
-              {t('premium.healthProfile')}
+              {t('healthProfile')}
             </Heading>
 
             {formError && (
@@ -426,7 +426,7 @@ const CommonQuestions = ({ onComplete }) => {
 
             <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
               <FormControl>
-                <FormLabel color="brand.800">{t('premium.age')}</FormLabel>
+                <FormLabel color="brand.800">{t('age')}</FormLabel>
                 {isLoading ? (
                   <Skeleton height="40px" borderRadius="md" />
                 ) : (
@@ -435,7 +435,7 @@ const CommonQuestions = ({ onComplete }) => {
                     name="age"
                     value={formData.age}
                     onChange={handleChange}
-                    placeholder={t('premium.yourAge')}
+                    placeholder={t('yourAge')}
                     min="10"
                     max="100"
                     bg={inputBg[colorMode]}
@@ -446,7 +446,7 @@ const CommonQuestions = ({ onComplete }) => {
               </FormControl>
 
               <FormControl>
-                <FormLabel color="brand.800">{t('premium.gender')}</FormLabel>
+                <FormLabel color="brand.800">{t('gender')}</FormLabel>
                 {isLoading ? (
                   <Skeleton height="40px" borderRadius="md" />
                 ) : (
@@ -454,21 +454,21 @@ const CommonQuestions = ({ onComplete }) => {
                     name="gender"
                     value={formData.gender}
                     onChange={handleChange}
-                    placeholder={t('premium.selectGender')}
+                    placeholder={t('selectGender')}
                     bg={inputBg[colorMode]}
                     borderColor="brand.300"
                     _focus={{ borderColor: 'brand.500', boxShadow: '0 0 0 1px var(--chakra-colors-brand-500)' }}
                   >
-                    <option value="male">{t('premium.male')}</option>
-                    <option value="female">{t('premium.female')}</option>
-                    <option value="other">{t('premium.other')}</option>
-                    <option value="prefer-not-to-say">{t('premium.preferNotToSay')}</option>
+                    <option value="male">{t('male')}</option>
+                    <option value="female">{t('female')}</option>
+                    <option value="other">{t('other')}</option>
+                    <option value="prefer-not-to-say">{t('preferNotToSay')}</option>
                   </Select>
                 )}
               </FormControl>
 
               <FormControl>
-                <FormLabel color="brand.800">{t('premium.heightCm')}</FormLabel>
+                <FormLabel color="brand.800">{t('heightCm')}</FormLabel>
                 {isLoading ? (
                   <Skeleton height="40px" borderRadius="md" />
                 ) : (
@@ -477,7 +477,7 @@ const CommonQuestions = ({ onComplete }) => {
                     name="height"
                     value={formData.healthProfile.height}
                     onChange={handleChange}
-                    placeholder={t('premium.yourHeight')}
+                    placeholder={t('yourHeight')}
                     min="100"
                     max="250"
                     bg={inputBg[colorMode]}
@@ -488,7 +488,7 @@ const CommonQuestions = ({ onComplete }) => {
               </FormControl>
 
               <FormControl>
-                <FormLabel color="brand.800">{t('premium.weightKg')}</FormLabel>
+                <FormLabel color="brand.800">{t('weightKg')}</FormLabel>
                 {isLoading ? (
                   <Skeleton height="40px" borderRadius="md" />
                 ) : (
@@ -497,7 +497,7 @@ const CommonQuestions = ({ onComplete }) => {
                     name="weight"
                     value={formData.healthProfile.weight}
                     onChange={handleChange}
-                    placeholder={t('premium.yourWeight')}
+                    placeholder={t('yourWeight')}
                     min="30"
                     max="200"
                     bg={inputBg[colorMode]}
@@ -509,7 +509,7 @@ const CommonQuestions = ({ onComplete }) => {
             </SimpleGrid>
 
             <FormControl>
-              <FormLabel color="brand.800">{t('premium.activityLevel')}</FormLabel>
+              <FormLabel color="brand.800">{t('activityLevel')}</FormLabel>
               {isLoading ? (
                 <Skeleton height="120px" borderRadius="md" />
               ) : (
@@ -518,18 +518,18 @@ const CommonQuestions = ({ onComplete }) => {
                   onChange={value => handleChange({ target: { name: 'activityLevel', value } })}
                 >
                   <Stack direction="column" spacing={3}>
-                    <Radio value="sedentary" colorScheme="brand">{t('premium.sedentary')}</Radio>
-                    <Radio value="lightly_active" colorScheme="brand">{t('premium.lightlyActive')}</Radio>
-                    <Radio value="moderately_active" colorScheme="brand">{t('premium.moderatelyActive')}</Radio>
-                    <Radio value="very_active" colorScheme="brand">{t('premium.veryActive')}</Radio>
-                    <Radio value="extremely_active" colorScheme="brand">{t('premium.extremelyActive')}</Radio>
+                    <Radio value="sedentary" colorScheme="brand">{t('sedentary')}</Radio>
+                    <Radio value="lightly_active" colorScheme="brand">{t('lightlyActive')}</Radio>
+                    <Radio value="moderately_active" colorScheme="brand">{t('moderatelyActive')}</Radio>
+                    <Radio value="very_active" colorScheme="brand">{t('veryActive')}</Radio>
+                    <Radio value="extremely_active" colorScheme="brand">{t('extremelyActive')}</Radio>
                   </Stack>
                 </RadioGroup>
               )}
             </FormControl>
 
             <FormControl>
-              <FormLabel color="brand.800">{t('premium.fitnessGoal')}</FormLabel>
+              <FormLabel color="brand.800">{t('fitnessGoal')}</FormLabel>
               {isLoading ? (
                 <Skeleton height="40px" borderRadius="md" />
               ) : (
@@ -537,16 +537,16 @@ const CommonQuestions = ({ onComplete }) => {
                   name="fitnessGoal"
                   value={formData.healthProfile.fitnessGoal}
                   onChange={handleChange}
-                  placeholder={t('premium.selectFitnessGoal')}
+                  placeholder={t('selectFitnessGoal')}
                   bg={inputBg[colorMode]}
                   borderColor="brand.300"
                   _focus={{ borderColor: 'brand.500', boxShadow: '0 0 0 1px var(--chakra-colors-brand-500)' }}
                 >
-                  <option value="weight-loss">{t('premium.weightLoss')}</option>
-                  <option value="weight-gain">{t('premium.weightGain')}</option>
-                  <option value="maintenance">{t('premium.maintenance')}</option>
-                  <option value="muscle-gain">{t('premium.muscleGain')}</option>
-                  <option value="improve-fitness">{t('premium.improveFitness')}</option>
+                  <option value="weight-loss">{t('weightLoss')}</option>
+                  <option value="weight-gain">{t('weightGain')}</option>
+                  <option value="maintenance">{t('maintenance')}</option>
+                  <option value="muscle-gain">{t('muscleGain')}</option>
+                  <option value="improve-fitness">{t('improveFitness')}</option>
                 </Select>
               )}
             </FormControl>
@@ -563,10 +563,10 @@ const CommonQuestions = ({ onComplete }) => {
               >
                 <HStack mb={3}>
                   <Heading size="md" color="brand.700">
-                    {t('premium.nutritionTarget')}
+                    {t('nutritionTarget')}
                   </Heading>
                   <Tooltip 
-                    label={t('premium.nutritionTooltip')}
+                    label={t('nutritionTooltip')}
                     placement="top"
                   >
                     <Icon as={InfoIcon} color="brand.500" />
@@ -575,42 +575,42 @@ const CommonQuestions = ({ onComplete }) => {
                 
                 <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
                   <Stat>
-                    <StatLabel fontSize="sm">{t('premium.bmr')}</StatLabel>
+                    <StatLabel fontSize="sm">{t('bmr')}</StatLabel>
                     <StatNumber color="brand.700">{nutritionProfile.bmr}</StatNumber>
-                    <StatHelpText fontSize="xs">{t('premium.bmrHelp')}</StatHelpText>
+                    <StatHelpText fontSize="xs">{t('bmrHelp')}</StatHelpText>
                   </Stat>
                   
                   <Stat>
-                    <StatLabel fontSize="sm">{t('premium.tdee')}</StatLabel>
+                    <StatLabel fontSize="sm">{t('tdee')}</StatLabel>
                     <StatNumber color="brand.700">{nutritionProfile.tdee}</StatNumber>
-                    <StatHelpText fontSize="xs">{t('premium.tdeeHelp')}</StatHelpText>
+                    <StatHelpText fontSize="xs">{t('tdeeHelp')}</StatHelpText>
                   </Stat>
                   
                   <Stat>
-                    <StatLabel fontSize="sm">{t('premium.targetCalories')}</StatLabel>
+                    <StatLabel fontSize="sm">{t('targetCalories')}</StatLabel>
                     <StatNumber color="green.600">{nutritionProfile.dailyCalories}</StatNumber>
-                    <StatHelpText fontSize="xs">{t('premium.targetCaloriesHelp')}</StatHelpText>
+                    <StatHelpText fontSize="xs">{t('targetCaloriesHelp')}</StatHelpText>
                   </Stat>
                   
                   <Stat>
-                    <StatLabel fontSize="sm">{t('premium.adjustment')}</StatLabel>
+                    <StatLabel fontSize="sm">{t('adjustment')}</StatLabel>
                     <StatNumber color="teal.600">
                       {nutritionProfile.calculations.goalAdjustment > 0 ? '+' : ''}
                       {(nutritionProfile.calculations.goalAdjustment * 100).toFixed(0)}%
                     </StatNumber>
-                    <StatHelpText fontSize="xs">{t('premium.adjustmentHelp')}</StatHelpText>
+                    <StatHelpText fontSize="xs">{t('adjustmentHelp')}</StatHelpText>
                   </Stat>
                 </SimpleGrid>
                 
                 <Divider my={4} borderColor="brand.300" />
                 
                 <Text fontWeight="semibold" mb={3} color="brand.800">
-                  {t('premium.dailyMacros')}
+                  {t('dailyMacros')}
                 </Text>
                 
                 <SimpleGrid columns={{ base: 3 }} spacing={4}>
                   <Stat>
-                    <StatLabel fontSize="sm" color="blue.600">{t('premium.protein')}</StatLabel>
+                    <StatLabel fontSize="sm" color="blue.600">{t('protein')}</StatLabel>
                     <StatNumber fontSize="2xl" color="blue.700">
                       {nutritionProfile.macros.protein}g
                     </StatNumber>
@@ -620,7 +620,7 @@ const CommonQuestions = ({ onComplete }) => {
                   </Stat>
                   
                   <Stat>
-                    <StatLabel fontSize="sm" color="orange.600">{t('premium.carbs')}</StatLabel>
+                    <StatLabel fontSize="sm" color="orange.600">{t('carbs')}</StatLabel>
                     <StatNumber fontSize="2xl" color="orange.700">
                       {nutritionProfile.macros.carbs}g
                     </StatNumber>
@@ -630,7 +630,7 @@ const CommonQuestions = ({ onComplete }) => {
                   </Stat>
                   
                   <Stat>
-                    <StatLabel fontSize="sm" color="purple.600">{t('premium.fat')}</StatLabel>
+                    <StatLabel fontSize="sm" color="purple.600">{t('fat')}</StatLabel>
                     <StatNumber fontSize="2xl" color="purple.700">
                       {nutritionProfile.macros.fat}g
                     </StatNumber>
@@ -643,7 +643,7 @@ const CommonQuestions = ({ onComplete }) => {
                 <Alert status="info" mt={4} borderRadius="md" fontSize="sm">
                   <AlertIcon />
                   <Text>
-                    {t('premium.nutritionDisclaimer')}
+                    {t('nutritionDisclaimer')}
                   </Text>
                 </Alert>
               </Box>
@@ -651,7 +651,7 @@ const CommonQuestions = ({ onComplete }) => {
 
             <FormControl>
               <FormLabel color="brand.800">
-                {t('premium.dietaryPreferences')} 
+                {t('dietaryPreferences')} 
                 {hasInitialized && (
                   <Badge ml={2} colorScheme="brand">
                     {formData.healthProfile.dietaryPreferences.length} selected
@@ -684,7 +684,7 @@ const CommonQuestions = ({ onComplete }) => {
 
             <FormControl>
               <FormLabel color="brand.800">
-                {t('premium.allergies')}
+                {t('allergies')}
                 {hasInitialized && (
                   <Badge ml={2} colorScheme="red">
                     {formData.healthProfile.allergies.length} selected
@@ -721,10 +721,10 @@ const CommonQuestions = ({ onComplete }) => {
               size="lg"
               mt={4}
               isLoading={isSubmitting}
-              loadingText={t('premium.saving')}
+              loadingText={t('saving')}
               isDisabled={isLoading || !hasInitialized}
             >
-              {t('premium.saveHealthProfile')}
+              {t('saveHealthProfile')}
             </Button>
           </VStack>
         </form>

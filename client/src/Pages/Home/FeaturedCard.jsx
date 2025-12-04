@@ -216,7 +216,7 @@ export const FeaturedMeals = ({
     return (
       <VStack mt={6} p={4} bg="transparent" alignItems="center" w="99%">
         <Heading mb={6} fontSize="3em" color="brand.800">
-          {t('featuredSlide.title')}
+          {t('title')}
         </Heading>
         <Text color="gray.500" fontSize="lg" textAlign="center">
           No featured meals available
@@ -228,7 +228,7 @@ export const FeaturedMeals = ({
   return (
     <VStack mt={6} p={4} bg="transparent" alignItems="center" w="99%">
       <Heading mb={6} fontSize="3em" color="brand.800">
-        {t('featuredSlide.title')}
+        {t('title')}
       </Heading>
 
       <Box 

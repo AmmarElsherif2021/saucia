@@ -103,7 +103,7 @@ export const AddToCartModal = ({
     if (result && result.success) {
       // Show success toast
       // toast({
-      //   title: t('cart.addedToCart') || "Added to cart!",
+      //   title: t('addedToCart') || "Added to cart!",
       //   description: `${quantity} × ${name} added to your cart`,
       //   status: "success",
       //   duration: 3000,
@@ -116,7 +116,7 @@ export const AddToCartModal = ({
       // Show error toast if needed
   //     toast({
   //       title: t('cat.error') || "Error",
-  //       description: t('cart.failedToAdd') || "Failed to add item to cart",
+  //       description: t('failedToAdd') || "Failed to add item to cart",
   //       status: "error",
   //       duration: 3000,
   //       isClosable: true,
@@ -156,10 +156,10 @@ export const AddToCartModal = ({
       <ModalBody>
         <Flex direction="column" gap={4}>
           <Text color={colorMode== "dark"?"brand.300":"brand.600" } fontSize="lg" fontWeight="medium">
-            {t('cart.howManyWouldYouLike')}
+            {t('howManyWouldYouLike')}
           </Text>
           <Flex align="center" justify="space-between">
-            <Text>{t('common.quantity')}:</Text>
+            <Text>{t('quantity')}:</Text>
             <Flex align="center" gap={3}>
               <IconButton
                 icon={<MinusIcon />}
@@ -179,7 +179,7 @@ export const AddToCartModal = ({
             </Flex>
           </Flex>
           <Flex justify="space-between" align="center" mt={4}>
-            <Text fontSize="lg">{t('profile.total')}:</Text>
+            <Text fontSize="lg">{t('total')}:</Text>
             <Text fontSize="xl" fontWeight="bold" color="brand.500">
               {currency} {(price * quantity).toFixed(2)}
             </Text>
@@ -188,10 +188,10 @@ export const AddToCartModal = ({
       </ModalBody>
       <ModalFooter>
         <Button variant="outline" mx={3} onClick={onClose}>
-          {t('buttons.maybeLater') || t('buttons.cancel')}
+          {t('maybeLater') || t('cancel')}
         </Button>
         <Button colorScheme="brand" onClick={handleConfirm}>
-          {t('buttons.addToCart') || t('buttons.confirm')} ({quantity})
+          {t('addToCart') || t('confirm')} ({quantity})
         </Button>
       </ModalFooter>
     </ModalContent>
@@ -346,7 +346,7 @@ const PriceDisplay = ({ base_price, is_discount_active, discount_percentage = 0,
         color="secondary.800"
         lineHeight="2.2"
       >
-        {typeof price === 'number' ? price.toFixed(2) : 'N/A'}{' '}{t('common.currency')}
+        {typeof price === 'number' ? price.toFixed(2) : 'N/A'}{' '}{t('currency')}
       </Text>
       {is_discount_active && discount_percentage > 0 && (
         <Text
@@ -355,7 +355,7 @@ const PriceDisplay = ({ base_price, is_discount_active, discount_percentage = 0,
           textDecoration="line-through"
           lineHeight="1"
         >
-          {base_price.toFixed(2)}{' '}{t('common.currency')}
+          {base_price.toFixed(2)}{' '}{t('currency')}
         </Text>
       )}
     </VStack>
@@ -528,7 +528,7 @@ export const MinimalMealCard = ({
               //backdropFilter="blur(10px)"
               fontWeight="medium"
             >
-              ⏱️ {meal.prep_time_minutes} {t('common.minutes')}
+              ⏱️ {meal.prep_time_minutes} {t('minutes')}
             </Badge>
           )}
         </Flex>
@@ -605,7 +605,7 @@ export const MinimalMealCard = ({
             colorScheme="secondary"
             variant="solid"
             borderRadius="full"
-            aria-label={t('buttons.addToCart')}
+            aria-label={t('addToCart')}
             //boxShadow="0 4px 20px rgba(3, 137, 79, 0.4)"
             _hover={{
               transform: 'scale(1.1)',
@@ -632,7 +632,7 @@ export const MinimalMealCard = ({
             border="1px solid"
             borderColor="transparent"
           >
-            ✓ {t('admin.available')}
+            ✓ {t('available')}
           </Badge>
         </Flex>
       </VStack>
@@ -731,7 +731,7 @@ export const MealCard = ({ meal, isModal = false, onClose, quantity = 1, setQuan
           </Heading>
           {meal.prep_time_minutes && (
             <Text fontSize="sm" color="gray.500" whiteSpace="nowrap">
-              {meal.prep_time_minutes} {t('common.minutes')}
+              {meal.prep_time_minutes} {t('minutes')}
             </Text>
           )}
         </Flex>
@@ -756,7 +756,7 @@ export const MealCard = ({ meal, isModal = false, onClose, quantity = 1, setQuan
         {meal.spice_level > 0 && (
           <Flex align="center" gap="2">
             <Text fontSize="sm" color={colorMode === 'dark' ? 'gray.400' : 'gray.600'}>
-              {t('common.spiceLevel')}:
+              {t('spiceLevel')}:
             </Text>
             <Flex>
               {Array(5).fill('').map((_, i) => (
@@ -789,10 +789,10 @@ export const MealCard = ({ meal, isModal = false, onClose, quantity = 1, setQuan
           
           <VStack spacing="1">
             <Badge colorScheme="blue" variant="subtle" borderRadius="full">
-              {meal.section ? t(`foodCategories.${meal.section?.toLowerCase?.()}`) : t('common.uncategorized')}
+              {meal.section ? t(`foodCategories.${meal.section?.toLowerCase?.()}`) : t('uncategorized')}
             </Badge>
             <Badge colorScheme="green" borderRadius="full">
-              {t('common.ready')}
+              {t('ready')}
             </Badge>
           </VStack>
         </Flex>
@@ -804,7 +804,7 @@ export const MealCard = ({ meal, isModal = false, onClose, quantity = 1, setQuan
             <VStack spacing="4">
               {/* Quantity Selector */}
               <Flex align="center" justify="center" gap="4">
-                <Text fontWeight="medium">{t('common.quantity')}:</Text>
+                <Text fontWeight="medium">{t('quantity')}:</Text>
                 <HStack>
                   <IconButton
                     icon={<MinusIcon />}
@@ -832,7 +832,7 @@ export const MealCard = ({ meal, isModal = false, onClose, quantity = 1, setQuan
 
               {/* Total Price */}
               <Text fontSize="lg" fontWeight="bold" color="secondary.800">
-                {t('checkout.total')}: {((meal.base_price || meal.price || 0) * quantity).toFixed(2)} {t('common.currency')}
+                {t('total')}: {((meal.base_price || meal.price || 0) * quantity).toFixed(2)} {t('currency')}
               </Text>
 
               {/* Add to Cart Button */}
@@ -843,7 +843,7 @@ export const MealCard = ({ meal, isModal = false, onClose, quantity = 1, setQuan
                 onClick={handleAddToCart}
                 leftIcon={<AddIcon />}
               >
-                {t('buttons.addToCart')}
+                {t('addToCart')}
               </Button>
             </VStack>
           </>
@@ -902,7 +902,7 @@ export const MealCardWithModal = ({ meal, colorInHex = MENU_THEMES.cards.default
 
     if (result.success) {
       // toast({
-      //   title: t('cart.addedToCart') || "Added to cart!",
+      //   title: t('addedToCart') || "Added to cart!",
       //   description: `${quantity} × ${meal.name} added to your cart`,
       //   status: "success",
       //   duration: 3000,
@@ -914,8 +914,8 @@ export const MealCardWithModal = ({ meal, colorInHex = MENU_THEMES.cards.default
       setQuantity(1);
     } else {
       toast({
-        title: t('cart.addToCartError') || "Error",
-        description: t('cart.failedToAdd') || "Failed to add item to cart",
+        title: t('addToCartError') || "Error",
+        description: t('failedToAdd') || "Failed to add item to cart",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -941,7 +941,7 @@ export const MealCardWithModal = ({ meal, colorInHex = MENU_THEMES.cards.default
           <ModalHeader>
             <Flex justify="space-between" align="center">
               <Text fontSize="2xl" fontWeight="bold">
-                {t('menuPage.addToCart')}
+                {t('addToCart')}
               </Text>
               <ModalCloseButton position="relative" />
             </Flex>
@@ -1021,7 +1021,7 @@ const handleConfirm = () => {
             px="2"
             py="1"
           >
-            {t('common.offer')} {discount_percentage.toFixed(0)}% OFF
+            {t('offer')} {discount_percentage.toFixed(0)}% OFF
           </Badge>
         )}
 
@@ -1059,7 +1059,7 @@ const handleConfirm = () => {
                 />
               ))}
             <Text ml="1" fontSize="sm" color={colorMode === 'dark' ? 'gray.400' : 'gray.500'}>
-              {rate?.toFixed?.(1) || '0.0'} {t('common.stars')}
+              {rate?.toFixed?.(1) || '0.0'} {t('stars')}
             </Text>
           </Flex>
 
@@ -1081,7 +1081,7 @@ const handleConfirm = () => {
               </Text>
             </Box>
             <Button colorScheme="brand" size="md" onClick={() => setIsModalOpen(true)}>
-              {t('buttons.addToCart')}
+              {t('addToCart')}
             </Button>
           </Flex>
         </Box>
@@ -1164,7 +1164,7 @@ export const FeaturedMealCard = ({ item, index = 0 }) => {
 
     if (result.success) {
       toast({
-        title: t('cart.addedToCart') || "Added to cart!",
+        title: t('addedToCart') || "Added to cart!",
         description: `${quantity} × ${isArabic ? meal.name_arabic : meal.name} added to your cart`,
         status: "success",
         duration: 3000,
@@ -1241,7 +1241,7 @@ export const FeaturedMealCard = ({ item, index = 0 }) => {
                 fontSize="2xs"
                 fontWeight="bold"
               >
-                <StarIcon boxSize="2" mr="1" /> {t('common.featured')}
+                <StarIcon boxSize="2" mr="1" /> {t('featured')}
               </Badge>
             )}
             
@@ -1323,7 +1323,7 @@ export const FeaturedMealCard = ({ item, index = 0 }) => {
                 px="2"
                 py="0.5"
               >
-                {section ? t(`foodCategories.${section?.toLowerCase?.()}`) : t('common.uncategorized')}
+                {section ? t(`foodCategories.${section?.toLowerCase?.()}`) : t('uncategorized')}
               </Badge>
             </Box>
 
@@ -1344,7 +1344,7 @@ export const FeaturedMealCard = ({ item, index = 0 }) => {
                       textDecoration="line-through"
                       lineHeight="1"
                     >
-                      {originalPrice.toFixed(2)}{t('common.currency')}
+                      {originalPrice.toFixed(2)}{t('currency')}
                     </Text>
                   )}
                   
@@ -1355,7 +1355,7 @@ export const FeaturedMealCard = ({ item, index = 0 }) => {
                     color={hasOffer ? 'green.500' : 'brand.700'}
                     lineHeight="1"
                   >
-                    {effectivePrice.toFixed(2)}{t('common.currency')}
+                    {effectivePrice.toFixed(2)}{t('currency')}
                   </Text>
                 </VStack>
 
@@ -1369,7 +1369,7 @@ export const FeaturedMealCard = ({ item, index = 0 }) => {
                     setIsModalOpen(true)
                   }}
                   borderRadius="full"
-                  aria-label={t('buttons.addToCart')}
+                  aria-label={t('addToCart')}
                 />
               </Flex>
             </Box>
@@ -1509,7 +1509,7 @@ return (
             ))}
             {isDiscountActive && (
               <Badge colorScheme="red" variant="solid" borderRadius="full" px={2} fontSize="xs">
-                {t('common.offer')} {discountPercentage}% OFF
+                {t('offer')} {discountPercentage}% OFF
               </Badge>
             )}
           </Flex>
@@ -1581,7 +1581,7 @@ return (
             onClick={() => setIsModalOpen(true)}
             rightIcon={<Image src={cartIcon} alt="Cart" boxSize="1.7em" ml={1} />}
           >
-            {t('buttons.addToCart')}
+            {t('addToCart')}
           </Button>
         </Flex>
       </Box>
@@ -1640,7 +1640,7 @@ export const PlanCard = ({ plan }) => {
   //useEffect(()=>//console.log(` from PlanCard ${JSON.stringify(plan)}`),[])
   // Construct description from plan data - with null checks
   const description = plan
-    ? `${plan.carb || 0}g ${t('premium.carbs')} • ${plan.protein || 0}g ${t('premium.protein')} • ${plan.kcal || 0}${t('premium.kcal')}`
+    ? `${plan.carb || 0}g ${t('carbs')} • ${plan.protein || 0}g ${t('protein')} • ${plan.kcal || 0}${t('kcal')}`
     : ''
   const macros = description?.split(' • ')
 

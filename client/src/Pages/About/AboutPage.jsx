@@ -19,7 +19,7 @@ const AboutPage = () => {
     <div>
       <StylizedBox colorScheme={'brand'}>
         <Heading as="h1" size="lg" mb="4">
-          {t('about.aboutUs')} {/* Translate "About Us" */}
+          {t('aboutUs')} {/* Translate "About Us" */}
         </Heading>
         <Text>
           {isArabic
@@ -29,7 +29,7 @@ const AboutPage = () => {
       </StylizedBox>
       <StylizedBox colorScheme={'warning'}>
         <Heading as="h2" size="md" mb="4">
-          {t('about.ourMission')} {/* Translate "Our Mission" */}
+          {t('ourMission')} {/* Translate "Our Mission" */}
         </Heading>
         <Text>
           {isArabic
@@ -39,7 +39,7 @@ const AboutPage = () => {
       </StylizedBox>
       <StylizedBox colorScheme={'info'}>
         <Heading as="h2" size="md" mb="4">
-          {t('about.whyChooseUs')} {/* Translate "Why Choose Us?" */}
+          {t('whyChooseUs')} {/* Translate "Why Choose Us?" */}
         </Heading>
         <Text>
           {isArabic

@@ -35,20 +35,20 @@ export const Footer = () => {
           {/* Contact Us Section */}
           <Box flex="1" textAlign={textAlign}>
             <Heading as="h3" size="md" mb={4} color="brand.400">
-              {t('footer.contactUs')}
+              {t('contactUs')}
             </Heading>
             <Text color="brand.400" fontSize="sm" mb={1}>
-              {t('footer.email')}: info@example.com
+              {t('email')}: info@example.com
             </Text>
             <Text color="brand.400" fontSize="sm">
-              {t('footer.phone')}: +1 (123) 456-7890
+              {t('phone')}: +1 (123) 456-7890
             </Text>
           </Box>
 
           {/* Follow Us Section */}
           <Box flex="1" textAlign={textAlign}>
             <Heading as="h3" size="md" mb={4} color="brand.400">
-              {t('footer.followUs')}
+              {t('followUs')}
             </Heading>
             <List spacing={2} fontSize="sm" pl={0}>
               <ListItem>
@@ -72,15 +72,15 @@ export const Footer = () => {
           {/* Subscribe Section */}
           <Box flex="1" textAlign={textAlign}>
             <Heading as="h3" size="md" mb={4} color="brand.400">
-              {t('footer.subscribe')}
+              {t('subscribe')}
             </Heading>
             <Text fontSize="sm" color="brand.400" mb={4}>
-              {t('footer.getUpdates')}
+              {t('getUpdates')}
             </Text>
             <HStack as="form" spacing={3} direction={flexDirection} alignItems="flex-start">
               <Input
                 type="email"
-                placeholder={t('footer.yourEmail')}
+                placeholder={t('yourEmail')}
                 size="md"
                 bg="gray.800"
                 borderColor="gray.700"
@@ -94,7 +94,7 @@ export const Footer = () => {
                 colorScheme="brand"
                 alignSelf={isArabic ? 'flex-end' : 'flex-start'}
               >
-                {t('footer.subscribe')}
+                {t('subscribe')}
               </Button>
             </HStack>
           </Box>
@@ -102,10 +102,10 @@ export const Footer = () => {
       </VStack>
       <Box textAlign="center" py={4} mt={10}>
         <Text color="brand.400" fontSize="xs">
-          &copy; {new Date().getFullYear()} {t('brandNames.saucia')}.{' '}
-          {t('footer.allRightsReserved')} | <Link href="/terms">{t('footer.termsOfService')}</Link>{' '}
-          | <Link href="/privacy">{t('footer.privacyPolicy')}</Link> |{' '}
-          <Link href="/faqs">{t('footer.faqs')}</Link>
+          &copy; {new Date().getFullYear()} {t('saucia')}.{' '}
+          {t('allRightsReserved')} | <Link href="/terms">{t('termsOfService')}</Link>{' '}
+          | <Link href="/privacy">{t('privacyPolicy')}</Link> |{' '}
+          <Link href="/faqs">{t('faqs')}</Link>
         </Text>
       </Box>
     </Box>

@@ -32,7 +32,7 @@ export const useOrderItems = () => {
 
     if (!hasMeals && !hasItems) {
       return <Text fontSize="sm" color="orange.500" fontWeight="medium">
-        {t('premium.orderBeingPrepared')}
+        {t('orderBeingPrepared')}
       </Text>;
     }
 
@@ -95,7 +95,7 @@ export const formatDeliveryDate = (dateString, isArabic) => {
 
 // Shared time formatter
 export const formatDeliveryTime = (timeString, t) => {
-  if (!timeString) return t('premium.notSet');
+  if (!timeString) return t('notSet');
   return timeString.slice(0, 5); // Remove seconds if present
 };
 

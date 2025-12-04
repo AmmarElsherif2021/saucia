@@ -103,7 +103,7 @@ const CartCard = ({ meal, onIncrease, onDecrease, onRemove }) => {
 
         {/* Price */}
         <Text fontSize="lg" fontWeight="bold" color="teal.500">
-          {mealTotal} {t('common.currency')}
+          {mealTotal} {t('currency')}
         </Text>
       </VStack>
 
@@ -112,7 +112,7 @@ const CartCard = ({ meal, onIncrease, onDecrease, onRemove }) => {
         <HStack spacing={1}>
           <IconButton
             icon={<MinusIcon boxSize={3} />}
-            aria-label={t('buttons.decreaseQuantity')}
+            aria-label={t('decreaseQuantity')}
             size="sm"
             colorScheme="gray"
             variant="ghost"
@@ -121,7 +121,7 @@ const CartCard = ({ meal, onIncrease, onDecrease, onRemove }) => {
           />
           <IconButton
             icon={<AddIcon boxSize={3} />}
-            aria-label={t('buttons.increaseQuantity')}
+            aria-label={t('increaseQuantity')}
             size="sm"
             colorScheme="teal"
             variant="ghost"
@@ -130,7 +130,7 @@ const CartCard = ({ meal, onIncrease, onDecrease, onRemove }) => {
         </HStack>
         <IconButton
           icon={<DeleteIcon />}
-          aria-label={t('buttons.removeMeal')}
+          aria-label={t('removeMeal')}
           size="sm"
           colorScheme="red"
           variant="ghost"
@@ -180,12 +180,12 @@ export const CRT = ({
 
   const handleIncrease = (meal) => {
     onIncrease(meal.temp_meal_id)
-    showToast(t('toasts.quantityUpdated'), null, 'success')
+    showToast(t('s.quantityUpdated'), null, 'success')
   }
 
   const handleDecrease = (meal) => {
     if (meal.quantity <= 1) {
-      showToast(t('toasts.minQuantity'), t('toasts.cantReduceQuantity'), 'warning')
+      showToast(t('s.minQuantity'), t('s.cantReduceQuantity'), 'warning')
       return
     }
     onDecrease(meal.temp_meal_id)
@@ -194,8 +194,8 @@ export const CRT = ({
   const handleRemove = (meal) => {
     onRemove(meal.temp_meal_id)
     showToast(
-      t('toasts.mealRemoved'),
-      t('toasts.mealRemovedDescription', { mealName: meal.name }),
+      t('s.mealRemoved'),
+      t('s.mealRemovedDescription', { mealName: meal.name }),
       'info'
     )
   }
@@ -220,11 +220,11 @@ export const CRT = ({
         <HStack spacing={2}>
           <Image src={cartIcon} alt="Cart" boxSize="32px" />
           <Text fontSize="3xl" fontWeight="bold" color={isDark ? 'white' : 'brand.800'}>
-            {t('cart.yourCart')}
+            {t('yourCart')}
           </Text>
         </HStack>
         <Badge colorScheme="orange" fontSize="md" px={3} py={1} borderRadius="full">
-          {meals.length} {meals.length === 1 ? t('cart.meal') : t('cart.meals')}
+          {meals.length} {meals.length === 1 ? t('meal') : t('meals')}
         </Badge>
       </Flex>
 
@@ -235,7 +235,7 @@ export const CRT = ({
         <VStack py={12} spacing={3}>
           <Text fontSize="6xl">🛒</Text>
           <Text color="gray.500" fontSize="lg" textAlign="center">
-            {t('cart.emptyCart')}
+            {t('emptyCart')}
           </Text>
         </VStack>
       ) : (
@@ -257,27 +257,27 @@ export const CRT = ({
           {/* Order Summary */}
           <Stack spacing={2} mb={5}>
             <OrderSummaryRow
-              label={t('cart.subtotal')}
-              value={`${orderMetadata.subtotal?.toFixed(2) || '0.00'} ${t('common.currency')}`}
+              label={t('subtotal')}
+              value={`${orderMetadata.subtotal?.toFixed(2) || '0.00'} ${t('currency')}`}
               colorMode={colorMode}
             />
             <OrderSummaryRow
-              label={t('cart.deliveryFee')}
-              value={`${orderMetadata.delivery_fee?.toFixed(2) || '0.00'} ${t('common.currency')}`}
+              label={t('deliveryFee')}
+              value={`${orderMetadata.delivery_fee?.toFixed(2) || '0.00'} ${t('currency')}`}
               colorMode={colorMode}
             />
             {hasDiscount && (
               <OrderSummaryRow
-                label={t('cart.discount')}
-                value={`${orderMetadata.discount_amount?.toFixed(2)} ${t('common.currency')}`}
+                label={t('discount')}
+                value={`${orderMetadata.discount_amount?.toFixed(2)} ${t('currency')}`}
                 isDiscount
                 colorMode={colorMode}
               />
             )}
             <Divider my={2} />
             <OrderSummaryRow
-              label={t('cart.total')}
-              value={`${orderMetadata.total_amount?.toFixed(2) || '0.00'} ${t('common.currency')}`}
+              label={t('total')}
+              value={`${orderMetadata.total_amount?.toFixed(2) || '0.00'} ${t('currency')}`}
               isTotal
               colorMode={colorMode}
             />
@@ -286,10 +286,10 @@ export const CRT = ({
           {/* Special Instructions */}
           <Box mb={4}>
             <Text fontSize="sm" fontWeight="semibold" mb={2} color={isDark ? 'gray.300' : 'gray.700'}>
-              {t('cart.specialInstructions')}
+              {t('specialInstructions')}
             </Text>
             <Textarea
-              placeholder={t('cart.specialInstructionsPlaceholder')}
+              placeholder={t('specialInstructionsPlaceholder')}
               variant="filled"
               size="md"
               value={orderMetadata.client_instructions || ''}
@@ -317,7 +317,7 @@ export const CRT = ({
               _hover={{ transform: 'translateY(-2px)', boxShadow: 'xl' }}
               transition="all 0.2s"
             >
-              {t('buttons.proceedToCheckout')}
+              {t('proceedToCheckout')}
             </Button>
           )}
         </>

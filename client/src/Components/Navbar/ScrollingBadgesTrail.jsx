@@ -192,7 +192,7 @@ export const ScrollingBadgesTrail = ({ className = "" }) => {
                       minH="auto"
                       lineHeight="1.2"
                     >
-                      {t(`navbar.${item.label}`)}
+                      {t(`${item.label}`)}
                     </Badge>
                   </Link>
                 </motion.div>

@@ -110,7 +110,7 @@ export const PlanCard = ({
           zIndex={1}
           fontWeight="semibold"
         >
-          {t('premium.currentPlan')}
+          {t('currentPlan')}
         </Badge>
       )}
 
@@ -149,7 +149,7 @@ export const PlanCard = ({
             px={2}
             py={1}
           >
-            {plan.periods?.length || 0} {t('premium.periods')}
+            {plan.periods?.length || 0} {t('periods')}
           </Badge>
         </HStack>
 
@@ -176,7 +176,7 @@ export const PlanCard = ({
                 {plan.kcal}
               </Text>
               <Text fontSize="2xs" color={useColorModeValue('secondary.600', 'secondary.300')}>
-                {t('premium.kcal')}
+                {t('kcal')}
               </Text>
             </VStack>
           </Flex>
@@ -196,7 +196,7 @@ export const PlanCard = ({
                 {plan.carb}g
               </Text>
               <Text fontSize="2xs" color={useColorModeValue('teal.600', 'teal.300')}>
-                {t('premium.carbs')}
+                {t('carbs')}
               </Text>
             </VStack>
           </Flex>
@@ -216,7 +216,7 @@ export const PlanCard = ({
                 {plan.protein}g
               </Text>
               <Text fontSize="2xs" color={useColorModeValue('brand.600', 'brand.300')}>
-                {t('premium.protein')}
+                {t('protein')}
               </Text>
             </VStack>
           </Flex>
@@ -235,7 +235,7 @@ export const PlanCard = ({
             fontSize="sm"
             fontWeight="semibold"
           >
-            {isUserPlan ? t('premium.viewDetails') : t('premium.select')}
+            {isUserPlan ? t('viewDetails') : t('select')}
           </Button>
         </Box>
       </Flex>

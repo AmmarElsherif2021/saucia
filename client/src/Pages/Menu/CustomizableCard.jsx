@@ -290,7 +290,7 @@ export const CustomizableMealCard = ({
               bg="rgba(3, 137, 79, 0.9)"
               color="white"
             >
-              {t('menuPage.customizable')}
+              {t('customizable')}
             </Badge>
             
             {/* Prep Time */}
@@ -304,7 +304,7 @@ export const CustomizableMealCard = ({
                 borderRadius="full"
                 fontWeight="medium"
               >
-                ⏱️ {meal.prep_time_minutes} {t('common.minutes')}
+                ⏱️ {meal.prep_time_minutes} {t('minutes')}
               </Badge>
             )}
           </Flex>
@@ -320,7 +320,7 @@ export const CustomizableMealCard = ({
               py={1}
               bg="rgba(34, 197, 129, 0.9)"
             >
-              {t('menuPage.freeItems', { count: totalFreeItems })}
+              {t('freeItems', { count: totalFreeItems })}
             </Badge>
           </Box>
         </Box>
@@ -409,10 +409,10 @@ export const CustomizableMealCard = ({
                 color="secondary.800"
                 lineHeight="1.2"
               >
-                {displayPrice.toFixed(2)} {t('common.currency')}
+                {displayPrice.toFixed(2)} {t('currency')}
               </Text>
               <Text fontSize="xs" color="gray.300">
-                {t('common.price')}
+                {t('price')}
               </Text>
             </Box>
             
@@ -424,7 +424,7 @@ export const CustomizableMealCard = ({
               colorScheme="secondary"
               variant="solid"
               borderRadius="full"
-              aria-label={t('menuPage.customize')}
+              aria-label={t('customize')}
               _hover={{
                 transform: 'scale(1.1)',
               }}
@@ -448,7 +448,7 @@ export const CustomizableMealCard = ({
               border="1px solid"
               borderColor="transparent"
             >
-              {t('menuPage.fullyCustomizable')}
+              {t('fullyCustomizable')}
             </Badge>
           </Flex>
         </VStack>

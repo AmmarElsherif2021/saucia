@@ -105,7 +105,7 @@ const TermButton = ({ term, pricing, isSelected, isDisabled, onClick, t }) => {
             fontSize={{ base: 'sm', md: 'md' }} 
             fontWeight="600"
           >
-            {term === 'short' ? (t('premium.shortTerm') || 'Short Term') : (t('premium.mediumTerm') || 'Medium Term')}
+            {term === 'short' ? (t('shortTerm') || 'Short Term') : (t('mediumTerm') || 'Medium Term')}
           </Text>
           
           <Box>
@@ -123,7 +123,7 @@ const TermButton = ({ term, pricing, isSelected, isDisabled, onClick, t }) => {
               opacity={isSelected ? 0.9 : 0.7}
               mt={1}
             >
-              {t('common.currency') || 'SAR'}
+              {t('currency') || 'SAR'}
             </Text>
           </Box>
           
@@ -135,7 +135,7 @@ const TermButton = ({ term, pricing, isSelected, isDisabled, onClick, t }) => {
             py={1}
             borderRadius="full"
           >
-            {pricing.meals} {t('premium.meals') || 'meals'}
+            {pricing.meals} {t('meals') || 'meals'}
           </Badge>
         </VStack>
       </CardBody>
@@ -257,7 +257,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
               <Icon as={StarIcon} w={5} h={5} color={accentColor} />
             </Box>
             <Text color={colorMode === 'dark' ? 'gray.300' : 'gray.600'} fontSize="md" fontWeight="500">
-              {t('premium.selectPlanToSeeDetails') || 'Select a plan to see details'}
+              {t('selectPlanToSeeDetails') || 'Select a plan to see details'}
             </Text>
           </MotionVStack>
         </CardBody>
@@ -267,7 +267,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
 
   // Helper functions
   const formatCurrency = (amount) => {
-    return `${amount.toFixed(2)} ${t('common.currency') || 'SAR'}`;
+    return `${amount.toFixed(2)} ${t('currency') || 'SAR'}`;
   };
 
   const formatDate = (dateString) => {
@@ -387,7 +387,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
               fontSize={{ base: 'sm', md: 'md' }}
               color={colorMode === 'dark' ? 'white' : 'gray.800'}
             >
-              {t('premium.nutritionalInformation') || 'Nutritional Information'}
+              {t('nutritionalInformation') || 'Nutritional Information'}
             </Text>
             <SimpleGrid columns={{ base: 2, sm: 4 }} spacing={2}>
               <Stat
@@ -401,7 +401,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
                   {chosenPlan.kcal}
                 </StatNumber>
                 <StatLabel fontSize="xs" color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}>
-                  {t('premium.kcal') || 'kcal'}
+                  {t('kcal') || 'kcal'}
                 </StatLabel>
               </Stat>
               
@@ -416,7 +416,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
                   {chosenPlan.protein}g
                 </StatNumber>
                 <StatLabel fontSize="xs" color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}>
-                  {t('premium.protein') || 'protein'}
+                  {t('protein') || 'protein'}
                 </StatLabel>
               </Stat>
               
@@ -431,7 +431,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
                   {chosenPlan.carb}g
                 </StatNumber>
                 <StatLabel fontSize="xs" color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}>
-                  {t('premium.carbs') || 'carbs'}
+                  {t('carbs') || 'carbs'}
                 </StatLabel>
               </Stat>
               
@@ -447,7 +447,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
                     {chosenPlan.fat}g
                   </StatNumber>
                   <StatLabel fontSize="xs" color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}>
-                    {t('premium.fat') || 'fat'}
+                    {t('fat') || 'fat'}
                   </StatLabel>
                 </Stat>
               )}
@@ -463,7 +463,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
               color={colorMode === 'dark' ? 'white' : 'gray.800'}
               textAlign="center"
             >
-              {t('premium.subscriptionTerm') || 'Choose Your Plan'}
+              {t('subscriptionTerm') || 'Choose Your Plan'}
             </Text>
             <SimpleGrid 
               columns={{ base: 1, sm: 2 }} 
@@ -500,7 +500,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
                 <MotionBox variants={itemVariants}>
                   <Flex justify="space-between" align="center" mb={3}>
                     <Text fontWeight="500" color={colorMode === 'dark' ? 'white' : 'gray.800'} fontSize="sm">
-                      {t('premium.mealProgress') || 'Meal Progress'}
+                      {t('mealProgress') || 'Meal Progress'}
                     </Text>
                     <Text fontSize="xs" color={colorMode === 'dark' ? 'gray.300' : 'gray.600'}>
                       {subscriptionData.consumed_meals || 0} / {subscriptionData.total_meals}
@@ -515,10 +515,10 @@ const SubscriptionSummary = ({ onDataChange }) => {
                   />
                   <Flex justify="space-between" align="center" mt={2}>
                     <Text fontSize="xs" color="green.500" fontWeight="500">
-                      {remainingMeals} {t('premium.mealsRemaining') || 'meals remaining'}
+                      {remainingMeals} {t('mealsRemaining') || 'meals remaining'}
                     </Text>
                     <Text fontSize="xs" color={colorMode === 'dark' ? 'gray.400' : 'gray.500'}>
-                      {progressPercentage.toFixed(0)}% {t('checkout.completedDeliveries') || 'completed'}
+                      {progressPercentage.toFixed(0)}% {t('completedDeliveries') || 'completed'}
                     </Text>
                   </Flex>
                 </MotionBox>
@@ -532,7 +532,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
                   fontSize={{ base: 'sm', md: 'md' }}
                   color={colorMode === 'dark' ? 'white' : 'gray.800'}
                 >
-                  {t('profile.subscriptionDetails') || 'Subscription Details'}
+                  {t('subscriptionDetails') || 'Subscription Details'}
                 </Text>
                 
                 <VStack spacing={3} align="stretch">
@@ -549,7 +549,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
                         boxShadow="sm"
                       >
                         <Text fontSize="xs" color={colorMode === 'dark' ? 'gray.300' : 'gray.600'} mb={1}>
-                          {t('premium.startDate') || 'Start Date'}
+                          {t('startDate') || 'Start Date'}
                         </Text>
                         <Text fontWeight="500" color={colorMode === 'dark' ? 'white' : 'gray.800'} fontSize="sm">
                           {formatDate(subscriptionData.start_date)}
@@ -567,7 +567,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
                         boxShadow="sm"
                       >
                         <Text fontSize="xs" color={colorMode === 'dark' ? 'gray.300' : 'gray.600'} mb={1}>
-                          {t('premium.endDate') || 'End Date'}
+                          {t('endDate') || 'End Date'}
                         </Text>
                         <Text fontWeight="500" color={colorMode === 'dark' ? 'white' : 'gray.800'} fontSize="sm">
                           {formatDate(subscriptionData.end_date)}
@@ -599,7 +599,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
                   >
                     <VStack align={{ base: 'center', sm: 'flex-start' }} spacing={1}>
                       <Text fontSize="sm" fontWeight="500" opacity={0.9}>
-                        {t('menuPage.totalPrice') || 'Total Price'}
+                        {t('totalPrice') || 'Total Price'}
                       </Text>
                       <Text fontSize={{ base: 'xl', md: '2xl' }} fontWeight="700" lineHeight="1">
                         {formatCurrency(selectedTermPricing.totalPrice)}
@@ -615,10 +615,10 @@ const SubscriptionSummary = ({ onDataChange }) => {
                         py={1}
                         borderRadius="full"
                       >
-                        {selectedTermPricing.meals} {t('premium.meals') || 'meals'}
+                        {selectedTermPricing.meals} {t('meals') || 'meals'}
                       </Badge>
                       <Text fontSize="xs" opacity={0.8}>
-                        {formatCurrency(selectedTermPricing.pricePerMeal)} {t('premium.pricePerMeal') || 'per meal'}
+                        {formatCurrency(selectedTermPricing.pricePerMeal)} {t('pricePerMeal') || 'per meal'}
                       </Text>
                     </VStack>
                   </Flex>
@@ -660,11 +660,11 @@ const SubscriptionSummary = ({ onDataChange }) => {
                 <AlertIcon color="orange.500" />
                 <Box>
                   <Text fontSize="sm" fontWeight="500" color={colorMode === 'dark' ? 'orange.200' : 'orange.800'}>
-                    {t('premium.subscriptionPaused') || 'Subscription is paused'}
+                    {t('subscriptionPaused') || 'Subscription is paused'}
                   </Text>
                   {subscriptionData.resume_date && (
                     <Text fontSize="xs" mt={1} color={colorMode === 'dark' ? 'orange.300' : 'orange.600'}>
-                      {t('premium.resumeDate') || 'Resume date'}: {formatDate(subscriptionData.resume_date)}
+                      {t('resumeDate') || 'Resume date'}: {formatDate(subscriptionData.resume_date)}
                     </Text>
                   )}
                 </Box>
@@ -685,7 +685,7 @@ const SubscriptionSummary = ({ onDataChange }) => {
               >
                 <AlertIcon color="blue.500" />
                 <Text fontSize="sm" color={colorMode === 'dark' ? 'blue.200' : 'blue.800'}>
-                  {t('premium.selectTermToSeeDetails') || 'Select a subscription term to see details'}
+                  {t('selectTermToSeeDetails') || 'Select a subscription term to see details'}
                 </Text>
               </Alert>
             </MotionBox>

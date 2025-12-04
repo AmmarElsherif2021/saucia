@@ -111,8 +111,8 @@ function MasonryCard({ meal, index }) {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: index * 0.1 }}
       viewport={{ once: true, margin: "-50px" }}
-      bg={colorMode === "dark" ? "gray.800" : "white"}
-      borderRadius="2xl"
+      position="relative"
+      borderRadius="3xl"
       overflow="hidden"
       boxShadow={colorMode === "dark" ? "xl" : "md"}
       _hover={{ 
@@ -120,78 +120,91 @@ function MasonryCard({ meal, index }) {
         transform: "translateY(-4px)"
       }}
       dir={isArabic ? "rtl" : "ltr"}
-      h={'fit-content'}
+      h={imageHeight}
     >
-      {/* Image Section */}
-      <Box position="relative" h={imageHeight} overflow="hidden">
-        <MotionImage
-          src={meal.image_url || meal.thumbnailUrl || `https://picsum.photos/seed/meal${meal.id}/800/600`}
-          alt={isArabic ? meal.name_arabic : meal.name}
-          w="100%"
-          h="100%"
-          objectFit="cover"
-          whileHover={{ scale: 1.05 }}
-          transition={{ duration: 0.4 }}
-        />
-        
-        {/* Gradient Overlay */}
-        <Box
-          position="absolute"
-          inset={0}
-          bgGradient="linear(to-t, blackAlpha.600, transparent)"
-        />
-        
-        {/* Price Badge */}
+      {/* Full Background Image */}
+      <MotionImage
+        src={meal.image_url || meal.thumbnailUrl || `https://picsum.photos/seed/meal${meal.id}/800/600`}
+        alt={isArabic ? meal.name_arabic : meal.name}
+        w="100%"
+        h="100%"
+        objectFit="cover"
+        position="absolute"
+        inset={0}
+        whileHover={{ scale: 1.05 }}
+        transition={{ duration: 0.4 }}
+      />
+      
+      {/* Enhanced Gradient Overlay for better text readability */}
+      <Box
+        position="absolute"
+        inset={0}
+        bgGradient="linear(to-b, blackAlpha.300, blackAlpha.800)"
+      />
+      
+      {/* Price Badge */}
+      <MotionBadge
+        position="absolute"
+        top={4}
+        right={isArabic ? 4 : "unset"}
+        left={isArabic ? "unset" : 4}
+        bg="brand.600"
+        color="white"
+        px={4}
+        py={2}
+        borderRadius="full"
+        fontWeight="bold"
+        fontSize="lg"
+        initial={{ scale: 0, rotate: -45 }}
+        whileInView={{ scale: 1, rotate: 0 }}
+        transition={{ delay: 0.3, duration: 0.4 }}
+        zIndex={2}
+      >
+        ${meal.basePrice || "28"}
+      </MotionBadge>
+
+      {/* Vegetarian Badge */}
+      {meal.isVegetarian && (
         <MotionBadge
           position="absolute"
           top={4}
-          right={isArabic ? 4 : "unset"}
           left={isArabic ? "unset" : 4}
-          bg="brand.600"
+          right={isArabic ? 4 : "unset"}
+          bg="green.500"
           color="white"
-          px={4}
-          py={2}
+          px={3}
+          py={1}
           borderRadius="full"
-          fontWeight="bold"
-          fontSize="lg"
-          initial={{ scale: 0, rotate: -45 }}
-          whileInView={{ scale: 1, rotate: 0 }}
-          transition={{ delay: 0.3, duration: 0.4 }}
+          fontSize="sm"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.4 }}
+          zIndex={2}
+          mt={14}
         >
-          ${meal.basePrice || "28"}
+          🌱 {t('vegetarian', 'Vegetarian')}
         </MotionBadge>
+      )}
 
-        {/* Vegetarian Badge */}
-        {meal.isVegetarian && (
-          <MotionBadge
-            position="absolute"
-            bottom={4}
-            left={isArabic ? 4 : "unset"}
-            right={isArabic ? "unset" : 4}
-            bg="green.500"
-            color="white"
-            px={3}
-            py={1}
-            borderRadius="full"
-            fontSize="sm"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.4 }}
-          >
-            🌱 {t('vegetarian', 'Vegetarian')}
-          </MotionBadge>
-        )}
-      </Box>
-
-      {/* Content Section */}
-      <VStack align="stretch" p={6} spacing={3}>
+      {/* Content Section - Positioned at Bottom */}
+      <VStack 
+        align="stretch" 
+        position="absolute"
+        bottom={0}
+        left={0}
+        right={0}
+        p={6} 
+        spacing={3}
+        zIndex={2}
+      >
         {/* Section Badge */}
         <MotionBadge
           alignSelf={isArabic ? "flex-end" : "flex-start"}
           px={3}
           py={1}
-          bg={colorMode === "dark" ? "brand.900" : "brand.100"}
-          color={colorMode === "dark" ? "brand.300" : "brand.700"}
+          bg="whiteAlpha.300"
+          backdropFilter="blur(10px)"
+          color="white"
           borderRadius="full"
           fontSize="xs"
           fontWeight="medium"
@@ -209,12 +222,13 @@ function MasonryCard({ meal, index }) {
         <MotionHeading
           fontSize={{ base: "xl", md: "2xl" }}
           fontWeight="bold"
-          color={colorMode === "dark" ? "white" : "brand.600"}
+          color="white"
           textAlign={isArabic ? "right" : "left"}
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.4 }}
           dir={isArabic ? 'rtl' : 'ltr'}
+          textShadow="0 2px 10px rgba(0,0,0,0.5)"
         >
           {isArabic ? meal.name_arabic : meal.name || t('signatureDish', 'Signature Dish')}
         </MotionHeading>
@@ -222,14 +236,15 @@ function MasonryCard({ meal, index }) {
         {/* Description */}
         <MotionText
           fontSize="sm"
-          color={colorMode === "dark" ? "gray.300" : "gray.600"}
+          color="whiteAlpha.900"
           lineHeight="relaxed"
           textAlign={isArabic ? "right" : "left"}
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.4 }}
           dir={isArabic ? 'rtl' : 'ltr'}
-          noOfLines={3}
+          noOfLines={2}
+          textShadow="0 1px 5px rgba(0,0,0,0.5)"
         >
           {isArabic ? meal.description_arabic : meal.description || t('mealDescription', 'Experience the perfect blend of flavors and artistry in every bite.')}
         </MotionText>
@@ -245,17 +260,44 @@ function MasonryCard({ meal, index }) {
             justifyContent={isArabic ? "flex-end" : "flex-start"}
           >
             {meal.calories && (
-              <Badge colorScheme="orange" fontSize="xs" px={2} py={1} borderRadius="full">
+              <Badge 
+                colorScheme="orange" 
+                fontSize="xs" 
+                px={2} 
+                py={1} 
+                borderRadius="full"
+                bg="whiteAlpha.300"
+                backdropFilter="blur(10px)"
+                color="white"
+              >
                 {meal.calories} cal
               </Badge>
             )}
             {meal.proteinG && (
-              <Badge colorScheme="blue" fontSize="xs" px={2} py={1} borderRadius="full">
+              <Badge 
+                colorScheme="blue" 
+                fontSize="xs" 
+                px={2} 
+                py={1} 
+                borderRadius="full"
+                bg="whiteAlpha.300"
+                backdropFilter="blur(10px)"
+                color="white"
+              >
                 {meal.proteinG}g {t('protein', 'protein')}
               </Badge>
             )}
             {meal.prepTimeMinutes && (
-              <Badge colorScheme="purple" fontSize="xs" px={2} py={1} borderRadius="full">
+              <Badge 
+                colorScheme="purple" 
+                fontSize="xs" 
+                px={2} 
+                py={1} 
+                borderRadius="full"
+                bg="whiteAlpha.300"
+                backdropFilter="blur(10px)"
+                color="white"
+              >
                 {meal.prepTimeMinutes} min
               </Badge>
             )}
@@ -266,18 +308,20 @@ function MasonryCard({ meal, index }) {
         <MotionButton
           w="100%"
           size="md"
-          bg="brand.500"
+          bgGradient="linear(to-br, brand.800, teal.500)"
           color="white"
           borderRadius="xl"
-          _hover={{ bg: "brand.600" }}
+          _hover={{ bg: "brand.800" }}
           whileHover={{ y: -2 }}
           whileTap={{ scale: 0.98 }}
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.4 }}
           onClick={() => setIsModalOpen(true)}
+          backdropFilter="blur(10px)"
+          boxShadow="0 4px 20px rgba(0,0,0,0.3)"
         >
-          {t('buttons.order')}
+          {t('order')}
         </MotionButton>
 
         <AddToCartModal
@@ -412,7 +456,7 @@ export default function Intro() {
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
             >
-              {t('featuredSlide.title') || 'Featured Signature Dishes'}
+              {t('title') || 'Featured Signature Dishes'}
             </MotionHeading>
             
             <MotionText
@@ -425,25 +469,34 @@ export default function Intro() {
               transition={{ duration: 0.8, delay: 0.2 }}
               viewport={{ once: true }}
             >
-              {t('featuredSlide.subtitle') || 'Discover our carefully crafted selection of exceptional dishes'}
+              {t('subtitle') || 'Discover our carefully crafted selection of exceptional dishes'}
             </MotionText>
           </VStack>
         </Container>
       </Box>
 
       {/* Masonry Grid Section */}
-      <Container maxW="7xl" px={{ base: 4, md: 6 }} mx={2} p={8} borderRadius={'25px'} bg={'secondary.500'}>
-         
-      <MasonryGrid
-        columns={{ base: 1, sm: 2, md: 3, lg: 4 }}
-        gap={2}
+      <Container
+        maxW="full"
+        px={{ base: 4, md: 6 }}
+        mx={3}
+        p={8}
+        borderRadius="25px"
+        // Gradient background (adapts to color mode)
+        bgGradient={
+          colorMode === "dark"
+            ? "linear(to-br, gray.800, brand.700)"
+            : "linear(to-br, brand.600, green.200, secondary.800)"
+        }
+        
       >
-         {displayMeals.map((meal, index) => (
+        <MasonryGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap={2}>
+          {displayMeals.map((meal, index) => (
             <MasonryCard key={meal.id} meal={meal} index={index} />
           ))}
-      </MasonryGrid>
+        </MasonryGrid>
       </Container>
-      
+
       {/* Enhanced Progress Bar */}
       <MotionBox
         position="fixed"

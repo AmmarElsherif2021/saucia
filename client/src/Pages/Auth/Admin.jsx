@@ -375,11 +375,11 @@ const EntitySection = ({
       borderColor="gray.100"
     >
       <SectionHeading
-        title={t(config.titleKey || `admin.entities.${entityType}.title`, { defaultValue: config.title })}
-        description={t(config.descriptionKey || `admin.entities.${entityType}.description`, { defaultValue: config.description })}
+        title={t(config.titleKey || `${entityType}.title`, { defaultValue: config.title })}
+        description={t(config.descriptionKey || `${entityType}.description`, { defaultValue: config.description })}
         onAddClick={modals.add.onOpen}
-        buttonText={t('admin.actions.add_entity', {
-          entity: t(config.singularKey || `admin.entities.${entityType}.singular`, { defaultValue: config.singular }),
+        buttonText={t('actions.add_entity', {
+          entity: t(config.singularKey || `${entityType}.singular`, { defaultValue: config.singular }),
           defaultValue: `Add ${config.singular}`
         })}
         AddIcon={AddIcon}
@@ -400,7 +400,7 @@ const EntitySection = ({
            cursor="pointer" 
            leftIcon={<UploadIcon />}
            iconSpacing={0}
-           label={t('admin.actions.import', { defaultValue: "Import" })}
+           label={t('actions.import', { defaultValue: "Import" })}
            >
             <input 
               type="file" 
@@ -444,8 +444,8 @@ const EntitySection = ({
       <FormModal
         isOpen={modals.add.isOpen}
         onClose={modals.add.onClose}
-        title={t('admin.modals.add_entity', {
-          entity: t(config.singularKey || `admin.entities.${entityType}.singular`, { defaultValue: config.singular }),
+        title={t('modals.add_entity', {
+          entity: t(config.singularKey || `${entityType}.singular`, { defaultValue: config.singular }),
           defaultValue: `Add New ${config.singular}`
         })}
         onSubmit={handlers.handleAdd}
@@ -458,8 +458,8 @@ const EntitySection = ({
         key={selectedEntity?.id}
         isOpen={modals.edit.isOpen}
         onClose={modals.edit.onClose}
-        title={t('admin.modals.edit_entity', {
-          entity: t(config.singularKey || `admin.entities.${entityType}.singular`, { defaultValue: config.singular }),
+        title={t('modals.edit_entity', {
+          entity: t(config.singularKey || `${entityType}.singular`, { defaultValue: config.singular }),
           defaultValue: `Edit ${config.singular}`
         })}
         onSubmit={(data) => handlers.handleEdit(selectedEntity?.id, data)}  // Make sure this passes the ID
@@ -472,8 +472,8 @@ const EntitySection = ({
       <ConfirmationModal
         isOpen={modals.delete.isOpen}
         onClose={modals.delete.onClose}
-        title={t('admin.modals.delete_entity', {
-          entity: t(config.singularKey || `admin.entities.${entityType}.singular`, { defaultValue: config.singular }),
+        title={t('modals.delete_entity', {
+          entity: t(config.singularKey || `${entityType}.singular`, { defaultValue: config.singular }),
           defaultValue: `Delete ${config.singular}`
         })}
         onConfirm={() => handlers.handleDelete(selectedEntity?.id)}
@@ -626,7 +626,7 @@ const Admin = () => {
         backgroundColor: '#f0f0f0',
       }}
     >
-      <Heading mb={6}>{t('admin.dashboard.title', { defaultValue: "Admin Dashboard" })}</Heading>
+      <Heading mb={6}>{t('title', { defaultValue: "Admin Dashboard" })}</Heading>
 
       {/* Stats Cards */}
       <Grid
@@ -641,56 +641,56 @@ const Admin = () => {
         maxW={'90%'}
       >
         <StatCard 
-          title={t('admin.stats.total_users', { defaultValue: "Total Users" })} 
+          title={t('total_users', { defaultValue: "Total Users" })} 
           value={dashboardData?.totalUsers || 0} 
           colorScheme={'brand'}
           icon={<FaUsers size={20} />}
         />
 
         <StatCard 
-          title={t('admin.stats.admin_users', { defaultValue: "Admin Users" })} 
+          title={t('admin_users', { defaultValue: "Admin Users" })} 
           value={dashboardData?.totalAdmins || 0} 
           colorScheme={'warning'}
           icon={<FaUserShield size={20} />}
         />
 
         <StatCard 
-          title={t('admin.stats.items', { defaultValue: "Items" })} 
+          title={t('items', { defaultValue: "Items" })} 
           value={items?.length || 0} 
           colorScheme='orange'
           icon={<FaBox size={20} />}
         />
 
         <StatCard 
-          title={t('admin.stats.plans', { defaultValue: "Plans" })} 
+          title={t('plans', { defaultValue: "Plans" })} 
           value={plans?.length || 0} 
           colorScheme='error'
           icon={<FaClipboardList size={20} />}
         />
 
         <StatCard 
-          title={t('admin.stats.active_orders', { defaultValue: "Active Orders" })} 
+          title={t('active_orders', { defaultValue: "Active Orders" })} 
           value={dashboardData?.activeOrders || 0} 
           colorScheme='teal'
           icon={<FaShoppingCart size={20} />}
         />
 
         <StatCard 
-          title={t('admin.stats.todays_revenue', { defaultValue: "Today's Revenue" })} 
+          title={t('todays_revenue', { defaultValue: "Today's Revenue" })} 
           value={`$${dashboardData?.dailyRevenue?.toFixed(2) || 0}`} 
           colorScheme='green'
           icon={<FaDollarSign size={20} />}
         />
 
         <StatCard 
-          title={t('admin.stats.active_subscriptions', { defaultValue: "Active Subscriptions" })} 
+          title={t('active_subscriptions', { defaultValue: "Active Subscriptions" })} 
           value={dashboardData?.activeSubscriptions || 0} 
           colorScheme='purple'
           icon={<FaSync size={20} />}
         />
 
         <StatCard 
-          title={t('admin.stats.available_meals', { defaultValue: "Available Meals" })} 
+          title={t('available_meals', { defaultValue: "Available Meals" })} 
           value={dashboardData?.totalMeals || 0} 
           colorScheme='blue'
           icon={<FaUtensils size={20} />}
@@ -711,7 +711,7 @@ const Admin = () => {
 
       {/* Recent Activity Section */}
       <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
-        <SectionHeading title={t('admin.sections.recent_activity', { defaultValue: "Recent Activity" })} />
+        <SectionHeading title={t('sections.recent_activity', { defaultValue: "Recent Activity" })} />
         {activityLoading ? (
           <LoadingSpinner />
         ) : (
@@ -720,10 +720,10 @@ const Admin = () => {
               <Table variant="simple" size="sm">
                 <Thead>
                   <Tr>
-                    <Th>{t('admin.activity.action', { defaultValue: "Action" })}</Th>
-                    <Th>{t('admin.activity.user', { defaultValue: "User" })}</Th>
-                    <Th>{t('admin.activity.target', { defaultValue: "Target" })}</Th>
-                    <Th>{t('admin.activity.time', { defaultValue: "Time" })}</Th>
+                    <Th>{t('activity.action', { defaultValue: "Action" })}</Th>
+                    <Th>{t('activity.user', { defaultValue: "User" })}</Th>
+                    <Th>{t('activity.target', { defaultValue: "Target" })}</Th>
+                    <Th>{t('activity.time', { defaultValue: "Time" })}</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
@@ -731,7 +731,7 @@ const Admin = () => {
                     recentActivity.map((activity, index) => (
                       <Tr key={index}>
                         <Td>{activity.action}</Td>
-                        <Td>{activity.userName || activity.userEmail || t('admin.activity.system', { defaultValue: "System" })}</Td>
+                        <Td>{activity.userName || activity.userEmail || t('activity.system', { defaultValue: "System" })}</Td>
                         <Td>{activity.target}</Td>
                         <Td>{new Date(activity.timestamp).toLocaleString()}</Td>
                       </Tr>
@@ -739,7 +739,7 @@ const Admin = () => {
                   ) : (
                     <Tr>
                       <Td colSpan={4} textAlign="center">
-                        {t('admin.activity.no_recent', { defaultValue: "No recent activity" })}
+                        {t('activity.no_recent', { defaultValue: "No recent activity" })}
                       </Td>
                     </Tr>
                   )}
@@ -806,14 +806,14 @@ const Admin = () => {
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>
-            {t('admin.modals.user_actions.title', { defaultValue: "User Quick Actions" })}
+            {t('modals.user_actions.title', { defaultValue: "User Quick Actions" })}
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {adminAction === 'setAdmin' && (
               <Box>
                 <Heading size="sm" mb={4}>
-                  {t('admin.modals.set_admin_status', { 
+                  {t('modals.set_admin_status', { 
                     email: selectedUser?.email,
                     defaultValue: `Set Admin Status for ${selectedUser?.email}`
                   })}
@@ -823,7 +823,7 @@ const Admin = () => {
                   onClick={() => handleUserAction('setAdmin')}
                   isLoading={setAdminStatusMutation.isPending}
                 >
-                  {t('admin.actions.confirm_make_admin', { defaultValue: "Confirm Make Admin" })}
+                  {t('actions.confirm_make_admin', { defaultValue: "Confirm Make Admin" })}
                 </Button>
               </Box>
             )}
@@ -831,7 +831,7 @@ const Admin = () => {
             {adminAction === 'removeAdmin' && (
               <Box>
                 <Heading size="sm" mb={4}>
-                  {t('admin.modals.remove_admin_status', { 
+                  {t('modals.remove_admin_status', { 
                     email: selectedUser?.email,
                     defaultValue: `Remove Admin Status from ${selectedUser?.email}`
                   })}
@@ -841,7 +841,7 @@ const Admin = () => {
                   onClick={() => handleUserAction('removeAdmin')}
                   isLoading={setAdminStatusMutation.isPending}
                 >
-                  {t('admin.actions.confirm_remove_admin', { defaultValue: "Confirm Remove Admin" })}
+                  {t('actions.confirm_remove_admin', { defaultValue: "Confirm Remove Admin" })}
                 </Button>
               </Box>
             )}
@@ -849,15 +849,15 @@ const Admin = () => {
             {adminAction === 'updateStatus' && (
               <FormControl>
                 <FormLabel>
-                  {t('admin.fields.account_status', { defaultValue: "Account Status" })}
+                  {t('fields.account_status', { defaultValue: "Account Status" })}
                 </FormLabel>
                 <Select 
                   value={accountStatus} 
                   onChange={(e) => setAccountStatus(e.target.value)}
                 >
-                  <option value="active">{t('admin.status.active', { defaultValue: "Active" })}</option>
-                  <option value="suspended">{t('admin.status.suspended', { defaultValue: "Suspended" })}</option>
-                  <option value="deleted">{t('admin.status.deleted', { defaultValue: "Deleted" })}</option>
+                  <option value="active">{t('status.active', { defaultValue: "Active" })}</option>
+                  <option value="suspended">{t('status.suspended', { defaultValue: "Suspended" })}</option>
+                  <option value="deleted">{t('status.deleted', { defaultValue: "Deleted" })}</option>
                 </Select>
               </FormControl>
             )}
@@ -865,20 +865,20 @@ const Admin = () => {
             {adminAction === 'updateLoyalty' && (
               <FormControl>
                 <FormLabel>
-                  {t('admin.fields.loyalty_points', { defaultValue: "Loyalty Points" })}
+                  {t('fields.loyalty_points', { defaultValue: "Loyalty Points" })}
                 </FormLabel>
                 <Input 
                   type="number" 
                   value={loyaltyPoints} 
                   onChange={(e) => setLoyaltyPoints(e.target.value)}
-                  placeholder={t('admin.placeholders.enter_points', { defaultValue: "Enter points" })}
+                  placeholder={t('placeholders.enter_points', { defaultValue: "Enter points" })}
                 />
               </FormControl>
             )}
           </ModalBody>
           <ModalFooter>
             <Button variant="ghost" mr={3} onClick={userActionModal.onClose}>
-              {t('admin.actions.cancel', { defaultValue: "Cancel" })}
+              {t('actions.cancel', { defaultValue: "Cancel" })}
             </Button>
             <Button 
               colorScheme="blue" 
@@ -894,7 +894,7 @@ const Admin = () => {
               }
             >
             
-              {t('admin.actions.apply_action', { defaultValue: "Apply Action" })}
+              {t('actions.apply_action', { defaultValue: "Apply Action" })}
             </Button>
           </ModalFooter>
         </ModalContent>

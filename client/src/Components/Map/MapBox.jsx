@@ -35,7 +35,7 @@ const markerIconSvg = `
   </svg>
 `
 
-const MapBox = ({ onAddressSubmit, predefinedLocations, onSelectLocation }) => {
+const MapBox = ({ onAddressSubmit, predefinedLocations, onSelectLocation, disabledMessage }) => {
   const mapRef = useRef()
   const popupRef = useRef()
   const mapInstanceRef = useRef()
@@ -304,7 +304,15 @@ const MapBox = ({ onAddressSubmit, predefinedLocations, onSelectLocation }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+     if (disabledMessage) {
+      toast({
+        title: 'Feature Disabled',
+        description: disabledMessage,
+        status: 'warning',
+        duration: 3000,
+      });
+      return;
+    }
     if (!addressDetails.coordinates) {
       toast({
         title: 'Please select a location on the map',
@@ -371,7 +379,7 @@ const MapBox = ({ onAddressSubmit, predefinedLocations, onSelectLocation }) => {
     <Box>
       <VStack spacing={4} align="stretch">
         {/* Address Search Input */}
-        {onAddressSubmit && (
+        {!disabledMessage && onAddressSubmit && (
           <form onSubmit={handleSearch}>
             <FormControl>
               <FormLabel>Search for an address</FormLabel>
@@ -401,14 +409,14 @@ const MapBox = ({ onAddressSubmit, predefinedLocations, onSelectLocation }) => {
           <div ref={mapRef} style={{ width: '100%', height: '400px', marginBottom: '16px' }} />
           <div ref={popupRef} className="ol-popup" style={popupStyle} />
           
-          {onAddressSubmit && (
+          {!disabledMessage && onAddressSubmit && (
             <div style={{ marginBottom: '16px', fontSize: '14px', color: '#666' }}>
               Click on the map to select a location for the new address
             </div>
           )}
         </Box>
 
-        {onAddressSubmit && (
+        {!disabledMessage && onAddressSubmit && (
           <form onSubmit={handleSubmit}>
             <VStack spacing={4} align="stretch">
               <FormControl isRequired>
@@ -466,6 +474,7 @@ const MapBox = ({ onAddressSubmit, predefinedLocations, onSelectLocation }) => {
             </VStack>
           </form>
         )}
+        
       </VStack>
     </Box>
   )

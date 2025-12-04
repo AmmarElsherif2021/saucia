@@ -19,8 +19,8 @@ export const useEntityConfigs = () => {
   // Entity configurations with unified operations support
   const ENTITY_CONFIGS = {
     items: {
-      title: t('admin.Items'),
-      singular: t('admin.Item'),
+      title: t('Items'),
+      singular: t('Item'),
       FormComponent: ItemForm,
       searchFields: ['name', 'name_arabic', 'category', 'category_arabic', 'description'],
       initialData: {
@@ -42,31 +42,31 @@ export const useEntityConfigs = () => {
         allergy_ids: []
       },
       columns: [
-        { key: 'name', label: t('admin.Name'), width: '15%' },
-        { key: 'name_arabic', label: t('admin.Name (Arabic)'), width: '15%' },
-        { key: 'category', label: t('admin.Category'), width: '10%' },
-        { key: 'category_arabic', label: t('admin.Category (Arabic)'), width: '10%' },
-        { key: 'price', label: t('admin.Price'), width: '8%', format: value => `$${parseFloat(value).toFixed(2)}` },
-        { key: 'max_free_per_meal', label: t('admin.Free Count'), width: '8%' },
+        { key: 'name', label: t('Name'), width: '15%' },
+        { key: 'name_arabic', label: t('Name (Arabic)'), width: '15%' },
+        { key: 'category', label: t('Category'), width: '10%' },
+        { key: 'category_arabic', label: t('Category (Arabic)'), width: '10%' },
+        { key: 'price', label: t('Price'), width: '8%', format: value => `$${parseFloat(value).toFixed(2)}` },
+        { key: 'max_free_per_meal', label: t('Free Count'), width: '8%' },
         {
           key: 'is_available',
-          label: t('admin.Available'),
+          label: t('Available'),
           width: '8%',
           render: value => (
             <Badge colorScheme={value ? 'green' : 'red'}>
-              {value ? t('admin.Yes') : t('admin.No')}
+              {value ? t('Yes') : t('No')}
             </Badge>
           )
         },
           {
           key: 'item_allergies', // Change from 'allergies' to 'item_allergies'
-          label: t('admin.Allergies'),
+          label: t('Allergies'),
           width: '15%',
           render: value => value?.length > 0 
             ? value.map(ia => ia.allergies.name).join(', ') 
-            : t('admin.None')
+            : t('None')
         },
-        { key: 'image_url', label: t('admin.Image'), width: '11%', truncate: true },
+        { key: 'image_url', label: t('Image'), width: '11%', truncate: true },
       ],
       
       exportName: 'items.json',
@@ -77,8 +77,8 @@ export const useEntityConfigs = () => {
     },
 
     meals: {
-      title: t('admin.Meals'),
-      singular: t('admin.Meal'),
+      title: t('Meals'),
+      singular: t('Meal'),
       FormComponent: MealForm,
       searchFields: ['name', 'name_arabic', 'section', 'section_arabic'],
       initialData: {
@@ -107,45 +107,45 @@ export const useEntityConfigs = () => {
         item_ids: []
       },
       columns: [
-        { key: 'name', label: t('admin.Name') },
-        { key: 'name_arabic', label: t('admin.Name (Arabic)') },
-        { key: 'section', label: t('admin.Section'), render: (value) => value || t('admin.N/A') },
-        { key: 'section_arabic', label: t('admin.Section (Arabic)'), render: (value) => value || t('admin.N/A') },
-        { key: 'base_price', label: t('admin.Price'), render: value => `$${parseFloat(value || 0).toFixed(2)}` },
-        { key: 'calories', label: t('admin.Calories'), render: (value) => value || 0 },
-        { key: 'protein_g', label: t('admin.Protein (g)'), render: (value) => value || 0 },
-        { key: 'carbs_g', label: t('admin.Carbs (g)'), render: (value) => value || 0 },
-        { key: 'weight', label: t('admin.weight (g)'), render: (value) => value || 0 },
-        { key: 'ingredients', label: t('admin.Ingredients'), truncate: true },
-        { key: 'description', label: t('admin.description'), truncate: true },
-        { key: 'description_arabic', label: t('admin.description_arabic'), truncate: true },
+        { key: 'name', label: t('Name') },
+        { key: 'name_arabic', label: t('Name (Arabic)') },
+        { key: 'section', label: t('Section'), render: (value) => value || t('N/A') },
+        { key: 'section_arabic', label: t('Section (Arabic)'), render: (value) => value || t('N/A') },
+        { key: 'base_price', label: t('Price'), render: value => `$${parseFloat(value || 0).toFixed(2)}` },
+        { key: 'calories', label: t('Calories'), render: (value) => value || 0 },
+        { key: 'protein_g', label: t('Protein (g)'), render: (value) => value || 0 },
+        { key: 'carbs_g', label: t('Carbs (g)'), render: (value) => value || 0 },
+        { key: 'weight', label: t('weight (g)'), render: (value) => value || 0 },
+        { key: 'ingredients', label: t('Ingredients'), truncate: true },
+        { key: 'description', label: t('description'), truncate: true },
+        { key: 'description_arabic', label: t('description_arabic'), truncate: true },
         {
           key: 'is_featured',
-          label: t('admin.featured'),
+          label: t('featured'),
           render: value => (
             <Badge colorScheme={value ? 'green' : 'red'}>
-              {value ? t('admin.Yes') : t('admin.No')}
+              {value ? t('Yes') : t('No')}
             </Badge>
           )
         },
         {
           key: 'is_available',
-          label: t('admin.Available'),
+          label: t('Available'),
           render: value => (
             <Badge colorScheme={value ? 'green' : 'red'}>
-              {value ? t('admin.Yes') : t('admin.No')}
+              {value ? t('Yes') : t('No')}
             </Badge>
           )
         },
        {
         key: 'allergies', // Use 'allergies' from transformed data
-        label: t('admin.Allergies'),
+        label: t('Allergies'),
         width: '15%',
         render: (value) => value?.length > 0 
           ? value.map(a => a.name).join(', ') 
-          : t('admin.None')
+          : t('None')
       },
-        { key: 'image_url', label: t('admin.Image'), truncate: true },
+        { key: 'image_url', label: t('Image'), truncate: true },
       ],
       
       exportName: 'meals.json',
@@ -156,8 +156,8 @@ export const useEntityConfigs = () => {
     },
 
     plans: {
-      title: t('admin.Plans'),
-      singular: t('admin.Plan'),
+      title: t('Plans'),
+      singular: t('Plan'),
       FormComponent: PlanForm,
       searchFields: ['title', 'title_arabic', 'description'],
       initialData: {
@@ -178,28 +178,28 @@ export const useEntityConfigs = () => {
         is_active: true
       },
       columns: [
-        { key: 'title', label: t('admin.Title (EN)'), render: (value) => value || t('admin.N/A') },
-        { key: 'title_arabic', label: t('admin.Title (AR)'), render: (value) => value || t('admin.N/A') },
+        { key: 'title', label: t('Title (EN)'), render: (value) => value || t('N/A') },
+        { key: 'title_arabic', label: t('Title (AR)'), render: (value) => value || t('N/A') },
         {
           key: 'short_term_meals',
-          label: t('admin.Short Term Meals'),
+          label: t('Short Term Meals'),
           render: (value) => value ?? 0
         },
         {
           key: 'medium_term_meals',
-          label: t('admin.Medium Term Meals'),
+          label: t('Medium Term Meals'),
           render: (value) => value ?? 0
         },
-        { key: 'carb', label: t('admin.Carbs (g)'), render: (value) => value || 0 },
-        { key: 'protein', label: t('admin.Protein (g)'), render: (value) => value || 0 },
-        { key: 'kcal', label: t('admin.Calories (kcal)'), render: (value) => value || 0 },
-        { key: 'price_per_meal', label: t('admin.Price/Meal'), render: (value) => `$${parseFloat(value).toFixed(2)}` },
+        { key: 'carb', label: t('Carbs (g)'), render: (value) => value || 0 },
+        { key: 'protein', label: t('Protein (g)'), render: (value) => value || 0 },
+        { key: 'kcal', label: t('Calories (kcal)'), render: (value) => value || 0 },
+        { key: 'price_per_meal', label: t('Price/Meal'), render: (value) => `$${parseFloat(value).toFixed(2)}` },
         {
           key: 'is_active',
-          label: t('admin.Status'),
+          label: t('Status'),
           render: (value) => (
             <Badge colorScheme={value ? 'green' : 'red'}>
-              {value ? t('admin.Active') : t('admin.Inactive')}
+              {value ? t('Active') : t('Inactive')}
             </Badge>
           )
         },
@@ -213,8 +213,8 @@ export const useEntityConfigs = () => {
     },
 
     users: {
-  title: t('admin.Users'),
-  singular: t('admin.User'),
+  title: t('Users'),
+  singular: t('User'),
   FormComponent: UserForm,
   searchFields: ['email', 'display_name', 'phone_number'], // Fixed field names
   initialData: {
@@ -225,21 +225,21 @@ export const useEntityConfigs = () => {
     loyalty_points: 0
   },
   columns: [
-    { key: 'email', label: t('admin.Email') },
-    { key: 'display_name', label: t('admin.Name') },
-    { key: 'phone_number', label: t('admin.Phone') },
+    { key: 'email', label: t('Email') },
+    { key: 'display_name', label: t('Name') },
+    { key: 'phone_number', label: t('Phone') },
     {
       key: 'is_admin',
-      label: t('admin.Role'),
+      label: t('Role'),
       render: (value) => (
         <Badge colorScheme={value ? 'purple' : 'gray'}>
-          {value ? t('admin.Admin') : t('admin.User')}
+          {value ? t('Admin') : t('User')}
         </Badge>
       )
     },
     {
       key: 'account_status',
-      label: t('admin.Status'),
+      label: t('Status'),
       render: (value) => (
         <Badge colorScheme={value === 'active' ? 'green' : 'red'}>
           {t(value)}
@@ -248,13 +248,13 @@ export const useEntityConfigs = () => {
     },
     {
       key: 'loyalty_points',
-      label: t('admin.Loyalty Points'),
+      label: t('Loyalty Points'),
       render: (value) => value || 0
     },
     {
       key: 'created_at',
-      label: t('admin.Created'),
-      render: (value) => value ? new Date(value).toLocaleDateString() : t('admin.N/A')
+      label: t('Created'),
+      render: (value) => value ? new Date(value).toLocaleDateString() : t('N/A')
     },
   ],
       exportName: 'users.json',
@@ -265,8 +265,8 @@ export const useEntityConfigs = () => {
     },
 
     allergies: {
-      title: t('admin.Allergies'),
-      singular: t('admin.Allergy'),
+      title: t('Allergies'),
+      singular: t('Allergy'),
       FormComponent: AllergyForm,
       searchFields: ['name', 'name_arabic', 'description'],
       initialData: {
@@ -275,13 +275,13 @@ export const useEntityConfigs = () => {
         severity_level: 1
       },
       columns: [
-        { key: 'name', label: t('admin.Name (EN)'), width: '30%' },
-        { key: 'name_arabic', label: t('admin.Name (AR)'), width: '30%' },
+        { key: 'name', label: t('Name (EN)'), width: '30%' },
+        { key: 'name_arabic', label: t('Name (AR)'), width: '30%' },
         {
           key: 'severity_level',
-          label: t('admin.Severity'),
+          label: t('Severity'),
           render: value => {
-            const levels = { 1: t('admin.Low'), 2: t('admin.Medium'), 3: t('admin.High') };
+            const levels = { 1: t('Low'), 2: t('Medium'), 3: t('High') };
             return <Badge colorScheme={value === 3 ? 'red' : value === 2 ? 'yellow' : 'green'}>
               {levels[value] || value}
             </Badge>;
@@ -296,8 +296,8 @@ export const useEntityConfigs = () => {
     },
 
     dietaryPreferences: {
-      title: t('admin.Dietary Preferences'),
-      singular: t('admin.Dietary Preference'),
+      title: t('Dietary Preferences'),
+      singular: t('Dietary Preference'),
       FormComponent: DietaryPreferenceForm,
       searchFields: ['name', 'name_arabic', 'category'],
       initialData: {
@@ -306,9 +306,9 @@ export const useEntityConfigs = () => {
         description: ''
       },
       columns: [
-        { key: 'name', label: t('admin.Name (EN)'), width: '35%' },
-        { key: 'name_arabic', label: t('admin.Name (AR)'), width: '35%' },
-        { key: 'description', label: t('admin.Description'), width: '30%' }
+        { key: 'name', label: t('Name (EN)'), width: '35%' },
+        { key: 'name_arabic', label: t('Name (AR)'), width: '35%' },
+        { key: 'description', label: t('Description'), width: '30%' }
       ],
    
       exportName: 'dietary-preferences.json',
@@ -318,7 +318,7 @@ export const useEntityConfigs = () => {
     },
 
     dashboard: {
-      title: t('admin.Dashboard'),
+      title: t('Dashboard'),
       operations: {
         useGetStats: 'useGetDashboardStats',
         useGetRecentActivity: 'useGetRecentActivity'
@@ -348,7 +348,7 @@ export const useEntityConfigs = () => {
   // Validation helper for entity data
   const validateEntityData = (entityType, data) => {
     const config = ENTITY_CONFIGS[entityType];
-    if (!config) return { isValid: false, errors: [t('admin.Invalid entity type')] };
+    if (!config) return { isValid: false, errors: [t('Invalid entity type')] };
 
     const errors = [];
     const initialData = config.initialData;
@@ -356,7 +356,7 @@ export const useEntityConfigs = () => {
     Object.keys(initialData).forEach(key => {
       if (initialData[key] === '' && (!data[key] || data[key] === '')) {
         if (typeof initialData[key] === 'string' && ['name', 'email', 'title'].includes(key)) {
-          errors.push(t('admin.{{key}} is required', { key: t(key) }));
+          errors.push(t('{{key}} is required', { key: t(key) }));
         }
       }
     });

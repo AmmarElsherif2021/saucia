@@ -4,6 +4,7 @@ import { useAuthContext } from '../Contexts/AuthContext';
 import { userAPI } from '../API/userAPI';
 import { itemsAPI } from '../API/itemAPI';
 import { ordersAPI } from '../API/orderAPI';
+import { adminSubscriptionAPI } from '../API/adminSubscriptionAPI';
 
 export const useUserSubscriptions = () => {
     const { user } = useAuthContext();
@@ -25,7 +26,7 @@ export const useUserSubscriptions = () => {
             console.log('✅ Active subscription found:', activeSubscription.id);
             
             try {
-                const summary = await userAPI.getSubscriptionSummary(activeSubscription.id);
+                const summary = await adminSubscriptionAPI.getSubscriptionSummary(activeSubscription.id);
                 console.log('✅ Subscription summary retrieved:', {
                     hasSubscription: !!summary?.subscription,
                     hasMeals: !!summary?.subscription?.meals,

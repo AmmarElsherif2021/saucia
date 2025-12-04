@@ -228,13 +228,13 @@ const CompleteProfile = ({ useMockData = false }) => {
   // Translation helper for error messages
   const getTranslatedError = (errorKey) => {
     const errorMessages = {
-      'firstNameRequired': t('profile.firstNameRequired', 'First name is required'),
-      'firstNameMinLength': t('profile.firstNameMinLength', 'First name must be at least 2 characters'),
-      'lastNameRequired': t('profile.lastNameRequired', 'Last name is required'),
-      'lastNameMinLength': t('profile.lastNameMinLength', 'Last name must be at least 2 characters'),
-      'phoneRequired': t('profile.phoneRequired', 'Phone number is required'),
-      'phoneInvalid': t('profile.phoneInvalid', 'Please enter a valid phone number'),
-      'ageInvalid': t('profile.ageInvalid', 'Please enter a valid age (1-150)')
+      'firstNameRequired': t('firstNameRequired', 'First name is required'),
+      'firstNameMinLength': t('firstNameMinLength', 'First name must be at least 2 characters'),
+      'lastNameRequired': t('lastNameRequired', 'Last name is required'),
+      'lastNameMinLength': t('lastNameMinLength', 'Last name must be at least 2 characters'),
+      'phoneRequired': t('phoneRequired', 'Phone number is required'),
+      'phoneInvalid': t('phoneInvalid', 'Please enter a valid phone number'),
+      'ageInvalid': t('ageInvalid', 'Please enter a valid age (1-150)')
     };
     return errorMessages[errorKey] || errorKey;
   };
@@ -341,10 +341,10 @@ const handleSubmit = async (e) => {
       setIsCompleted(true);
       
       toast({
-        title: t('profile.profileCompleted', 'Profile Completed!'),
+        title: t('profileCompleted', 'Profile Completed!'),
         description: useMockData 
-          ? t('profile.mockProfileUpdated', 'Mock profile has been successfully updated.') 
-          : t('profile.profileUpdated', 'Your profile has been successfully updated.'),
+          ? t('mockProfileUpdated', 'Mock profile has been successfully updated.') 
+          : t('profileUpdated', 'Your profile has been successfully updated.'),
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -392,13 +392,13 @@ const handleSubmit = async (e) => {
   } catch (error) {
     console.error('Profile completion error:', error);
     const errorMessage = useMockData 
-      ? t('profile.mockProfileFailed', 'Mock profile completion failed.') 
-      : error.message || t('profile.profileCompletionFailed', 'Profile completion failed. Please try again.');
+      ? t('mockProfileFailed', 'Mock profile completion failed.') 
+      : error.message || t('profileCompletionFailed', 'Profile completion failed. Please try again.');
     
     setError(errorMessage);
     
     toast({
-      title: t('profile.error', 'Error'),
+      title: t('error', 'Error'),
       description: errorMessage,
       status: "error",
       duration: 5000,
@@ -421,10 +421,10 @@ const handleSubmit = async (e) => {
       />
       <VStack spacing={2}>
         <Heading size="lg" color="green.600">
-          {t('profile.profileCompleted', 'Profile Completed!')}
+          {t('profileCompleted', 'Profile Completed!')}
         </Heading>
         <Text color="gray.600" maxWidth="md">
-          {t('profile.profileCompletedDescription', 'Your profile has been successfully set up. Redirecting you now...')}
+          {t('profileCompletedDescription', 'Your profile has been successfully set up. Redirecting you now...')}
         </Text>
       </VStack>
       <Progress 
@@ -462,7 +462,7 @@ const handleSubmit = async (e) => {
             </Text>
             {fieldConfig.required && (
               <Badge colorScheme="red" size="sm" borderRadius="full">
-                {t('profile.required', 'Required')}
+                {t('required', 'Required')}
               </Badge>
             )}
           </HStack>
@@ -551,7 +551,7 @@ const handleSubmit = async (e) => {
         <VStack spacing={4}>
           <Spinner size="xl" color="blue.500" thickness="4px" />
           <Text color="gray.600" fontSize={{ base: "md", md: "lg" }}>
-            {t('profile.loadingProfile', 'Loading your profile...')}
+            {t('loadingProfile', 'Loading your profile...')}
           </Text>
         </VStack>
       </Box>
@@ -606,12 +606,12 @@ const handleSubmit = async (e) => {
                   {isCompleted ? (
                     <HStack justify="center" spacing={2}>
                       <Icon as={FiCheckCircle} />
-                      <Text>{t('profile.profileCompleted', 'Profile Completed!')}</Text>
+                      <Text>{t('profileCompleted', 'Profile Completed!')}</Text>
                     </HStack>
                   ) : (
                     useMockData 
-                      ? t('profile.completeProfileMock', 'Complete Your Profile (Mock Mode)') 
-                      : t('profile.profileCompletion', 'Complete Your Profile')
+                      ? t('completeProfileMock', 'Complete Your Profile (Mock Mode)') 
+                      : t('profileCompletion', 'Complete Your Profile')
                   )}
                 </Heading>
                 <Text 
@@ -620,8 +620,8 @@ const handleSubmit = async (e) => {
                   maxWidth="md"
                 >
                   {isCompleted 
-                    ? t('profile.redirectingDescription', 'Taking you to your next step...')
-                    : t('profile.profileCompletionDescription', 'Just a few more details to personalize your experience and get started')
+                    ? t('redirectingDescription', 'Taking you to your next step...')
+                    : t('profileCompletionDescription', 'Just a few more details to personalize your experience and get started')
                   }
                 </Text>
               </VStack>
@@ -637,7 +637,7 @@ const handleSubmit = async (e) => {
                     <Box width="100%">
                       <Flex justify="space-between" align="center" mb={3}>
                         <Text fontSize="sm" color="gray.600" fontWeight="medium">
-                          {t('profile.profileCompletion', 'Profile Completion')}
+                          {t('profileCompletion', 'Profile Completion')}
                         </Text>
                         <HStack spacing={2}>
                           {progress === 100 && (
@@ -665,7 +665,7 @@ const handleSubmit = async (e) => {
                     
                     {progress < 100 && (
                       <Text fontSize="xs" color="gray.500" textAlign="center">
-                        {t('profile.completeRequiredFields', 'Please complete all required fields to continue')}
+                        {t('completeRequiredFields', 'Please complete all required fields to continue')}
                       </Text>
                     )}
                   </VStack>
@@ -693,7 +693,7 @@ const handleSubmit = async (e) => {
                           mb={4}
                           textAlign={{ base: "center", md: "left" }}
                         >
-                          {t('profile.personalInformation', 'Personal Information')}
+                          {t('personalInformation', 'Personal Information')}
                         </Text>
                         
                         <Stack 
@@ -733,9 +733,9 @@ const handleSubmit = async (e) => {
                           mb={4}
                           textAlign={{ base: "center", md: "left" }}
                         >
-                          {t('profile.additionalDetails', 'Additional Details')}
+                          {t('additionalDetails', 'Additional Details')}
                           <Text fontSize="sm" color="gray.500" fontWeight="normal" mt={1}>
-                            {t('profile.optionalFieldsDescription', 'These fields are optional but help us personalize your experience')}
+                            {t('optionalFieldsDescription', 'These fields are optional but help us personalize your experience')}
                           </Text>
                         </Text>
 
@@ -772,7 +772,7 @@ const handleSubmit = async (e) => {
                           width="100%"
                           height={{ base: "50px", md: "56px" }}
                           isLoading={loading}
-                          loadingText={t('profile.savingProfile', 'Saving Profile...')}
+                          loadingText={t('savingProfile', 'Saving Profile...')}
                           isDisabled={progress < 100}
                           opacity={progress < 100 ? 0.7 : 1}
                           fontSize={{ base: "md", md: "lg" }}
@@ -789,8 +789,8 @@ const handleSubmit = async (e) => {
                           transition="all 0.2s ease"
                         >
                           {progress === 100 
-                            ? t('profile.completeProfile', 'Complete Profile') 
-                            : t('profile.fillRequiredFields', 'Please fill required fields')
+                            ? t('completeProfile', 'Complete Profile') 
+                            : t('fillRequiredFields', 'Please fill required fields')
                           }
                         </Button>
 
@@ -800,7 +800,7 @@ const handleSubmit = async (e) => {
                           textAlign="center"
                           mt={4}
                         >
-                          {t('profile.updateLater', 'You can update this information later in your profile settings')}
+                          {t('updateLater', 'You can update this information later in your profile settings')}
                         </Text>
                       </Box>
                     </VStack>

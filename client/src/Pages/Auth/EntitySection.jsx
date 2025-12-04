@@ -282,8 +282,8 @@ export const EntitySection = ({
             <FormModal
               isOpen={modals.add.isOpen}
               onClose={modals.add.onClose}
-              title={t('admin.modals.add_entity', {
-                entity: t(config.singularKey || `admin.entities.${entityType}.singular`, { defaultValue: config.singular }),
+              title={t('modals.add_entity', {
+                entity: t(config.singularKey || `admin.${entityType}.singular`, { defaultValue: config.singular }),
                 defaultValue: `Add New ${config.singular}`
               })}
               onSubmit={handleAddWithDebug}
@@ -295,8 +295,8 @@ export const EntitySection = ({
             <FormModal
               isOpen={modals.edit.isOpen}
               onClose={modals.edit.onClose}
-              title={t('admin.modals.edit_entity', {
-                entity: t(config.singularKey || `admin.entities.${entityType}.singular`, { defaultValue: config.singular }),
+              title={t('modals.edit_entity', {
+                entity: t(config.singularKey || `admin.${entityType}.singular`, { defaultValue: config.singular }),
                 defaultValue: `Edit ${config.singular}`
               })}
               onSubmit={(data) => handleEditWithDebug(selectedEntity?.id, data)}
@@ -309,8 +309,8 @@ export const EntitySection = ({
             <ConfirmationModal
               isOpen={modals.delete.isOpen}
               onClose={modals.delete.onClose}
-              title={t('admin.modals.delete_entity', {
-                entity: t(config.singularKey || `admin.entities.${entityType}.singular`, { defaultValue: config.singular }),
+              title={t('modals.delete_entity', {
+                entity: t(config.singularKey || `admin.${entityType}.singular`, { defaultValue: config.singular }),
                 defaultValue: `Delete ${config.singular}`
               })}
               onConfirm={() => handleDeleteWithDebug(selectedEntity?.id)}

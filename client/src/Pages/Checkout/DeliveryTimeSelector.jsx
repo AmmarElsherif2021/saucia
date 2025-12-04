@@ -38,10 +38,10 @@ const DeliveryTimeSelector = () => {
   return (
     <Box mb={2} w={'100%'} px={1}>
       <Heading size="md" mb={3}>
-        {t('premium.selectDeliveryTime')}
+        {t('selectDeliveryTime')}
       </Heading>
       <Text mb={4}>
-        {t('premium.deliveryTimeInstructions')}
+        {t('deliveryTimeInstructions')}
       </Text>
 
       <SimpleGrid columns={{ base: 2, sm: 3, md: 3 }} spacing={1}>

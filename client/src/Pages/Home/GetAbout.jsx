@@ -102,7 +102,7 @@ const SupportForm = () => {
       <InputGroup size="md">
         <Input
           pr="4.5rem"
-          placeholder={t('about.supportPlaceholder')}
+          placeholder={t('supportPlaceholder')}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           variant={"filled"}
@@ -114,7 +114,7 @@ const SupportForm = () => {
             colorScheme="brand"
             type="submit"
           >
-            {t('about.send')}
+            {t('send')}
           </Button>
         </InputRightElement>
       </InputGroup>
@@ -136,8 +136,8 @@ export const AboutPage = ({ contactUs }) => {
   const aboutSections = [
     {
       id: 1,
-      title: t('about.mealExperienceTitle'),
-      description: t('about.mealExperienceDescription'),
+      title: t('mealExperienceTitle'),
+      description: t('mealExperienceDescription'),
       image: chefImage,
       inputComponent: (
         <Link to="/menu">
@@ -145,7 +145,7 @@ export const AboutPage = ({ contactUs }) => {
             colorScheme="brand" 
             size="sm"
           >
-            {t('about.browseMenu')}
+            {t('browseMenu')}
           </Button>
         </Link>
       ),
@@ -153,8 +153,8 @@ export const AboutPage = ({ contactUs }) => {
     },
     {
       id: 2,
-      title: t('about.customizationFlowTitle'),
-      description: t('about.customizationFlowDescription'),
+      title: t('customizationFlowTitle'),
+      description: t('customizationFlowDescription'),
       image: customImage,
       inputComponent: (
         <Link 
@@ -165,7 +165,7 @@ export const AboutPage = ({ contactUs }) => {
             colorScheme="teal" 
             size="sm"
           >
-            {t('about.createYourOwn')}
+            {t('createYourOwn')}
           </Button>
         </Link>
       ),
@@ -173,8 +173,8 @@ export const AboutPage = ({ contactUs }) => {
     },
     {
       id: 3,
-      title: t('about.signatureMealsTitle'),
-      description: t('about.signatureMealsDescription'),
+      title: t('signatureMealsTitle'),
+      description: t('signatureMealsDescription'),
       image: missionImage,
       inputComponent: (
         <Link 
@@ -185,7 +185,7 @@ export const AboutPage = ({ contactUs }) => {
             colorScheme="secondary" 
             size="sm"
           >
-            {t('about.viewSignatureMeals')}
+            {t('viewSignatureMeals')}
           </Button>
         </Link>
       ),
@@ -193,8 +193,8 @@ export const AboutPage = ({ contactUs }) => {
     },
     {
       id: 4,
-      title: t('about.premiumPlansTitle'),
-      description: t('about.premiumPlansDescription'),
+      title: t('premiumPlansTitle'),
+      description: t('premiumPlansDescription'),
       image: premiumImage,
       inputComponent: (
         <Link to="/premium">
@@ -202,7 +202,7 @@ export const AboutPage = ({ contactUs }) => {
             colorScheme="brand" 
             size="sm"
           >
-            {t('about.explorePlans')}
+            {t('explorePlans')}
           </Button>
         </Link>
       ),
@@ -210,8 +210,8 @@ export const AboutPage = ({ contactUs }) => {
     },
     {
       id: 5,
-      title: t('about.supportLineTitle'),
-      description: t('about.supportLineDescription'),
+      title: t('supportLineTitle'),
+      description: t('supportLineDescription'),
       image: supportImage,
       inputComponent: <SupportForm/>,
       cardBg: 'warning.200'
@@ -241,7 +241,7 @@ export const AboutPage = ({ contactUs }) => {
           textAlign="center"
           color={colorMode === 'dark' ? 'white' : 'brand.800'}
         >
-          {t('about.aboutUs')}
+          {t('aboutUs')}
         </Heading>
 
         <Text
@@ -252,7 +252,7 @@ export const AboutPage = ({ contactUs }) => {
           mx="auto"
           color={colorMode === 'dark' ? 'gray.300' : 'tertiary.600'}
         >
-          {t('about.intro')}
+          {t('intro')}
         </Text>
 
         <VStack spacing={8} mb={10}>

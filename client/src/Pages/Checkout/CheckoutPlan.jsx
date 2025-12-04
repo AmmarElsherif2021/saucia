@@ -262,8 +262,8 @@ const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
     <VStack spacing={4} align="stretch" maxW={{ base: "100%", md: "90%" }}>
       <InfoAlert
         status="info"
-        title={t('checkout.comingSoonTitle', { method: methodName }) || `${methodName} Coming Soon`}
-        message={t('checkout.comingSoonMessage') || 'This payment method will be available soon. Please use cash payment at the restaurant.'}
+        title={t('comingSoonTitle', { method: methodName }) || `${methodName} Coming Soon`}
+        message={t('comingSoonMessage') || 'This payment method will be available soon. Please use cash payment at the restaurant.'}
         colorMode={colorMode}
       />
       <Button 
@@ -274,7 +274,7 @@ const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
         variant="outline"
         isDisabled
       >
-        {t('checkout.unavailable', { method: methodName }) || `${methodName} Unavailable`}
+        {t('unavailable', { method: methodName }) || `${methodName} Unavailable`}
       </Button>
     </VStack>
   );
@@ -284,8 +284,8 @@ const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
       <VStack spacing={4} align="stretch" maxW={{ base: "100%", md: "90%" }}>
         <InfoAlert
           status="success"
-          title={t('checkout.cashPaymentTitle') || 'Cash Payment at Restaurant'}
-          message={t('checkout.cashPaymentMessage') || 'Your subscription will be activated when you pay in cash at the restaurant during pickup.'}
+          title={t('cashPaymentTitle') || 'Cash Payment at Restaurant'}
+          message={t('cashPaymentMessage') || 'Your subscription will be activated when you pay in cash at the restaurant during pickup.'}
           colorMode={colorMode}
         />
         
@@ -297,10 +297,10 @@ const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
           borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.200'}
         >
           <Text fontSize="sm" fontWeight="500" mb={2}>
-            {t('checkout.paymentInstructions') || 'Payment Instructions:'}
+            {t('paymentInstructions') || 'Payment Instructions:'}
           </Text>
           <Text fontSize="sm">
-            {t('checkout.cashInstructions') || '1. Complete your subscription order online\n2. Visit the selected restaurant location\n3. Pay in cash to activate your subscription\n4. Start enjoying your meals!'}
+            {t('cashInstructions') || '1. Complete your subscription order online\n2. Visit the selected restaurant location\n3. Pay in cash to activate your subscription\n4. Start enjoying your meals!'}
           </Text>
         </Box>
       </VStack>
@@ -322,7 +322,7 @@ const PaymentMethodInputs = ({ paymentMethod, t, colorMode }) => {
     <VStack spacing={4} align="stretch" maxW={{ base: "100%", md: "90%" }}>
       <InfoAlert
         status="info"
-        title={t('checkout.selectPaymentMethodFirst') || 'Please select a payment method to continue'}
+        title={t('selectPaymentMethodFirst') || 'Please select a payment method to continue'}
         colorMode={colorMode}
       />
     </VStack>
@@ -519,8 +519,8 @@ const CheckoutPlan = () => {
     
     if (!paymentMethod) {
       showToast(
-        t('checkout.paymentMethodRequired'),
-        t('checkout.pleaseSelectPaymentMethod'),
+        t('paymentMethodRequired'),
+        t('pleaseSelectPaymentMethod'),
         'warning'
       )
       return
@@ -529,8 +529,8 @@ const CheckoutPlan = () => {
     const { fullName, email, deliveryAddress } = billingInfo;
     if (!fullName || !email || !deliveryAddress) {
       showToast(
-        t('checkout.requiredFieldsMissing'),
-        t('checkout.pleaseFillAllRequiredFields'),
+        t('requiredFieldsMissing'),
+        t('pleaseFillAllRequiredFields'),
         'warning'
       )
       return
@@ -581,8 +581,8 @@ const CheckoutPlan = () => {
       const isCashPayment = paymentMethod === PAYMENT_METHODS.CASH
       
       showToast(
-        isCashPayment ? t('checkout.subscriptionPending') : t('checkout.subscriptionSuccessful'),
-        isCashPayment ? t('checkout.pendingPaymentMessage') : t('checkout.premiumPlanActive'),
+        isCashPayment ? t('subscriptionPending') : t('subscriptionSuccessful'),
+        isCashPayment ? t('pendingPaymentMessage') : t('premiumPlanActive'),
         isCashPayment ? 'info' : 'success',
         5000
       );
@@ -598,8 +598,8 @@ const CheckoutPlan = () => {
       setIsSubmitting(false);
 
       showToast(
-        t('checkout.subscriptionFailed'),
-        error.message || t('checkout.failedToUpdatePlanSubscription'),
+        t('subscriptionFailed'),
+        error.message || t('failedToUpdatePlanSubscription'),
         'error',
         5000
       );
@@ -695,7 +695,7 @@ const CheckoutPlan = () => {
             color={colorMode === 'dark' ? 'white' : 'brand.700'}
             fontWeight="600"
           >
-            {t('checkout.completeYourOrder') || 'Complete Your Order'}
+            {t('completeYourOrder') || 'Complete Your Order'}
           </Heading>
           <Text
             fontSize="md"
@@ -703,20 +703,20 @@ const CheckoutPlan = () => {
             textAlign="center"
             maxW="2xl"
           >
-            {t('checkout.reviewAndConfirm') || 'Review your subscription details and complete your order'}
+            {t('reviewAndConfirm') || 'Review your subscription details and complete your order'}
           </Text>
         </VStack>
 
         <SimpleGrid columns={gridColumns} spacing={6} gap={6}>
           {/* Billing Information Section */}
-          <Section title={t('checkout.billingInformation')} bgColor="teal" icon={saladIcon}>
+          <Section title={t('billingInformation')} bgColor="teal" icon={saladIcon}>
             <Stack spacing={4}>
               <FormControl isRequired>
                 <FormLabel fontSize="sm" fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'brand.700'}>
-                  {t('checkout.fullName')}
+                  {t('fullName')}
                 </FormLabel>
                 <Input
-                  placeholder={t('checkout.enterYourFullName')}
+                  placeholder={t('enterYourFullName')}
                   value={billingInfo.fullName}
                   onChange={(e) => handleBillingInfoChange('fullName', e.target.value)}
                   {...inputProps}
@@ -725,11 +725,11 @@ const CheckoutPlan = () => {
 
               <FormControl isRequired>
                 <FormLabel fontSize="sm" fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'brand.700'}>
-                  {t('checkout.emailAddress')}
+                  {t('emailAddress')}
                 </FormLabel>
                 <Input
                   type="email"
-                  placeholder={t('checkout.yourEmailAddress')}
+                  placeholder={t('yourEmailAddress')}
                   value={billingInfo.email}
                   onChange={(e) => handleBillingInfoChange('email', e.target.value)}
                   {...inputProps}
@@ -738,10 +738,10 @@ const CheckoutPlan = () => {
 
               <FormControl>
                 <FormLabel fontSize="sm" fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'brand.700'}>
-                  {t('checkout.phoneNumber')}
+                  {t('phoneNumber')}
                 </FormLabel>
                 <Input
-                  placeholder={t('checkout.yourPhoneNumber')}
+                  placeholder={t('yourPhoneNumber')}
                   value={billingInfo.phoneNumber}
                   onChange={(e) => handleBillingInfoChange('phoneNumber', e.target.value)}
                   {...inputProps}
@@ -750,13 +750,13 @@ const CheckoutPlan = () => {
 
               <FormControl isRequired>
                 <FormLabel fontSize="sm" fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'brand.700'}>
-                  {t('checkout.deliveryAddress')}
+                  {t('deliveryAddress')}
                 </FormLabel>
                 
                 <InfoAlert
                   status="info"
-                  title={t('checkout.deliveryRestrictionTitle') || 'Pickup Only'}
-                  message={t('checkout.deliveryRestrictionMessage') || 'Currently we only offer pickup from our restaurant locations. Delivery service will be available soon.'}
+                  title={t('deliveryRestrictionTitle') || 'Pickup Only'}
+                  message={t('deliveryRestrictionMessage') || 'Currently we only offer pickup from our restaurant locations. Delivery service will be available soon.'}
                   colorMode={colorMode}
                 />
 
@@ -765,7 +765,7 @@ const CheckoutPlan = () => {
                     <Skeleton height="40px" borderRadius="md" />
                   ) : (
                     <Select
-                      placeholder={t('checkout.selectRestaurantLocation') || "Select restaurant location"}
+                      placeholder={t('selectRestaurantLocation') || "Select restaurant location"}
                       value={billingInfo.deliveryAddress}
                       onChange={(e) => {
                         const selectedAddress = restaurantAddresses.find(addr => addr.display_name === e.target.value);
@@ -800,7 +800,7 @@ const CheckoutPlan = () => {
                     variant="outline"
                     leftIcon={<Image src={locationPin} alt="Location Pin" boxSize="16px" />}
                   >
-                    {t('checkout.viewOnMap') || 'View on Map'}
+                    {t('viewOnMap') || 'View on Map'}
                   </Button>
                 </Flex>
                 
@@ -822,21 +822,21 @@ const CheckoutPlan = () => {
                 borderColor={colorMode === 'dark' ? 'gray.500' : 'brand.200'}
               >
                 <Checkbox colorScheme="brand" fontSize="sm">
-                  {t('checkout.sendMePlanUpdatesAndNotifications')}
+                  {t('sendMePlanUpdatesAndNotifications')}
                 </Checkbox>
               </Box>
             </Stack>
           </Section>
 
           {/* Payment Details Section */}
-          <Section title={t('checkout.paymentDetails')} bgColor="secondary" icon={paymentIcon}>
+          <Section title={t('paymentDetails')} bgColor="secondary" icon={paymentIcon}>
             <VStack spacing={5} align="stretch">
               <FormControl>
                 <FormLabel fontSize="sm" fontWeight="500" color={colorMode === 'dark' ? 'gray.200' : 'gray.700'}>
-                  {t('checkout.paymentMethod')}
+                  {t('paymentMethod')}
                 </FormLabel>
                 <Select
-                  placeholder={t('checkout.selectPaymentMethod')}
+                  placeholder={t('selectPaymentMethod')}
                   focusBorderColor="secondary.500"
                   bg={colorMode === 'dark' ? 'gray.700' : 'white'}
                   borderWidth="2px"
@@ -852,24 +852,24 @@ const CheckoutPlan = () => {
                   }}
                 >
                   <option value={PAYMENT_METHODS.CASH}>
-                    {t('checkout.cashAtRestaurant') || 'Cash at Restaurant'}
+                    {t('cashAtRestaurant') || 'Cash at Restaurant'}
                   </option>
                   <option value={PAYMENT_METHODS.CREDIT_CARD} disabled>
-                    {t('checkout.creditCard') || 'Credit Card'} ({t('checkout.comingSoon') || 'Coming Soon'})
+                    {t('creditCard') || 'Credit Card'} ({t('comingSoon') || 'Coming Soon'})
                   </option>
                   <option value={PAYMENT_METHODS.PAYPAL} disabled>
-                    {t('checkout.paypal') || 'PayPal'} ({t('checkout.comingSoon') || 'Coming Soon'})
+                    {t('paypal') || 'PayPal'} ({t('comingSoon') || 'Coming Soon'})
                   </option>
                   <option value={PAYMENT_METHODS.APPLE_PAY} disabled>
-                    {t('checkout.applePay') || 'Apple Pay'} ({t('checkout.comingSoon') || 'Coming Soon'})
+                    {t('applePay') || 'Apple Pay'} ({t('comingSoon') || 'Coming Soon'})
                   </option>
                   <option value={PAYMENT_METHODS.GOOGLE_PAY} disabled>
-                    {t('checkout.googlePay') || 'Google Pay'} ({t('checkout.comingSoon') || 'Coming Soon'})
+                    {t('googlePay') || 'Google Pay'} ({t('comingSoon') || 'Coming Soon'})
                   </option>
                 </Select>
                 
                 <Text fontSize="xs" color="gray.500" mt={2}>
-                  {t('checkout.paymentMethodInfo') || 'Currently only cash payments at the restaurant are available. Online payments coming soon.'}
+                  {t('paymentMethodInfo') || 'Currently only cash payments at the restaurant are available. Online payments coming soon.'}
                 </Text>
               </FormControl>
 
@@ -878,7 +878,7 @@ const CheckoutPlan = () => {
           </Section>
 
           {/* Subscription Summary Section */}
-          <Section title={t('checkout.subscriptionSummary')} bgColor="brand" icon={orderIcon}>
+          <Section title={t('subscriptionSummary')} bgColor="brand" icon={orderIcon}>
             <SubscriptionSummary />
             <Button
               colorScheme="brand"
@@ -886,7 +886,7 @@ const CheckoutPlan = () => {
               width="full"
               onClick={handleOpenConfirmation}
               isLoading={isSubmitting}
-              loadingText={t('checkout.processing')}
+              loadingText={t('processing')}
               isDisabled={!userAddresses || !isSubscriptionValid}
               mt={5}
               borderRadius="md"
@@ -900,7 +900,7 @@ const CheckoutPlan = () => {
               }}
               transition="all 0.2s"
             >
-              {t('checkout.completeSubscription')}
+              {t('completeSubscription')}
             </Button>
           </Section>
         </SimpleGrid>

@@ -199,7 +199,7 @@ export const ProfileModal = ({ isOpen, onClose }) => {
                       mt={2}
                       borderRadius="md"
                     >
-                      {t('profile.signOut')}
+                      {t('signOut')}
                     </Button>
                   </VStack>
                 </motion.div>
@@ -208,13 +208,13 @@ export const ProfileModal = ({ isOpen, onClose }) => {
               <VStack spacing={4} p={2}>
                 <motion.div variants={itemVariants}>
                   <Text fontSize="lg" fontWeight="bold" textAlign="center">
-                    {t('profile.guestTitle')}
+                    {t('guestTitle')}
                   </Text>
                 </motion.div>
                 
                 <motion.div variants={itemVariants}>
                   <Text textAlign="center" fontSize="sm" color={textColor}>
-                    {t('profile.guestMessage')}
+                    {t('guestMessage')}
                   </Text>
                 </motion.div>
                 
@@ -228,7 +228,7 @@ export const ProfileModal = ({ isOpen, onClose }) => {
                       onClose()
                     }}
                   >
-                    {t('profile.signIn')}
+                    {t('signIn')}
                   </Button>
                 </motion.div>
               </VStack>

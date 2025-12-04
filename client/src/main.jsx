@@ -115,7 +115,7 @@ const Admin = safeLazy(() => import('./Pages/Auth/Admin.jsx'), 'Admin');
 const JoinPlanPage = safeLazy(() => import('./Pages/Premium/JoinPlan/JoinPlanPage.jsx'), 'JoinPlanPage');
 const AuthCallback = safeLazy(() => import('./Pages/Auth/AuthCallback.jsx'), 'AuthCallback');
 const AuthCompleteProfile = safeLazy(() => import('./Pages/Auth/CompleteProfile.jsx'), 'AuthCompleteProfile');
-
+const OTPAuth = safeLazy(() => import('./Pages/Auth/OTPAuth.jsx'), 'OTPAuth');
 // Enhanced page loader with better UX
 const PageLoader = ({ message = 'Loading...', showRetry = false, onRetry }) => (
   <Center maxWidth={'97vw'} h="100vh" flexDirection="column">
@@ -305,6 +305,20 @@ const router = createBrowserRouter([
       </div>
     ),
   },
+  {
+  path: '/auth/otp',
+  element: (
+    <div>
+      <Suspense fallback={
+        <Box textAlign="center" justifyContent={'center'} w={'99%'} h={'100vh'} display={'flex'} flexDirection={'column'}>
+          <Spinner size="xl" color="brand.500" mb={4} />
+        </Box>
+      }>
+        <OTPAuth />
+      </Suspense>
+    </div>
+  ),
+},
   {
     path: '/auth/callback',
     element: (
@@ -496,10 +510,12 @@ ReactDOM.createRoot(root).render(
           <ElementsProvider> {/* Single provider here */}
             <CartProvider>
               <ChosenPlanProvider>
+                <ErrorBoundary>
                 <AuthProvider>
                   <RouterWithPrefetch router={router} queryClient={queryClient} />
                   {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}
                 </AuthProvider>
+                </ErrorBoundary>
               </ChosenPlanProvider>
             </CartProvider>
           </ElementsProvider>

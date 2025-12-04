@@ -138,7 +138,7 @@ export const CartProvider = ({ children }) => {
 
       // Show success toast
       toast({
-        title: t('cart.addToCart')||'Added to cart!',
+        title: t('addToCart')||'Added to cart!',
         description: `${meal.name} has been added to your cart`,
         status: 'success',
         duration: 2000,

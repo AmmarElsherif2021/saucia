@@ -9,20 +9,28 @@ import {
   VStack,
   HStack,
   useColorModeValue,
+  CircularProgress,
+  CircularProgressLabel,
+  Divider,
+  Badge,
+  Flex,
+  Icon,
+  Spacer,
 } from '@chakra-ui/react'
-import { PieChart } from 'react-minimal-pie-chart'
 import profileIcon from '../../assets/profile-b.svg'
 import { useNavigate } from 'react-router-dom'
 import { useDisclosure } from '@chakra-ui/react'
 import { useAuthContext } from '../../Contexts/AuthContext'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { FiLogOut, FiUser, FiCalendar, FiPackage, FiChevronRight } from 'react-icons/fi'
 
 export const ProfileDD = ({ disabled = false }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const navigate = useNavigate()
-  const { user, logout } = useAuthContext()
-  const {t}=useTranslation();
+  const { user, logout, subscription } = useAuthContext()
+  const { t } = useTranslation()
+  
   const handleProfileClick = () => {
     if (user) {
       navigate('/account')
@@ -43,29 +51,45 @@ export const ProfileDD = ({ disabled = false }) => {
   const borderColor = useColorModeValue('gray.200', 'gray.700')
   const textColor = useColorModeValue('gray.600', 'gray.300')
   const accentColor = useColorModeValue('brand.500', 'brand.300')
+  const hoverBg = useColorModeValue('gray.50', 'gray.700')
+  const cardBg = useColorModeValue('gray.50', 'gray.900')
   
+  // Calculate percentage for progress
+  const consumptionPercentage = subscription && subscription.total_meals > 0 
+    ? Math.round((subscription.consumed_meals / subscription.total_meals) * 100)
+    : 0
+  
+  const remainingMeals = subscription 
+    ? subscription.total_meals - (subscription.consumed_meals || 0)
+    : 0
+
   // Animation variants
   const containerVariants = {
-    hidden: { opacity: 0, scale: 0.95 },
+    hidden: { opacity: 0, y: -10, scale: 0.95 },
     visible: {
       opacity: 1,
+      y: 0,
       scale: 1,
       transition: {
         duration: 0.2,
         ease: "easeOut",
-        staggerChildren: 0.1,
-        delayChildren: 0.1
+        staggerChildren: 0.05,
       }
+    },
+    exit: {
+      opacity: 0,
+      y: -10,
+      transition: { duration: 0.15 }
     }
   }
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
+    hidden: { opacity: 0, y: 5 },
     visible: { 
       opacity: 1, 
       y: 0,
       transition: { 
-        duration: 0.25,
+        duration: 0.2,
         ease: "easeOut"
       }
     }
@@ -76,18 +100,12 @@ export const ProfileDD = ({ disabled = false }) => {
       isOpen={isOpen} 
       onClose={onClose} 
       placement="bottom-end"
-      // Center align the dropdown under the icon
+      closeOnBlur={true}
       modifiers={[
         {
           name: 'offset',
           options: {
-            offset: [0, 12],
-          },
-        },
-        {
-          name: 'preventOverflow',
-          options: {
-            padding: 16,
+            offset: [0, 8],
           },
         },
       ]}
@@ -101,29 +119,53 @@ export const ProfileDD = ({ disabled = false }) => {
         minW="auto"
         h="auto"
         borderRadius="full"
-        _hover={{ bg: 'blackAlpha.100' }}
-        _active={{ bg: 'blackAlpha.200' }}
+        position="relative"
+        _hover={{ 
+          bg: useColorModeValue('blackAlpha.100', 'whiteAlpha.100'),
+          transform: 'scale(1.05)'
+        }}
+        _active={{ 
+          bg: useColorModeValue('blackAlpha.200', 'whiteAlpha.200'),
+          transform: 'scale(0.95)'
+        }}
+        transition="all 0.2s"
       >
         <Image 
-          src={profileIcon} 
+          src={user?.photoURL || profileIcon} 
           alt="Profile" 
-          boxSize="30px" 
+          boxSize="36px"
           borderRadius="full"
+          border="2px solid"
+          borderColor={useColorModeValue('gray.200', 'gray.600')}
+          _hover={{ borderColor: accentColor }}
+          transition="border-color 0.2s"
         />
+        {user && (
+          <Box
+            position="absolute"
+            bottom="0"
+            right="0"
+            w="10px"
+            h="10px"
+            bg="green.400"
+            borderRadius="full"
+            border="2px solid"
+            borderColor={menuBg}
+          />
+        )}
       </MenuButton>
 
       <MenuList 
-        p={4} 
-        minW="300px"
-        maxW="350px"
+        p={0}
+        minW="320px"
+        maxW="380px"
         bg={menuBg}
         borderRadius="xl"
-        boxShadow="xl"
+        boxShadow="sm"
         border="1px solid"
         borderColor={borderColor}
-        zIndex={1000}
-        // Center align the menu
-        transform="translateX(-25%)"
+        overflow="hidden"
+        zIndex={2000}
       >
         <motion.div
           initial="hidden"
@@ -131,135 +173,247 @@ export const ProfileDD = ({ disabled = false }) => {
           variants={containerVariants}
         >
           {user ? (
-            <VStack align="stretch" spacing={4}>
+            <VStack align="stretch" spacing={0}>
+              {/* User Header */}
               <motion.div variants={itemVariants}>
-                <HStack spacing={4} align="center">
-                  <Image
-                    src={user.photoURL || profileIcon}
-                    alt="Profile"
-                    boxSize="80px"
-                    borderRadius="full"
-                    onClick={handleProfileClick}
-                    cursor="pointer"
-                    _hover={{ opacity: 0.85 }}
-                    transition="opacity 0.2s"
-                    border="2px solid"
-                    borderColor={accentColor}
-                  />
-                  <VStack align="flex-start" spacing={0}>
-                    <Text fontWeight="bold" fontSize="md" noOfLines={1}>
-                      {user.displayName || 'Anonymous User'}
-                    </Text>
-                    <Text 
-                      fontSize="sm" 
-                      color={textColor}
-                      bg={accentColor + '10'}
-                      px={2}
-                      py={1}
-                      borderRadius="md"
-                      mt={2}
-                    >
-                      {user.planTitle || 'Free Plan'}
-                    </Text>
-                  </VStack>
-                </HStack>
+                <Box 
+                  p={6} 
+                  bgGradient={useColorModeValue(
+                    'linear(to-br, brand.50, blue.50)',
+                    'linear(to-br, gray.800, gray.900)'
+                  )}
+                  cursor="pointer"
+                  onClick={handleProfileClick}
+                  _hover={{ bgGradient: useColorModeValue(
+                    'linear(to-br, brand.100, blue.100)',
+                    'linear(to-br, gray.700, gray.800)'
+                  )}}
+                  transition="all 0.2s"
+                >
+                  <HStack spacing={4} align="center">
+                    <Image
+                      src={user.photoURL || profileIcon}
+                      alt="Profile"
+                      boxSize="60px"
+                      borderRadius="full"
+                      border="3px solid"
+                      borderColor="white"
+                      shadow="md"
+                    />
+                    <VStack align="flex-start" spacing={1} flex={1}>
+                      <Text fontWeight="bold" fontSize="lg" noOfLines={1}>
+                        {user.displayName || t('profile.anonymousUser')}
+                      </Text>
+                      <Badge 
+                        colorScheme={user.planTitle === 'Premium' ? 'purple' : 'gray'}
+                        variant="subtle"
+                        px={3}
+                        py={1}
+                        borderRadius="full"
+                        fontSize="xs"
+                        fontWeight="semibold"
+                      >
+                        {user.planTitle || t('profile.freePlan')}
+                      </Badge>
+                    </VStack>
+                    <Icon as={FiChevronRight} color={textColor} />
+                  </HStack>
+                </Box>
               </motion.div>
 
+              {/* Next Meal Section */}
               {user.nextMeal && (
-                <motion.div variants={itemVariants}>
-                  <VStack align="flex-start" spacing={1} bg="blackAlpha.50" p={3} borderRadius="md">
-                    <Text fontSize="sm" fontWeight="bold" color={textColor}>
-                      NEXT MEAL
-                    </Text>
-                    <HStack spacing={1}>
-                      <Text fontSize="sm" fontWeight="medium">
-                        {user.nextMeal.time || 'N/A'}
-                      </Text>
-                      <Text fontSize="sm" color={textColor}>
-                        at
-                      </Text>
-                      <Text fontSize="sm" fontWeight="medium">
-                        {user.nextMeal.location || 'N/A'}
-                      </Text>
-                    </HStack>
-                  </VStack>
-                </motion.div>
+                <>
+                  <Divider />
+                  <motion.div variants={itemVariants}>
+                    <Box p={4}>
+                      <HStack spacing={3} align="center" mb={2}>
+                        <Icon as={FiCalendar} color={accentColor} />
+                        <Text fontSize="sm" fontWeight="semibold" color={textColor}>
+                          {t('profile.nextMeal')}
+                        </Text>
+                      </HStack>
+                      <Box 
+                        bg={cardBg}
+                        p={4}
+                        borderRadius="lg"
+                        border="1px solid"
+                        borderColor={borderColor}
+                      >
+                        <VStack align="flex-start" spacing={2}>
+                          <HStack spacing={2}>
+                            <Box w="8px" h="8px" bg="green.400" borderRadius="full" />
+                            <Text fontSize="sm" fontWeight="medium">
+                              {user.nextMeal.time || 'N/A'}
+                            </Text>
+                            <Spacer />
+                            <Text fontSize="sm" color={textColor}>
+                              {user.nextMeal.location || 'N/A'}
+                            </Text>
+                          </HStack>
+                          {user.nextMeal.meal && (
+                            <Text fontSize="xs" color={textColor} fontStyle="italic">
+                              {user.nextMeal.meal}
+                            </Text>
+                          )}
+                        </VStack>
+                      </Box>
+                    </Box>
+                  </motion.div>
+                </>
               )}
 
+              {/* Subscription Progress */}
+              <Divider />
               <motion.div variants={itemVariants}>
-                <VStack align="center" spacing={3}>
-                  <Text fontSize="sm" fontWeight="bold" color={textColor}>
-                    {t("profile.noActiveSubscription")}
-                  </Text>
-                  <Box position="relative" w="110px" h="110px">
-                    <PieChart
-                      data={[
-                        {
-                          title: 'Remaining',
-                          value: user.timeRemaining || 0,
-                          color: '#3CD3AA',
-                        },
-                        {
-                          title: 'Used',
-                          value: 100 - (user.timeRemaining || 0),
-                          color: useColorModeValue('#E2E8F0', '#4A5568'),
-                        },
-                      ]}
-                      lineWidth={20}
-                      rounded
-                      totalValue={100}
-                      animate
-                    />
-                    <Text 
-                      position="absolute" 
-                      top="50%" 
-                      left="50%" 
-                      transform="translate(-50%, -50%)"
-                      fontSize="lg" 
-                      fontWeight="bold"
-                    >
-                      {user.timeRemaining || 0}%
+                <Box p={4}>
+                  <HStack spacing={3} align="center" mb={4}>
+                    <Icon as={FiPackage} color={accentColor} />
+                    <Text fontSize="sm" fontWeight="semibold" color={textColor}>
+                      {t('profile.subscriptionStatus')}
                     </Text>
-                  </Box>
-                  <Button 
-                    colorScheme="brand" 
-                    variant="outline"
-                    size="sm"
-                    w="full" 
+                  </HStack>
+
+                  {subscription && subscription.id ? (
+                    <VStack spacing={4} align="stretch">
+                      {/* Circular Progress */}
+                      <Flex justify="center" position="relative">
+                        <CircularProgress
+                          value={consumptionPercentage}
+                          size="120px"
+                          thickness="8px"
+                          color={accentColor}
+                          trackColor={useColorModeValue('gray.200', 'gray.700')}
+                        >
+                          <CircularProgressLabel>
+                            <VStack spacing={0}>
+                              <Text fontSize="2xl" fontWeight="bold">
+                                {remainingMeals}
+                              </Text>
+                              <Text fontSize="xs" color={textColor}>
+                                {t('profile.remaining')}
+                              </Text>
+                            </VStack>
+                          </CircularProgressLabel>
+                        </CircularProgress>
+                      </Flex>
+
+                      {/* Progress Details */}
+                      <HStack justify="space-between" px={2}>
+                        <VStack align="center" spacing={0}>
+                          <Text fontSize="sm" fontWeight="semibold" color={textColor}>
+                            {t('profile.used')}
+                          </Text>
+                          <Text fontSize="lg" fontWeight="bold">
+                            {subscription.consumed_meals || 0}
+                          </Text>
+                        </VStack>
+                        
+                        <Divider orientation="vertical" h="40px" />
+                        
+                        <VStack align="center" spacing={0}>
+                          <Text fontSize="sm" fontWeight="semibold" color={textColor}>
+                            {t('profile.total')}
+                          </Text>
+                          <Text fontSize="lg" fontWeight="bold">
+                            {subscription.total_meals}
+                          </Text>
+                        </VStack>
+                      </HStack>
+                    </VStack>
+                  ) : (
+                    <Box 
+                      bg={cardBg}
+                      p={6}
+                      borderRadius="lg"
+                      textAlign="center"
+                    >
+                      <Icon as={FiPackage} boxSize={8} color={textColor} mb={3} />
+                      <Text fontSize="sm" color={textColor} mb={4}>
+                        {t('profile.noActiveSubscription')}
+                      </Text>
+                      <Button
+                        colorScheme="brand"
+                        size="sm"
+                        onClick={() => navigate('/pricing')}
+                      >
+                        {t('profile.upgradeNow')}
+                      </Button>
+                    </Box>
+                  )}
+                </Box>
+              </motion.div>
+
+              {/* Logout Button */}
+              <Divider />
+              <motion.div variants={itemVariants}>
+                <Box p={4}>
+                  <Button
+                    leftIcon={<FiLogOut />}
+                    variant="ghost"
+                    colorScheme="red"
+                    size="md"
+                    w="full"
                     onClick={handleLogout}
-                    mt={2}
-                    borderRadius="md"
+                    borderRadius="lg"
+                    justifyContent="flex-start"
+                    _hover={{ bg: useColorModeValue('red.100', 'red.900') }}
+                    alignItems={'center'}
                   >
-                    Sign Out
+                    {t('profile.signOut')}
                   </Button>
-                </VStack>
+                </Box>
               </motion.div>
             </VStack>
           ) : (
-            <VStack spacing={4} p={2}>
+            /* Guest State */
+            <VStack spacing={6} p={8} align="center">
               <motion.div variants={itemVariants}>
-                <Text fontSize="lg" fontWeight="bold" textAlign="center">
-                 {t('premium.authenticationRequired')}
-                </Text>
+                <Box
+                  w="80px"
+                  h="80px"
+                  borderRadius="full"
+                  bg={useColorModeValue('gray.100', 'gray.700')}
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  mb={4}
+                >
+                  <Icon as={FiUser} boxSize={8} color={textColor} />
+                </Box>
               </motion.div>
               
               <motion.div variants={itemVariants}>
-                <Text textAlign="center" fontSize="sm" color={textColor}>
-                 {t('profile.signInRequired')}
-                </Text>
+                <VStack spacing={2}>
+                  <Text fontSize="lg" fontWeight="bold" textAlign="center">
+                    {t('authenticationRequired')}
+                  </Text>
+                  <Text 
+                    textAlign="center" 
+                    fontSize="sm" 
+                    color={textColor}
+                    maxW="280px"
+                  >
+                    {t('signInRequired')}
+                  </Text>
+                </VStack>
               </motion.div>
               
               <motion.div variants={itemVariants}>
                 <Button
                   colorScheme="brand"
                   w="full"
-                  borderRadius="md"
+                  size="lg"
+                  borderRadius="lg"
                   onClick={() => {
                     navigate('/auth')
                     onClose()
                   }}
+                  shadow="md"
+                  _hover={{ transform: 'translateY(-2px)', shadow: 'lg' }}
+                  transition="all 0.2s"
                 >
-                  {t('buttons.login')}
+                  {t('login')}
                 </Button>
               </motion.div>
             </VStack>

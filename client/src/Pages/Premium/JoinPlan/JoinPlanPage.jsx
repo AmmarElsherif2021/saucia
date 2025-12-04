@@ -115,7 +115,7 @@ const JoinPlanPage = () => {
         bg={colorMode === "dark" ? "brand.900" : "white"}
       >
         <VStack spacing={4}>
-          <Text>{t('common.loading')}</Text>
+          <Text>{t('loading')}</Text>
         </VStack>
       </Box>
     )
@@ -127,8 +127,8 @@ const JoinPlanPage = () => {
         <Alert status="warning" borderRadius="md">
           <AlertIcon />
           <Box>
-            <Text fontWeight="bold">{t('premium.authenticationRequired')}</Text>
-            <Text fontSize="sm">{t('premium.pleaseSignInToJoinPlan')}</Text>
+            <Text fontWeight="bold">{t('authenticationRequired')}</Text>
+            <Text fontSize="sm">{t('pleaseSignInToJoinPlan')}</Text>
           </Box>
         </Alert>
       </Box>
@@ -154,7 +154,7 @@ const JoinPlanPage = () => {
             </Box>
             <Box>
               <Text fontWeight="bold">
-                {t('premium.joiningPlan')}: {isArabic ? chosenPlan.title_arabic : chosenPlan.title}
+                {t('joiningPlan')}: {isArabic ? chosenPlan.title_arabic : chosenPlan.title}
               </Text>
               <Text fontSize="sm">
                 {subscriptionData.selected_term && (
@@ -170,22 +170,22 @@ const JoinPlanPage = () => {
         ) : (
           <Box bg={colorMode === "dark" ? "gray.800" : "white"} p={6} borderRadius="md" shadow="md">
             <Heading as="h2" size="md" mb={4}>
-              {t('premium.confirmSubscription')}
+              {t('confirmSubscription')}
             </Heading>
             
             {chosenPlan ? (
               <>
                 <Text mb={4}>
-                  {t('premium.subscribingTo')}: <strong>{chosenPlan.title}</strong>
+                  {t('subscribingTo')}: <strong>{chosenPlan.title}</strong>
                 </Text>
                 {subscriptionData.selected_term && (
                   <Text mb={4}>
-                    {t('premium.selectedTerm')}: {subscriptionData.selected_term} 
-                    ({subscriptionData.total_meals} {t('premium.meals')})
+                    {t('selectedTerm')}: {subscriptionData.selected_term} 
+                    ({subscriptionData.total_meals} {t('meals')})
                   </Text>
                 )}
                 <Text mb={6}>
-                  {t('premium.reviewBeforePayment')}
+                  {t('reviewBeforePayment')}
                 </Text>
 
                 <Button
@@ -194,22 +194,22 @@ const JoinPlanPage = () => {
                   width="full"
                   onClick={handleProceedToCheckout}
                 >
-                  {t('premium.proceedToPayment')}
+                  {t('proceedToPayment')}
                 </Button>
               </>
             ) : (
               <>
                 <Text mb={4} color="orange.500">
-                  {t('premium.noPlanSelected')}
+                  {t('noPlanSelected')}
                 </Text>
                 <Text mb={6}>
-                  {t('premium.pleaseSelectAPlanFirst')}
+                  {t('pleaseSelectAPlanFirst')}
                 </Text>
               </>
             )}
             
             <Button mt={4} variant="outline" width="full" onClick={handleBackToPlans}>
-              {t('premium.backToPlans')}
+              {t('backToPlans')}
             </Button>
           </Box>
         )}

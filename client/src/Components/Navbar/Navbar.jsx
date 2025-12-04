@@ -124,7 +124,7 @@ export const Navbar = () => {
     <Link to="/cart">
       <Box position="relative" display="inline-block">
         <IconButton
-          aria-label={t('navbar.cart')}
+          aria-label={t('cart')}
           icon={<FaShoppingCart />}
           variant="ghost"
           size={isMobile ? "sm" : { md: "sm", lg: "md" }}
@@ -188,7 +188,7 @@ export const Navbar = () => {
                   src={logoIcon}
                   w={logoSize.w}
                   h={logoSize.h}
-                  alt={t('navbar.logoAlt')}
+                  alt={t('logoAlt')}
                   objectFit="contain"
                   transition="transform 0.2s"
                   _hover={{ transform: 'scale(1.05)' }}
@@ -230,7 +230,7 @@ export const Navbar = () => {
                       }}
                       transition="all 0.2s"
                     >
-                      {t(`navbar.${item.label}`)}
+                      {t(`${item.label}`)}
                     </Button>
                   </Link>
                 ))}
@@ -244,7 +244,7 @@ export const Navbar = () => {
                 <ProfileDD />
                 
                 <IconButton
-                  aria-label={t('common.toggleDarkMode')}
+                  aria-label={t('toggleDarkMode')}
                   icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
                   onClick={toggleColorMode}
                   variant="ghost"
@@ -281,7 +281,7 @@ export const Navbar = () => {
                 <ProfileDD />
                 
                 <IconButton
-                  aria-label={t('common.toggleDarkMode')}
+                  aria-label={t('toggleDarkMode')}
                   icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
                   onClick={toggleColorMode}
                   variant="ghost"
@@ -310,7 +310,7 @@ export const Navbar = () => {
                 </Button>
 
                 <IconButton
-                  aria-label={isOpen ? t('common.close') : t('common.open')}
+                  aria-label={isOpen ? t('close') : t('open')}
                   icon={isOpen ? <CloseIcon /> : <HamburgerIcon />}
                   onClick={isOpen ? onClose : onOpen}
                   variant="ghost"
@@ -332,7 +332,7 @@ export const Navbar = () => {
               <CartIcon isMobile />
               
               <IconButton
-                aria-label={t('common.toggleDarkMode')}
+                aria-label={t('toggleDarkMode')}
                 icon={colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
                 onClick={toggleColorMode}
                 variant="ghost"
@@ -345,7 +345,7 @@ export const Navbar = () => {
               />
 
               <IconButton
-                aria-label={isOpen ? t('common.close') : t('common.open')}
+                aria-label={isOpen ? t('close') : t('open')}
                 icon={isOpen ? <CloseIcon /> : <HamburgerIcon />}
                 onClick={isOpen ? onClose : onOpen}
                 variant="ghost"
@@ -406,7 +406,7 @@ export const Navbar = () => {
                       color: useColorModeValue('brand.700', 'brand.200'),
                     }}
                   >
-                    {t('navbar.home')}
+                    {t('home')}
                   </Button>
                 </Link>
               </motion.div>
@@ -430,7 +430,7 @@ export const Navbar = () => {
                         color: useColorModeValue('brand.700', 'brand.200'),
                       }}
                     >
-                      {t(`navbar.${item.label}`)}
+                      {t(`${item.label}`)}
                     </Button>
                   </Link>
                 </motion.div>
@@ -454,7 +454,7 @@ export const Navbar = () => {
                       color: useColorModeValue('brand.700', 'brand.200'),
                     }}
                   >
-                    {t('navbar.profile')}
+                    {t('profile')}
                   </Button>
                 </Box>
               </motion.div>
@@ -477,7 +477,7 @@ export const Navbar = () => {
                       color: useColorModeValue('brand.700', 'brand.200'),
                     }}
                   >
-                    {t('common.language')}
+                    {t('language')}
                   </Button>
                 </Box>
               </motion.div>

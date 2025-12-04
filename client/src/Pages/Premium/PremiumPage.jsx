@@ -46,6 +46,7 @@ import loseWeightPlanImage from '../../assets/premium/loseWeight.png'
 import dailyMealPlanImage from '../../assets/premium/dailymealplan.png'
 import saladsPlanImage from '../../assets/premium/proteinsaladplan.png'
 import nonProteinsaladsPlanImage from '../../assets/premium/nonproteinsaladplan.png'
+import TestOrders from './TestOrders';
 
 // Map plan titles to images
 const planImages = {
@@ -135,7 +136,7 @@ const EnhancedPlanCard = ({
           color={badgeColor}
           fontWeight="semibold"
         >
-          {t('premium.currentPlan')}
+          {t('currentPlan')}
         </Badge>
       )}
 
@@ -154,7 +155,7 @@ const EnhancedPlanCard = ({
           borderRadius="full"
           fontWeight="semibold"
         >
-          {t('premium.activeSubscriptionExists')}
+          {t('activeSubscriptionExists')}
         </Badge>
       )}
 
@@ -182,7 +183,7 @@ const EnhancedPlanCard = ({
             borderRadius="md"
             opacity={!canSelectPlan && !isUserPlan ? 0.6 : 1}
           >
-            {t('premium.kcal')}: {plan.kcal || 0}
+            {t('kcal')}: {plan.kcal || 0}
           </Badge>
           <Badge 
             colorScheme="teal" 
@@ -193,7 +194,7 @@ const EnhancedPlanCard = ({
             borderRadius="md"
             opacity={!canSelectPlan && !isUserPlan ? 0.6 : 1}
           >
-            {t('premium.carbs')}: {plan.carb || 0}g
+            {t('carbs')}: {plan.carb || 0}g
           </Badge>
           <Badge 
             colorScheme="warning" 
@@ -204,7 +205,7 @@ const EnhancedPlanCard = ({
             borderRadius="md"
             opacity={!canSelectPlan && !isUserPlan ? 0.6 : 1}
           >
-            {t('premium.protein')}: {plan.protein || 0}g
+            {t('protein')}: {plan.protein || 0}g
           </Badge>
           <Badge 
             colorScheme="orange" 
@@ -215,7 +216,7 @@ const EnhancedPlanCard = ({
             borderRadius="md"
             opacity={!canSelectPlan && !isUserPlan ? 0.6 : 1}
           >
-            {t('premium.fat')}: {plan.fat || 0}g
+            {t('fat')}: {plan.fat || 0}g
           </Badge>
         </Flex>
 
@@ -230,7 +231,7 @@ const EnhancedPlanCard = ({
             width="full"
             isDisabled={!canSelectPlan && !isUserPlan}
           >
-            {showDetails ? t('premium.hideDetails') : t('premium.showDetails')}
+            {showDetails ? t('hideDetails') : t('showDetails')}
           </Button>
           
           <Button
@@ -241,9 +242,9 @@ const EnhancedPlanCard = ({
             width="full"
             fontWeight="semibold"
             isDisabled={!canSelectPlan}
-            title={!canSelectPlan ? t('premium.cannotSelectNewPlan') : ''}
+            title={!canSelectPlan ? t('cannotSelectNewPlan') : ''}
           >
-            {isUserPlan ? t('premium.viewDetails') : t('premium.select')}
+            {isUserPlan ? t('viewDetails') : t('select')}
           </Button>
         </Flex>
       </VStack>
@@ -259,7 +260,7 @@ const EnhancedPlanCard = ({
           <VStack align="stretch" spacing={4}>
             <Box>
               <Text fontSize="xs" fontWeight="semibold" color="brand.700" mb={3}>
-                {t('checkout.subscriptionPeriod')}
+                {t('subscriptionPeriod')}
               </Text>
               
               {/* Short Term */}
@@ -273,15 +274,15 @@ const EnhancedPlanCard = ({
               >
                 <Flex justify="space-between" align="center" mb={1}>
                   <Text fontSize="sm" fontWeight="semibold" color="teal.700">
-                    {t('premium.shortTerm')}
+                    {t('shortTerm')}
                   </Text>
                   <Badge colorScheme="teal" fontSize="xs" px={2} py={1}>
-                    {plan.short_term_meals} {t('premium.meals')}
+                    {plan.short_term_meals} {t('meals')}
                   </Badge>
                 </Flex>
               
                 <Text fontSize="xs" color="brand.600" fontWeight="bold">
-                  {t('premium.overallPrice')}: {plan.price_per_meal * plan.short_term_meals} {t('common.currency')}
+                  {t('overallPrice')}: {plan.price_per_meal * plan.short_term_meals} {t('currency')}
                 </Text>
               </Box>
 
@@ -295,18 +296,18 @@ const EnhancedPlanCard = ({
               >
                 <Flex justify="space-between" align="center" mb={1}>
                   <Text fontSize="sm" fontWeight="semibold" color="teal.700">
-                    {t('premium.mediumTerm')}
+                    {t('mediumTerm')}
                   </Text>
                   <HStack spacing={1}>
                     <Badge colorScheme="teal" fontSize="xs" px={2} py={1}>
-                      {plan.medium_term_meals || 30} {t('premium.meals')}
+                      {plan.medium_term_meals || 30} {t('meals')}
                     </Badge>
                    
                   </HStack>
                 </Flex>
                 
                 <Text fontSize="xs" color="brand.600" fontWeight="bold">
-                  {t('premium.overallPrice')}: {plan.price_per_meal * plan.medium_term_meals} {t('common.currency')}
+                  {t('overallPrice')}: {plan.price_per_meal * plan.medium_term_meals} {t('currency')}
                 </Text>
               </Box>
             </Box>
@@ -317,10 +318,10 @@ const EnhancedPlanCard = ({
                 <AlertIcon />
                 <Box>
                   <Text fontSize="xs" fontWeight="bold">
-                    {t('premium.cannotSubscribeWhileActive')}
+                    {t('cannotSubscribeWhileActive')}
                   </Text>
                   <Text fontSize="xs">
-                    {t('premium.completeOrCancelCurrentFirst')}
+                    {t('completeOrCancelCurrentFirst')}
                   </Text>
                 </Box>
               </Alert>
@@ -408,8 +409,8 @@ const LoginModal = ({ isOpen, onClose, selectedPlan = null, selectedTerm = null 
       >
         <ModalHeader textAlign="center">
           {selectedPlan 
-            ? t('premium.signInToSubscribe')
-            : t('premium.authenticationRequired')
+            ? t('signInToSubscribe')
+            : t('authenticationRequired')
           }
         </ModalHeader>
         <ModalCloseButton />
@@ -438,7 +439,7 @@ const LoginModal = ({ isOpen, onClose, selectedPlan = null, selectedTerm = null 
                       {selectedPlan.title}
                     </Badge>
                     <Text fontSize="xs" color={'highlight.400'} textAlign="center">
-                      {t('premium.selectedPlanWillBeReserved')}
+                      {t('selectedPlanWillBeReserved')}
                     </Text>
                   </VStack>
                 </motion.div>
@@ -446,15 +447,15 @@ const LoginModal = ({ isOpen, onClose, selectedPlan = null, selectedTerm = null 
               
               <motion.div variants={itemVariants}>
                 <Text fontSize="lg" fontWeight="bold" textAlign="center">
-                  {t('profile.signInRequired')}
+                  {t('signInRequired')}
                 </Text>
               </motion.div>
               
               <motion.div variants={itemVariants}>
                 <Text textAlign="center" fontSize="sm" color={textColor}>
                   {selectedPlan 
-                    ? t('premium.signInToContinueWithPlan')
-                    : t('profile.signInToAccessPremium')
+                    ? t('signInToContinueWithPlan')
+                    : t('signInToAccessPremium')
                   }
                 </Text>
               </motion.div>
@@ -466,7 +467,7 @@ const LoginModal = ({ isOpen, onClose, selectedPlan = null, selectedTerm = null 
                   borderRadius="md"
                   onClick={handleLoginRedirect}
                 >
-                  {t('premium.continueWithLogin')}
+                  {t('continueWithLogin')}
                 </Button>
               </motion.div>
             </VStack>
@@ -593,8 +594,8 @@ export const PremiumPage = () => {
     if (hasActiveSubscription) {
       //console.log('🚫 User has active subscription, blocking new plan selection');
       toast({
-        title: t('premium.activeSubscriptionExists'),
-        description: t('premium.cannotSelectNewPlan'),
+        title: t('activeSubscriptionExists'),
+        description: t('cannotSelectNewPlan'),
         status: 'warning',
         duration: 5000,
         isClosable: true,
@@ -669,7 +670,7 @@ export const PremiumPage = () => {
       <Center h="100vh">
         <VStack spacing={4}>
           <Spinner size="xl" color="brand.500" thickness="3px" />
-          <Text>{t('common.loading')}</Text>
+          <Text>{t('loading')}</Text>
         </VStack>
       </Center>
     );
@@ -677,6 +678,7 @@ export const PremiumPage = () => {
 
   return (
     <Box p={{ base: 4, md: 8 }} bg="gray.50" minH="100vh">
+      <TestOrders/>
       <VStack spacing={6} align="stretch">
         {/* Top Section - Current Plan or Teaser */}
         <Box ref={topSectionRef}>
@@ -697,7 +699,7 @@ export const PremiumPage = () => {
                   size={{ base: 'md', md: 'lg' }}
                   onClick={toggleExplorePlans}
                 >
-                  {explorePlans ? t('premium.hideAvailablePlans') : t('premium.exploreOtherPlans')}
+                  {explorePlans ? t('hideAvailablePlans') : t('exploreOtherPlans')}
                 </Button>
               )}
 
@@ -707,7 +709,7 @@ export const PremiumPage = () => {
                   size={{ base: 'md', md: 'lg' }}
                   onClick={toggleExplorePlans}
                 >
-                  {t('premium.browseAvailablePlans')}
+                  {t('browseAvailablePlans')}
                 </Button>
               )}
             </Center>
@@ -719,8 +721,8 @@ export const PremiumPage = () => {
           <Alert status="warning" borderRadius="lg">
             <AlertIcon />
             <Box>
-              <Text fontWeight="bold">{t('premium.activeSubscriptionAlert')}</Text>
-              <Text fontSize="sm">{t('premium.completeOrCancelCurrentFirst')}</Text>
+              <Text fontWeight="bold">{t('activeSubscriptionAlert')}</Text>
+              <Text fontSize="sm">{t('completeOrCancelCurrentFirst')}</Text>
             </Box>
           </Alert>
         )}
@@ -742,7 +744,7 @@ export const PremiumPage = () => {
                 mb={6}
                 color="brand.700"
               >
-                {t('premium.availablePremiumPlans')}
+                {t('availablePremiumPlans')}
               </Heading>
 
               {plans && plans.length > 0 ? (
@@ -762,7 +764,7 @@ export const PremiumPage = () => {
                 </SimpleGrid>
               ) : (
                 <Center p={8}>
-                  <Text>{t('premium.noPlansAvailable')}</Text>
+                  <Text>{t('noPlansAvailable')}</Text>
                 </Center>
               )}
             </Box>
@@ -774,8 +776,8 @@ export const PremiumPage = () => {
           <Alert status="warning" borderRadius="lg">
             <AlertIcon />
             <Box>
-              <Text fontWeight="bold">{t('premium.readyToStart')}</Text>
-              <Text fontSize="sm">{t('premium.signInToExploreAndSubscribe')}</Text>
+              <Text fontWeight="bold">{t('readyToStart')}</Text>
+              <Text fontSize="sm">{t('signInToExploreAndSubscribe')}</Text>
             </Box>
           </Alert>
         )}

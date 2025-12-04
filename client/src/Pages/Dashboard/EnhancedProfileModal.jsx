@@ -131,11 +131,11 @@ const EnhancedProfileModal = ({
           <Flex justify="space-between" align="center">
             <VStack align="start" spacing={1}>
               <Text fontSize="xl" fontWeight="bold">
-                {t('profile.editProfile')}
+                {t('editProfile')}
               </Text>
               <HStack spacing={2}>
                 <Text fontSize="sm" color="gray.500">
-                  {t('profile.profileCompletion')}: {completionPercentage}%
+                  {t('profileCompletion')}: {completionPercentage}%
                 </Text>
                 <Progress 
                   value={completionPercentage} 
@@ -148,7 +148,7 @@ const EnhancedProfileModal = ({
             </VStack>
             
             {hasUnsavedChanges && (
-              <Tooltip label={t('profile.unsavedChanges')}>
+              <Tooltip label={t('unsavedChanges')}>
                 <IconButton
                   icon={<CheckIcon />}
                   colorScheme="orange"
@@ -205,7 +205,7 @@ const EnhancedProfileModal = ({
           ) : (
             <Flex justify="center" align="center" h="200px">
               <Text color="gray.500">
-                {t('profile.loadingData') || 'Loading profile data...'}
+                {t('loadingData') || 'Loading profile data...'}
               </Text>
             </Flex>
           )}
@@ -218,7 +218,7 @@ const EnhancedProfileModal = ({
         >
           <HStack spacing={3} w="full" justify="space-between">
             <Text fontSize="sm" color="gray.500">
-              {hasUnsavedChanges && t('profile.unsavedChangesWarning')}
+              {hasUnsavedChanges && t('unsavedChangesWarning')}
             </Text>
             
             <HStack spacing={3}>
@@ -227,7 +227,7 @@ const EnhancedProfileModal = ({
                 onClick={onClose}
                 isDisabled={isLoading}
               >
-                {t('common.cancel')}
+                {t('cancel')}
               </Button>
               
               <Button
@@ -237,13 +237,13 @@ const EnhancedProfileModal = ({
                   handleSubmit();
                 }}
                 isLoading={isLoading}
-                loadingText={t('profile.saving')}
+                loadingText={t('saving')}
                 leftIcon={!isLoading ? <CheckIcon /> : undefined}
                 size="lg"
                 minW="120px"
                 isDisabled={!formData}
               >
-                {t('profile.saveChanges')}
+                {t('saveChanges')}
               </Button>
             </HStack>
           </HStack>

@@ -104,13 +104,13 @@ export const AddressInput = ({ label, value, onChange, onMapOpen }) => {
             <Input
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              placeholder={t('profile.enterDeliveryAddress')}
+              placeholder={t('enterDeliveryAddress')}
               variant={'ghost'}
               size={{ base: "md", md: "lg" }}
               flex={1}
             />
             <IconButton
-              aria-label={t('checkout.selectFromMap')}
+              aria-label={t('selectFromMap')}
               icon={<Image src={locationPin} boxSize={{ base: "20px", md: "24px" }} />}
               onClick={onMapOpen}
               size={{ base: "md", md: "lg" }}
@@ -145,7 +145,7 @@ export const UserInfoItem = ({ label, value, verified = false }) => {
                 size={{ base: "sm", md: "md" }}
                 borderRadius="full"
               >
-                {t('profile.verified')}
+                {t('verified')}
               </Badge>
             )}
           </Flex>
@@ -174,7 +174,7 @@ export const NotificationStatus = ({ label, enabled }) => {
             size={{ base: "sm", md: "md" }}
             borderRadius="full"
           >
-            {enabled ? t('profile.enabled') : t('profile.disabled')}
+            {enabled ? t('enabled') : t('disabled')}
           </Badge>
         </Stack>
       </Box>
@@ -352,7 +352,7 @@ export const OrderHistoryTable = ({ orders }) => {
       return (
         <Center w="100%" py={8}>
           <Text textAlign="center" color="gray.500" fontSize={{ base: "sm", md: "md" }}>
-            {t('profile.noOrdersFound')}
+            {t('noOrdersFound')}
           </Text>
         </Center>
       )
@@ -365,11 +365,11 @@ export const OrderHistoryTable = ({ orders }) => {
             <Table variant="striped" size={{ base: "sm", md: "md" }}>
               <Thead>
                 <Tr>
-                  <Th fontSize={{ base: "xs", md: "sm" }}>{t('profile.orderID')}</Th>
-                  <Th fontSize={{ base: "xs", md: "sm" }}>{t('profile.date')}</Th>
-                  <Th fontSize={{ base: "xs", md: "sm" }}>{t('profile.items')}</Th>
-                  <Th fontSize={{ base: "xs", md: "sm" }} isNumeric>{t('profile.total')}</Th>
-                  <Th fontSize={{ base: "xs", md: "sm" }}>{t('profile.status')}</Th>
+                  <Th fontSize={{ base: "xs", md: "sm" }}>{t('orderID')}</Th>
+                  <Th fontSize={{ base: "xs", md: "sm" }}>{t('date')}</Th>
+                  <Th fontSize={{ base: "xs", md: "sm" }}>{t('items')}</Th>
+                  <Th fontSize={{ base: "xs", md: "sm" }} isNumeric>{t('total')}</Th>
+                  <Th fontSize={{ base: "xs", md: "sm" }}>{t('status')}</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -407,7 +407,7 @@ export const OrderHistoryTable = ({ orders }) => {
                         {(!order.order_items || order.order_items.length === 0) && 
                          (!order.order_meals || order.order_meals.length === 0) && (
                           <Text color="gray.500" fontSize="xs">
-                            {t('profile.noItems')}
+                            {t('noItems')}
                           </Text>
                         )}
                       </VStack>
@@ -514,7 +514,7 @@ export const SubscriptionDetails = ({
   // Handle order activation
   const handleOrderActivation = useCallback(async (orderId) => {
     if (!canActivateOrders) {
-      showToast('premium.error', 'premium.cannotActivateWhileOrderInProgress', 'error');
+      showToast('error', 'premium.cannotActivateWhileOrderInProgress', 'error');
       return;
     }
 
@@ -526,10 +526,10 @@ export const SubscriptionDetails = ({
     setActivatingOrderId(orderId);
     try {
       await onActivateOrder(orderId);
-      showToast('premium.success', 'premium.mealActivatedSuccessfully');
+      showToast('success', 'premium.mealActivatedSuccessfully');
     } catch (error) {
       console.error('Error activating order:', error);
-      showToast('premium.error', 'premium.failedToActivateMeal', 'error');
+      showToast('error', 'premium.failedToActivateMeal', 'error');
     } finally {
       setActivatingOrderId(null);
     }
@@ -538,7 +538,7 @@ export const SubscriptionDetails = ({
   // Render order items
   const renderOrderItems = useCallback((order) => {
     if (!order.order_items || order.order_items.length === 0) {
-      return <Text fontSize="sm" color="gray.500">{t('premium.noItems')}</Text>;
+      return <Text fontSize="sm" color="gray.500">{t('noItems')}</Text>;
     }
 
     return (
@@ -609,14 +609,14 @@ export const SubscriptionDetails = ({
               </Badge>
               {order.status === 'pending' && canActivateOrders && (
                 <Badge colorScheme="yellow" size="sm">
-                  {t('premium.readyToActivate')}
+                  {t('readyToActivate')}
                 </Badge>
               )}
               {order.status === 'pending' && hasOrdersInProgress && (
                 <Badge colorScheme="red" size="sm">
                   <HStack spacing={1}>
                     <Icon as={FiLock} boxSize="10px" />
-                    <Text>{t('premium.locked')}</Text>
+                    <Text>{t('locked')}</Text>
                   </HStack>
                 </Badge>
               )}
@@ -627,8 +627,8 @@ export const SubscriptionDetails = ({
             <Tooltip 
               label={
                 canActivateOrders 
-                  ? t('premium.activateThisOrder') 
-                  : t('premium.cannotActivateWhileOrderInProgress')
+                  ? t('activateThisOrder') 
+                  : t('cannotActivateWhileOrderInProgress')
               } 
               hasArrow
             >
@@ -640,7 +640,7 @@ export const SubscriptionDetails = ({
                 onClick={() => handleOrderActivation(order.id)}
                 isDisabled={!canActivateOrders}
                 isLoading={activatingOrderId === order.id}
-                aria-label={t('premium.activateOrder')}
+                aria-label={t('activateOrder')}
               />
             </Tooltip>
           )}
@@ -678,7 +678,7 @@ export const SubscriptionDetails = ({
         <VStack spacing={4}>
           <Spinner size={{ base: "md", md: "lg" }} />
           <Text fontSize="sm" color="gray.500">
-            {t('premium.loadingSubscription')}
+            {t('loadingSubscription')}
           </Text>
         </VStack>
       </Center>
@@ -702,7 +702,7 @@ export const SubscriptionDetails = ({
                 fontSize={{ base: "md", md: "lg" }}
                 color="gray.600"
               >
-                {t('profile.nosubscription')}
+                {t('nosubscription')}
               </Text>
               <Button 
                 colorScheme="brand"
@@ -710,7 +710,7 @@ export const SubscriptionDetails = ({
                 w={{ base: "100%", sm: "auto" }}
                 onClick={() => navigate('/subscriptions')}
               >
-                {t('profile.browsePlans')}
+                {t('browsePlans')}
               </Button>
             </VStack>
           </Box>
@@ -737,7 +737,7 @@ export const SubscriptionDetails = ({
                 textAlign="center"
                 color="brand.600"
               >
-                {subscription.plans?.title || t('profile.subscription')}
+                {subscription.plans?.title || t('subscription')}
               </Heading>
               
               <Center>
@@ -753,7 +753,7 @@ export const SubscriptionDetails = ({
               <VStack spacing={3} align="stretch">
                 <HStack justify="space-between">
                   <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
-                    {t('profile.status')}:
+                    {t('status')}:
                   </Text>
                   <Badge 
                     colorScheme={subscription.status === 'active' ? 'green' : 'yellow'} 
@@ -766,7 +766,7 @@ export const SubscriptionDetails = ({
                 
                 <HStack justify="space-between">
                   <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
-                    {t('profile.consumedMeals')}:
+                    {t('consumedMeals')}:
                   </Text>
                   <Text fontSize={{ base: "sm", md: "md" }} fontWeight="bold">
                     {subscription.consumed_meals} / {subscription.total_meals}
@@ -775,7 +775,7 @@ export const SubscriptionDetails = ({
 
                 {/* Progress Bar */}
                 <Box>
-                  <Text fontSize="sm" mb={2}>{t('premium.progress')}:</Text>
+                  <Text fontSize="sm" mb={2}>{t('progress')}:</Text>
                   <Progress
                     value={(subscription.consumed_meals / subscription.total_meals) * 100}
                     colorScheme="brand"
@@ -786,7 +786,7 @@ export const SubscriptionDetails = ({
                 
                 <HStack justify="space-between">
                   <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
-                    {t('profile.preferredDeliveryTime')}:
+                    {t('preferredDeliveryTime')}:
                   </Text>
                   <Text fontSize={{ base: "sm", md: "md" }}>
                     {subscription.preferred_delivery_time?.substring(0, 5) || '12:00'}
@@ -809,7 +809,7 @@ export const SubscriptionDetails = ({
         >
           <VStack spacing={4} align="stretch">
             <Heading size="md" color="brand.600">
-              {t('premium.upcomingMeals')}
+              {t('upcomingMeals')}
             </Heading>
 
             {/* Alert for orders in progress */}
@@ -817,9 +817,9 @@ export const SubscriptionDetails = ({
               <Alert status="warning">
                 <AlertIcon />
                 <Box>
-                  <AlertTitle>{t('premium.orderInProgress')}</AlertTitle>
+                  <AlertTitle>{t('orderInProgress')}</AlertTitle>
                   <AlertDescription fontSize="sm">
-                    {t('premium.cannotActivateWhileOrderInProgress')}
+                    {t('cannotActivateWhileOrderInProgress')}
                   </AlertDescription>
                 </Box>
               </Alert>
@@ -829,7 +829,7 @@ export const SubscriptionDetails = ({
             {pendingOrders.length > 0 ? (
               <Box>
                 <Text fontSize="md" fontWeight="semibold" mb={3} color="brand.600">
-                  {t('premium.availableToActivate')} ({pendingOrders.length})
+                  {t('availableToActivate')} ({pendingOrders.length})
                 </Text>
                 <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                   {pendingOrders.map((order) => renderOrderCard(order, true))}
@@ -839,7 +839,7 @@ export const SubscriptionDetails = ({
               <Alert status="info">
                 <AlertIcon />
                 <Box>
-                  <AlertTitle>{t('premium.noPendingOrders')}</AlertTitle>
+                  <AlertTitle>{t('noPendingOrders')}</AlertTitle>
                 </Box>
               </Alert>
             )}
@@ -848,7 +848,7 @@ export const SubscriptionDetails = ({
             {activeOrders.length > 0 && (
               <Box>
                 <Text fontSize="md" fontWeight="semibold" mb={3} color="green.600">
-                  {t('premium.activeOrders')} ({activeOrders.length})
+                  {t('activeOrders')} ({activeOrders.length})
                 </Text>
                 <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                   {activeOrders.map((order) => renderOrderCard(order, false))}
@@ -860,7 +860,7 @@ export const SubscriptionDetails = ({
             {deliveredOrders.length > 0 && (
               <Box>
                 <Text fontSize="md" fontWeight="semibold" mb={3} color="gray.600">
-                  {t('premium.recentDeliveries')} ({Math.min(deliveredOrders.length, 3)})
+                  {t('recentDeliveries')} ({Math.min(deliveredOrders.length, 3)})
                 </Text>
                 <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                   {deliveredOrders.slice(0, 3).map((order) => renderOrderCard(order, false))}
@@ -879,7 +879,7 @@ export const SubscriptionDetails = ({
             w={{ base: "100%", sm: "auto" }}
             minW="200px"
           >
-            {t('profile.manageSubscription')}
+            {t('manageSubscription')}
           </Button>
         </Center>
       </VStack>
@@ -1053,7 +1053,7 @@ export const ResponsiveProfileHeader = ({ user, onOpen, t }) => (
         size={{ base: "lg", md: "xl" }} 
         color="brand.600"
       >
-        {t('profile.welcome')}, {user?.display_name || user?.email}
+        {t('welcome')}, {user?.display_name || user?.email}
       </Heading>
       
       <Text 
@@ -1061,7 +1061,7 @@ export const ResponsiveProfileHeader = ({ user, onOpen, t }) => (
         color="gray.600"
         maxW="md"
       >
-        {t('profile.manageYourAccount')}
+        {t('manageYourAccount')}
       </Text>
       
       <Button
@@ -1071,7 +1071,7 @@ export const ResponsiveProfileHeader = ({ user, onOpen, t }) => (
         w={{ base: "100%", sm: "auto" }}
         minW="200px"
       >
-        {t('profile.editProfile')}
+        {t('editProfile')}
       </Button>
     </VStack>
   </ResponsiveCard>

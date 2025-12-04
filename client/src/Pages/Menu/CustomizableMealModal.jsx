@@ -242,7 +242,7 @@ const totalPrice = useMemo(() => {
     );
     
     return matching.length 
-      ? `${t('menuPage.contains')} ${matching.join(', ')}`
+      ? `${t('contains')} ${matching.join(', ')}`
       : '';
   };
 
@@ -296,7 +296,7 @@ const totalPrice = useMemo(() => {
               {mealName}
             </Text>
             <Text fontWeight="bold" color="brand.600">
-              {totalPrice.toFixed(2)} {t('common.currency')}
+              {totalPrice.toFixed(2)} {t('currency')}
             </Text>
             </Box>
              <ModalCloseButton />
@@ -311,10 +311,10 @@ const totalPrice = useMemo(() => {
               <AlertIcon />
               <Box>
                 <AlertTitle fontSize="sm">
-                  {t('menuPage.allergenWarningTitle') || 'Allergen Warning!'}
+                  {t('allergenWarningTitle') || 'Allergen Warning!'}
                 </AlertTitle>
                 <AlertDescription fontSize="xs">
-                  {t('menuPage.allergenWarningMessage') || 
+                  {t('allergenWarningMessage') || 
                     'You have selected items that contain allergens you are sensitive to. Please review your selection carefully.'}
                 </AlertDescription>
               </Box>
@@ -370,7 +370,7 @@ const totalPrice = useMemo(() => {
                           {getSectionDisplayName(section)}
                         </Heading>
                         <Text fontSize="xs" opacity={0.9}>
-                          {sectionFreeCounts[section]?.value || 0} {t('menuPage.free')}
+                          {sectionFreeCounts[section]?.value || 0} {t('free')}
                         </Text>
                         {usage && usage.selected > 0 && (
                           <Badge
@@ -469,7 +469,7 @@ const totalPrice = useMemo(() => {
                                   alignItems="center"
                                 >
                                   <WarningIcon mr={1} boxSize={2} />
-                                  {t('foodDetails.allergens') || 'ALLERGEN'}
+                                  {t('.allergens') || 'ALLERGEN'}
                                 </Badge>
                               )}
 
@@ -492,8 +492,8 @@ const totalPrice = useMemo(() => {
                                 
                                 <Text fontSize="xs" color="gray.600">
                                   {displayInfo.price > 0 
-                                    ? `+${displayInfo.price.toFixed(2)} ${t('common.currency')}` 
-                                    : t('menuPage.free')}
+                                    ? `+${displayInfo.price.toFixed(2)} ${t('currency')}` 
+                                    : t('free')}
                                 </Text>
                                 
                                 {displayInfo.calories > 0 && (
@@ -555,16 +555,16 @@ const totalPrice = useMemo(() => {
         <ModalFooter>
           <Flex align="center" gap={4} w="100%">
             <Tag colorScheme="blue">
-              {t('menuPage.selectedCount', { count: totalSelectedItems }) ||
+              {t('selectedCount', { count: totalSelectedItems }) ||
                 `Selected: ${totalSelectedItems}`}
             </Tag>
             <Tag colorScheme="green">
-              {t('menuPage.totalPrice') || 'Total'}: {totalPrice.toFixed(2)} {t('common.currency')}
+              {t('totalPrice') || 'Total'}: {totalPrice.toFixed(2)} {t('currency')}
             </Tag>
             {hasSelectedUnsafeItems && (
               <Tag colorScheme="red" size="sm">
                 <WarningIcon mr={1} />
-                {t('menuPage.hasAllergens') || 'Contains Allergens'}
+                {t('hasAllergens') || 'Contains Allergens'}
               </Tag>
             )}
           </Flex>
@@ -574,7 +574,7 @@ const totalPrice = useMemo(() => {
             isDisabled={totalSelectedItems === 0}
             mx={1}
           >
-            {t('menuPage.addToCart') || 'Add to Cart'}
+            {t('addToCart') || 'Add to Cart'}
           </Button>
         </ModalFooter>
       </ModalContent>

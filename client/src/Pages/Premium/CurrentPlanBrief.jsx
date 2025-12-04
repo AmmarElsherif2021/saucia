@@ -129,7 +129,7 @@ export const CurrentPlanBrief = () => {
           textAlign={isArabic ? 'right' : 'left'}
           color="brand.600"
         >
-          {t('premium.currentlySubscribedToThe')}{' '}
+          {t('currentlySubscribedToThe')}{' '}
           <Text as="span" fontSize={"sm"} color="teal.700" mb={2} bg={"teal.200"} p={1} borderRadius="md" display="inline-block">
             {isArabic ? plan?.title_arabic : plan?.title}
           </Text>
@@ -172,16 +172,16 @@ export const CurrentPlanBrief = () => {
           {/* Nutrition Badges */}
           <Flex mt={2} gap={2} flexWrap="wrap" justify={{ base: 'center', md: 'flex-start' }}>
             <Badge colorScheme="brand" variant="solid" fontSize="xs" px={2} py={1} borderRadius="md">
-              {t('premium.kcal')}: {plan?.kcal || 0}
+              {t('kcal')}: {plan?.kcal || 0}
             </Badge>
             <Badge colorScheme="teal" variant="solid" fontSize="xs" px={2} py={1} borderRadius="md">
-              {t('premium.carbs')}: {plan?.carb || 0}g
+              {t('carbs')}: {plan?.carb || 0}g
             </Badge>
             <Badge colorScheme="warning" variant="solid" fontSize="xs" px={2} py={1} borderRadius="md">
-              {t('premium.protein')}: {plan?.protein || 0}g
+              {t('protein')}: {plan?.protein || 0}g
             </Badge>
             <Badge colorScheme="orange" variant="solid" fontSize="xs" px={2} py={1} borderRadius="md">
-              {t('premium.fat')}: {plan?.fat || 0}g
+              {t('fat')}: {plan?.fat || 0}g
             </Badge>
           </Flex>
 
@@ -189,13 +189,13 @@ export const CurrentPlanBrief = () => {
           {subscriptionStats && (
             <Flex mt={4} gap={2} flexWrap="wrap" justify={{ base: 'center', md: 'flex-start' }}>
               <Badge colorScheme="teal" variant="outline" px={2} py={1} borderRadius="md">
-                {t('premium.totalMeals')}: {subscriptionStats.totalMeals}
+                {t('totalMeals')}: {subscriptionStats.totalMeals}
               </Badge>
               <Badge colorScheme="green" variant="outline" px={2} py={1} borderRadius="md">
-                {t('premium.consumed')}: {subscriptionStats.consumedMeals}
+                {t('consumed')}: {subscriptionStats.consumedMeals}
               </Badge>
               <Badge colorScheme="orange" variant="outline" px={2} py={1} borderRadius="md">
-                {t('premium.remaining')}: {subscriptionStats.remainingMeals}
+                {t('remaining')}: {subscriptionStats.remainingMeals}
               </Badge>
             </Flex>
           )}
@@ -212,7 +212,7 @@ export const CurrentPlanBrief = () => {
                 borderColor="brand.400"
               >
                 <Text fontSize="sm" fontWeight="semibold" color="teal.700" mb={2} bg={"teal.200"} p={1} borderRadius="md" display="inline-block">
-                  {t('premium.nextScheduledMeal')}
+                  {t('nextScheduledMeal')}
                 </Text>
                 
                 {/* Display meal information from order_meals */}
@@ -228,19 +228,19 @@ export const CurrentPlanBrief = () => {
                 <Flex direction="column" gap={1}>
                   {nextOrder.scheduled_delivery_date && (
                     <Flex align="center" fontSize="xs" color="brand.600">
-                      <Text fontSize="xs" mx={2}>{t('premium.deliveryDate')}:</Text>
+                      <Text fontSize="xs" mx={2}>{t('deliveryDate')}:</Text>
                       {formatDeliveryDate(nextOrder.scheduled_delivery_date, isArabic)}
                     </Flex>
                   )}
 
                   <Flex align="center" fontSize="xs" color="brand.600">
-                    <Text fontSize="xs" mx={2}>{t('premium.preferredTime')}:</Text>
+                    <Text fontSize="xs" mx={2}>{t('preferredTime')}:</Text>
                     {formatDeliveryTime(currentSubscription.preferred_delivery_time, t)}
                   </Flex>
 
                   {nextOrder.user_addresses && (
                     <Flex align="flex-start" fontSize="xs" color="brand.600">
-                      <Text fontSize="xs" mx={2} flexShrink={0}>{t('premium.deliveryAddress')}</Text>
+                      <Text fontSize="xs" mx={2} flexShrink={0}>{t('deliveryAddress')}</Text>
                       <Text>
                         {nextOrder.user_addresses.label} - {nextOrder.user_addresses.address_line1}
                       </Text>
@@ -296,7 +296,7 @@ export const CurrentPlanBrief = () => {
             rightIcon={showDetails ? <ChevronUpIcon /> : <ChevronDownIcon />}
             width={{ base: '100%', md: 'auto' }}
           >
-            {showDetails ? t('premium.hideDetails') : t('premium.showDetails')}
+            {showDetails ? t('hideDetails') : t('showDetails')}
           </Button>
           
           <Button
@@ -305,7 +305,7 @@ export const CurrentPlanBrief = () => {
             size={buttonSize}
             width={{ base: '100%', md: 'auto' }}
           >
-            {t('premium.managePlan')}
+            {t('managePlan')}
           </Button>
         </Flex>
       </Flex>
@@ -321,7 +321,7 @@ export const CurrentPlanBrief = () => {
           borderColor="brand.300"
         >
           <Text fontWeight="semibold" mb={2} fontSize="lg" color="brand.700">
-            {t('premium.subscriptionDetails')}
+            {t('subscriptionDetails')}
           </Text>
 
           <Flex 
@@ -331,30 +331,30 @@ export const CurrentPlanBrief = () => {
             {/* Subscription Info */}
             <Box flex="1">
               <DetailItem 
-                label={t('premium.planName')}
+                label={t('planName')}
                 value={isArabic ? plan?.title_arabic : plan?.title}
               />
               
               <DetailItem 
-                label={t('premium.subscriptionId')}
+                label={t('subscriptionId')}
                 value={`${currentSubscription.id.slice(0, 8)}...`}
               />
               
               <DetailItem 
-                label={t('premium.startDate')}
+                label={t('startDate')}
                 value={formatDeliveryDate(currentSubscription.start_date, isArabic)}
               />
               
               {currentSubscription.end_date && (
                 <DetailItem 
-                  label={t('premium.endDate')}
+                  label={t('endDate')}
                   value={formatDeliveryDate(currentSubscription.end_date, isArabic)}
                 />
               )}
               
               <DetailItem 
-                label={t('premium.pricePerMeal')}
-                value={`${currentSubscription.price_per_meal} ${t('common.currency')}`}
+                label={t('pricePerMeal')}
+                value={`${currentSubscription.price_per_meal} ${t('currency')}`}
               />
             </Box>
 
@@ -363,7 +363,7 @@ export const CurrentPlanBrief = () => {
               {subscriptionStats && (
                 <>
                   <Text fontSize="xs" mb={2} color="brand.700">
-                    {t('premium.subscriptionProgress')}
+                    {t('subscriptionProgress')}
                   </Text>
                   
                   <Box position="relative" mb={3}>
@@ -404,14 +404,14 @@ export const CurrentPlanBrief = () => {
                       w={"fit-content"}
                       borderRadius="md"
                       >
-                    {subscriptionStats.consumedMeals} / {subscriptionStats.totalMeals} {t('premium.mealsConsumed')}
+                    {subscriptionStats.consumedMeals} / {subscriptionStats.totalMeals} {t('mealsConsumed')}
                   </Text>
                    </Box>
                   </Box>
 
                   <DetailItem 
-                    label={t('premium.autoRenewal')}
-                    value={currentSubscription.auto_renewal ? t('premium.enabled') : t('premium.disabled')}
+                    label={t('autoRenewal')}
+                    value={currentSubscription.auto_renewal ? t('enabled') : t('disabled')}
                     valueColor={currentSubscription.auto_renewal ? "green.600" : "red.600"}
                   />
                 </>
@@ -419,7 +419,7 @@ export const CurrentPlanBrief = () => {
 
               {subscriptionOrders && subscriptionOrders.length > 0 && (
                 <DetailItem 
-                  label={t('premium.pendingOrders')}
+                  label={t('pendingOrders')}
                   value={subscriptionOrders.filter(order => 
                     ['pending', 'confirmed', 'preparing','out_for_delivery'].includes(order.status)
                   ).length}

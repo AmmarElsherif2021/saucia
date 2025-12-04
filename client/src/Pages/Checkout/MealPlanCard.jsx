@@ -206,7 +206,7 @@ export const MealPlanCard = ({
           py="1"
           zIndex="2"
         >
-          {t('checkout.customized')}
+          {t('customized')}
         </Badge>
       )}
 

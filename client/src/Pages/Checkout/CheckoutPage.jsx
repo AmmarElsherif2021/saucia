@@ -169,22 +169,22 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData, isSubmi
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>{t('checkout.confirmOrder') || 'Confirm Your Order'}</ModalHeader>
+        <ModalHeader>{t('confirmOrder') || 'Confirm Your Order'}</ModalHeader>
         <ModalBody>
           <VStack spacing={4} align="stretch">
             <Box>
               <Text fontWeight="bold" mb={2}>
-                {t('checkout.contactInformation') || 'Contact Information'}
+                {t('contactInformation') || 'Contact Information'}
               </Text>
               <Text fontSize="sm">
-                <strong>{t('checkout.fullName') || 'Name'}:</strong> {orderData.orderInfo.fullName}
+                <strong>{t('fullName') || 'Name'}:</strong> {orderData.orderInfo.fullName}
               </Text>
               <Text fontSize="sm">
-                <strong>{t('checkout.phoneNumber') || 'Phone'}:</strong> {orderData.orderInfo.phoneNumber}
+                <strong>{t('phoneNumber') || 'Phone'}:</strong> {orderData.orderInfo.phoneNumber}
               </Text>
               {orderData.orderInfo.email && (
                 <Text fontSize="sm">
-                  <strong>{t('checkout.email') || 'Email'}:</strong> {orderData.orderInfo.email}
+                  <strong>{t('email') || 'Email'}:</strong> {orderData.orderInfo.email}
                 </Text>
               )}
             </Box>
@@ -193,7 +193,7 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData, isSubmi
 
             <Box>
               <Text fontWeight="bold" mb={2}>
-                {t('checkout.pickupLocation') || 'Pickup Location'}
+                {t('pickupLocation') || 'Pickup Location'}
               </Text>
               <Text fontSize="sm">
                 {orderData.selectedPickupAddress?.display_name || orderData.selectedPickupAddress?.label || orderData.orderInfo.deliveryAddress}
@@ -209,7 +209,7 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData, isSubmi
 
             <Box>
               <Text fontWeight="bold" mb={2}>
-                {t('checkout.paymentMethod') || 'Payment Method'}
+                {t('paymentMethod') || 'Payment Method'}
               </Text>
               <Text fontSize="sm">
                 Cash on Pickup
@@ -220,15 +220,15 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData, isSubmi
 
             <Box>
               <Text fontWeight="bold" mb={2}>
-                {t('checkout.orderSummary') || 'Order Summary'}
+                {t('orderSummary') || 'Order Summary'}
               </Text>
               <Flex justify="space-between">
-                <Text fontSize="sm">{t('checkout.subtotal') || 'Subtotal'}:</Text>
+                <Text fontSize="sm">{t('subtotal') || 'Subtotal'}:</Text>
                 <Text fontSize="sm">${orderData.orderSummary.subtotal.toFixed(2)}</Text>
               </Flex>
               <Divider my={2} />
               <Flex justify="space-between" fontWeight="bold">
-                <Text>{t('checkout.total') || 'Total'}:</Text>
+                <Text>{t('total') || 'Total'}:</Text>
                 <Text>${orderData.orderSummary.total.toFixed(2)}</Text>
               </Flex>
             </Box>
@@ -236,15 +236,15 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData, isSubmi
         </ModalBody>
         <ModalFooter>
           <Button variant="ghost" mr={3} onClick={onClose}>
-            {t('common.cancel') || 'Cancel'}
+            {t('cancel') || 'Cancel'}
           </Button>
           <Button
             colorScheme="brand"
             onClick={onConfirm}
             isLoading={isSubmitting}
-            loadingText={t('checkout.processing') || 'Processing...'}
+            loadingText={t('processing') || 'Processing...'}
           >
-            {t('checkout.confirmOrder') || 'Confirm Order'}
+            {t('confirmOrder') || 'Confirm Order'}
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -395,7 +395,7 @@ export default function CheckoutPage() {
         payload: {
           email: user?.email || '',
           phoneNumber: userProfile.phone_number || '',
-          fullName: userProfile.display_name || userProfile.full_name || '',
+          fullName: userProfile.display_name || userProfile.full_name || 'anon',
           deliveryAddress: defaultAddr ? 
             `${defaultAddr.address_line1}${defaultAddr.address_line2 ? ', ' + defaultAddr.address_line2 : ''}, ${defaultAddr.city}` : '',
           city: defaultAddr?.city || '',
@@ -460,8 +460,8 @@ export default function CheckoutPage() {
   // Validate required fields
   if (!orderInfo.fullName || orderInfo.fullName.trim().length < 3) {
     toast({
-      title: t('checkout.nameRequired') || 'Name Required',
-      description: t('checkout.pleaseEnterName') || 'Please enter your full name',
+      title: t('nameRequired') || 'Name Required',
+      description: t('pleaseEnterName') || 'Please enter your full name',
       status: 'warning',
       duration: 3000,
       isClosable: true,
@@ -475,8 +475,8 @@ export default function CheckoutPage() {
   
   if (!orderInfo.phoneNumber || !phoneRegex.test(cleanPhone)) {
     toast({
-      title: t('checkout.invalidPhone') || 'Phone Number Required',
-      description: t('checkout.saudiPhoneRequired') || 'Please enter a valid Saudi phone number starting with +966 5 (required for order confirmation)',
+      title: t('invalidPhone') || 'Phone Number Required',
+      description: t('saudiPhoneRequired') || 'Please enter a valid Saudi phone number starting with +966 5 (required for order confirmation)',
       status: 'warning',
       duration: 4000,
       isClosable: true,
@@ -487,8 +487,8 @@ export default function CheckoutPage() {
   // Validate pickup address is selected
   if (!selectedPickupAddress) {
     toast({
-      title: t('checkout.pickupLocationRequired') || 'Pickup Location Required',
-      description: t('checkout.pleaseSelectPickupLocation') || 'Please select a pickup location',
+      title: t('pickupLocationRequired') || 'Pickup Location Required',
+      description: t('pleaseSelectPickupLocation') || 'Please select a pickup location',
       status: 'warning',
       duration: 3000,
       isClosable: true,
@@ -499,8 +499,8 @@ export default function CheckoutPage() {
   // Validate cart has items
   if (!cart?.meals || cart.meals.length === 0) {
     toast({
-      title: t('checkout.emptyCart') || 'Empty Cart',
-      description: t('checkout.addItemsToCart') || 'Please add items to your cart before checkout',
+      title: t('emptyCart') || 'Empty Cart',
+      description: t('addItemsToCart') || 'Please add items to your cart before checkout',
       status: 'warning',
       duration: 3000,
       isClosable: true,
@@ -516,10 +516,9 @@ export default function CheckoutPage() {
 const handleConfirmOrder = async () => {
   dispatch({ type: 'START_SUBMISSION' });
   onCloseConfirmation();
-
   try {
-    if (!orderInfo.fullName || !orderInfo.phoneNumber) {
-      throw new Error('Contact information is required');
+    if (!orderInfo.phoneNumber) {
+      throw new Error('Contact number information is required');
     }
 
     if (!selectedPickupAddress) {
@@ -605,13 +604,7 @@ const handleConfirmOrder = async () => {
       subscription_meal_index: null,
     };
 
-    console.log('📦 Creating order with data:', {
-      user_id: orderData.user_id,
-      contact_phone: orderData.contact_phone,
-      meals_count: orderData.order_meals.length,
-      items_count: orderData.order_items.length,
-      total: orderData.total_amount
-    });
+    console.log('📦 Creating order with data:', JSON.stringify(orderData));
     
     // Call the createInstantOrder API
     const createdOrder = await createInstantOrder(orderData);
@@ -625,7 +618,7 @@ const handleConfirmOrder = async () => {
     clearCart();
 
     toast({
-      title: t('checkout.orderPlacedSuccessfully') || 'Order Placed Successfully',
+      title: t('orderPlacedSuccessfully') || 'Order Placed Successfully',
       description: `Order #${createdOrder.order_number} is ready for pickup`,
       status: 'success',
       duration: 5000,
@@ -640,7 +633,7 @@ const handleConfirmOrder = async () => {
     dispatch({ type: 'END_SUBMISSION' });
 
     toast({
-      title: t('checkout.orderFailed') || 'Order Failed',
+      title: t('orderFailed') || 'Order Failed',
       description: error.message || 'Failed to place order. Please try again.',
       status: 'error',
       duration: 5000,
@@ -658,22 +651,22 @@ const handleConfirmOrder = async () => {
     >
       <VStack spacing={8} align="stretch">
         <Heading as="h1" size="xl" textAlign="center" color="brand.500">
-          {t('checkout.checkout') || 'Checkout'}
+          {t('checkout') || 'Checkout'}
         </Heading>
 
         <SimpleGrid columns={gridColumns} spacing={6}>
           {/* Contact Information Section */}
           <Section
-            title={t('checkout.contactInformation') || 'Contact Information'}
+            title={t('contactInformation') || 'Contact Information'}
             bgColor="brand"
             titleColor="gray.800"
             icon={saladIcon}
           >
             <Stack spacing={3}>
               <FormControl isRequired>
-                <FormLabel fontSize="sm">{t('checkout.fullName') || 'Full Name'}</FormLabel>
+                <FormLabel fontSize="sm">{t('fullName') || 'Full Name'}</FormLabel>
                 <Input
-                  placeholder={t('checkout.enterYourFullName') || 'Enter your full name'}
+                  placeholder={t('enterYourFullName') || 'Enter your full name'}
                   value={orderInfo.fullName}
                   onChange={(e) => handleOrderInfoChange('fullName', e.target.value)}
                   {...inputProps}
@@ -682,7 +675,7 @@ const handleConfirmOrder = async () => {
 
               <FormControl isRequired>
                 <FormLabel fontSize="sm">
-                  {t('checkout.phoneNumber') || 'Phone Number'} 
+                  {t('phoneNumber') || 'Phone Number'} 
                   <Badge ml={2} colorScheme="green">Saudi</Badge>
                 </FormLabel>
                 <Input
@@ -698,12 +691,12 @@ const handleConfirmOrder = async () => {
 
               <FormControl>
                 <FormLabel fontSize="sm">
-                  {t('checkout.emailAddress') || 'Email Address'} 
+                  {t('emailAddress') || 'Email Address'} 
                   <Badge ml={2} colorScheme="gray">Optional</Badge>
                 </FormLabel>
                 <Input
                   type="email"
-                  placeholder={t('checkout.yourEmailAddress') || 'your@email.com'}
+                  placeholder={t('yourEmailAddress') || 'your@email.com'}
                   value={orderInfo.email}
                   onChange={(e) => handleOrderInfoChange('email', e.target.value)}
                   {...inputProps}
@@ -712,10 +705,10 @@ const handleConfirmOrder = async () => {
 
               <FormControl>
                 <FormLabel fontSize="sm">
-                  {t('checkout.specialInstructions') || 'Special Instructions'}
+                  {t('specialInstructions') || 'Special Instructions'}
                 </FormLabel>
                 <Input
-                  placeholder={t('checkout.anySpecialRequests') || 'Any special requests?'}
+                  placeholder={t('anySpecialRequests') || 'Any special requests?'}
                   value={orderInfo.notes}
                   onChange={(e) => handleOrderInfoChange('notes', e.target.value)}
                   {...inputProps}
@@ -726,7 +719,7 @@ const handleConfirmOrder = async () => {
 
           {/* Pickup Location Section */}
           <Section 
-            title={t('checkout.pickupLocation') || 'Pickup Location'} 
+            title={t('pickupLocation') || 'Pickup Location'} 
             bgColor="warning" 
             icon={paymentIcon}
           >
@@ -734,7 +727,7 @@ const handleConfirmOrder = async () => {
               <Alert status="info" borderRadius="md" size="sm">
                 <AlertIcon />
                 <Text fontSize="sm">
-                  {t('checkout.pickupOnly') || 'Pickup only. Delivery coming soon!'}
+                  {t('pickupOnly') || 'Pickup only. Delivery coming soon!'}
                 </Text>
               </Alert>
 
@@ -771,7 +764,7 @@ const handleConfirmOrder = async () => {
                     colorScheme="brand" 
                     onClick={onOpenMap}
                   >
-                    📍 {t('checkout.viewOnMap') || 'View on Map'}
+                    📍 {t('viewOnMap') || 'View on Map'}
                   </Button>
 
                   {selectedPickupAddress && (
@@ -798,7 +791,7 @@ const handleConfirmOrder = async () => {
 
           {/* Order Summary Section */}
           <Section 
-            title={t('checkout.orderSummary') || 'Order Summary'} 
+            title={t('orderSummary') || 'Order Summary'} 
             bgColor="accent" 
             icon={orderIcon}
           >
@@ -842,7 +835,7 @@ const handleConfirmOrder = async () => {
               {/* Price Summary */}
               <Stack spacing={2}>
                 <Flex justify="space-between">
-                  <Text fontSize="sm">{t('checkout.subtotal') || 'Subtotal'}:</Text>
+                  <Text fontSize="sm">{t('subtotal') || 'Subtotal'}:</Text>
                   <Text fontSize="sm" fontWeight="bold">
                     ${orderSummary.subtotal.toFixed(2)}
                   </Text>
@@ -852,7 +845,7 @@ const handleConfirmOrder = async () => {
 
                 <Flex justify="space-between">
                   <Text fontWeight="bold" fontSize="lg">
-                    {t('checkout.total') || 'Total'}:
+                    {t('total') || 'Total'}:
                   </Text>
                   <Text fontWeight="bold" fontSize="lg" color="brand.600">
                     ${orderSummary.total.toFixed(2)}
@@ -874,10 +867,10 @@ const handleConfirmOrder = async () => {
                 width="full"
                 onClick={handleOpenConfirmation}
                 isLoading={isSubmitting}
-                loadingText={t('checkout.processing') || 'Processing...'}
+                loadingText={t('processing') || 'Processing...'}
                 isDisabled={cart?.meals?.length === 0 || isSubmitting || !selectedPickupAddress}
               > 
-                {t('checkout.placeOrder') || 'Place Order'}
+                {t('placeOrder') || 'Place Order'}
               </Button>
             </VStack>
           </Section>

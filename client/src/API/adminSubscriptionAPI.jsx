@@ -1,4 +1,5 @@
 import { supabase } from "../../supabaseClient";
+import { userAPI } from "./userAPI";
 
 // ===== GENERIC DB HELPERS =====
 const fetchSingle = async (table, query) => {
@@ -236,7 +237,7 @@ async getSubscriptionSummary(subscriptionId) {
     });
 
     // Get subscription stats
-    const stats = await this.getSubscriptionStats(subscriptionId);
+    const stats = await userAPI.getSubscriptionStats(subscriptionId);
     
     console.log('✅ Subscription stats:', stats);
 
