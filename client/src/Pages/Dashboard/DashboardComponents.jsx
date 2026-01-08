@@ -1,5 +1,35 @@
 import { useState, useMemo, useCallback } from 'react';
+
+import { ChevronDownIcon, ChevronUpIcon, TimeIcon, CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
 import {
+  
+  Collapse,
+  useDisclosure,
+  Grid,
+  GridItem,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+
+  Card,
+  CardBody,
+  CardHeader,
+  StackDivider,
+  useColorModeValue,
+  Tag,
+  TagLabel,
+  TagLeftIcon,
+  Divider,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  StatArrow,
+  AspectRatio,
+  Wrap,
+  WrapItem,
   FormControl,
   FormLabel,
   Input,
@@ -51,12 +81,21 @@ import {
   useToast
 } from '@chakra-ui/react';
 
-import { 
-  FiCheckCircle, 
+import {  
   FiLock, 
   FiClock, 
+  FiAlertTriangle,
+  FiPackage,
+  FiDollarSign,
+  FiCheckCircle,
+  FiTrendingUp,
   FiCalendar,
-  FiAlertTriangle 
+  FiChevronRight,
+  FiMapPin,
+  FiRefreshCw,
+  FiBarChart2,
+  FiPlayCircle,
+  FiPauseCircle
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -344,102 +383,386 @@ export const SwitchFormControl = ({ label, id, checked, onChange }) => {
     )
 };
   
-// Order History Table - Mobile-first responsive design
-export const OrderHistoryTable = ({ orders }) => {
-    const { t } = useTranslation();
-    
-    if (!orders || orders.length === 0) {
-      return (
-        <Center w="100%" py={8}>
-          <Text textAlign="center" color="gray.500" fontSize={{ base: "sm", md: "md" }}>
-            {t('noOrdersFound')}
-          </Text>
-        </Center>
-      )
+const ExpandableRow = ({ order }) => {
+  const { isOpen, onToggle } = useDisclosure();
+  
+  // Helper function to format date
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  // Get status color scheme
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'confirmed':
+      case 'completed':
+      case 'delivered':
+      case 'paid':
+        return 'green';
+      case 'pending':
+      case 'processing':
+        return 'orange';
+      case 'cancelled':
+      case 'failed':
+        return 'red';
+      default:
+        return 'gray';
     }
-    
-    return (
-      <ResponsiveWrapper>
-        <Box overflowX="auto" w="100%">
-          <TableContainer>
-            <Table variant="striped" size={{ base: "sm", md: "md" }}>
-              <Thead>
-                <Tr>
-                  <Th fontSize={{ base: "xs", md: "sm" }}>{t('orderID')}</Th>
-                  <Th fontSize={{ base: "xs", md: "sm" }}>{t('date')}</Th>
-                  <Th fontSize={{ base: "xs", md: "sm" }}>{t('items')}</Th>
-                  <Th fontSize={{ base: "xs", md: "sm" }} isNumeric>{t('total')}</Th>
-                  <Th fontSize={{ base: "xs", md: "sm" }}>{t('status')}</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {orders?.map((order) => (
-                  <Tr key={order.id}>
-                    <Td fontSize={{ base: "xs", md: "sm" }}>
-                      <Text isTruncated maxW={{ base: "60px", md: "100px" }}>
-                        {order.order_number || order.id.slice(0, 8)}...
-                      </Text>
-                    </Td>
-                    <Td fontSize={{ base: "xs", md: "sm" }}>
-                      <Text>
-                        {new Date(order.created_at).toLocaleDateString('en-US', {
-                          year: '2-digit',
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                      </Text>
-                    </Td>
-                    <Td fontSize={{ base: "xs", md: "sm" }}>
-                      <VStack align="start" spacing={1}>
-                        {/* Show order items */}
-                        {order.items?.map((item) => (
-                          <Text key={item.id} isTruncated maxW={{ base: "80px", md: "150px" }}>
-                            {item.name} x{item.quantity}
+  };
+
+  // Get payment status color
+  const getPaymentStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'paid':
+      case 'completed':
+        return 'green';
+      case 'pending':
+        return 'yellow';
+      case 'failed':
+      case 'refunded':
+        return 'red';
+      default:
+        return 'gray';
+    }
+  };
+
+  // Calculate total items
+  const totalItems = (order.order_meals?.length || 0) + (order.order_items?.length || 0);
+
+  // Get payment method display
+  const getPaymentMethodDisplay = (method) => {
+    const methods = {
+      'cash': 'Cash',
+      'card': 'Credit Card',
+      'apple_pay': 'Apple Pay',
+      'google_pay': 'Google Pay',
+    };
+    return methods[method] || method || 'N/A';
+  };
+
+  return (
+    <>
+      {/* Main Row */}
+      <Tr 
+        onClick={onToggle}
+        cursor="pointer"
+        _hover={{ bg: 'gray.50' }}
+        transition="all 0.2s"
+      >
+        <Td>
+          <Flex align="center">
+            <IconButton
+              size="xs"
+              icon={isOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+              variant="ghost"
+              mr={2}
+              aria-label="Expand order"
+            />
+            <Text fontWeight="medium" fontSize={{ base: "xs", md: "sm" }}>
+              #{order.order_number || order.id.slice(-8)}
+            </Text>
+          </Flex>
+        </Td>
+        <Td fontSize={{ base: "xs", md: "sm" }}>
+          <VStack align="start" spacing={0}>
+            <Text>
+              {new Date(order.created_at).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </Text>
+            <Text fontSize="xs" color="gray.500">
+              {new Date(order.created_at).toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </Text>
+          </VStack>
+        </Td>
+        <Td fontSize={{ base: "xs", md: "sm" }}>
+          <Text color="gray.600">
+            {totalItems} {totalItems === 1 ? 'item' : 'items'}
+          </Text>
+        </Td>
+        <Td isNumeric fontSize={{ base: "xs", md: "sm" }}>
+          <Text fontWeight="bold">
+            ${order.total_amount?.toFixed(2)}
+          </Text>
+        </Td>
+        <Td>
+          <Badge
+            colorScheme={getStatusColor(order.status)}
+            size="sm"
+            borderRadius="md"
+            px={2}
+            py={1}
+          >
+            {order.status}
+          </Badge>
+        </Td>
+      </Tr>
+
+      {/* Expanded Details Row */}
+      <Tr>
+        <Td colSpan={5} p={0}>
+          <Collapse in={isOpen} animateOpacity>
+            <Box
+              p={{ base: 3, md: 4 }}
+              bg="gray.50"
+              borderTopWidth="1px"
+              borderColor="gray.200"
+            >
+              <Grid
+                templateColumns={{ base: '1fr', md: '2fr 1fr' }}
+                gap={4}
+                fontSize="sm"
+              >
+                {/* Left Column - Order Items */}
+                <GridItem>
+                  <Text fontWeight="semibold" mb={3} fontSize="md">
+                    Order Details
+                  </Text>
+                  
+                  {/* Order Items List */}
+                  <VStack align="stretch" spacing={3} mb={4}>
+                    {/* Meals */}
+                    {order.order_meals?.map((meal, index) => (
+                      <HStack key={meal.id} spacing={3} align="start">
+                        <Box
+                          width="50px"
+                          height="50px"
+                          borderRadius="md"
+                          overflow="hidden"
+                          flexShrink={0}
+                        >
+                          <Image
+                            src={meal?.image_url}
+                            alt={meal.name}
+                            objectFit="cover"
+                            w="100%"
+                            h="100%"
+                          />
+                        </Box>
+                        <Box flex={1}>
+                          <Text fontWeight="medium">{meal.name}</Text>
+                          {meal.name_arabic && (
+                            <Text fontSize="xs" color="gray.600">
+                              {meal.name_arabic}
+                            </Text>
+                          )}
+                          {meal.customization_notes && (
+                            <Text fontSize="xs" color="blue.600" mt={1}>
+                              Note: {meal.customization_notes}
+                            </Text>
+                          )}
+                        </Box>
+                        <VStack align="end" spacing={0}>
+                          <Text fontWeight="medium">
+                            ${meal.total_price?.toFixed(2)}
                           </Text>
-                        ))}
-                        {/* Show order meals if they exist */}
-                        {order.order_meals?.map((meal) => (
-                          <Text key={meal.id} isTruncated maxW={{ base: "80px", md: "150px" }}>
-                            {meal.name} x{meal.quantity}
+                          <Text fontSize="xs" color="gray.500">
+                            {meal.quantity} × ${meal.unit_price?.toFixed(2)}
                           </Text>
-                        ))}
-                        {/* If no items or meals, show a message */}
-                        {(!order.order_items || order.order_items.length === 0) && 
-                         (!order.order_meals || order.order_meals.length === 0) && (
-                          <Text color="gray.500" fontSize="xs">
-                            {t('noItems')}
+                        </VStack>
+                      </HStack>
+                    ))}
+                    
+                    {/* Additional Items */}
+                    {order.order_items?.map((item) => (
+                      <HStack key={item.id} justify="space-between">
+                        <Text>{item.name} × {item.quantity}</Text>
+                        <Text fontWeight="medium">
+                          ${item.total_price?.toFixed(2)}
+                        </Text>
+                      </HStack>
+                    ))}
+                  </VStack>
+
+                  {/* Delivery Address */}
+                  {order.delivery_address && (
+                    <Box mt={4}>
+                      <Text fontWeight="semibold" mb={2}>
+                        Delivery Address
+                      </Text>
+                      <Box p={3} bg="white" borderRadius="md" borderWidth="1px">
+                        <Text>{order.delivery_address.label}</Text>
+                        <Text fontSize="sm" color="gray.600">
+                          {order.delivery_address.address_line1}
+                          {order.delivery_address.address_line2 && (
+                            <>, {order.delivery_address.address_line2}</>
+                          )}
+                        </Text>
+                        <Text fontSize="sm" color="gray.600">
+                          {order.delivery_address.city}, {order.delivery_address.state}
+                        </Text>
+                        {order.delivery_instructions && (
+                          <Text fontSize="sm" color="blue.600" mt={1}>
+                            Instructions: {order.delivery_instructions}
                           </Text>
                         )}
-                      </VStack>
-                    </Td>
-                    <Td fontSize={{ base: "xs", md: "sm" }} isNumeric>
-                      <Text fontWeight="bold">
-                        ${order.total_amount?.toFixed(2)}
-                      </Text>
-                    </Td>
-                    <Td>
+                      </Box>
+                    </Box>
+                  )}
+                </GridItem>
+
+                {/* Right Column - Order Summary */}
+                <GridItem>
+                  <Text fontWeight="semibold" mb={3} fontSize="md">
+                    Order Summary
+                  </Text>
+                  
+                  {/* Payment Status & Method */}
+                  <VStack align="stretch" spacing={3} mb={4}>
+                    <HStack justify="space-between">
+                      <Text color="gray.600">Payment Status:</Text>
                       <Badge
-                        colorScheme={
-                          order.status === 'delivered' || order.status === 'completed'
-                            ? 'green'
-                            : order.status === 'pending' || order.status === 'confirmed'
-                              ? 'yellow'
-                              : 'red'
-                        }
-                        size={{ base: "sm", md: "md" }}
-                        borderRadius="full"
+                        colorScheme={getPaymentStatusColor(order.payment_status)}
+                        size="sm"
                       >
-                        {order.status}
+                        {order.payment_status}
                       </Badge>
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </TableContainer>
-        </Box>
-      </ResponsiveWrapper>
-    )
+                    </HStack>
+                    
+                    <HStack justify="space-between">
+                      <Text color="gray.600">Payment Method:</Text>
+                      <Text fontWeight="medium">
+                        {getPaymentMethodDisplay(order.payment_method)}
+                      </Text>
+                    </HStack>
+
+                    {order.paid_at && (
+                      <HStack justify="space-between">
+                        <Text color="gray.600">Paid At:</Text>
+                        <Text fontSize="xs">
+                          {formatDate(order.paid_at)}
+                        </Text>
+                      </HStack>
+                    )}
+                  </VStack>
+
+                  {/* Pricing Breakdown */}
+                  <Box p={3} bg="white" borderRadius="md" borderWidth="1px">
+                    <VStack align="stretch" spacing={2}>
+                      <HStack justify="space-between">
+                        <Text color="gray.600">Subtotal</Text>
+                        <Text>${order.subtotal?.toFixed(2)}</Text>
+                      </HStack>
+                      
+                      {order.tax_amount > 0 && (
+                        <HStack justify="space-between">
+                          <Text color="gray.600">Tax</Text>
+                          <Text>${order.tax_amount?.toFixed(2)}</Text>
+                        </HStack>
+                      )}
+                      
+                      {order.discount_amount > 0 && (
+                        <HStack justify="space-between">
+                          <Text color="gray.600">Discount</Text>
+                          <Text color="green.500">-${order.discount_amount?.toFixed(2)}</Text>
+                        </HStack>
+                      )}
+                      
+                      {order.delivery_fee > 0 && (
+                        <HStack justify="space-between">
+                          <Text color="gray.600">Delivery</Text>
+                          <Text>${order.delivery_fee?.toFixed(2)}</Text>
+                        </HStack>
+                      )}
+                      
+                      <Divider />
+                      
+                      <HStack justify="space-between" fontWeight="bold">
+                        <Text>Total</Text>
+                        <Text fontSize="lg">${order.total_amount?.toFixed(2)}</Text>
+                      </HStack>
+                    </VStack>
+                  </Box>
+
+                  {/* Loyalty Points */}
+                  {(order.loyalty_points_used > 0 || order.loyalty_points_earned > 0) && (
+                    <Box mt={4}>
+                      <Text fontWeight="medium" mb={2}>
+                        Loyalty Points
+                      </Text>
+                      <HStack spacing={4}>
+                        {order.loyalty_points_used > 0 && (
+                          <Tag colorScheme="blue" size="sm">
+                            <TagLabel>Used: {order.loyalty_points_used} pts</TagLabel>
+                          </Tag>
+                        )}
+                        {order.loyalty_points_earned > 0 && (
+                          <Tag colorScheme="green" size="sm">
+                            <TagLabel>Earned: {order.loyalty_points_earned} pts</TagLabel>
+                          </Tag>
+                        )}
+                      </HStack>
+                    </Box>
+                  )}
+                </GridItem>
+              </Grid>
+            </Box>
+          </Collapse>
+        </Td>
+      </Tr>
+    </>
+  );
+};
+
+export const OrderHistoryTable = ({ orders }) => {
+  // const { t } = useTranslation();
+  
+  if (!orders || orders.length === 0) {
+    return (
+      <Center w="100%" py={12}>
+        <VStack spacing={4}>
+          <Box p={4} bg="gray.100" borderRadius="full">
+            <TimeIcon boxSize={6} color="gray.400" />
+          </Box>
+          <Text textAlign="center" color="gray.500">
+            No orders found
+            {/* {t('noOrdersFound')} */}
+          </Text>
+        </VStack>
+      </Center>
+    );
+  }
+
+  return (
+    <Box 
+      borderWidth="1px" 
+      borderRadius="lg" 
+      overflow="hidden"
+      bg="white"
+      boxShadow="sm"
+    >
+      <TableContainer>
+        <Table variant="simple" size={{ base: "sm", md: "md" }}>
+          <Thead bg="gray.50">
+            <Tr>
+              <Th fontSize={{ base: "xs", md: "sm" }}>Order #</Th>
+              <Th fontSize={{ base: "xs", md: "sm" }}>Date & Time</Th>
+              <Th fontSize={{ base: "xs", md: "sm" }}>Items</Th>
+              <Th fontSize={{ base: "xs", md: "sm" }} isNumeric>Total</Th>
+              <Th fontSize={{ base: "xs", md: "sm" }}>Status</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {orders.map((order) => (
+              <ExpandableRow key={order.id} order={order} />
+            ))}
+          </Tbody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
 };
   
 // Subscription Details - Mobile-optimized layout
@@ -458,6 +781,13 @@ export const SubscriptionDetails = ({
   const isArabic = currentLanguage === 'ar';
 
   const [activatingOrderId, setActivatingOrderId] = useState(null);
+
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const primaryColor = useColorModeValue('brand.600', 'brand.300');
+  const secondaryColor = useColorModeValue('brand.500', 'brand.400');
+  const accentColor = useColorModeValue('green.500', 'green.300');
+  const mutedColor = useColorModeValue('gray.600', 'gray.400');
 
   // Filter orders for this subscription
   const subscriptionOrders = useMemo(() => {
@@ -498,7 +828,11 @@ export const SubscriptionDetails = ({
     };
   }, [subscriptionOrders]);
 
-
+  // Calculate progress percentage
+  const progressPercentage = useMemo(() => {
+    if (!subscription?.total_meals || subscription.total_meals === 0) return 0;
+    return Math.round((subscription.consumed_meals / subscription.total_meals) * 100);
+  }, [subscription]);
 
   // Show toast message
   const showToast = useCallback((title, description, status = 'success') => {
@@ -508,6 +842,7 @@ export const SubscriptionDetails = ({
       status,
       duration: 3000,
       isClosable: true,
+      position: 'top-right',
     });
   }, [toast, t]);
 
@@ -538,148 +873,185 @@ export const SubscriptionDetails = ({
   // Render order items
   const renderOrderItems = useCallback((order) => {
     if (!order.order_items || order.order_items.length === 0) {
-      return <Text fontSize="sm" color="gray.500">{t('noItems')}</Text>;
+      return (
+        <Text fontSize="sm" color={mutedColor} fontStyle="italic">
+          {t('noItems')}
+        </Text>
+      );
     }
 
     return (
-      <VStack align="start" spacing={1}>
+      <VStack align="start" spacing={2} width="100%">
         {order.order_items.map((item, index) => (
-          <HStack key={index} spacing={2} wrap="wrap">
-            <Text fontSize="sm" fontWeight="medium">
-              {isArabic ? item.name_arabic || item.name : item.name}
-            </Text>
-            {item.quantity > 1 && (
-              <Badge fontSize="xs" colorScheme="blue">x{item.quantity}</Badge>
-            )}
-            {item.category && (
-              <Badge fontSize="xs" colorScheme="gray" variant="subtle">
-                {item.category}
-              </Badge>
-            )}
-            <Text fontSize="xs" color="brand.500" fontWeight="bold">
-              ${item.total_price}
-            </Text>
+          <HStack 
+            key={index} 
+            spacing={3} 
+            wrap="wrap" 
+            p={2}
+            bg={useColorModeValue('gray.50', 'gray.700')}
+            borderRadius="md"
+            width="100%"
+          >
+            <Box flex={1}>
+              <Text fontSize="sm" fontWeight="medium">
+                {isArabic ? item.name_arabic || item.name : item.name}
+              </Text>
+              {item.category && (
+                <Tag size="sm" colorScheme="gray" variant="subtle" mt={1}>
+                  {item.category}
+                </Tag>
+              )}
+            </Box>
+            <HStack spacing={2}>
+              {item.quantity > 1 && (
+                <Tag size="sm" colorScheme="blue" borderRadius="full">
+                  x{item.quantity}
+                </Tag>
+              )}
+              <Text fontSize="sm" color={secondaryColor} fontWeight="bold">
+                ${item.total_price}
+              </Text>
+            </HStack>
           </HStack>
         ))}
       </VStack>
     );
-  }, [isArabic, t]);
+  }, [isArabic, t, mutedColor, secondaryColor]);
 
   // Render individual order card
-  const renderOrderCard = useCallback((order, showActivateButton = false) => (
-    <Box
-      key={order.id}
-      p={4}
-      borderWidth="2px"
-      borderColor={
-        order.status === 'pending' && canActivateOrders ? 'brand.200' :
-        order.status === 'active' ? 'green.200' : 
-        order.status === 'delivered' ? 'gray.200' : 'orange.200'
-      }
-      borderRadius="md"
-      bg={
-        order.status === 'delivered' ? 'gray.50' :
-        order.status === 'active' ? 'green.50' : 
-        order.status === 'pending' && canActivateOrders ? 'brand.50' : 'white'
-      }
-      opacity={(!canActivateOrders && order.status === 'pending') ? 0.6 : 1}
-      transition="all 0.2s"
-      _hover={
-        order.status === 'pending' && canActivateOrders 
-          ? { borderColor: 'brand.400', shadow: 'md' } 
-          : {}
-      }
-    >
-      <VStack align="stretch" spacing={3}>
-        <HStack justify="space-between" align="start">
-          <VStack align="start" spacing={1}>
-            <HStack wrap="wrap" spacing={2}>
-              <Text fontWeight="bold" fontSize="sm">
-                #{order.order_number}
-              </Text>
-              <Badge 
-                colorScheme={
-                  order.status === 'pending' ? 'blue' :
-                  order.status === 'active' ? 'green' :
-                  order.status === 'delivered' ? 'gray' : 'orange'
-                }
-                size="sm"
-              >
-                {t(`admin.order_status.${order.status}`)}
-              </Badge>
-              {order.status === 'pending' && canActivateOrders && (
-                <Badge colorScheme="yellow" size="sm">
-                  {t('readyToActivate')}
-                </Badge>
-              )}
-              {order.status === 'pending' && hasOrdersInProgress && (
-                <Badge colorScheme="red" size="sm">
-                  <HStack spacing={1}>
-                    <Icon as={FiLock} boxSize="10px" />
-                    <Text>{t('locked')}</Text>
-                  </HStack>
-                </Badge>
-              )}
-            </HStack>
-          </VStack>
+  const renderOrderCard = useCallback((order, showActivateButton = false) => {
+    const statusColor = {
+      'pending': useColorModeValue('blue.500', 'blue.300'),
+      'active': useColorModeValue('green.500', 'green.300'),
+      'delivered': useColorModeValue('gray.500', 'gray.300'),
+      'cancelled': useColorModeValue('red.500', 'red.300'),
+    }[order.status] || useColorModeValue('orange.500', 'orange.300');
 
-          {showActivateButton && order.status === 'pending' && (
-            <Tooltip 
-              label={
-                canActivateOrders 
-                  ? t('activateThisOrder') 
-                  : t('cannotActivateWhileOrderInProgress')
-              } 
-              hasArrow
-            >
-              <IconButton
-                icon={canActivateOrders ? <Icon as={FiCheckCircle} /> : <Icon as={FiLock} />}
-                colorScheme={canActivateOrders ? "brand" : "gray"}
-                size="sm"
-                variant={canActivateOrders ? "solid" : "outline"}
-                onClick={() => handleOrderActivation(order.id)}
-                isDisabled={!canActivateOrders}
-                isLoading={activatingOrderId === order.id}
-                aria-label={t('activateOrder')}
-              />
-            </Tooltip>
-          )}
-        </HStack>
-        
-        {renderOrderItems(order)}
-        
-        <HStack spacing={4} fontSize="xs" color="gray.600" wrap="wrap">
-          {order.scheduled_delivery_date && (
-            <HStack>
-              <Icon as={FiClock} boxSize="12px" />
-              <Text>
-                {new Date(order.scheduled_delivery_date).toLocaleDateString(
-                  isArabic ? 'ar-EG' : 'en-US'
-                )}
-              </Text>
-            </HStack>
-          )}
-          <HStack>
-            <Icon as={FiCalendar} boxSize="12px" />
-            <Text>
-              {new Date(order.created_at).toLocaleDateString(
-                isArabic ? 'ar-EG' : 'en-US'
+    return (
+      <Card
+        key={order.id}
+        borderWidth="1px"
+        borderColor={
+          order.status === 'pending' && canActivateOrders ? 'brand.300' :
+          order.status === 'active' ? 'green.300' : 
+          order.status === 'delivered' ? 'gray.300' : 'orange.300'
+        }
+        bg={cardBg}
+        shadow="sm"
+        transition="all 0.2s"
+        _hover={{
+          shadow: 'md',
+          transform: 'translateY(-2px)'
+        }}
+        opacity={(!canActivateOrders && order.status === 'pending') ? 0.7 : 1}
+      >
+        <CardBody>
+          <VStack align="stretch" spacing={4}>
+            {/* Order Header */}
+            <Flex justify="space-between" align="start">
+              <VStack align="start" spacing={1}>
+                <HStack spacing={2}>
+                  <Tag colorScheme="brand" variant="subtle" size="sm">
+                    #{order.order_number}
+                  </Tag>
+                  <Tag 
+                    colorScheme={
+                      order.status === 'pending' ? 'blue' :
+                      order.status === 'active' ? 'green' :
+                      order.status === 'delivered' ? 'gray' : 'orange'
+                    }
+                    size="sm"
+                    borderRadius="full"
+                  >
+                    {t(`admin.order_status.${order.status}`)}
+                  </Tag>
+                  {order.status === 'pending' && canActivateOrders && (
+                    <Tag colorScheme="yellow" size="sm" borderRadius="full">
+                      <TagLeftIcon as={FiPlayCircle} />
+                      <TagLabel>{t('readyToActivate')}</TagLabel>
+                    </Tag>
+                  )}
+                  {order.status === 'pending' && hasOrdersInProgress && (
+                    <Tag colorScheme="red" size="sm" borderRadius="full">
+                      <TagLeftIcon as={FiPauseCircle} />
+                      <TagLabel>{t('locked')}</TagLabel>
+                    </Tag>
+                  )}
+                </HStack>
+              </VStack>
+
+              {showActivateButton && order.status === 'pending' && (
+                <Tooltip 
+                  label={
+                    canActivateOrders 
+                      ? t('activateThisOrder') 
+                      : t('cannotActivateWhileOrderInProgress')
+                  } 
+                  hasArrow
+                >
+                  <IconButton
+                    icon={
+                      canActivateOrders ? 
+                      <Icon as={FiPlayCircle} /> : 
+                      <Icon as={FiPauseCircle} />
+                    }
+                    colorScheme={canActivateOrders ? "brand" : "gray"}
+                    size="sm"
+                    variant={canActivateOrders ? "solid" : "outline"}
+                    onClick={() => handleOrderActivation(order.id)}
+                    isDisabled={!canActivateOrders}
+                    isLoading={activatingOrderId === order.id}
+                    aria-label={t('activateOrder')}
+                    borderRadius="full"
+                  />
+                </Tooltip>
               )}
-            </Text>
-          </HStack>
-        </HStack>
-      </VStack>
-    </Box>
-  ), [canActivateOrders, hasOrdersInProgress, renderOrderItems, handleOrderActivation, activatingOrderId, t, isArabic]);
+            </Flex>
+
+            {/* Order Items */}
+            {renderOrderItems(order)}
+
+            {/* Order Metadata */}
+            <VStack align="start" spacing={2} fontSize="xs" color={mutedColor}>
+              {order.scheduled_delivery_date && (
+                <HStack>
+                  <Icon as={FiClock} boxSize={3} />
+                  <Text>
+                    {t('scheduledFor')}: {new Date(order.scheduled_delivery_date).toLocaleDateString(
+                      isArabic ? 'ar-EG' : 'en-US',
+                      { weekday: 'short', month: 'short', day: 'numeric' }
+                    )}
+                  </Text>
+                </HStack>
+              )}
+              <HStack>
+                <Icon as={FiCalendar} boxSize={3} />
+                <Text>
+                  {t('orderedOn')}: {new Date(order.created_at).toLocaleDateString(
+                    isArabic ? 'ar-EG' : 'en-US'
+                  )}
+                </Text>
+              </HStack>
+            </VStack>
+          </VStack>
+        </CardBody>
+      </Card>
+    );
+  }, [canActivateOrders, hasOrdersInProgress, renderOrderItems, handleOrderActivation, activatingOrderId, t, isArabic, cardBg]);
 
   if (isLoading) {
     return (
-      <Center w="100%" py={8}>
-        <VStack spacing={4}>
-          <Spinner size={{ base: "md", md: "lg" }} />
-          <Text fontSize="sm" color="gray.500">
-            {t('loadingSubscription')}
-          </Text>
+      <Center w="100%" py={12}>
+        <VStack spacing={6}>
+          <Spinner size="xl" color={primaryColor} thickness="4px" />
+          <VStack spacing={2}>
+            <Text fontSize="lg" color={mutedColor}>
+              {t('loadingSubscription')}
+            </Text>
+            <Text fontSize="sm" color={mutedColor} textAlign="center" maxW="md">
+              {t('fetchingYourSubscriptionDetails')}
+            </Text>
+          </VStack>
         </VStack>
       </Center>
     );
@@ -688,200 +1060,333 @@ export const SubscriptionDetails = ({
   if (!subscription) {
     return (
       <ResponsiveWrapper>
-        <Box 
-          w="100%" 
-          maxW="lg" 
-          bg="secondary.200" 
-          borderRadius="lg" 
-          overflow="hidden"
+        <Card 
+          bg={cardBg}
+          borderWidth="1px"
+          borderColor={borderColor}
+          shadow="lg"
+          maxW="lg"
+          mx="auto"
         >
-          <Box p={{ base: 4, md: 6 }} borderWidth="1px" borderRadius="lg">
-            <VStack spacing={4}>
-              <Text 
-                textAlign="center" 
-                fontSize={{ base: "md", md: "lg" }}
-                color="gray.600"
-              >
-                {t('nosubscription')}
-              </Text>
+          <CardBody>
+            <VStack spacing={6} textAlign="center">
+              <Icon as={FiPackage} boxSize={16} color="gray.400" />
+              <VStack spacing={3}>
+                <Heading size="lg" color={mutedColor}>
+                  {t('nosubscription')}
+                </Heading>
+                <Text color={mutedColor} fontSize="sm">
+                  {t('subscription.emptyStateDescription')}
+                </Text>
+              </VStack>
               <Button 
                 colorScheme="brand"
-                size={{ base: "md", md: "lg" }}
-                w={{ base: "100%", sm: "auto" }}
+                size="lg"
+                rightIcon={<Icon as={FiChevronRight} />}
                 onClick={() => navigate('/subscriptions')}
+                w="full"
+                maxW="sm"
               >
                 {t('browsePlans')}
               </Button>
             </VStack>
-          </Box>
-        </Box>
+          </CardBody>
+        </Card>
       </ResponsiveWrapper>
     );
   }
   
   return (
     <ResponsiveWrapper>
-      <VStack spacing={6} align="stretch">
-        {/* Subscription Overview */}
-        <Box 
-          w="100%" 
-          maxW="lg" 
-          bg="secondary.200" 
-          borderRadius="lg" 
+      <VStack spacing={8} align="stretch">
+        {/* Subscription Overview Card */}
+        <Card 
+          bg={cardBg}
+          borderWidth="1px"
+          borderColor={borderColor}
+          shadow="lg"
           overflow="hidden"
         >
-          <Box p={{ base: 4, md: 6 }} borderWidth="1px" borderRadius="lg">
-            <VStack spacing={4} align="stretch">
-              <Heading 
-                size={{ base: "md", md: "lg" }} 
-                textAlign="center"
-                color="brand.600"
-              >
-                {subscription.plans?.title || t('subscription')}
-              </Heading>
-              
-              <Center>
-                <Text 
-                  fontWeight="bold" 
-                  fontSize={{ base: "xl", md: "2xl" }}
-                  color="brand.500"
-                >
-                  ${subscription.plans?.price_per_meal}/meal
-                </Text>
-              </Center>
-              
-              <VStack spacing={3} align="stretch">
+          <CardHeader bg={useColorModeValue('brand.50', 'brand.900')} pb={4}>
+            <VStack spacing={2}>
+              <HStack spacing={3}>
+                <Icon as={FiPackage} boxSize={6} color={primaryColor} />
+                <Heading size="lg" color={primaryColor}>
+                  {subscription.plans?.title || t('subscription')}
+                </Heading>
+              </HStack>
+              <Text color={mutedColor} fontSize="sm">
+                {t('subscription.planDescription')}
+              </Text>
+            </VStack>
+          </CardHeader>
+          
+          <CardBody>
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8}>
+              {/* Left Column: Stats */}
+              <VStack spacing={6} align="stretch">
+                <Stat>
+                  <StatLabel fontSize="sm" color={mutedColor}>
+                    <HStack spacing={2}>
+                      <Icon as={FiDollarSign} />
+                      <Text>{t('pricePerMeal')}</Text>
+                    </HStack>
+                  </StatLabel>
+                  <StatNumber fontSize="3xl" color={secondaryColor}>
+                    ${subscription.plans?.price_per_meal}
+                    <Text as="span" fontSize="lg" color={mutedColor}>
+                      /meal
+                    </Text>
+                  </StatNumber>
+                  <StatHelpText>
+                    <StatArrow type="increase" />
+                    {t('subscription.savingsPercentage', { percent: '15%' })}
+                  </StatHelpText>
+                </Stat>
+
+                <Divider />
+
                 <HStack justify="space-between">
-                  <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
-                    {t('status')}:
-                  </Text>
-                  <Badge 
-                    colorScheme={subscription.status === 'active' ? 'green' : 'yellow'} 
-                    size={{ base: "sm", md: "md" }}
-                    borderRadius="full"
-                  >
-                    {subscription.status}
-                  </Badge>
-                </HStack>
-                
-                <HStack justify="space-between">
-                  <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
-                    {t('consumedMeals')}:
-                  </Text>
-                  <Text fontSize={{ base: "sm", md: "md" }} fontWeight="bold">
-                    {subscription.consumed_meals} / {subscription.total_meals}
-                  </Text>
+                  <VStack align="start" spacing={1}>
+                    <Text fontSize="sm" color={mutedColor}>
+                      <HStack spacing={2}>
+                        <Icon as={FiCheckCircle} />
+                        <Text>{t('status')}</Text>
+                      </HStack>
+                    </Text>
+                    <Tag 
+                      colorScheme={subscription.status === 'active' ? 'green' : 'yellow'} 
+                      size="lg"
+                      borderRadius="full"
+                      px={4}
+                    >
+                      <TagLeftIcon as={subscription.status === 'active' ? FiCheckCircle : FiClock} />
+                      <TagLabel fontWeight="bold">
+                        {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
+                      </TagLabel>
+                    </Tag>
+                  </VStack>
+                  
+                  <VStack align="end" spacing={1}>
+                    <Text fontSize="sm" color={mutedColor}>
+                      <HStack spacing={2}>
+                        <Icon as={FiBarChart2} />
+                        <Text>{t('progress')}</Text>
+                      </HStack>
+                    </Text>
+                    <Text fontSize="2xl" fontWeight="bold" color={primaryColor}>
+                      {progressPercentage}%
+                    </Text>
+                  </VStack>
                 </HStack>
 
                 {/* Progress Bar */}
                 <Box>
-                  <Text fontSize="sm" mb={2}>{t('progress')}:</Text>
+                  <HStack justify="space-between" mb={2}>
+                    <Text fontSize="sm" color={mutedColor}>
+                      {t('mealsConsumed')}
+                    </Text>
+                    <Text fontSize="sm" fontWeight="bold" color={primaryColor}>
+                      {subscription.consumed_meals} / {subscription.total_meals}
+                    </Text>
+                  </HStack>
                   <Progress
-                    value={(subscription.consumed_meals / subscription.total_meals) * 100}
+                    value={progressPercentage}
                     colorScheme="brand"
-                    size="md"
-                    borderRadius="md"
+                    size="lg"
+                    borderRadius="full"
+                    hasStripe
+                    isAnimated={progressPercentage > 0}
                   />
                 </Box>
-                
-                <HStack justify="space-between">
-                  <Text fontSize={{ base: "sm", md: "md" }} fontWeight="medium">
-                    {t('preferredDeliveryTime')}:
-                  </Text>
-                  <Text fontSize={{ base: "sm", md: "md" }}>
-                    {subscription.preferred_delivery_time?.substring(0, 5) || '12:00'}
-                  </Text>
-                </HStack>
               </VStack>
-            </VStack>
-          </Box>
-        </Box>
+
+              {/* Right Column: Details */}
+              <VStack spacing={6} align="stretch">
+                <SimpleGrid columns={2} spacing={4}>
+                  <VStack align="start" spacing={1}>
+                    <Text fontSize="sm" color={mutedColor}>
+                      <HStack spacing={2}>
+                        <Icon as={FiClock} />
+                        <Text>{t('deliveryTime')}</Text>
+                      </HStack>
+                    </Text>
+                    <Text fontSize="lg" fontWeight="semibold">
+                      {subscription.preferred_delivery_time?.substring(0, 5) || '12:00'}
+                    </Text>
+                  </VStack>
+
+                  <VStack align="start" spacing={1}>
+                    <Text fontSize="sm" color={mutedColor}>
+                      <HStack spacing={2}>
+                        <Icon as={FiTrendingUp} />
+                        <Text>{t('frequency')}</Text>
+                      </HStack>
+                    </Text>
+                    <Text fontSize="lg" fontWeight="semibold">
+                      {subscription.delivery_frequency || t('weekly')}
+                    </Text>
+                  </VStack>
+
+                  <VStack align="start" spacing={1}>
+                    <Text fontSize="sm" color={mutedColor}>
+                      <HStack spacing={2}>
+                        <Icon as={FiCalendar} />
+                        <Text>{t('startDate')}</Text>
+                      </HStack>
+                    </Text>
+                    <Text fontSize="lg" fontWeight="semibold">
+                      {new Date(subscription.start_date).toLocaleDateString()}
+                    </Text>
+                  </VStack>
+
+                  <VStack align="start" spacing={1}>
+                    <Text fontSize="sm" color={mutedColor}>
+                      <HStack spacing={2}>
+                        <Icon as={FiMapPin} />
+                        <Text>{t('deliveryArea')}</Text>
+                      </HStack>
+                    </Text>
+                    <Text fontSize="lg" fontWeight="semibold" noOfLines={1}>
+                      {subscription.delivery_area || t('defaultArea')}
+                    </Text>
+                  </VStack>
+                </SimpleGrid>
+
+                {/* Action Buttons */}
+                <Wrap spacing={3} justify="center">
+                  <WrapItem>
+                    <Button 
+                      colorScheme="brand"
+                      rightIcon={<Icon as={FiChevronRight} />}
+                      onClick={() => navigate('/premium')}
+                      size="md"
+                    >
+                      {t('manageSubscription')}
+                    </Button>
+                  </WrapItem>
+                  <WrapItem>
+                    <Button 
+                      variant="outline"
+                      leftIcon={<Icon as={FiRefreshCw} />}
+                      onClick={refreshSubscription}
+                      size="md"
+                    >
+                      {t('refresh')}
+                    </Button>
+                  </WrapItem>
+                </Wrap>
+              </VStack>
+            </SimpleGrid>
+          </CardBody>
+        </Card>
 
         {/* Orders Management Section */}
-        <Box 
-          w="100%" 
-          maxW="4xl" 
-          bg="white" 
-          borderRadius="lg" 
-          overflow="hidden"
-          p={{ base: 4, md: 6 }}
+        <Card 
+          bg={cardBg}
           borderWidth="1px"
+          borderColor={borderColor}
+          shadow="lg"
         >
-          <VStack spacing={4} align="stretch">
-            <Heading size="md" color="brand.600">
-              {t('upcomingMeals')}
-            </Heading>
+          <CardHeader>
+            <VStack align="start" spacing={2}>
+              <Heading size="lg" color={primaryColor}>
+                {t('upcomingMeals')}
+              </Heading>
+              <Text color={mutedColor} fontSize="sm">
+                {t('manageAndActivateYourUpcomingMeals')}
+              </Text>
+            </VStack>
+          </CardHeader>
 
-            {/* Alert for orders in progress */}
-            {hasOrdersInProgress && (
-              <Alert status="warning">
-                <AlertIcon />
+          <CardBody>
+            <VStack spacing={6} align="stretch">
+              {/* Alert for orders in progress */}
+              {hasOrdersInProgress && (
+                <Alert 
+                  status="warning" 
+                  variant="subtle"
+                  borderRadius="md"
+                  borderLeftWidth="4px"
+                  borderLeftColor="yellow.500"
+                >
+                  <AlertIcon />
+                  <Box>
+                    <AlertTitle fontSize="md">{t('orderInProgress')}</AlertTitle>
+                    <AlertDescription fontSize="sm">
+                      {t('cannotActivateWhileOrderInProgress')}
+                    </AlertDescription>
+                  </Box>
+                </Alert>
+              )}
+
+              {/* Pending Orders - Available for Activation */}
+              {pendingOrders.length > 0 ? (
                 <Box>
-                  <AlertTitle>{t('orderInProgress')}</AlertTitle>
-                  <AlertDescription fontSize="sm">
-                    {t('cannotActivateWhileOrderInProgress')}
-                  </AlertDescription>
+                  <VStack align="start" spacing={3} mb={4}>
+                    <Heading size="md" color="brand.600">
+                      {t('availableToActivate')}
+                    </Heading>
+                    <Tag colorScheme="yellow" size="lg" borderRadius="full" px={4}>
+                      {pendingOrders.length} {t('pendingMeals')}
+                    </Tag>
+                  </VStack>
+                  <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+                    {pendingOrders.map((order) => renderOrderCard(order, true))}
+                  </SimpleGrid>
                 </Box>
-              </Alert>
-            )}
+              ) : (
+                <Alert 
+                  status="info" 
+                  variant="subtle"
+                  borderRadius="md"
+                >
+                  <AlertIcon />
+                  <Box>
+                    <AlertTitle>{t('noPendingOrders')}</AlertTitle>
+                    <AlertDescription fontSize="sm">
+                      {t('allMealsAreCurrentlyActiveOrDelivered')}
+                    </AlertDescription>
+                  </Box>
+                </Alert>
+              )}
 
-            {/* Pending Orders - Available for Activation */}
-            {pendingOrders.length > 0 ? (
-              <Box>
-                <Text fontSize="md" fontWeight="semibold" mb={3} color="brand.600">
-                  {t('availableToActivate')} ({pendingOrders.length})
-                </Text>
-                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                  {pendingOrders.map((order) => renderOrderCard(order, true))}
-                </SimpleGrid>
-              </Box>
-            ) : (
-              <Alert status="info">
-                <AlertIcon />
+              {/* Active Orders - Currently Being Processed */}
+              {activeOrders.length > 0 && (
                 <Box>
-                  <AlertTitle>{t('noPendingOrders')}</AlertTitle>
+                  <VStack align="start" spacing={3} mb={4}>
+                    <Heading size="md" color="green.600">
+                      {t('activeOrders')}
+                    </Heading>
+                    <Tag colorScheme="green" size="lg" borderRadius="full" px={4}>
+                      {activeOrders.length} {t('inProgress')}
+                    </Tag>
+                  </VStack>
+                  <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+                    {activeOrders.map((order) => renderOrderCard(order, false))}
+                  </SimpleGrid>
                 </Box>
-              </Alert>
-            )}
+              )}
 
-            {/* Active Orders - Currently Being Processed */}
-            {activeOrders.length > 0 && (
-              <Box>
-                <Text fontSize="md" fontWeight="semibold" mb={3} color="green.600">
-                  {t('activeOrders')} ({activeOrders.length})
-                </Text>
-                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                  {activeOrders.map((order) => renderOrderCard(order, false))}
-                </SimpleGrid>
-              </Box>
-            )}
-
-            {/* Recent Delivered Orders */}
-            {deliveredOrders.length > 0 && (
-              <Box>
-                <Text fontSize="md" fontWeight="semibold" mb={3} color="gray.600">
-                  {t('recentDeliveries')} ({Math.min(deliveredOrders.length, 3)})
-                </Text>
-                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                  {deliveredOrders.slice(0, 3).map((order) => renderOrderCard(order, false))}
-                </SimpleGrid>
-              </Box>
-            )}
-          </VStack>
-        </Box>
-
-        {/* Manage Subscription Button */}
-        <Center pt={4}>
-          <Button 
-            colorScheme="brand" 
-            onClick={() => navigate('/premium')}
-            size={{ base: "md", md: "lg" }}
-            w={{ base: "100%", sm: "auto" }}
-            minW="200px"
-          >
-            {t('manageSubscription')}
-          </Button>
-        </Center>
+              {/* Recent Delivered Orders */}
+              {deliveredOrders.length > 0 && (
+                <Box>
+                  <VStack align="start" spacing={3} mb={4}>
+                    <Heading size="md" color={mutedColor}>
+                      {t('recentDeliveries')}
+                    </Heading>
+                    <Tag colorScheme="gray" size="lg" borderRadius="full" px={4}>
+                      {Math.min(deliveredOrders.length, 3)} {t('recent')}
+                    </Tag>
+                  </VStack>
+                  <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+                    {deliveredOrders.slice(0, 3).map((order) => renderOrderCard(order, false))}
+                  </SimpleGrid>
+                </Box>
+              )}
+            </VStack>
+          </CardBody>
+        </Card>
       </VStack>
     </ResponsiveWrapper>
   );

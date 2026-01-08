@@ -102,8 +102,9 @@ function MasonryCard({ meal, index }) {
   };
 
   // Varying heights for masonry effect
-  const imageHeights = ["320px", "380px", "420px", "360px", "400px"];
+  const imageHeights = ["340px", "400px", "440px", "380px", "430px"];
   const imageHeight = imageHeights[index % imageHeights.length];
+  
 
   return (
     <MotionBox
@@ -148,7 +149,7 @@ function MasonryCard({ meal, index }) {
         top={4}
         right={isArabic ? 4 : "unset"}
         left={isArabic ? "unset" : 4}
-        bg="brand.600"
+        bg="secondary.800"
         color="white"
         px={4}
         py={2}
@@ -220,15 +221,16 @@ function MasonryCard({ meal, index }) {
 
         {/* Meal Name */}
         <MotionHeading
-          fontSize={{ base: "xl", md: "2xl" }}
+          fontSize={{ base: "2xl", md: "3xl" }}
           fontWeight="bold"
-          color="white"
+          color="secondary.700"
           textAlign={isArabic ? "right" : "left"}
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.4 }}
           dir={isArabic ? 'rtl' : 'ltr'}
           textShadow="0 2px 10px rgba(0,0,0,0.5)"
+          fontFamily={isArabic && '"Playpen Sans Arabic", cursive'}
         >
           {isArabic ? meal.name_arabic : meal.name || t('signatureDish', 'Signature Dish')}
         </MotionHeading>
@@ -275,7 +277,7 @@ function MasonryCard({ meal, index }) {
             )}
             {meal.proteinG && (
               <Badge 
-                colorScheme="blue" 
+                colorScheme="secondary" 
                 fontSize="xs" 
                 px={2} 
                 py={1} 
@@ -289,7 +291,7 @@ function MasonryCard({ meal, index }) {
             )}
             {meal.prepTimeMinutes && (
               <Badge 
-                colorScheme="purple" 
+                colorScheme="brand" 
                 fontSize="xs" 
                 px={2} 
                 py={1} 
@@ -308,7 +310,7 @@ function MasonryCard({ meal, index }) {
         <MotionButton
           w="100%"
           size="md"
-          bgGradient="linear(to-br, brand.800, teal.500)"
+          bgGradient="linear(to-br, secondary.800, teal.700)"
           color="white"
           borderRadius="xl"
           _hover={{ bg: "brand.800" }}
@@ -469,7 +471,7 @@ export default function Intro() {
               transition={{ duration: 0.8, delay: 0.2 }}
               viewport={{ once: true }}
             >
-              {t('subtitle') || 'Discover our carefully crafted selection of exceptional dishes'}
+              {t('introSubtitle') || 'Discover our carefully crafted selection of exceptional dishes'}
             </MotionText>
           </VStack>
         </Container>

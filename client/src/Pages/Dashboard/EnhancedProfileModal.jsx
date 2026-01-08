@@ -16,11 +16,11 @@ import {
   Flex,
   IconButton,
   Tooltip,
+  useToast
 } from '@chakra-ui/react';
 import { CheckIcon, CloseIcon } from '@chakra-ui/icons';
 import {
   BasicInfoSection,
-  HealthProfileSection,
   NotificationSection,
   DeliverySection,
 } from './DashboardSections';
@@ -176,14 +176,14 @@ const EnhancedProfileModal = ({
                 t={t}
               />
 
-              <Divider />
+              {/* <Divider />
 
               <HealthProfileSection 
                 formData={formData}
                 handlers={handlers}
                 t={t}
                 isLoading={false}
-              />
+              /> */}
 
               <Divider />
 

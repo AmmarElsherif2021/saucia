@@ -343,7 +343,7 @@ const PriceDisplay = ({ base_price, is_discount_active, discount_percentage = 0,
       <Text
         fontWeight="bold"
         fontSize={size}
-        color="secondary.800"
+        color="brand.500"
         lineHeight="2.2"
       >
         {typeof price === 'number' ? price.toFixed(2) : 'N/A'}{' '}{t('currency')}
@@ -383,7 +383,6 @@ const validateMealForCart = (meal) => {
   return true;
 };
 
-// Enhanced Minimal Meal Card - Grid optimized
 // Enhanced Minimal Meal Card - Grid optimized
 export const MinimalMealCard = ({
   meal, 
@@ -450,7 +449,7 @@ export const MinimalMealCard = ({
       w={{ base: "100%" }}
       minH={{ base: "300px", sm: "350px", md: "370px" }}
       maxW="400px"
-      borderRadius="xl"
+      borderRadius="3xl"
       overflow="hidden"
       cursor="pointer"
       transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
@@ -485,7 +484,7 @@ export const MinimalMealCard = ({
           left="0"
           right="0"
           bottom="0"
-          bgGradient={`linear(to-b, rgba(0,0,0,0.6) 0%, transparent 40%,  rgba(0, 32, 22, 0.8) 70%, rgba(0, 32, 22, 0.8) 100%)`}
+          bgGradient={`linear(to-b, rgba(0,0,0,0.6) 0%, transparent 40%,  rgba(0, 0, 0, 0.8) 70%, rgba(0, 0, 0, 0.8) 100%)`}
           zIndex={1}
         />
       </Box>
@@ -599,11 +598,11 @@ export const MinimalMealCard = ({
           
           {/* Add to Cart Button with Glow Effect */}
           <IconButton
-            icon={<FaCartPlus size={20} color={'#03543cff'}/>}
+            icon={<FaCartPlus size={20} color={'#2bad8dff'}/>}
             size="lg"
             onClick={handleAddToCart}
-            colorScheme="secondary"
-            variant="solid"
+            colorScheme="brand"
+            variant="outline"
             borderRadius="full"
             aria-label={t('addToCart')}
             //boxShadow="0 4px 20px rgba(3, 137, 79, 0.4)"
@@ -621,16 +620,15 @@ export const MinimalMealCard = ({
         {/* Status Badge at Bottom shadow*/}
         <Flex justify="center">
           <Badge
-            colorScheme="secondary"
+            colorScheme="brand"
             fontSize="xs"
             px={3}
             py={1}
             borderRadius="full"
-            bg="rgba(9, 156, 102, 0.56)"
+            //bg="rgba(9, 156, 102, 0.56)"
             color="green.300"
             backdropFilter="blur(10px)"
-            border="1px solid"
-            borderColor="transparent"
+            variant={'outline'}
           >
             ✓ {t('available')}
           </Badge>
@@ -892,6 +890,7 @@ export const MealCardWithModal = ({ meal, colorInHex = MENU_THEMES.cards.default
       name_arabic: meal.name_arabic,
       description: meal.description,
       unit_price: meal.base_price || meal.price || 0,
+      image_url:meal.image_url,
       quantity: quantity,
       calories: meal.calories,
       protein_g: meal.protein_g,

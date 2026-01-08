@@ -11,7 +11,8 @@ import {
   Alert,
   AlertIcon,
   VStack,
-  Button
+  Button,
+  useColorMode
 } from '@chakra-ui/react'
 import { ACC } from '../../Components/ComponentsTrial'
 import { MealCardWithModal } from '../../Components/Cards'
@@ -35,31 +36,31 @@ import dessertIcon from '../../assets/menu/dessert.svg'
 //Menu theming constants
 const MENU_THEMES = {
   sections: {
-    'Salads': '#da5151',
-    'Soups': '#daba51', 
-    'Proteins': '#da5151',
-    'Cheese': '#62c5b8',
+    'Salads': '#da8652ff',
+    'Soups': '#edd584', 
+    'Proteins': '#df6464ff',
+    'cheeses': '#62c5b8',
     'Extras': '#1fa28e',
     'Dressings': '#d7b741',
-    'Fruits': '#59ac53',
-    'make your own salad': '#da5151',
-    'Make your own fruit salad': '#a8cc6f',
-    'Our signature salad': '#10b26c',
-    'Juices': '#63c15a',
-    'Desserts': '#51c5c3',
+    'Fruits': '#91e08b',
+    'make your own salad': '#eb9a7a',
+    'Make your own fruit salad': '#d0f39c',
+    'Our signature salad': '#47d095',
+    'Juices': '#c2ea98',
+    'Desserts': '#86e4e3',
     'Default': '#f179b5'
   },
   cards: {
     customizable: '#03894f',
     salad: '#2d7d32',
-    protein: '#d32f2f',
+    protein: '#d36e2fff',
     default: '#03894f'
   },
   transparency: {
     cardBg: '60',
     border: '80',
-    hover: '70',
-    content: '40',
+    hover: '80',
+    content: '100',
     title: 'aa'
   }
 };
@@ -253,6 +254,9 @@ const MealSection = ({ section, handlers, userFiltering, themeUtils, getMealSele
 
   return (
     <MasonryGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap={4}>
+      {
+        // JSON.stringify(section.meals[0])
+      }
       {section.meals.map((meal) => {
         if (!meal?.id) return null;
         
@@ -420,9 +424,9 @@ const MenuPage = () => {
     
     // Ensure selectedItems is always an array
     const safeSelectedItems = Array.isArray(selectedItems) ? selectedItems : []
-    
+    console.log('📦 MenuPage: added meal obj:', meal)
     const result = addMealToCart(meal, safeSelectedItems, totalPrice)
-    
+    console.log('📦 MenuPage: Add to cart result', result)
     if (!result.success) {
       // You can add toast notification here if needed
       console.error('Failed to add meal to cart')
@@ -463,7 +467,7 @@ const MenuPage = () => {
             </Box>
           </Box>
         </Alert>
-        <Button colorScheme="blue" onClick={handleRetry}>
+        <Button colorScheme="brand" onClick={handleRetry}>
           Retry
         </Button>
       </Center>
@@ -492,10 +496,8 @@ const MenuPage = () => {
       FallbackComponent={ErrorFallback}
       onReset={handleRetry}
     >
-      <Box p={4}>
-        <Heading mb={6} textStyle="heading">
-          {t('title', 'Menu')}
-        </Heading>
+      <Box p={0} m={8} bg={'transparent'} >
+       
         <ACC
           sections={sections.map((section, index) => ({
             title: currentLanguage === 'ar' ? section.name_arabic : section.name,

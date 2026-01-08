@@ -92,13 +92,13 @@ const fetchUserOrders = useCallback(async (userId = null, queryParams = {}) => {
     }
   }, []);
 
-  const fetchLastUserOrder = useCallback(async (userId,subscriptionId=null) => {
+  const fetchLastUserOrder = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams({ filter_type: 'filtered' });
-      if (userId) params.append('user_id', userId);
-      if(subscriptionId !== null) params.append('subscription_id', subscriptionId);
+      const params = new URLSearchParams({ filter_type: 'user' });
+      //if (userId) params.append('user_id', userId);
+      //if (subscriptionId) params.append('subscription_id', subscriptionId);
       const result = await callEdgeFunction('track-last-order', {
         query: `?${params.toString()}`
       });

@@ -2,7 +2,7 @@ import { Box, useColorMode, Spinner, Center, Alert, AlertIcon, Button } from '@c
 import { useQueryClient } from '@tanstack/react-query'
 import { Hero } from './Hero'
 import { FeaturedMeals } from './FeaturedSlide'
-import { AboutPage } from './GetAbout'
+import  AboutPage  from './GetAbout'
 import { Footer } from './Footer'
 import { useRef, useEffect } from 'react'
 import { useScrollNavigation } from '../../Hooks/useScrollNavigation'

@@ -248,7 +248,7 @@ const createTheme = (config) => {
       Button: {
         baseStyle: {
           fontWeight: 'semibold',
-          borderRadius: 'md',
+          borderRadius: 'xl',
           fontFamily: isArabic ? "'Lalezar', sans-serif" : "'Outfit', sans-serif",
           _focus: {
             boxShadow: 'none',

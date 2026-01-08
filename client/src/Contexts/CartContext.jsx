@@ -40,10 +40,10 @@ export const CartProvider = ({ children }) => {
 
   const addMealToCart = (meal, selectedItems = [], totalPrice = null) => {
     console.group('🍽️ ADD MEAL TO CART')
-    //console.log('Meal input:', meal)
+    console.log('Meal input:', meal)
     //console.log('Selected items input:', selectedItems)
     //console.log('Total price input:', totalPrice)
-
+   
     try {
       const mealId = meal.meal_id || meal.id
 

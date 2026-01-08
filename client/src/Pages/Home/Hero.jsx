@@ -65,7 +65,9 @@ const StaticTextContent = ({ currentLanguage }) => {
             bgGradient="linear(to-r, brand.600, secondary.600, brand.800)"
             bgClip="text"
             letterSpacing="tight"
+            fontFamily={currentLanguage === 'ar'?'"Lalezar",sans_serif':'"Delicious Handrawn", cursive'}
             textAlign={isMobile || isTablet ? 'center' : (isRTL ? 'right' : 'left')}
+            
           >
             {heroContent.name}
           </Heading>
@@ -80,11 +82,12 @@ const StaticTextContent = ({ currentLanguage }) => {
           <Text
             fontSize={{ base: 'md', sm: 'lg', md: 'xl', lg: '2xl' }}
             color={textColor}
-            fontWeight="medium"
+            fontWeight="thin"
             lineHeight={{ base: 'tall', md: 'relaxed' }}
             maxW={{ base: 'full'}}
             opacity={0.9}
             textAlign={isMobile || isTablet ? 'center' : (isRTL ? 'right' : 'left')}
+            fontFamily={currentLanguage === 'ar'?'"Lalezar",sans_serif':'"Delicious Handrawn", cursive'}
           >
             {heroContent.description}
           </Text>
@@ -104,7 +107,7 @@ const StaticTextContent = ({ currentLanguage }) => {
               h={{ base: '10', md: '12' }}
               colorScheme="brand"
               bgGradient="linear(to-r, brand.500, brand.700)"
-              color="white"
+              //color="whiteAlpha.900"
               fontWeight="bold"
               fontSize={{ base: 'md', md: 'lg' }}
               _hover={{
@@ -135,7 +138,7 @@ const StaticTextContent = ({ currentLanguage }) => {
               }}
             >
               <Flex alignItems="center" gap={3}>
-                <Text>
+                <Text fontFamily={currentLanguage === 'ar'?'"Lalezar",sans_serif':'"Chewy", system-ui'}>
                   {currentLanguage === 'en' ? 'Explore Now' : 'اكتشف الآن'}
                 </Text>
                 <motion.span
@@ -147,7 +150,7 @@ const StaticTextContent = ({ currentLanguage }) => {
                     repeat: Infinity,
                     repeatType: 'reverse'
                   }}
-                  style={{ fontSize: '1.2em' }}
+                  style={{ fontSize: '1.2em', fontWeight: 'bold' }}
                 >
                   {isRTL ? '←' : '→'}
                 </motion.span>
@@ -234,7 +237,7 @@ export const Hero = () => {
     <Box
       as="section"
       minH="100vh"
-      h="110vh"
+      h="auto"
       w="full"
       bgGradient={`linear(to-br, ${bgFrom}, ${bgVia}, ${bgTo})`}
       //bg={'orange.200'} blue

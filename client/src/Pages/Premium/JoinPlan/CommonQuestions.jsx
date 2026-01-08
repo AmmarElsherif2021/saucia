@@ -695,6 +695,7 @@ const CommonQuestions = ({ onComplete }) => {
                 <Skeleton height="100px" borderRadius="md" />
               ) : (
                 <Wrap spacing={3}>
+                  {availableAllergies.map(a=> JSON.stringify(a))}
                   {availableAllergies.map(allergy => (
                     <WrapItem key={allergy.id}>
                       <Button

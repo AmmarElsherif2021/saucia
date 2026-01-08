@@ -12,7 +12,7 @@ export const useUserAllergies = () => {
     queryFn: () => allergiesAPI.listAllergies(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     onSuccess: (data) => {
-      ////console.log(`Allergies fetched: ${data.length || 0} allergies`);
+    console.log(`!! 🔄 🔄 🔄 Fetching  🔄 🔄 🔄  Allergies fetched: ${data.length || 0} allergies`);
     }
   });
   

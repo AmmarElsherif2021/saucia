@@ -9,7 +9,7 @@ import { ElementsProvider } from './Contexts/ElementsContext.jsx'
 import { ChosenPlanProvider } from './Contexts/ChosenPlanContext.jsx'
 import { Navbar } from './Components/Navbar/Navbar.jsx'
 import './index.css'
-import { Spinner, Center, Box, Text, Button, VStack } from '@chakra-ui/react'
+import { Spinner, Center, Box, Text, Button, VStack, useColorMode } from '@chakra-ui/react'
 import { CartProvider } from './Contexts/CartContext.jsx'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
@@ -151,6 +151,7 @@ const RouteGuard = ({ children }) => {
 };
 
 const Layout = ({ children }) => {
+  const {colorMode}=useColorMode();
   return (
     <div
       style={{
@@ -179,6 +180,7 @@ const Layout = ({ children }) => {
           marginTop: '4rem', 
           width: '100%',
           overflowX: 'hidden',
+          backgroundColor: colorMode=== 'dark'?'#222828ff':'transparent',
         }}
       >
         {children}

@@ -3,6 +3,7 @@ import { CRT } from '../../Components/Cart'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useCart } from '../../Contexts/CartContext'
+import { OrderStatusTracker } from './OrderStatusTracker'
 
 const CartPage = () => {
   const { colorMode } = useColorMode()
@@ -51,6 +52,9 @@ const CartPage = () => {
           onCheckout={handleCheckout}
           checkoutButton={true}
         />
+      </Container>
+      <Container maxW="container.xl" centerContent>
+        <OrderStatusTracker/>
       </Container>
     </VStack>
   )

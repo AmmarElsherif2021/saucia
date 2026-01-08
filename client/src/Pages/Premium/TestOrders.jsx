@@ -147,7 +147,7 @@ export default function TestOrders() {
     try {
       const orderId = orders[0].id;
       console.log('Testing: fetchLastUserOrder with USER_ID:', user.id);
-      const result = await fetchLastUserOrder(user.id);
+      const result = await fetchLastUserOrder();
       console.log('✓ Fetch Last order Success:', result);
       addTestResult('fetchLastUserOrder', true, result);
     } catch (err) {

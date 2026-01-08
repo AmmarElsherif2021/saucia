@@ -89,8 +89,8 @@ const menuPDFTheme = {
       height: '148mm',
     },
     logo: {
-      width: '60px',
-      height: '60px',
+      width: '40px',
+      height: '40px',
     }
   },
   contactInfo: {
@@ -243,7 +243,7 @@ const AllergyIcons = ({ allergies, size = 3 }) => {
   }).filter(allergy => allergy && allergy.name);
 
   return (
-    <HStack m={1} bg={'yellow.300'} w={'70%'}borderRadius={'md'} mx={'1px'} spacing={0.5} flexWrap="wrap" align={'center'} justify={'center'}>
+    <HStack m={0} bg={'yellow.300'} w={'70%'}borderRadius={'md'} mx={'1px'} spacing={0.5} flexWrap="wrap" align={'center'} justify={'center'}>
       {normalizedAllergies.map((allergy, index) => {
         const icon = getAllergyIcon(allergy.name);
         if (!icon) return null;
@@ -447,7 +447,7 @@ const PageHeader = ({ title, titleArabic, gradient, icon, isA5 }) => (
     p={isA5 ? 1 : 2}
     position="relative"
     overflow="hidden"
-    marginBottom={'3px'}
+    marginBottom={'0px'}
   >
     <Box
       width={isA5 ? '50px' : menuPDFTheme.sizes.logo.width}
@@ -457,8 +457,8 @@ const PageHeader = ({ title, titleArabic, gradient, icon, isA5 }) => (
       display="flex"
       alignItems="center"
       justifyContent="space-between"
-      border="2px solid"
-      borderColor={'brand.600'}
+      // border="2px solid"
+      // borderColor={'brand.600'}
       fontWeight="bold"
       fontSize={isA5 ? '2xs' : 'xs'}
       color={gradient.includes('brand') ? 'brand.500' : 'secondary.500'}
@@ -468,7 +468,7 @@ const PageHeader = ({ title, titleArabic, gradient, icon, isA5 }) => (
       zIndex={1}
       pl={'4px'}
     >
-      <Image src={logoIcon} sx={{width: isA5 ? '40px' : '50px'}}/>
+      <Image src={logoIcon} sx={{width: isA5 ? '40px' : '60px'}}/>
     </Box>
 
     <HStack 
@@ -507,17 +507,20 @@ const PageHeader = ({ title, titleArabic, gradient, icon, isA5 }) => (
 
 const SectionHeader = ({ title, titleArabic, gradient }) => (
   <Box 
-    p={1.5}
+    
+    pb={0.5}
     borderRadius="md"
-    mb={0.5}
+    mb={0}
     position="relative"
     overflow="hidden"
+    alignItems={'center'}
+    justify={'space-between'}
   >
     <HStack justify={'space-between'} position="relative" zIndex={1} flexDirection={'row-reverse'}>
-      <Heading size="xs" color={'brand.700'} fontWeight="bold" fontFamily={'"Outfit", sans_serif'}>
+      <Heading size="sm" color={'brand.700'} fontWeight="bold" fontFamily={'"Outfit", sans_serif'}>
         {title}
       </Heading>
-      <Heading size="xs" color={'brand.700'} fontWeight="bold" dir="rtl" fontFamily={"'Lalezar', sans-serif"}>
+      <Heading size="sm" color={'brand.700'} fontWeight="bold" dir="rtl" fontFamily={"'Lalezar', sans-serif"}>
         {titleArabic}
       </Heading>
     </HStack>
@@ -525,7 +528,7 @@ const SectionHeader = ({ title, titleArabic, gradient }) => (
 );
 
 const NutritionBadges = ({ meal }) => (
-  <HStack spacing={0.25} flexWrap="wrap" justify={'center'} mx={0} px={0} w={'120%'}>
+  <HStack spacing={0.25} flexWrap="wrap" justify={'center'} mt={0} px={0} w={'120%'}>
     {meal.calories && meal.calories>0 && (
     <Badge {...badgeStyles.carbs}>
       kcal {meal.calories || 0}
@@ -621,8 +624,9 @@ const RegularMealCard = ({ meal }) => (
     flex={'reverse'}
     variant="outline"
     {...cardStyles.regular}
-    width="auto"
-    height={"auto"}
+    width="240px"
+    minWidth="240px"
+    height="auto"
     sx={{
       '@media print': {
         breakInside: 'avoid',
@@ -636,15 +640,16 @@ const RegularMealCard = ({ meal }) => (
   >
     <CardBody p={'1'}>
       <HStack justify={"right"} p={0}>
-        <VStack align="stretch" spacing={1}>
+        <VStack align="stretch" spacing={1} flex="1">
           <VStack align="start" spacing={0} width="full">
             <Flex 
               justify={"space-between"} 
-              minW={'120%'} 
+              width="170%"
               flexDirection={meal.ingredients ? "row-reverse" : "column-reverse"}
               align={'start'}
               px={0}
               mr={0}
+              //bg={'orange.200'}
             >  
              <Text 
              p={0} 
@@ -668,7 +673,7 @@ const RegularMealCard = ({ meal }) => (
                 dir="rtl" 
                 p={0}
                 mr={0}
-                w={'100%'}
+                w={'110%'}
                 fontFamily={"'Lalezar', sans-serif"}
                 textAlign={'right'}
                 sx={{
@@ -685,6 +690,7 @@ const RegularMealCard = ({ meal }) => (
               fontFamily={"'Lalezar', sans_serif"}
               lineHeight={'3'}
               textAlign={'right'}
+              width={'110%'}
             >
               {meal.ingredients_arabic}
             </Text>
@@ -704,7 +710,7 @@ const RegularMealCard = ({ meal }) => (
           </VStack>
         </VStack>
         
-        <Flex align={'center'} justify="flex-end">
+        <Flex align={'flex-start'} justify="flex-end" flexShrink={0}>
           <PriceDisplay price={meal.base_price} />
           <Box 
             w={'15px'} 
@@ -712,14 +718,14 @@ const RegularMealCard = ({ meal }) => (
             border={'solid 2px'} 
             borderColor={'brand.600'} 
             ml={"1px"}
+            flexShrink={0}
           />
         </Flex>
       </HStack>
-      <HStack justify="space-between" align="center" mt={0} pt={0}>
+      <VStack justify="space-between" align="center" mt={0.5} pt={0} spacing={1}>
         <NutritionBadges meal={meal} />
-        {/* Updated to pass allergies directly from meal object */}
         <AllergyIcons allergies={meal.allergies} size={3} />
-      </HStack>
+      </VStack>
     </CardBody>
   </Card>
 );
@@ -739,7 +745,7 @@ const SelectiveMealCard = ({ meal }) => (
   >
     <CardBody p={0.5}>
       <VStack align="stretch" spacing={0.5}>
-        <HStack justify="space-between" flexDirection={'row-reverse'}>
+        <HStack justify="space-between" flexDirection={'row'}>
            <VStack spacing={0} align="end">
             <PriceDisplay price={meal.base_price} currency="ريال" size="md" />
           </VStack>
@@ -955,7 +961,7 @@ const RegularMealsSection = ({ regularMealsBySection, isA5 }) => (
               p={isA5 ? 0.5 : 1}
               sx={{
                 height: 'fit-content',
-                columnCount: isA5 ? 3 : (sectionData.meals[0].ingredients ? 2 : 3),
+                columnCount: isA5 ? 3 : 2,//(sectionData.meals[0].ingredients ? 2 : 3),
                 columnGap: isA5 ? '1px' : '2px',
                 '& > *': {
                   breakInside: 'avoid',
@@ -1000,7 +1006,8 @@ const SelectiveMealsSection = ({ selectiveMealsWithItems, isA5 }) => (
           >
             {sectionData.meals.map((meal) => (
               <Box key={meal.id} width="full">
-                <SelectiveMealCard meal={meal} />
+                {/* <SelectiveMealCard meal={meal} /> */}
+                <PriceDisplay price={meal.base_price} currency="ريال" size="xl" />
 
                 {meal.itemsByCategory && Object.keys(meal.itemsByCategory).length > 0 && (
                   <Box
@@ -1104,7 +1111,7 @@ const SelectiveMealsSection = ({ selectiveMealsWithItems, isA5 }) => (
 // ============================================================================
 
 const Footer = ({ isA5 }) => (
-  <Box mb={6} pb={2} pt={0} h={isA5 ? '3mm' : '4mm'} borderTop={'2px dashed rgba(5, 182, 143, 0.92)'}>
+  <Box mb={2} pb={2} pt={1} h={isA5 ? '3mm' : '4mm'} borderTop={'2px dashed rgba(5, 182, 143, 0.92)'} dir='ltr'>
     <Grid templateColumns="1fr auto 1fr" gap={1} alignItems="center">
       {/* Contact Info Left */}
       <Box p={isA5 ? 1 : 1.5}>
@@ -1131,14 +1138,14 @@ const Footer = ({ isA5 }) => (
         borderColor="brand.300"
         borderRadius="md"
         bg="white"
-        w={isA5 ? "40px" : "60px"}
-        h={isA5 ? "40px" : "60px"}
+        w={isA5 ? "40px" : "80px"}
+        h={isA5 ? "40px" : "80px"}
         display="flex"
         flexDirection="column"
         alignItems="center"
         justifyContent="center"
       >
-        <Image src={qrImage} boxSize={isA5 ? "30px" : "50px"} alt="QR Code Placeholder" />
+        <Image src={qrImage} boxSize={isA5 ? "30px" : "60px"} alt="QR Code Placeholder" />
         </Box>
     
       {/* Social Media Right */}
@@ -1163,23 +1170,6 @@ const Footer = ({ isA5 }) => (
     </Grid>
    
     <Divider my={1} borderColor="gray.200" />
-   
-    <VStack spacing={0}>
-      <Text fontSize={isA5 ? "2xs" : "3xs"} color="gray.600" textAlign="center">
-        Generated: {new Date().toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric'
-        })}
-      </Text>
-      <Text fontSize={isA5 ? "2xs" : "3xs"} color="gray.600" textAlign="center" dir="rtl">
-        {menuPDFTheme.arabicText.generatedOn}: {new Date().toLocaleDateString('ar-SA', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })}
-      </Text>
-    </VStack>
   </Box>
 );
 
@@ -1490,7 +1480,7 @@ const MenuPDFPortal = () => {
   } = useMenuData();
 
   const { handlePrint, isPrinting } = usePrintHandler(menuRef, printSize);
-
+  
   const handleRefresh = async () => {
     try {
       await Promise.all([refetchMeals(), refetchItems()]);
@@ -1529,7 +1519,13 @@ const MenuPDFPortal = () => {
         printSize={printSize}
         onPrintSizeChange={handlePrintSizeChange}
       />
+      {/* <small>
+      {
 
+        JSON.stringify(selectiveMealsWithItems)
+      }
+
+      </small> */}
       <Box ref={menuRef}>
         <RegularMealsPage 
           regularMealsBySection={regularMealsBySection} 

@@ -5,7 +5,7 @@ import { Box, Image, useBreakpointValue, Spinner, Text, Link } from '@chakra-ui/
 // Import SVG shape components shadow
 import circle from './circle.svg';
 import small_circle from './small_circle.svg';
-import top_left_semi_circle from './orange_semi_circle.svg';
+import top_left_semi_circle from './top-left-corner.svg';
 import extruded_circle from './extruded_circle.svg';
 import right_bottom_quarter from './right_bottom_quarter.svg';
 import octa_star from './octa_star.svg';
@@ -145,7 +145,7 @@ const SHAPE_CONFIG = {
   },
   circle2: { 
     component: circle2, 
-    finalStyle: { left: '178px', top: '322px', width: '78px', height: '78px' },
+    finalStyle: { left: '171px', top: '310px', width: '98px', height: '138px' },
     medianStyle: { left: '178px', top: '322px', width: '30px', height: '30px' },
     initialStyle: { left: '178px', top: '322px', width: '7px', height: '7px' },
     path: '/menu',

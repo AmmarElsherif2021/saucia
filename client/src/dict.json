@@ -483,6 +483,7 @@
   "allergies": "Allergies",
   "saveChanges": "Save Changes",
   "overview": "Overview",
+  "introSubtitle": "Discover our carefully crafted selection of exceptional dishes",
   "orderHistory": "Order History",
   "subscription": "Subscription",
   "accountOverview": "Account Overview",
@@ -2266,7 +2267,8 @@
   "supportPortalTitle": "اسأل خبير التغذية",
   "supportPortalDescription": "احصل على توصيات وجبات مخصصة تناسب تفضيلاتك واحتياجاتك الغذائية. خبراؤنا هنا لمساعدتك على اتخاذ خيارات صحية!",
   "supportPortalTextareaPlaceholder": "صف تفضيلات وجباتك أو احتياجاتك الغذائية...",
-  "supportPortalSubmitButton": "أرسل استفسارك"
+  "supportPortalSubmitButton": "أرسل استفسارك",
+  "introSubtitle":"استمتع بتجربة سلطات فاخرة وصحية تم تحضيرها بعناية"
   }
  }
 }

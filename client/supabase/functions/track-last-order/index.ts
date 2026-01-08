@@ -87,7 +87,7 @@ serve(async (req: Request) => {
     const url = new URL(req.url);
     const filters: OrderFilters = {
       user_id: url.searchParams.get('user_id') || undefined,
-      subscription_id: url.searchParams.get('subscription_id') || undefined,
+      //subscription_id: url.searchParams.get('subscription_id') || undefined,
       filter_type: url.searchParams.get('filter_type') as any || 'user',
     };
 
@@ -136,7 +136,7 @@ serve(async (req: Request) => {
           break;
       }
 
-      console.log('Fetching last order for user:', targetUserId);
+      //console.log('Fetching last order for user:', targetUserId);
 
       // Query for the most recent order
       const { data: lastOrder, error } = await supabaseAdmin
@@ -151,11 +151,10 @@ serve(async (req: Request) => {
             *,
             items(name, image_url)
           ),
-          user_subscriptions(*),
           delivery_address:delivery_address_id(*)
         `)
+        .is('subscription_id', null)
         .eq('user_id', targetUserId)
-        .eq('subscription_id', filters.subscription_id)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
@@ -169,7 +168,7 @@ serve(async (req: Request) => {
               success: false, 
               orders: [],
               meta: {
-                total: 0,
+                total: 1,
                 filters: filters,
                 user_id: targetUserId,
                 message: `Some error occured fetching last order for user ${targetUserId} ${error.message}`

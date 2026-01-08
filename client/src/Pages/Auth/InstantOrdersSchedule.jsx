@@ -134,7 +134,7 @@ const OrderCard = ({ order }) => {
     }
   };
 
-  const deliveryDate = new Date(order.scheduled_delivery_date);
+  const deliveryDate = new Date(order.created_at); // Until delivery logic is solved by business adminstration
   const isToday = deliveryDate.toDateString() === new Date().toDateString();
   const isPast = deliveryDate < new Date() && !isToday;
 

@@ -243,10 +243,10 @@ const EnhancedAccordionButton = ({
   index 
 }) => {
   // Ensure section.theme has a fallback
-  const themeColor = section.theme || '#03894f';
+  const themeColor = section.theme || '#0c705eff';
   // Use the hex color from section theme with transparency using shared function
-  const buttonBg = applyTransparency(themeColor, '60');
-  const buttonHoverBg = applyTransparency(themeColor, '60');
+  const buttonBg = applyTransparency(themeColor, 'ff');
+  const buttonHoverBg = applyTransparency(themeColor, 'ff');
   const expandedBorderColor = applyTransparency(themeColor, '0');
   return (
     <AccordionButton
@@ -299,7 +299,7 @@ const EnhancedAccordionButton = ({
               size="md" 
               transition="all 0.2s ease"
               transform={isExpanded ? 'translateX(4px)' : 'translateX(0)'}
-              color={'brand.700'}
+              color={'brand.800'}
             >
               {section.title} {''}
               {section.subtitle && (
@@ -312,7 +312,7 @@ const EnhancedAccordionButton = ({
       <AccordionIcon 
         transition="transform 0.3s ease"
         transform={isExpanded ? 'rotate(180deg) scale(1.1)' : 'rotate(0deg) scale(1)'}
-        color={section.theme}
+        color= {'#177767ff'}// {section.theme}
         boxSize={'14'}
         p={0}
       />
@@ -354,22 +354,22 @@ export const ACC = ({ sections = [], expandedIndex, onToggle }) => {
         
         // Use section's theme with transparency
         const applyTransparency = (transparency) => `${section.theme}${transparency}`;
-        const sectionBg = applyTransparency('60');
-        const sectionBorder = applyTransparency('60');
+        const sectionBg = applyTransparency('ff');
+        const sectionBorder = applyTransparency('ff');
         
         return (
           <AccordionItem
             key={`section-${index}-${section.title}`}
             id={`section-${index}`}
             data-section-name={section.title}
-            border="none"
+            border="3px solid #0c856fff"
             borderRadius="15px"
             overflow="hidden"
             transition="all 0.3s ease"
             mb={4}
             mx={2}
             bg={isExpanded ? sectionBg : 'transparent'}
-            borderColor={sectionBorder}
+            //borderColor={sectionBorder}
           >
             <h2>
               <EnhancedAccordionButton

@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback, Suspense, lazy } from 'react'; 
-import { EditIcon, StarIcon } from '@chakra-ui/icons';
 import { useTranslation } from 'react-i18next';
 import {
+  Card,
+  CardBody,
+  StackDivider,
+  useColorModeValue,
   Box,
   Heading,
   SimpleGrid,
@@ -53,8 +56,11 @@ import {
   ModalCloseButton,
   Progress,
   Tooltip,
-  Checkbox
+  Checkbox,
+  useToast
 } from '@chakra-ui/react';
+
+import {StarIcon, EditIcon, CheckIcon, CloseIcon, AddIcon, DeleteIcon, ViewIcon } from '@chakra-ui/icons';
 import {
   BasicFormControl,
   NumberFormControl,
@@ -70,11 +76,23 @@ import {
   ActionButtonGroup,
   SubscriptionDetails
 } from './DashboardComponents';
-
+import {
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiCalendar,
+  FiStar,
+  FiHeart,
+  FiBell,
+  FiCheckCircle,
+  FiAlertCircle,
+  FiInfo,
+  FiXCircle,
+} from 'react-icons/fi';
 import { useI18nContext } from '../../Contexts/I18nContext';
 import { useUserAllergies } from '../../Hooks/userHooks';
 import { useUserDietaryPreferences } from '../../Hooks/useUserDietaryPreferences';
-import { AddIcon, DeleteIcon } from '@chakra-ui/icons';
+import CommonQuestions from '../Premium/JoinPlan/CommonQuestions';
 const MapModal = lazy(() => import('../Checkout/MapModal'));
 // Options getters AddIcon
 const getGenderOptions = [
@@ -105,6 +123,30 @@ const getActivityLevelOptions = [
     { value: 'extremely_active', label: 'Extremely Active' },
 ];
 
+
+//Helper components
+const getIconForLabel = (label) => {
+  const iconMap = {
+    'email': FiMail,
+    'displayName': FiUser,
+    'phoneNumber': FiPhone,
+    'age': FiCalendar,
+    'gender': FiUser,
+    'language': FiInfo,
+    'accountCreated': FiCalendar,
+    'loyaltyPoints': FiStar,
+    'notes': FiInfo,
+    'height': FiUser,
+    'weight': FiUser,
+    'fitnessGoal': FiHeart,
+    'activityLevel': FiHeart,
+    'dietaryPreferences': FiInfo,
+    'allergies': FiAlertCircle,
+  };
+  
+  const key = Object.keys(iconMap).find(key => label.toLowerCase().includes(key.toLowerCase()));
+  return iconMap[key] || FiInfo;
+};
 // Extracted modal sections
 export const BasicInfoSection = ({ formData, handlers, t }) => { 
   const { handleInputChange, handleNumberChange } = handlers;
@@ -181,205 +223,441 @@ export const BasicInfoSection = ({ formData, handlers, t }) => {
     </Box>
   );
 };
+// DashboardSections.jsx - Refactored OverviewSection with in-place editing
 
-// Enhanced HealthProfileSection cloned from CommonQuestions
-export const HealthProfileSection = ({ formData, handlers, t, isLoading = false }) => {
-  const { handleHealthProfileChange, handleCheckboxArrayChange, toggleSelection } = handlers;
-  const { colorMode } = useColorMode();
-  const { currentLanguage } = useI18nContext();
-  const isArabic = currentLanguage === 'ar';
-  const inputBg = { light: 'white', dark: 'gray.700' };
-  const {handleInputChange} = handlers;
-  // Fetch dietary preferences and allergies using hooks
-  const { 
-    dietaryPreferences: availablePreferences = [],
-    userDietaryPreferences = [],
-    isLoading: isLoadingPreferences,
-  } = useUserDietaryPreferences();
-  
-  const { 
-    allergies: availableAllergies = [],
-    userAllergies = [],
-    isLoading: isLoadingAllergies,
-  } = useUserAllergies();
 
-  const handleChange = (e) => {
+
+// Personal Information Section with In-Place Editing
+const PersonalInfoSection = ({ 
+  user, 
+  onUpdate, 
+  isUpdating 
+}) => {
+  const { t } = useTranslation();
+  const toast = useToast();
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const headerColor = useColorModeValue('gray.800', 'white');
+  const inputBg = useColorModeValue('white', 'gray.700');
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    display_name: user.displayName || '',
+    phone_number: user.phoneNumber || '',
+    age: user.age || '',
+    gender: user.gender || '',
+    language: user.language || 'en',
+    notes: user.notes || '',
+  });
+
+  const getGenderOptions = [
+    { value: 'male', label: t('male') },
+    { value: 'female', label: t('female') },
+    { value: 'other', label: t('other') },
+    { value: 'prefer-not-to-say', label: t('preferNotToSay') },
+  ];
+
+  const getLanguageOptions = [
+    { value: 'en', label: 'English' },
+    { value: 'ar', label: 'عربي' },
+  ];
+
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name in formData) {
-      handleInputChange(e);
-    } else {
-      handleHealthProfileChange(name, value);
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleNumberChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = async () => {
+    try {
+      await onUpdate(formData);
+      setIsEditing(false);
+      toast({
+        title: t('profileUpdated'),
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: t('updateError'),
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
-  const togglePreferenceSelection = (preferenceId) => {
-    if (toggleSelection) {
-      toggleSelection('dietaryPreferences', preferenceId);
-    }
+  const handleCancel = () => {
+    setFormData({
+      display_name: user.displayName || '',
+      phone_number: user.phoneNumber || '',
+      age: user.age || '',
+      gender: user.gender || '',
+      language: user.language || 'en',
+      notes: user.notes || '',
+    });
+    setIsEditing(false);
   };
 
-  const toggleAllergySelection = (allergyId) => {
-    if (toggleSelection) {
-      toggleSelection('allergies', allergyId);
-    }
-  };
+  const personalFields = [
+    { label: t('email'), value: user.email, verified: user.emailVerified },
+    { label: t('displayName'), value: user.displayName },
+    { label: t('phoneNumber'), value: user.phoneNumber },
+    { label: t('age'), value: user.age },
+    { label: t('gender'), value: user.gender },
+    { label: t('language'), value: user.language || 'en' },
+    { label: t('accountCreated'), value: new Date(user.createdAt).toLocaleDateString() },
+    { label: t('loyaltyPoints'), value: user.loyaltyPoints || 0 },
+    { label: t('notes'), value: user.notes },
+  ].filter(field => field.value != null);
 
   return (
-    <Box p={6} borderRadius="lg" bg={colorMode === 'light' ? 'gray.50' : 'gray.800'} borderWidth="1px">
-      <HStack mb={4} spacing={3}>
-        <Icon viewBox="0 0 24 24" color="brand.500">
-          <path fill="currentColor" d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M12,8A3,3 0 0,1 15,11A3,3 0 0,1 12,14A3,3 0 0,1 9,11A3,3 0 0,1 12,8Z" />
-        </Icon>
-        <Heading size="md" color="brand.500">
-          {t('healthProfile')}
-        </Heading>
-      </HStack>
-
-      <VStack spacing={5} align="stretch">
-        {/* Physical Stats */}
-         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-          <FormControl>
-            <FormLabel>{t('heightCm')}</FormLabel>
-            {isLoading ? (
-              <Skeleton height="40px" borderRadius="md" />
+    <Card 
+      bg={cardBg}
+      borderRadius="lg"
+      border="1px"
+      borderColor={borderColor}
+      boxShadow="sm"
+    >
+      <CardBody>
+        <VStack 
+          align="start" 
+          spacing={4}
+          divider={<StackDivider borderColor={borderColor} />}
+        >
+          <HStack justify="space-between" width="100%">
+            <Heading size="md" color={headerColor} display="flex" alignItems="center" gap={2}>
+              <Icon as={FiUser} />
+              {t('personalInformation')}
+            </Heading>
+            {!isEditing ? (
+              <Button
+                size="sm"
+                leftIcon={<EditIcon />}
+                onClick={() => setIsEditing(true)}
+                colorScheme="brand"
+                variant="ghost"
+              >
+                {t('edit')}
+              </Button>
             ) : (
-              <Input
-                type="number"
-                name="height_cm"
-                value={formData.healthProfile?.height_cm || ''}
-                onChange={handleChange}
-                placeholder={t('yourHeight')}
-                min="100"
-                max="250"
-                bg={inputBg[colorMode]}
-              />
+              <HStack>
+                <Button
+                  size="sm"
+                  leftIcon={<CheckIcon />}
+                  onClick={handleSave}
+                  colorScheme="brand"
+                  isLoading={isUpdating}
+                >
+                  {t('save')}
+                </Button>
+                <Button
+                  size="sm"
+                  leftIcon={<CloseIcon />}
+                  onClick={handleCancel}
+                  variant="ghost"
+                >
+                  {t('cancel')}
+                </Button>
+              </HStack>
             )}
-          </FormControl>
+          </HStack>
 
-          <FormControl>
-            <FormLabel>{t('weightKg')}</FormLabel>
-            {isLoading ? (
-              <Skeleton height="40px" borderRadius="md" />
+          {!isEditing ? (
+            <VStack align="start" spacing={1} width="100%">
+              {personalFields.map(field => (
+                <UserInfoItem key={field.label} {...field} />
+              ))}
+            </VStack>
+          ) : (
+            <VStack spacing={4} width="100%" pt={2}>
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} width="100%">
+                <BasicFormControl
+                  label={t('displayName')}
+                  name="display_name"
+                  value={formData.display_name}
+                  onChange={handleInputChange}
+                  placeholder={t('enterDisplayName')}
+                  bg={inputBg}
+                />
+                <BasicFormControl
+                  label={t('phoneNumber')}
+                  name="phone_number"
+                  value={formData.phone_number}
+                  onChange={handleInputChange}
+                  placeholder={t('enterPhoneNumber')}
+                  bg={inputBg}
+                />
+                <NumberFormControl
+                  label={t('age')}
+                  value={formData.age || 0}
+                  min={10}
+                  max={120}
+                  onChange={(_, value) => handleNumberChange('age', value)}
+                  bg={inputBg}
+                />
+                <SelectFormControl
+                  label={t('gender')}
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleInputChange}
+                  options={getGenderOptions}
+                  placeholder={t('selectGender')}
+                  bg={inputBg}
+                />
+                <SelectFormControl
+                  label={t('language')}
+                  name="language"
+                  value={formData.language}
+                  onChange={handleInputChange}
+                  options={getLanguageOptions}
+                  bg={inputBg}
+                />
+              </SimpleGrid>
+              
+              <FormControl>
+                <FormLabel>{t('notes')}</FormLabel>
+                <Textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleInputChange}
+                  placeholder={t('enterNotes')}
+                  rows={3}
+                  bg={inputBg}
+                  resize="vertical"
+                />
+              </FormControl>
+            </VStack>
+          )}
+        </VStack>
+      </CardBody>
+    </Card>
+  );
+};
+
+// Notification Preferences Section with In-Place Editing
+const NotificationPreferencesSection = ({ 
+  user, 
+  onUpdate, 
+  isUpdating 
+}) => {
+  const { t } = useTranslation();
+  const toast = useToast();
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const headerColor = useColorModeValue('gray.800', 'white');
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    email: user.notificationPreferences?.email ?? true,
+    sms: user.notificationPreferences?.sms ?? false,
+    push: user.notificationPreferences?.push ?? true,
+  });
+
+  const handleNotificationChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = async () => {
+    try {
+      await onUpdate({
+        notification_preferences: {
+          email_enabled: formData.email,
+          sms_enabled: formData.sms,
+          push_enabled: formData.push,
+        }
+      });
+      setIsEditing(false);
+      toast({
+        title: t('notificationsUpdated'),
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: t('updateError'),
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleCancel = () => {
+    setFormData({
+      email: user.notificationPreferences?.email ?? true,
+      sms: user.notificationPreferences?.sms ?? false,
+      push: user.notificationPreferences?.push ?? true,
+    });
+    setIsEditing(false);
+  };
+
+  const notificationFields = [
+    { label: t('emailNotifications'), enabled: user.notificationPreferences?.email },
+    { label: t('smsNotifications'), enabled: user.notificationPreferences?.sms },
+    { label: t('pushNotifications'), enabled: user.notificationPreferences?.push },
+  ];
+
+  return (
+    <Card 
+      bg={cardBg}
+      borderRadius="lg"
+      border="1px"
+      borderColor={borderColor}
+      boxShadow="sm"
+    >
+      <CardBody>
+        <VStack 
+          align="start" 
+          spacing={4}
+          divider={<StackDivider borderColor={borderColor} />}
+        >
+          <HStack justify="space-between" width="100%">
+            <Heading size="md" color={headerColor} display="flex" alignItems="center" gap={2}>
+              <Icon as={FiBell} />
+              {t('notificationPreferences')}
+            </Heading>
+            {!isEditing ? (
+              <Button
+                size="sm"
+                leftIcon={<EditIcon />}
+                onClick={() => setIsEditing(true)}
+                colorScheme="brand"
+                variant="ghost"
+              >
+                {t('edit')}
+              </Button>
             ) : (
-              <Input
-                type="number"
-                name="weight_kg"
-                value={formData.healthProfile?.weight_kg || ''}
-                onChange={handleChange}
-                placeholder={t('yourWeight')}
-                min="30"
-                max="200"
-                bg={inputBg[colorMode]}
-              />
+              <HStack>
+                <Button
+                  size="sm"
+                  leftIcon={<CheckIcon />}
+                  onClick={handleSave}
+                  colorScheme="brand"
+                  isLoading={isUpdating}
+                >
+                  {t('save')}
+                </Button>
+                <Button
+                  size="sm"
+                  leftIcon={<CloseIcon />}
+                  onClick={handleCancel}
+                  variant="ghost"
+                >
+                  {t('cancel')}
+                </Button>
+              </HStack>
             )}
-          </FormControl>
-        </SimpleGrid>
+          </HStack>
 
-        {/* Activity Level */}
-        <FormControl>
-          <FormLabel>{t('activityLevel')}</FormLabel>
-          {isLoading ? (
-            <Skeleton height="120px" borderRadius="md" />
-          ) : (
-            <RadioGroup
-               value={formData.healthProfile?.activity_level || 'moderately_active'}
-               onChange={value => handleHealthProfileChange('activity_level', value)}
-            >
-              <Stack direction="column" spacing={3}>
-                <Radio value="sedentary">{t('sedentary')}</Radio>
-                <Radio value="lightly_active">{t('lightlyActive')}</Radio>
-                <Radio value="moderately_active">{t('moderatelyActive')}</Radio>
-                <Radio value="very_active">{t('veryActive')}</Radio>
-                <Radio value="extremely_active">{t('extremelyActive')}</Radio>
-              </Stack>
-            </RadioGroup>
-          )}
-        </FormControl>
-
-        {/* Fitness Goal */}
-        <FormControl>
-          <FormLabel>{t('fitnessGoal')}</FormLabel>
-          {isLoading ? (
-            <Skeleton height="40px" borderRadius="md" />
-          ) : (
-            <Select
-              name="fitness_goal"
-              value={formData.healthProfile?.fitness_goal || 'maintenance'}
-              onChange={handleChange}
-              placeholder={t('selectFitnessGoal')}
-              bg={inputBg[colorMode]}
-            >
-              <option value="weight-loss">{t('weightLoss')}</option>
-              <option value="weight-gain">{t('weightGain')}</option>
-              <option value="maintenance">{t('maintenance')}</option>
-              <option value="muscle-gain">{t('muscleGain')}</option>
-              <option value="improve-fitness">{t('improveFitness')}</option>
-            </Select>
-          )}
-        </FormControl>
-
-        <Divider />
-
-        {/* Dietary Preferences */}
-        <FormControl>
-          <FormLabel>{t('dietaryPreferences')}</FormLabel>
-          {isLoading || isLoadingPreferences || availablePreferences.length === 0 ? (
-            <Skeleton height="100px" borderRadius="md" />
-          ) : (
-            <Wrap spacing={3}>
-              {availablePreferences.map(pref => (
-                <WrapItem key={pref.id}>
-                  <Button
-                    size="sm"
-                    variant={
-                      formData.healthProfile?.dietaryPreferences?.includes(pref.id) ||
-                      userDietaryPreferences?.some(up => up.preference_id === pref.id)
-                        ? 'solid' 
-                        : 'outline'
-                    }
-                    colorScheme="brand"
-                    onClick={() => togglePreferenceSelection(pref.id)}
-                  >
-                    {isArabic ? pref.name_arabic : pref.name}
-                  </Button>
-                </WrapItem>
+          {!isEditing ? (
+            <VStack align="start" spacing={2} width="100%">
+              {notificationFields.map(field => (
+                <NotificationStatus key={field.label} {...field} />
               ))}
-            </Wrap>
-          )}
-        </FormControl>
-
-        {/* Allergies */}
-        <FormControl>
-          <FormLabel>{t('allergies')}</FormLabel>
-          {isLoading || isLoadingAllergies || availableAllergies.length === 0 ? (
-            <Skeleton height="100px" borderRadius="md" />
+            </VStack>
           ) : (
-            <Wrap spacing={3}>
-              {availableAllergies.map(allergy => (
-                <WrapItem key={allergy.id}>
-                  <Button
-                    size="sm"
-                    variant={
-                      formData.healthProfile?.allergies?.includes(allergy.id) ||
-                      userAllergies?.some(ua => ua.allergy_id === allergy.id)
-                        ? 'solid' 
-                        : 'outline'
-                    }
-                    colorScheme="red"
-                    onClick={() => toggleAllergySelection(allergy.id)}
-                  >
-                    {isArabic ? allergy.name_arabic : allergy.name}
-                  </Button>
-                </WrapItem>
-              ))}
-            </Wrap>
+            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} width="100%" pt={2}>
+              <SwitchFormControl
+                label={t('emailNotifications')}
+                isChecked={formData.email}
+                onChange={(e) => handleNotificationChange('email', e.target.checked)}
+              />
+              <SwitchFormControl
+                label={t('smsNotifications')}
+                isChecked={formData.sms}
+                onChange={(e) => handleNotificationChange('sms', e.target.checked)}
+              />
+              <SwitchFormControl
+                label={t('pushNotifications')}
+                isChecked={formData.push}
+                onChange={(e) => handleNotificationChange('push', e.target.checked)}
+              />
+            </SimpleGrid>
           )}
-        </FormControl>
+        </VStack>
+      </CardBody>
+    </Card>
+  );
+};
+
+// Refactored OverviewSection
+export const OverviewSection = ({ 
+  user, 
+  onUpdateProfile,
+  onUpdateHealthProfile,
+  isUpdatingProfile,
+  isUpdatingHealthProfile,
+  t 
+}) => {
+  const sectionBg = useColorModeValue('brand.50', 'brand.900');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+
+  return (
+    <Box 
+      p={{ base: 4, md: 6 }} 
+      bg={sectionBg}
+      borderRadius="xl"
+      border="1px"
+      borderColor={borderColor}
+      boxShadow="sm"
+    >
+      <VStack spacing={6} align="stretch">
+        {/* Personal Information Section */}
+        <PersonalInfoSection 
+          user={user}
+          onUpdate={onUpdateProfile}
+          isUpdating={isUpdatingProfile}
+        />
+
+        {/* Health Profile Section */}
+        <Card 
+          bg={useColorModeValue('white', 'gray.800')}
+          borderRadius="lg"
+          border="1px"
+          borderColor={borderColor}
+          boxShadow="sm"
+        >
+          <CardBody>
+            <VStack 
+              align="start" 
+              spacing={4}
+              divider={<StackDivider borderColor={borderColor} />}
+            >
+              <Heading 
+                size="md" 
+                color={useColorModeValue('gray.800', 'white')} 
+                display="flex" 
+                alignItems="center" 
+                gap={2}
+              >
+                <Icon as={FiHeart} />
+                {t('healthProfile')}
+              </Heading>
+              <Box width="100%">
+                <CommonQuestions onComplete={() => {}} />
+              </Box>
+            </VStack>
+          </CardBody>
+        </Card>
+
+        {/* Notification Preferences Section */}
+        <NotificationPreferencesSection 
+          user={user}
+          onUpdate={onUpdateProfile}
+          isUpdating={isUpdatingProfile}
+        />
       </VStack>
     </Box>
   );
 };
-
 export const NotificationSection = ({ formData, handlers, t }) => {
   const { handleNotificationChange } = handlers;
   const { colorMode } = useColorMode();
@@ -464,6 +742,9 @@ export const DeliverySection = ({ formData, handlers, onOpenMap, t }) => {
 };
 
 // ProfileHeader
+
+
+
 export const ProfileHeader = ({ user, userPlan, onOpen, t }) => {
   return (
     <Flex 
@@ -528,86 +809,20 @@ export const ProfileHeader = ({ user, userPlan, onOpen, t }) => {
       </VStack>
 
       <Button
-        leftIcon={<EditIcon />}
+        leftIcon={<ViewIcon />}
         onClick={onOpen}
         variant="outline"
         colorScheme="brand"
         size="lg"
         mt={{ base: 4, md: 0 }}
       >
-        {t('editProfile')}
+        {t('viewProfile')}
       </Button>
     </Flex>
   );
 };
-export const OverviewSection = ({ user, t }) => {
-  const personalFields = [
-    { label: t('email'), value: user.email, verified: user.emailVerified },
-    { label: t('displayName'), value: user.displayName },
-    { label: t('phoneNumber'), value: user.phoneNumber },
-    { label: t('age'), value: user.age },
-    { label: t('gender'), value: user.gender },
-    { label: t('language'), value: user.language || 'en' },
-    { label: t('accountCreated'), value: new Date(user.createdAt).toLocaleDateString() },
-    { label: t('loyaltyPoints'), value: user.loyaltyPoints || 0 },
-    { label: t('notes'), value: user.notes },
-  ].filter(field => field.value != null);
 
-  const healthFields = user.healthProfile ? [
-    { label: t('height'), value: user.healthProfile.height ? `${user.healthProfile.height} cm` : null },
-    { label: t('weight'), value: user.healthProfile.weight ? `${user.healthProfile.weight} kg` : null },
-    { label: t('fitnessGoal'), value: user.healthProfile.fitnessGoal },
-    { label: t('activityLevel'), value: user.healthProfile.activityLevel },
-    { 
-      label: t('dietaryPreferences'), 
-      value: user.healthProfile.dietaryPreferences?.length 
-        ? user.healthProfile.dietaryPreferences.join(', ') 
-        : null 
-    },
-    { 
-      label: t('allergies'), 
-      value: user.healthProfile.allergies?.length 
-        ? user.healthProfile.allergies.join(', ') 
-        : null 
-    },
-  ].filter(field => field.value != null) : [];
 
-  const notificationFields = [
-    { label: t('emailNotifications'), enabled: user.notificationPreferences?.email },
-    { label: t('smsNotifications'), enabled: user.notificationPreferences?.sms },
-    { label: t('pushNotifications'), enabled: user.notificationPreferences?.push },
-  ];
-
-  return (
-    <Box p={4} bg="brand.200" borderRadius="lg">
-      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
-        <VStack align="start" spacing={2}>
-          <Heading size="sm">{t('personalInformation')}</Heading>
-          {personalFields.map(field => (
-            <UserInfoItem key={field.label} {...field} />
-          ))}
-        </VStack>
-        <VStack align="start" spacing={2}>
-          {healthFields.length > 0 && (
-            <>
-              <Heading size="sm">{t('healthProfile')}</Heading>
-              {healthFields.map(field => (
-                <UserInfoItem key={field.label} {...field} />
-              ))}
-            </>
-          )}
-          <Heading size="sm" mt={healthFields.length ? 4 : 0}>
-            {t('notificationPreferences')}
-          </Heading>
-          {notificationFields.map(field => (
-            <NotificationStatus key={field.label} {...field} />
-          ))}
-        </VStack>
-      </SimpleGrid>
-    </Box>
-  );
-};
-// Add these components to your existing DashboardSections.jsx
 
 // Order History Section
 export const OrderHistorySection = ({ orders, isLoading, t, navigate }) => {
