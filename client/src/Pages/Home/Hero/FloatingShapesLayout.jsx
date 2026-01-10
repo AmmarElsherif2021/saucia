@@ -7,7 +7,7 @@ import circle from './circle.svg';
 import small_circle from './small_circle.svg';
 import top_left_semi_circle from './top-left-corner.svg';
 import extruded_circle from './extruded_circle.svg';
-import right_bottom_quarter from './right_bottom_quarter.svg';
+import right_bottom_quarter from './premium.svg';
 import octa_star from './octa_star.svg';
 import teal_semi_circle from './teal_semi_circle.svg';
 import circle2 from './circle2.svg';
