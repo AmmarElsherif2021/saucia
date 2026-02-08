@@ -4,7 +4,7 @@ import { Hero } from './Hero'
 import { FeaturedMeals } from './FeaturedSlide'
 import  AboutPage  from './GetAbout'
 import { Footer } from './Footer'
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, memo } from 'react'
 import { useScrollNavigation } from '../../Hooks/useScrollNavigation'
 import { ScrollingBadgesTrail } from '../../Components/Navbar/ScrollingBadgesTrail'
 import { useElements } from '../../Contexts/ElementsContext'
@@ -12,9 +12,9 @@ import { smartPrefetch } from '../../lib/prefetchQueries'
 import { useAuthContext } from '../../Contexts/AuthContext'
 import { useNavigate } from 'react-router'
 import Intro from './Intro'
-//import Purchaseportal from './PurchasePortal'
-//import MenuPDFPortal from '../Auth/MenPDF'
-
+import SupportPortal from './SupportPortal' // This is now a drawer component
+import { Skiper19 } from './Skipper'
+const MemoizedSupportPortal = memo(SupportPortal);
 // Loading component for better UX
 const FeaturedMealsLoading = () => (
   <Center h="300px">
@@ -70,7 +70,7 @@ const HomePage = () => {
   const { colorMode } = useColorMode()
   const queryClient = useQueryClient()
   const { pendingRedirect} = useAuthContext();
-  const navigate = useNavigate();
+  const navigate = useNavigate(); 
   // Create refs for all sections
   const sectionRefs = {
     'about us': useRef(null),
@@ -79,12 +79,11 @@ const HomePage = () => {
   }
 
   const { scrollToSection } = useScrollNavigation(sectionRefs)
+  
   // Initial Redirection Logic
   useEffect(() => {
     const handleInitialRedirect = async () => {
       if (pendingRedirect) {
-        //console.log('Handling initial redirect:', pendingRedirect);
-        // Scroll to the section if it exists
         navigate(pendingRedirect.path || '/');
       } else {
         // Default to hero section
@@ -94,14 +93,15 @@ const HomePage = () => {
 
     handleInitialRedirect();
   }, []);
+
   // Predictive prefetching for likely next pages
   useEffect(() => {
     const prefetchTimer = setTimeout(() => {
       smartPrefetch.predictivePrefetch('/', queryClient)
-    }, 2000) // Wait 2 seconds after initial load
+    }, 2000)
 
     return () => clearTimeout(prefetchTimer)
-  }, [queryClient]) // Add queryClient to dependencies
+  }, [queryClient])
 
   return (
     <Box 
@@ -110,22 +110,25 @@ const HomePage = () => {
       px={2} 
       bg={colorMode === "dark" ? "teal.800" : "none"}
       minH="100vh"
-      overflowX={'hidden'}
-      ref={sectionRefs.hero}
+      overflowX="hidden"
+      position="relative" // Important for fixed positioning
     >
-      {/* <MenuPDFPortal/> */}
       <ScrollingBadgesTrail />
-      {/* <Purchaseportal /> */}
-      {/* Hero section - always renders immediately */}
-      <Box overflowX={'hidden'}>
+      <Skiper19 />
+      {/* Floating Support Portal Button */}
+      <MemoizedSupportPortal/>
+      
+      {/* Main Content */}
+      <Box overflowX="hidden">
         <Hero />
       </Box>
-      <Intro />
-      {/* Featured meals section - with its own loading state */}
       
-      {/* 
+      <Intro />
+      
+      {/*
       <FeaturedMealsSection sectionRef={sectionRefs.features} />
       */}
+      
       {/* About section - static content */}
       <Box ref={sectionRefs['about us']}>
         <AboutPage />

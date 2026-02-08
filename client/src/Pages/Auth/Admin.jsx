@@ -91,6 +91,7 @@ import { useDebugUser } from '../../Hooks/useDebugUser.jsx';
 import InstantOrdersMonitoring from './InstantOrdersSchedule.jsx';
 import MenuPDFPortal from './MenPDF.jsx';
 import { useI18nContext } from '../../Contexts/I18nContext.jsx';
+import AdminSupportPortal from './AdminSupportPortal.jsx';
 
 // Enhanced Table Component with TanStack
 const EnhancedTable = ({ 
@@ -613,9 +614,9 @@ const Admin = () => {
 
   if (isLoading) return <LoadingSpinner />
   if (error) return <ErrorAlert message={error?.message || 'Failed to load admin data'} retry={handleRetry} />
-  // if (!user || !userInfo.profile.is_admin) return (
-  //   <ErrorAlert message="Access denied. Admins only." />
-  // )
+  if (!user || !userInfo.profile.is_admin) return (
+    <ErrorAlert message="Access denied. Admins only." />
+  )
 
   return (
     <Box
@@ -696,7 +697,9 @@ const Admin = () => {
           icon={<FaUtensils size={20} />}
         />
       </Grid>
-
+      <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
+        <AdminSupportPortal/>
+      </Box>
       <Box gap={6} m={12} maxW={'90%'} backgroundColor={'#ffffff'} p={8}>
         <AdminAddressManager/>
       </Box>

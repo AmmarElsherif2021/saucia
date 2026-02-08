@@ -39,11 +39,3 @@ export const GetPremium = () => {
     </Box>
   )
 }
-/*
-bbb
-axios          package.json:22:6
-dotenv         package.json:23:6
-firebase       package.json:24:6
-jwt-decode     package.json:28:6
-react-leaflet  package.json:35:6
-*/

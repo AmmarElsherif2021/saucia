@@ -13,6 +13,13 @@ import {
   IconButton,
   SimpleGrid,
 } from "@chakra-ui/react";
+import { AddIcon, MinusIcon } from "@chakra-ui/icons";
+import veganIcon from '../../assets/icons/vegan.svg';
+import vegetarianIcon from '../../assets/icons/vegetarian.svg';
+import glutenFreeIcon from '../../assets/icons/gluten-free.svg';
+import dairyFreeIcon from '../../assets/icons/dairy-free.svg';
+import premiumIcon from '../../assets/icons/premium.svg';
+import lightSAR from '../../assets/icons/lite-sar.svg';
 import {
   motion,
   useScroll,
@@ -22,7 +29,6 @@ import { useTranslation } from "react-i18next";
 import { useElements } from "../../Contexts/ElementsContext";
 import { useI18nContext } from "../../Contexts/I18nContext";
 import { useCart } from "../../Contexts/CartContext";
-import { AddToCartModal } from "../../Components/Cards";
 
 // Create motion components
 const MotionBox = motion(Box);
@@ -32,6 +38,7 @@ const MotionButton = motion(Button);
 const MotionBadge = motion(Badge);
 const MotionImage = motion(Image);
 const MotionFlex = motion(Flex);
+
 const MasonryGrid = ({ children, columns = { base: 1, sm: 2, md: 2, lg: 3 }, gap = 4 }) => {
   const [columnCount, setColumnCount] = useState(1);
   const containerRef = useRef(null);
@@ -56,7 +63,6 @@ const MasonryGrid = ({ children, columns = { base: 1, sm: 2, md: 2, lg: 3 }, gap
     return () => window.removeEventListener('resize', updateColumns);
   }, [columns]);
 
-  // Distribute children into columns
   const childrenArray = React.Children.toArray(children);
   const columnWrappers = Array.from({ length: columnCount }, () => []);
   
@@ -81,8 +87,66 @@ const MasonryGrid = ({ children, columns = { base: 1, sm: 2, md: 2, lg: 3 }, gap
   );
 };
 
+// Enhanced badge component based on schema
+const DietaryBadges = ({ meal, colorMode, isArabic=false }) => {
+  const badges = [];
+
+  if (meal.is_vegetarian) {
+    badges.push({ label: <Image src={vegetarianIcon} alt="Vegetarian" w="16px" h="16px" />, color: 'green', alt: "Vegetarian",altArabic:"نباتي" });
+  }
+  if (meal.is_vegan) {
+    badges.push({ label: <Image src={veganIcon} alt="Vegan" w="16px" h="16px" />, color: 'green', alt: "Vegan", altArabic:"vegan" });
+  }
+  if (meal.is_gluten_free) {
+    badges.push({ label: <Image src={glutenFreeIcon} alt="Gluten Free" w="16px" h="16px" />, color: 'blue', alt: "Gluten Free", altArabic:"خالي جلوتين" });
+  }
+  if (meal.is_dairy_free) {
+    badges.push({ label: <Image src={dairyFreeIcon} alt="Dairy Free" w="16px" h="16px" />, color: 'cyan', alt: "Dairy Free", altArabic:"خالي ألبان" });
+  }
+  if (meal.is_premium) {
+    badges.push({ label: <Image src={premiumIcon} alt="Premium" w="16px" h="16px" />, color: 'purple', alt: "Premium", altArabic:"مميز" });
+  }
+
+  if (badges.length === 0) return null;
+
+  return (
+    <MotionFlex
+      gap={1}
+      wrap="wrap"
+      initial={{ opacity: 0, y: 10 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.5, duration: 0.4 }}
+      justifyContent="flex-start"
+      bg={'whiteAlpha.500'}
+      borderRadius={'full'}
+      p={2}
+      w={'fit-content'}
+    >
+      {badges.map((badge, idx) => (
+        <Badge
+          key={idx}
+          colorScheme={badge.color}
+          fontSize="2xs"
+          px={2}
+          py={1}
+          borderRadius="full"
+          bg="secondary.900"
+          //backdropFilter="blur(10px)"
+          color="white"
+          display={'flex'}
+          flexDir={'column'}
+          alignItems={'center'}
+        >
+          {badge.label}
+          <small>{isArabic?badge.altArabic:badge.alt}</small>
+        </Badge>
+      ))}
+    </MotionFlex>
+  );
+};
+
 function MasonryCard({ meal, index }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const { addMealToCart } = useCart();
   const { colorMode } = useColorMode();
@@ -94,17 +158,20 @@ function MasonryCard({ meal, index }) {
     addMealToCart({
       id: meal.id,
       name: isArabic ? meal.name_arabic : meal.name,
-      price: meal.basePrice || 28,
-      image: meal.image_url || meal.thumbnailUrl,
+      price: meal.base_price || 28,
+      image: meal.image_url || meal.thumbnail_url,
       qty: quantity
     });
-    setIsModalOpen(false);
+    setIsExpanded(false);
+    setQuantity(1);
   };
 
-  // Varying heights for masonry effect
   const imageHeights = ["340px", "400px", "440px", "380px", "430px"];
   const imageHeight = imageHeights[index % imageHeights.length];
   
+  const displayPrice = meal.discount_percentage 
+    ? (meal.base_price * (1 - meal.discount_percentage / 100)).toFixed(2)
+    : (meal.base_price || 28).toFixed(2);
 
   return (
     <MotionBox
@@ -118,96 +185,42 @@ function MasonryCard({ meal, index }) {
       boxShadow={colorMode === "dark" ? "xl" : "md"}
       _hover={{ 
         boxShadow: "2xl",
-        transform: "translateY(-4px)"
       }}
       dir={isArabic ? "rtl" : "ltr"}
-      h={imageHeight}
+      h={isExpanded ? "auto" : imageHeight}
+      //transition="height 0.4s ease-in-out"
     >
+      
       {/* Full Background Image */}
       <MotionImage
-        src={meal.image_url || meal.thumbnailUrl || `https://picsum.photos/seed/meal${meal.id}/800/600`}
+        src={meal.image_url || meal.thumbnail_url || `https://picsum.photos/seed/meal${meal.id}/800/600`}
         alt={isArabic ? meal.name_arabic : meal.name}
         w="100%"
-        h="100%"
+        h={isExpanded ? "250px" : "100%"}
         objectFit="cover"
-        position="absolute"
-        inset={0}
-        whileHover={{ scale: 1.05 }}
-        transition={{ duration: 0.4 }}
+        position={isExpanded ? "relative" : "absolute"}
+        inset={isExpanded ? "unset" : 0}
+        transition="all 0.4s ease-in-out"
       />
-      
-      {/* Enhanced Gradient Overlay for better text readability */}
-      <Box
-        position="absolute"
-        inset={0}
-        bgGradient="linear(to-b, blackAlpha.300, blackAlpha.800)"
-      />
-      
-      {/* Price Badge */}
-      <MotionBadge
-        position="absolute"
-        top={4}
-        right={isArabic ? 4 : "unset"}
-        left={isArabic ? "unset" : 4}
-        bg="secondary.800"
-        color="white"
-        px={4}
-        py={2}
-        borderRadius="full"
-        fontWeight="bold"
-        fontSize="lg"
-        initial={{ scale: 0, rotate: -45 }}
-        whileInView={{ scale: 1, rotate: 0 }}
-        transition={{ delay: 0.3, duration: 0.4 }}
-        zIndex={2}
-      >
-        ${meal.basePrice || "28"}
-      </MotionBadge>
-
-      {/* Vegetarian Badge */}
-      {meal.isVegetarian && (
-        <MotionBadge
-          position="absolute"
-          top={4}
-          left={isArabic ? "unset" : 4}
-          right={isArabic ? 4 : "unset"}
-          bg="green.500"
-          color="white"
-          px={3}
-          py={1}
-          borderRadius="full"
-          fontSize="sm"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.4 }}
-          zIndex={2}
-          mt={14}
-        >
-          🌱 {t('vegetarian', 'Vegetarian')}
-        </MotionBadge>
-      )}
-
-      {/* Content Section - Positioned at Bottom */}
-      <VStack 
-        align="stretch" 
-        position="absolute"
-        bottom={0}
-        left={0}
-        right={0}
-        p={6} 
-        spacing={3}
-        zIndex={2}
-      >
-        {/* Section Badge */}
-        <MotionBadge
+     
+      {/* Gradient Overlay */}
+        <Box
+          position={isExpanded ? "relative" : "absolute"}
+          inset={isExpanded ? "unset" : 0}
+          bgGradient={isExpanded ? "none" : "linear(to-b,blackAlpha.600, blackAlpha.50, blackAlpha.600)"}
+          h={isExpanded ? "0" : "100%"}
+        />
+        {
+          !isExpanded && (
+            <MotionBadge
           alignSelf={isArabic ? "flex-end" : "flex-start"}
           px={3}
           py={1}
-          bg="whiteAlpha.300"
-          backdropFilter="blur(10px)"
-          color="white"
+          bg={isExpanded ? "brand.100" : "brand.700"}
+          backdropFilter={isExpanded ? "none" : "blur(10px)"}
+          color={isExpanded ? "brand.700" : "white"}
           borderRadius="full"
-          fontSize="xs"
+          fontSize="2xs"
           fontWeight="medium"
           textTransform="uppercase"
           letterSpacing="wide"
@@ -215,44 +228,120 @@ function MasonryCard({ meal, index }) {
           whileInView={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2, duration: 0.4 }}
           w="fit-content"
-        >
+          position="absolute"
+          top={4}
+          left={isArabic ? "auto" : 4}
+          right={isArabic ? 4 : "auto"}
+          zIndex={3}
+            >
           {isArabic ? meal.section_arabic : meal.section}
-        </MotionBadge>
+            </MotionBadge>
+          )
+        }
+
+        {/* Price and Discount Badges */}
+        {!isExpanded && (
+          <Flex
+            position="absolute"
+            top={4}
+            right={isArabic ? "auto" : 4}
+            left={isArabic ? 4 : "auto"}
+            gap={2}
+            zIndex={3}
+            flexDirection={isArabic ? "row-reverse" : "row"}
+          >
+            <MotionBadge
+          bg="secondary.800"
+          color="white"
+          px={4}
+          py={2}
+          borderRadius="20px"
+          fontWeight="bold"
+          fontSize="sm"
+          initial={{ scale: 0, rotate: -45 }}
+          whileInView={{ scale: 1, rotate: 0 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+          flex={'row'}
+            >
+          {meal.base_price}{isArabic ? <Image src={lightSAR} alt="SAR" w="16px" h="16px" /> : " SAR"}
+            </MotionBadge>
+            
+            {meal.discount_percentage && (
+          <MotionBadge
+            bg="red.500"
+            color="white"
+            px={3}
+            py={2}
+            borderRadius="20px"
+            fontSize="sm"
+            fontWeight="bold"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.4 }}
+          >
+            -{Math.round(meal.discount_percentage)}%
+          </MotionBadge>
+            )}
+          </Flex>
+        )}
+
+        {/* Content Section */}
+      <VStack 
+        align="stretch" 
+        position={isExpanded ? "relative" : "absolute"}
+        bottom={isExpanded ? "unset" : 0}
+        left={0}
+        right={0}
+        p={6} 
+        spacing={3}
+        zIndex={2}
+        bg={isExpanded ? (colorMode === "dark" ? "gray.800" : "secondary.700") : "transparent"}
+        borderTopRadius={0}
+      >
+     
 
         {/* Meal Name */}
+           
         <MotionHeading
           fontSize={{ base: "2xl", md: "3xl" }}
           fontWeight="bold"
-          color="secondary.700"
+          color={isExpanded ? "secondary.700" : "secondary.700"}
           textAlign={isArabic ? "right" : "left"}
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.4 }}
           dir={isArabic ? 'rtl' : 'ltr'}
-          textShadow="0 2px 10px rgba(0,0,0,0.5)"
+          textShadow={isExpanded ? "none" : "0 2px 10px rgba(0,0,0,0.5)"}
           fontFamily={isArabic && '"Playpen Sans Arabic", cursive'}
+          bg={'blackAlpha.800'}
+          px={0}
+          w={'fit-content'}
+          borderRadius={isExpanded ? '0' : 'md'}
         >
-          {isArabic ? meal.name_arabic : meal.name || t('signatureDish', 'Signature Dish')}
+          {isArabic ? meal.name_arabic : meal.name}
         </MotionHeading>
 
         {/* Description */}
         <MotionText
           fontSize="sm"
-          color="whiteAlpha.900"
+          color={isExpanded ? (colorMode === "dark" ? "gray.300" : "gray.600") : "whiteAlpha.900"}
           lineHeight="relaxed"
           textAlign={isArabic ? "right" : "left"}
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.4 }}
           dir={isArabic ? 'rtl' : 'ltr'}
-          noOfLines={2}
-          textShadow="0 1px 5px rgba(0,0,0,0.5)"
+          noOfLines={isExpanded ? 3 : 2}
+          textShadow={isExpanded ? "none" : "0 1px 5px rgba(0,0,0,0.5)"}
         >
-          {isArabic ? meal.description_arabic : meal.description || t('mealDescription', 'Experience the perfect blend of flavors and artistry in every bite.')}
+          {isArabic ? meal.description_arabic : meal.description}
         </MotionText>
 
+        {/* Dietary Badges */}
+        <DietaryBadges meal={meal} colorMode={colorMode} isArabic={isArabic} />
+
         {/* Nutritional Info */}
-        {(meal.calories || meal.proteinG || meal.prepTimeMinutes) && (
+        {(meal.calories || meal.protein_g || meal.prep_time_minutes) && (
           <MotionFlex
             gap={2}
             wrap="wrap"
@@ -263,82 +352,136 @@ function MasonryCard({ meal, index }) {
           >
             {meal.calories && (
               <Badge 
-                colorScheme="orange" 
                 fontSize="xs" 
                 px={2} 
                 py={1} 
                 borderRadius="full"
-                bg="whiteAlpha.300"
-                backdropFilter="blur(10px)"
-                color="white"
+                bg={isExpanded ? "orange.100" : "whiteAlpha.300"}
+                color={isExpanded ? "orange.700" : "white"}
               >
                 {meal.calories} cal
               </Badge>
             )}
-            {meal.proteinG && (
+            {meal.protein_g && (
               <Badge 
-                colorScheme="secondary" 
                 fontSize="xs" 
                 px={2} 
                 py={1} 
                 borderRadius="full"
-                bg="whiteAlpha.300"
-                backdropFilter="blur(10px)"
-                color="white"
+                bg={isExpanded ? "purple.100" : "whiteAlpha.300"}
+                color={isExpanded ? "purple.700" : "white"}
               >
-                {meal.proteinG}g {t('protein', 'protein')}
+                {meal.protein_g}g protein
               </Badge>
             )}
-            {meal.prepTimeMinutes && (
+            {meal.prep_time_minutes && (
               <Badge 
-                colorScheme="brand" 
                 fontSize="xs" 
                 px={2} 
                 py={1} 
                 borderRadius="full"
-                bg="whiteAlpha.300"
-                backdropFilter="blur(10px)"
-                color="white"
+                bg={isExpanded ? "blue.100" : "whiteAlpha.300"}
+                color={isExpanded ? "blue.700" : "white"}
               >
-                {meal.prepTimeMinutes} min
+                {meal.prep_time_minutes} min
               </Badge>
             )}
           </MotionFlex>
         )}
 
-        {/* Order Button */}
-        <MotionButton
-          w="100%"
-          size="md"
-          bgGradient="linear(to-br, secondary.800, teal.700)"
-          color="white"
-          borderRadius="xl"
-          _hover={{ bg: "brand.800" }}
-          whileHover={{ y: -2 }}
-          whileTap={{ scale: 0.98 }}
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.4 }}
-          onClick={() => setIsModalOpen(true)}
-          backdropFilter="blur(10px)"
-          boxShadow="0 4px 20px rgba(0,0,0,0.3)"
-        >
-          {t('order')}
-        </MotionButton>
+        {/* Purchase Controls - Only show when expanded */}
+        {isExpanded && (
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <VStack spacing={4} w="100%">
+              {/* Quantity Selector */}
+              <Flex align="center" justify="space-between" w="100%">
+                <Text fontWeight="medium">{t('quantity')}:</Text>
+                <Flex borderWidth={'3px'} borderColor={'brand.600'} align="center" gap={3} bg={colorMode === "dark" ? "gray.700" : "gray.100"} p={2} borderRadius="3xl">
+                  <IconButton
+                    icon={<MinusIcon />}
+                    aria-label="Decrease quantity"
+                    onClick={() => setQuantity((prev) => Math.max(prev - 1, 1))}
+                    size="sm"
+                    variant="ghost"
+                    _hover={{ bg: "brand.500", color: "white" }}
+                  />
+                  <Text fontSize="lg" fontWeight="bold" minW="2rem" textAlign="center">
+                    {quantity}
+                  </Text>
+                  <IconButton
+                    icon={<AddIcon />}
+                    aria-label="Increase quantity"
+                    onClick={() => setQuantity((prev) => prev + 1)}
+                    size="sm"
+                    variant="ghost"
+                    _hover={{ bg: "brand.500", color: "white" }}
+                  />
+                </Flex>
+              </Flex>
 
-        <AddToCartModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          name={isArabic ? meal.name_arabic : meal.name}
-          price={meal.basePrice || 28}
-          quantity={quantity}
-          setQuantity={setQuantity}
-          onConfirm={handleAddToCart}
-          t={t}
-          hasOffer={false}
-          discountPercentage={0}
-          colorMode={colorMode}
-        />
+              {/* Total Price */}
+              <Flex justify="space-between" align="center" w="100%" pt={2} borderTop="2px" borderColor={colorMode === "dark" ? "gray.700" : "brand.700"}>
+                <Text fontSize="lg" fontWeight="bold">{t('total')}:</Text>
+                <Text fontSize="xl" fontWeight="bold" color="whiteAlpha.900" display="flex" alignItems="center" gap={1}>
+                  {(displayPrice * quantity).toFixed(2)}<Image src={lightSAR} w={'20px'}/> 
+                </Text>
+              </Flex>
+
+              {/* Action Buttons */}
+              <Flex gap={3} w="100%">
+                <Button
+                  flex={1}
+                  variant="outline"
+                  borderWidth="3px"
+                  borderColor="brand.700"
+                  color="brand.700"
+                  onClick={() => {
+                    setIsExpanded(false);
+                    setQuantity(1);
+                  }}
+                  _hover={{ bg: "secondary.500" }}
+                >
+                  {t('maybeLater') || t('cancel')}
+                </Button>
+                <Button
+                  flex={1}
+                  bgGradient="linear(to-br, secondary.800, teal.700)"
+                  color="white"
+                  onClick={handleAddToCart}
+                  _hover={{ boxShadow: "lg" }}
+                >
+                  {t('addToCart')} ({quantity})
+                </Button>
+              </Flex>
+            </VStack>
+          </MotionBox>
+        )}
+
+        {/* Order Button - Show when not expanded */}
+        {!isExpanded && (
+          <MotionButton
+            w="100%"
+            size="md"
+            bgGradient="linear(to-br, secondary.800, teal.700)"
+            color="white"
+            borderRadius="xl"
+            _hover={{ bg: "brand.800" }}
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.4 }}
+            onClick={() => setIsExpanded(true)}
+            backdropFilter="blur(10px)"
+            boxShadow="0 4px 20px rgba(0,0,0,0.3)"
+          >
+            {t('order')}
+          </MotionButton>
+        )}
       </VStack>
     </MotionBox>
   );
@@ -357,85 +500,6 @@ export default function Intro() {
   const { featuredMeals, elementsLoading, elementsError } = useElements();
   const { currentLanguage } = useI18nContext();
   const isArabic = currentLanguage === 'ar';
-
-  // Use actual featured meals data or fallback
-  const displayMeals = featuredMeals && featuredMeals.length > 0 
-    ? featuredMeals.slice(0, 6) 
-    : [
-        { 
-          id: 1, 
-          name: t('signatureDish', 'Signature Dish'), 
-          name_arabic: "طبق التوقيع",
-          section: t('chefSpecial', "Chef's Special"),
-          section_arabic: "طبق الشيف المميز",
-          basePrice: 28,
-          description: "A delightful combination of fresh ingredients",
-          description_arabic: "مزيج رائع من المكونات الطازجة",
-          calories: 450,
-          proteinG: 32
-        },
-        { 
-          id: 2, 
-          name: t('freshPasta', 'Fresh Pasta'), 
-          name_arabic: "باستا طازجة",
-          section: t('italianCuisine', "Italian Cuisine"),
-          section_arabic: "المطبخ الإيطالي",
-          basePrice: 22,
-          description: "Handmade pasta with authentic Italian sauce",
-          description_arabic: "باستا مصنوعة يدوياً مع صلصة إيطالية أصيلة",
-          prepTimeMinutes: 25
-        },
-        { 
-          id: 3, 
-          name: t('grilledSalmon', 'Grilled Salmon'), 
-          name_arabic: "سلمون مشوي",
-          section: t('seafood', "Seafood"),
-          section_arabic: "المأكولات البحرية",
-          basePrice: 32,
-          description: "Fresh Atlantic salmon grilled to perfection",
-          description_arabic: "سلمون أطلسي طازج مشوي بإتقان",
-          calories: 380,
-          proteinG: 42,
-          prepTimeMinutes: 20
-        },
-        { 
-          id: 4, 
-          name: "Garden Salad", 
-          name_arabic: "سلطة الحديقة",
-          section: "Healthy Options",
-          section_arabic: "خيارات صحية",
-          basePrice: 16,
-          description: "Fresh greens with house vinaigrette",
-          description_arabic: "خضروات طازجة مع صلصة الخل المنزلية",
-          isVegetarian: true,
-          calories: 220
-        },
-        { 
-          id: 5, 
-          name: "Beef Tenderloin", 
-          name_arabic: "فيليه اللحم",
-          section: "Premium Cuts",
-          section_arabic: "قطع فاخرة",
-          basePrice: 45,
-          description: "Prime cut beef cooked to your liking",
-          description_arabic: "لحم بقري فاخر مطبوخ حسب رغبتك",
-          proteinG: 48,
-          prepTimeMinutes: 30
-        },
-        { 
-          id: 6, 
-          name: "Mushroom Risotto", 
-          name_arabic: "ريزوتو الفطر",
-          section: "Italian Cuisine",
-          section_arabic: "المطبخ الإيطالي",
-          basePrice: 24,
-          description: "Creamy Arborio rice with wild mushrooms",
-          description_arabic: "أرز أربوريو كريمي مع فطر بري",
-          isVegetarian: true,
-          calories: 380,
-          prepTimeMinutes: 35
-        },
-      ];
 
   return (
     <Box
@@ -458,7 +522,7 @@ export default function Intro() {
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
             >
-              {t('title') || 'Featured Signature Dishes'}
+              {t('introTitle') || 'Featured Signature Dishes'}
             </MotionHeading>
             
             <MotionText
@@ -484,18 +548,20 @@ export default function Intro() {
         mx={3}
         p={8}
         borderRadius="25px"
-        // Gradient background (adapts to color mode)
         bgGradient={
           colorMode === "dark"
             ? "linear(to-br, gray.800, brand.700)"
             : "linear(to-br, brand.600, green.200, secondary.800)"
         }
-        
       >
         <MasonryGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap={2}>
-          {displayMeals.map((meal, index) => (
-            <MasonryCard key={meal.id} meal={meal} index={index} />
-          ))}
+          {featuredMeals && featuredMeals.length > 0 ? (
+            featuredMeals.slice(0, 6).map((meal, index) => (
+              <MasonryCard key={meal.id} meal={meal} index={index} />
+            ))
+          ) : (
+            <Text>{t('noMealsAvailable') || 'No meals available'}</Text>
+          )}
         </MasonryGrid>
       </Container>
 
@@ -539,9 +605,8 @@ export default function Intro() {
         aria-label="Shopping Cart"
         _hover={{ bg: "brand.600" }}
         boxShadow="lg"
-      >
-        🛒
-      </MotionBox>
+        icon="🛒"
+      />
     </Box>
   );
 }

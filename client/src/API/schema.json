@@ -210,7 +210,7 @@
     "table_name": "plan_meals"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• plan_meals_plan_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE CASCADE\n\n• plan_meals_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• plan_meals_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE\n\n• plan_meals_plan_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE CASCADE\n\n",
     "sort_order": 2,
     "table_name": "plan_meals"
   },
@@ -225,7 +225,7 @@
     "table_name": "plans"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• plans_price_per_meal_check (CHECK)\n  CHECK ((price_per_meal >= (0)::numeric))\n\n• plans_target_carbs_per_meal_check (CHECK)\n  CHECK ((carb >= 0))\n\n• plans_check (CHECK)\n  CHECK ((medium_term_meals >= short_term_meals))\n\n• plans_min_meals_per_week_check (CHECK)\n  CHECK ((short_term_meals > 0))\n\n• plans_target_protein_per_meal_check (CHECK)\n  CHECK ((protein > 0))\n\n• plans_target_calories_per_meal_check (CHECK)\n  CHECK ((kcal > 0))\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• plans_target_calories_per_meal_check (CHECK)\n  CHECK ((kcal > 0))\n\n• plans_target_protein_per_meal_check (CHECK)\n  CHECK ((protein > 0))\n\n• plans_target_carbs_per_meal_check (CHECK)\n  CHECK ((carb >= 0))\n\n• plans_check (CHECK)\n  CHECK ((medium_term_meals >= short_term_meals))\n\n• plans_min_meals_per_week_check (CHECK)\n  CHECK ((short_term_meals > 0))\n\n• plans_price_per_meal_check (CHECK)\n  CHECK ((price_per_meal >= (0)::numeric))\n\n",
     "sort_order": 2,
     "table_name": "plans"
   },
@@ -260,7 +260,7 @@
     "table_name": "user_addresses"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_addresses_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• only_one_default_address_per_user (EXCLUDE)\n  EXCLUDE USING btree (user_id WITH =) WHERE ((is_default = true))\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• only_one_default_address_per_user (EXCLUDE)\n  EXCLUDE USING btree (user_id WITH =) WHERE ((is_default = true))\n\n• user_addresses_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n",
     "sort_order": 2,
     "table_name": "user_addresses"
   },
@@ -280,7 +280,7 @@
     "table_name": "user_allergies"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_allergies_severity_override_check (CHECK)\n  CHECK (((severity_override >= 1) AND (severity_override <= 5)))\n\n• user_allergies_allergy_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (allergy_id) REFERENCES allergies(id) ON DELETE CASCADE\n\n• user_allergies_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_allergies_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• user_allergies_allergy_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (allergy_id) REFERENCES allergies(id) ON DELETE CASCADE\n\n• user_allergies_severity_override_check (CHECK)\n  CHECK (((severity_override >= 1) AND (severity_override <= 5)))\n\n",
     "sort_order": 2,
     "table_name": "user_allergies"
   },
@@ -355,6 +355,26 @@
     "table_name": "user_health_profiles"
   },
   {
+    "output": "=========================================================\nTABLE: user_messages\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.user_messages (\n    id uuid DEFAULT uuid_generate_v4() NOT NULL,\n    user_id uuid NOT NULL,\n    admin_id uuid,\n    content text NOT NULL,\n    sender_type message_sender_type NOT NULL,\n    is_read boolean DEFAULT false NOT NULL,\n    read_at timestamp with time zone,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    updated_at timestamp with time zone DEFAULT now() NOT NULL,\n    CONSTRAINT user_messages_pkey PRIMARY KEY (id)\n);\n",
+    "sort_order": 1,
+    "table_name": "user_messages"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_messages_admin_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (admin_id) REFERENCES user_profiles(id) ON DELETE SET NULL\n\n• user_messages_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n",
+    "sort_order": 2,
+    "table_name": "user_messages"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• user_messages_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX user_messages_pkey ON public.user_messages USING btree (id)\n\n• idx_user_messages_user_id\n  Columns: user_id\n  Definition: CREATE INDEX idx_user_messages_user_id ON public.user_messages USING btree (user_id)\n\n• idx_user_messages_admin_id\n  Columns: admin_id\n  Definition: CREATE INDEX idx_user_messages_admin_id ON public.user_messages USING btree (admin_id)\n\n• idx_user_messages_created_at\n  Columns: created_at\n  Definition: CREATE INDEX idx_user_messages_created_at ON public.user_messages USING btree (created_at DESC)\n\n• idx_user_messages_is_read\n  Columns: is_read\n  Definition: CREATE INDEX idx_user_messages_is_read ON public.user_messages USING btree (is_read) WHERE (is_read = false)\n\n• idx_user_messages_user_created\n  Columns: user_id, created_at\n  Definition: CREATE INDEX idx_user_messages_user_created ON public.user_messages USING btree (user_id, created_at DESC)\n\n• idx_user_messages_realtime\n  Columns: user_id, created_at\n  Definition: CREATE INDEX idx_user_messages_realtime ON public.user_messages USING btree (user_id, created_at DESC)\n\n• idx_user_messages_unread\n  Columns: user_id, is_read\n  Definition: CREATE INDEX idx_user_messages_unread ON public.user_messages USING btree (user_id, is_read) WHERE ((is_read = false) AND (sender_type = 'admin'::message_sender_type))\n\n• idx_user_messages_admin\n  Columns: admin_id, created_at\n  Definition: CREATE INDEX idx_user_messages_admin ON public.user_messages USING btree (admin_id, created_at DESC) WHERE (admin_id IS NOT NULL)\n\n",
+    "sort_order": 3,
+    "table_name": "user_messages"
+  },
+  {
+    "output": "4️⃣  Triggers & Function Definitions\n-------------------------------------------------\n🔥 TRIGGER: set_user_messages_read_at\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.set_read_timestamp()\n\n📋 Trigger Definition:\nCREATE TRIGGER set_user_messages_read_at BEFORE UPDATE ON public.user_messages FOR EACH ROW EXECUTE FUNCTION set_read_timestamp()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.set_read_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    IF NEW.is_read AND NOT OLD.is_read THEN\n        NEW.read_at = NOW();\n    END IF;\n    RETURN NEW;\nEND;\n$function$\n\n\n---\n\n🔥 TRIGGER: trigger_set_read_timestamp_user_messages\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.set_message_read_timestamp()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_set_read_timestamp_user_messages BEFORE UPDATE ON public.user_messages FOR EACH ROW EXECUTE FUNCTION set_message_read_timestamp()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.set_message_read_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    IF NEW.is_read = true AND OLD.is_read = false THEN\r\n        NEW.read_at = NOW();\r\n    ELSIF NEW.is_read = false THEN\r\n        NEW.read_at = NULL;\r\n    END IF;\r\n    RETURN NEW;\r\nEND;\r\n$function$\n\n\n---\n\n🔥 TRIGGER: trigger_update_timestamp_user_messages\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.update_message_timestamp()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_update_timestamp_user_messages BEFORE UPDATE ON public.user_messages FOR EACH ROW EXECUTE FUNCTION update_message_timestamp()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.update_message_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    NEW.updated_at = NOW();\r\n    RETURN NEW;\r\nEND;\r\n$function$\n\n\n---\n\n🔥 TRIGGER: update_user_messages_updated_at\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.update_updated_at_column()\n\n📋 Trigger Definition:\nCREATE TRIGGER update_user_messages_updated_at BEFORE UPDATE ON public.user_messages FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.update_updated_at_column()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    NEW.updated_at = NOW();\n    RETURN NEW;\nEND;\n$function$\n\n\n",
+    "sort_order": 4,
+    "table_name": "user_messages"
+  },
+  {
     "output": "=========================================================\nTABLE: user_notification_preferences\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.user_notification_preferences (\n    user_id uuid NOT NULL,\n    email_enabled boolean DEFAULT true NOT NULL,\n    sms_enabled boolean DEFAULT false NOT NULL,\n    push_enabled boolean DEFAULT true NOT NULL,\n    order_confirmations boolean DEFAULT true NOT NULL,\n    delivery_updates boolean DEFAULT true NOT NULL,\n    meal_reminders boolean DEFAULT true NOT NULL,\n    plan_updates boolean DEFAULT true NOT NULL,\n    promotional_emails boolean DEFAULT false NOT NULL,\n    promotional_sms boolean DEFAULT false NOT NULL,\n    weekly_reports boolean DEFAULT true NOT NULL,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    updated_at timestamp with time zone DEFAULT now() NOT NULL,\n    CONSTRAINT user_notification_preferences_pkey PRIMARY KEY (user_id)\n);\n",
     "sort_order": 1,
     "table_name": "user_notification_preferences"
@@ -380,7 +400,7 @@
     "table_name": "user_payment_methods"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_payment_methods_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• user_payment_methods_expiry_year_check (CHECK)\n  CHECK (((expiry_year)::numeric >= EXTRACT(year FROM now())))\n\n• user_payment_methods_expiry_month_check (CHECK)\n  CHECK (((expiry_month >= 1) AND (expiry_month <= 12)))\n\n• only_one_default_payment_per_user (EXCLUDE)\n  EXCLUDE USING btree (user_id WITH =) WHERE ((is_default = true))\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_payment_methods_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• user_payment_methods_expiry_month_check (CHECK)\n  CHECK (((expiry_month >= 1) AND (expiry_month <= 12)))\n\n• only_one_default_payment_per_user (EXCLUDE)\n  EXCLUDE USING btree (user_id WITH =) WHERE ((is_default = true))\n\n• user_payment_methods_expiry_year_check (CHECK)\n  CHECK (((expiry_year)::numeric >= EXTRACT(year FROM now())))\n\n",
     "sort_order": 2,
     "table_name": "user_payment_methods"
   },
@@ -420,7 +440,7 @@
     "table_name": "user_subscriptions"
   },
   {
-    "output": "2️⃣  Constraints\n-------------------------------------------------\n• consumed_not_exceed_meals_array (CHECK)\n  CHECK ((consumed_meals <= jsonb_array_length(meals)))\n\n• user_subscriptions_consumed_meals_check (CHECK)\n  CHECK ((consumed_meals >= 0))\n\n• user_subscriptions_delivery_address_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (delivery_address_id) REFERENCES addresses(id) ON UPDATE CASCADE ON DELETE CASCADE\n\n• user_subscriptions_payment_method_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (payment_method_id) REFERENCES user_payment_methods(id)\n\n• user_subscriptions_plan_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE CASCADE\n\n• user_subscriptions_price_per_meal_check (CHECK)\n  CHECK ((price_per_meal >= (0)::numeric))\n\n• user_subscriptions_total_meals_check (CHECK)\n  CHECK ((total_meals > 0))\n\n• user_subscriptions_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• valid_end_date (CHECK)\n  CHECK (((end_date IS NULL) OR (end_date > start_date)))\n\n",
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_subscriptions_total_meals_check (CHECK)\n  CHECK ((total_meals > 0))\n\n• user_subscriptions_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• valid_end_date (CHECK)\n  CHECK (((end_date IS NULL) OR (end_date > start_date)))\n\n• user_subscriptions_price_per_meal_check (CHECK)\n  CHECK ((price_per_meal >= (0)::numeric))\n\n• user_subscriptions_plan_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE CASCADE\n\n• user_subscriptions_payment_method_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (payment_method_id) REFERENCES user_payment_methods(id)\n\n• user_subscriptions_delivery_address_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (delivery_address_id) REFERENCES addresses(id) ON UPDATE CASCADE ON DELETE CASCADE\n\n• user_subscriptions_consumed_meals_check (CHECK)\n  CHECK ((consumed_meals >= 0))\n\n• consumed_not_exceed_total_meals (CHECK)\n  CHECK ((consumed_meals <= total_meals))\n\n",
     "sort_order": 2,
     "table_name": "user_subscriptions"
   },

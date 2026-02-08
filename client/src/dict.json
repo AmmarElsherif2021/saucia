@@ -1,7 +1,13 @@
 {
   "en":{
   "translation":{
-     "order": "Order",
+  "supportPortal": "Support Portal",
+  "supportChat": "Support Chat",
+  "WeAreHereToHelp": "We're here to help!",
+  "Reconnect": "Reconnect",
+  "UnableToConnectSupport": "Unable to connect to support chat",
+  "send": "Send",
+  "order": "Order",
   "orderItems": "Order Items",
   "customer": "Customer",
   "item": "Item",
@@ -483,7 +489,7 @@
   "allergies": "Allergies",
   "saveChanges": "Save Changes",
   "overview": "Overview",
-  "introSubtitle": "Discover our carefully crafted selection of exceptional dishes",
+  "introSubtitle": "Explore our most loved recipes, crafted with premium ingredients and unique dressings.",
   "orderHistory": "Order History",
   "subscription": "Subscription",
   "accountOverview": "Account Overview",
@@ -1140,6 +1146,15 @@
 },
  "ar":{
   "translation":{
+  "SupportChat": "دردشة الدعم",
+  "welcomeSupportChat": "مرحبًا بك في دردشة الدعم! كيف يمكننا مساعدتك اليوم؟",
+  "sendMessage": "إرسال رسالة",
+  "typeYourMessage": "اكتب رسالتك...",
+    "supportPortal": "بوابة الدعم",
+  "WeAreHereToHelp": "نحن هنا للمساعدة",
+  "Reconnect": "إعادة الاتصال",
+  "UnableToConnectSupport": "غير قادر على الاتصال بدعم الدردشة",
+  "send": "إرسال",
   "order": "الطلب",
   "orderItems": "عناصر الطلب",
   "customer": "العميل",
@@ -1507,7 +1522,7 @@
   "maybeLater": "ربما لاحقًا",
   "confirm": "تأكيد",
   "addToCart": "أضف إلى السلة",
-  "order": "اطلب الآن",
+  "order": "اطلبها الان",
   "apply": "تطبيق",
   "proceedToCheckout": "إتمام الشراء",
   "edit": "تعديل",
@@ -2087,7 +2102,7 @@
   "seasonal": "الموسمي",
   "noItems": "لا توجد عناصر متاحة لهذه الفئة.",
   "noOffers": "لا توجد عروض",
-  "title": "العروض الحصرية",
+  "introTitle": "أكل صحي.. يضبط يومك",
   "buyOneGetOne": "اشترِ 1 واحصل على 1 مجانًا",
   "comboOffers": "خصم 20% على الوجبات المجمعة",
   "limitedTime": "عرض الحلوى لفترة محدودة",
@@ -2268,7 +2283,7 @@
   "supportPortalDescription": "احصل على توصيات وجبات مخصصة تناسب تفضيلاتك واحتياجاتك الغذائية. خبراؤنا هنا لمساعدتك على اتخاذ خيارات صحية!",
   "supportPortalTextareaPlaceholder": "صف تفضيلات وجباتك أو احتياجاتك الغذائية...",
   "supportPortalSubmitButton": "أرسل استفسارك",
-  "introSubtitle":"استمتع بتجربة سلطات فاخرة وصحية تم تحضيرها بعناية"
+  "introSubtitle":"جرب تشكيلتنا المختارة من أطباقنا الأكثر طلباً، محضرة بمكونات فاخرة وصوصاتنا الخاصة."
   }
  }
 }
