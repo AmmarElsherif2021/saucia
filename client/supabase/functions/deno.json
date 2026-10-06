@@ -1,0 +1,12 @@
+{
+  "imports": {
+    "supabase": "npm:@supabase/supabase-js@2.39.3",
+    "@supabase/functions-js": "jsr:@supabase/functions-js@2.86.0"
+  },
+  "tasks": {
+    "serve": "deno run --allow-net --allow-env --allow-read https://deno.land/std@0.177.0/http/file_server.ts --port=54321"
+  },
+  "compilerOptions": {
+    "lib": ["deno.window", "dom", "dom.iterable", "dom.asynciterable"]
+  }
+}

@@ -1,0 +1,36 @@
+﻿# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# legacy flat repo (kept locally, not tracked)
+_legacy/
+
+# Vercel
+.vercel
+
+# Supabase temp
+supabase/.temp/

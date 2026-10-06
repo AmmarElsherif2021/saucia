@@ -1,0 +1,457 @@
+[
+  {
+    "output": "=========================================================\nTABLE: addresses\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.addresses (\n    external_id text NOT NULL,\n    label text NOT NULL,\n    address_line1 text NOT NULL,\n    city text NOT NULL,\n    is_default boolean DEFAULT false NOT NULL,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    address_line2 text,\n    id uuid NOT NULL,\n    CONSTRAINT addresses_pkey PRIMARY KEY (id)\n);\n",
+    "sort_order": 1,
+    "table_name": "addresses"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• addresses_external_id_key (UNIQUE)\n  UNIQUE (external_id)\n\n• addresses_uuid_key (UNIQUE)\n  UNIQUE (id)\n\n",
+    "sort_order": 2,
+    "table_name": "addresses"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• addresses_external_id_key (UNIQUE)\n  Columns: external_id\n  Definition: CREATE UNIQUE INDEX addresses_external_id_key ON public.addresses USING btree (external_id)\n\n• idx_addresses_city\n  Columns: city\n  Definition: CREATE INDEX idx_addresses_city ON public.addresses USING btree (city)\n\n• idx_addresses_is_default\n  Columns: is_default\n  Definition: CREATE INDEX idx_addresses_is_default ON public.addresses USING btree (is_default)\n\n• addresses_uuid_key (UNIQUE)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX addresses_uuid_key ON public.addresses USING btree (id)\n\n• addresses_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX addresses_pkey ON public.addresses USING btree (id)\n\n",
+    "sort_order": 3,
+    "table_name": "addresses"
+  },
+  {
+    "output": "=========================================================\nTABLE: allergies\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.allergies (\n    id integer DEFAULT nextval('allergies_id_seq'::regclass) NOT NULL,\n    name text NOT NULL,\n    name_arabic text,\n    severity_level integer,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    CONSTRAINT allergies_pkey PRIMARY KEY (id)\n);\n",
+    "sort_order": 1,
+    "table_name": "allergies"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• allergies_name_key (UNIQUE)\n  UNIQUE (name)\n\n• allergies_severity_level_check (CHECK)\n  CHECK (((severity_level >= 1) AND (severity_level <= 5)))\n\n",
+    "sort_order": 2,
+    "table_name": "allergies"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• allergies_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX allergies_pkey ON public.allergies USING btree (id)\n\n• allergies_name_key (UNIQUE)\n  Columns: name\n  Definition: CREATE UNIQUE INDEX allergies_name_key ON public.allergies USING btree (name)\n\n",
+    "sort_order": 3,
+    "table_name": "allergies"
+  },
+  {
+    "output": "=========================================================\nTABLE: dietary_preferences\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.dietary_preferences (\n    id integer DEFAULT nextval('dietary_preferences_id_seq'::regclass) NOT NULL,\n    name text NOT NULL,\n    name_arabic text,\n    description text,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    CONSTRAINT dietary_preferences_pkey PRIMARY KEY (id)\n);\n",
+    "sort_order": 1,
+    "table_name": "dietary_preferences"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• dietary_preferences_name_key (UNIQUE)\n  UNIQUE (name)\n\n",
+    "sort_order": 2,
+    "table_name": "dietary_preferences"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• dietary_preferences_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX dietary_preferences_pkey ON public.dietary_preferences USING btree (id)\n\n• dietary_preferences_name_key (UNIQUE)\n  Columns: name\n  Definition: CREATE UNIQUE INDEX dietary_preferences_name_key ON public.dietary_preferences USING btree (name)\n\n",
+    "sort_order": 3,
+    "table_name": "dietary_preferences"
+  },
+  {
+    "output": "=========================================================\nTABLE: item_allergies\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.item_allergies (\n    item_id integer NOT NULL,\n    allergy_id integer NOT NULL,\n    CONSTRAINT item_allergies_pkey PRIMARY KEY (item_id, allergy_id)\n);\n",
+    "sort_order": 1,
+    "table_name": "item_allergies"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• item_allergies_allergy_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (allergy_id) REFERENCES allergies(id) ON DELETE CASCADE\n\n• item_allergies_item_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE\n\n",
+    "sort_order": 2,
+    "table_name": "item_allergies"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• item_allergies_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: item_id, allergy_id\n  Definition: CREATE UNIQUE INDEX item_allergies_pkey ON public.item_allergies USING btree (item_id, allergy_id)\n\n",
+    "sort_order": 3,
+    "table_name": "item_allergies"
+  },
+  {
+    "output": "=========================================================\nTABLE: items\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.items (\n    id integer DEFAULT nextval('items_id_seq'::regclass) NOT NULL,\n    name text NOT NULL,\n    name_arabic text,\n    description text,\n    description_arabic text,\n    category text NOT NULL,\n    category_arabic text,\n    price double precision NOT NULL,\n    calories integer DEFAULT 0 NOT NULL,\n    protein_g integer DEFAULT 0 NOT NULL,\n    carbs_g integer DEFAULT 0 NOT NULL,\n    fat_g integer DEFAULT 0 NOT NULL,\n    max_free_per_meal integer DEFAULT 0 NOT NULL,\n    image_url text,\n    is_available boolean DEFAULT true NOT NULL,\n    sort_order integer DEFAULT 0 NOT NULL,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    updated_at timestamp with time zone DEFAULT now() NOT NULL,\n    is_additive boolean DEFAULT true NOT NULL,\n    weight integer DEFAULT 0,\n    CONSTRAINT items_pkey PRIMARY KEY (id)\n);\n",
+    "sort_order": 1,
+    "table_name": "items"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• items_price_check (CHECK)\n  CHECK ((price >= ((0)::numeric)::double precision))\n\n• items_carbs_g_check (CHECK)\n  CHECK ((carbs_g >= 0))\n\n• items_fat_g_check (CHECK)\n  CHECK ((fat_g >= 0))\n\n• items_max_free_per_meal_check (CHECK)\n  CHECK ((max_free_per_meal >= 0))\n\n• items_protein_g_check (CHECK)\n  CHECK ((protein_g >= 0))\n\n• items_calories_check (CHECK)\n  CHECK ((calories >= 0))\n\n",
+    "sort_order": 2,
+    "table_name": "items"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• items_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX items_pkey ON public.items USING btree (id)\n\n",
+    "sort_order": 3,
+    "table_name": "items"
+  },
+  {
+    "output": "4️⃣  Triggers & Function Definitions\n-------------------------------------------------\n🔥 TRIGGER: trigger_update_timestamp_items\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.update_timestamp()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_update_timestamp_items BEFORE UPDATE ON public.items FOR EACH ROW EXECUTE FUNCTION update_timestamp()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.update_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    NEW.updated_at = NOW();\r\n    RETURN NEW;\r\nEND;\r\n$function$\n\n\n",
+    "sort_order": 4,
+    "table_name": "items"
+  },
+  {
+    "output": "=========================================================\nTABLE: meal_allergies\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.meal_allergies (\n    meal_id integer NOT NULL,\n    allergy_id integer NOT NULL,\n    CONSTRAINT meal_allergies_pkey PRIMARY KEY (meal_id, allergy_id)\n);\n",
+    "sort_order": 1,
+    "table_name": "meal_allergies"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• meal_allergies_allergy_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (allergy_id) REFERENCES allergies(id) ON DELETE CASCADE\n\n• meal_allergies_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE\n\n",
+    "sort_order": 2,
+    "table_name": "meal_allergies"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• meal_allergies_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: meal_id, allergy_id\n  Definition: CREATE UNIQUE INDEX meal_allergies_pkey ON public.meal_allergies USING btree (meal_id, allergy_id)\n\n",
+    "sort_order": 3,
+    "table_name": "meal_allergies"
+  },
+  {
+    "output": "=========================================================\nTABLE: meal_items\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.meal_items (\n    meal_id integer NOT NULL,\n    items integer[],\n    CONSTRAINT meal_items_pkey PRIMARY KEY (meal_id)\n);\n",
+    "sort_order": 1,
+    "table_name": "meal_items"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• trg_validate_meal_items_array (OTHER (t))\n  TRIGGER DEFERRABLE\n\n• meal_items_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE\n\n",
+    "sort_order": 2,
+    "table_name": "meal_items"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• meal_items_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: meal_id\n  Definition: CREATE UNIQUE INDEX meal_items_pkey ON public.meal_items USING btree (meal_id)\n\n• idx_meal_items_items_gin\n  Columns: items\n  Definition: CREATE INDEX idx_meal_items_items_gin ON public.meal_items USING gin (items)\n\n",
+    "sort_order": 3,
+    "table_name": "meal_items"
+  },
+  {
+    "output": "4️⃣  Triggers & Function Definitions\n-------------------------------------------------\n🔥 TRIGGER: trg_validate_meal_items_array\n   Timing: AFTER\n   Events: INSERT, UPDATE\n   Function: public.validate_meal_items_array()\n\n📋 Trigger Definition:\nCREATE CONSTRAINT TRIGGER trg_validate_meal_items_array AFTER INSERT OR UPDATE ON public.meal_items DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION validate_meal_items_array()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.validate_meal_items_array()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  IF NEW.items IS NOT NULL THEN\n    PERFORM 1\n    FROM unnest(NEW.items) AS iid\n    LEFT JOIN public.items it ON it.id = iid\n    WHERE it.id IS NULL;\n    IF FOUND THEN\n      RAISE EXCEPTION 'meal_items.items contains non-existent item id';\n    END IF;\n  END IF;\n  RETURN NEW;\nEND;\n$function$\n\n\n",
+    "sort_order": 4,
+    "table_name": "meal_items"
+  },
+  {
+    "output": "=========================================================\nTABLE: meal_reviews\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.meal_reviews (\n    id uuid DEFAULT uuid_generate_v4() NOT NULL,\n    user_id uuid NOT NULL,\n    meal_id integer NOT NULL,\n    order_id uuid NOT NULL,\n    rating integer NOT NULL,\n    review_text text,\n    is_verified_purchase boolean DEFAULT true NOT NULL,\n    is_published boolean DEFAULT true NOT NULL,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    updated_at timestamp with time zone DEFAULT now() NOT NULL,\n    CONSTRAINT meal_reviews_pkey PRIMARY KEY (id)\n);\n",
+    "sort_order": 1,
+    "table_name": "meal_reviews"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• meal_reviews_rating_check (CHECK)\n  CHECK (((rating >= 1) AND (rating <= 5)))\n\n• meal_reviews_user_id_meal_id_order_id_key (UNIQUE)\n  UNIQUE (user_id, meal_id, order_id)\n\n• meal_reviews_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• meal_reviews_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE\n\n",
+    "sort_order": 2,
+    "table_name": "meal_reviews"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• meal_reviews_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX meal_reviews_pkey ON public.meal_reviews USING btree (id)\n\n• meal_reviews_user_id_meal_id_order_id_key (UNIQUE)\n  Columns: user_id, meal_id, order_id\n  Definition: CREATE UNIQUE INDEX meal_reviews_user_id_meal_id_order_id_key ON public.meal_reviews USING btree (user_id, meal_id, order_id)\n\n• idx_meal_reviews_rating\n  Columns: meal_id, rating\n  Definition: CREATE INDEX idx_meal_reviews_rating ON public.meal_reviews USING btree (meal_id, rating) WHERE (is_published = true)\n\n",
+    "sort_order": 3,
+    "table_name": "meal_reviews"
+  },
+  {
+    "output": "4️⃣  Triggers & Function Definitions\n-------------------------------------------------\n🔥 TRIGGER: trigger_update_meal_rating_insert\n   Timing: AFTER\n   Events: INSERT\n   Function: public.update_meal_rating()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_update_meal_rating_insert AFTER INSERT ON public.meal_reviews FOR EACH ROW EXECUTE FUNCTION update_meal_rating()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.update_meal_rating()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    UPDATE meals \n    SET \n        rating = (\n            SELECT ROUND(AVG(rating)::numeric, 2)\n            FROM meal_reviews \n            WHERE meal_id = NEW.meal_id AND is_published = true\n        ),\n        rating_count = (\n            SELECT COUNT(*)\n            FROM meal_reviews \n            WHERE meal_id = NEW.meal_id AND is_published = true\n        )\n    WHERE id = NEW.meal_id;\n    \n    RETURN NEW;\nEND;\n$function$\n\n\n---\n\n🔥 TRIGGER: trigger_update_meal_rating_update\n   Timing: AFTER\n   Events: UPDATE\n   Function: public.update_meal_rating()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_update_meal_rating_update AFTER UPDATE ON public.meal_reviews FOR EACH ROW WHEN (((old.rating <> new.rating) OR (old.is_published <> new.is_published))) EXECUTE FUNCTION update_meal_rating()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.update_meal_rating()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    UPDATE meals \n    SET \n        rating = (\n            SELECT ROUND(AVG(rating)::numeric, 2)\n            FROM meal_reviews \n            WHERE meal_id = NEW.meal_id AND is_published = true\n        ),\n        rating_count = (\n            SELECT COUNT(*)\n            FROM meal_reviews \n            WHERE meal_id = NEW.meal_id AND is_published = true\n        )\n    WHERE id = NEW.meal_id;\n    \n    RETURN NEW;\nEND;\n$function$\n\n\n---\n\n🔥 TRIGGER: trigger_update_timestamp_meal_reviews\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.update_timestamp()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_update_timestamp_meal_reviews BEFORE UPDATE ON public.meal_reviews FOR EACH ROW EXECUTE FUNCTION update_timestamp()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.update_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    NEW.updated_at = NOW();\r\n    RETURN NEW;\r\nEND;\r\n$function$\n\n\n",
+    "sort_order": 4,
+    "table_name": "meal_reviews"
+  },
+  {
+    "output": "=========================================================\nTABLE: meals\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.meals (\n    id integer DEFAULT nextval('meals_id_seq'::regclass) NOT NULL,\n    name text NOT NULL,\n    name_arabic text,\n    description text,\n    description_arabic text,\n    section text NOT NULL,\n    section_arabic text,\n    base_price numeric(10,2) DEFAULT 0 NOT NULL,\n    calories integer DEFAULT 0 NOT NULL,\n    protein_g integer DEFAULT 0 NOT NULL,\n    carbs_g integer DEFAULT 0 NOT NULL,\n    fat_g integer DEFAULT 0 NOT NULL,\n    fiber_g integer,\n    sugar_g integer,\n    sodium_mg integer,\n    ingredients text,\n    ingredients_arabic text,\n    image_url text,\n    thumbnail_url text,\n    is_premium boolean DEFAULT false NOT NULL,\n    is_vegetarian boolean DEFAULT false NOT NULL,\n    is_vegan boolean DEFAULT false NOT NULL,\n    is_gluten_free boolean DEFAULT false NOT NULL,\n    is_dairy_free boolean DEFAULT false NOT NULL,\n    spice_level integer,\n    prep_time_minutes integer,\n    rating numeric(3,2),\n    rating_count integer DEFAULT 0 NOT NULL,\n    is_featured boolean DEFAULT false NOT NULL,\n    discount_percentage numeric(5,2),\n    discount_valid_until timestamp with time zone,\n    is_available boolean DEFAULT true NOT NULL,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    updated_at timestamp with time zone DEFAULT now() NOT NULL,\n    is_selective boolean DEFAULT false NOT NULL,\n    weight integer DEFAULT 0,\n    CONSTRAINT meals_pkey PRIMARY KEY (id)\n);\n",
+    "sort_order": 1,
+    "table_name": "meals"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• meals_discount_percentage_check (CHECK)\n  CHECK (((discount_percentage >= (0)::numeric) AND (discount_percentage <= (100)::numeric)))\n\n• meals_fat_g_check (CHECK)\n  CHECK ((fat_g >= 0))\n\n• meals_fiber_g_check (CHECK)\n  CHECK ((fiber_g >= 0))\n\n• meals_prep_time_minutes_check (CHECK)\n  CHECK ((prep_time_minutes > 0))\n\n• meals_rating_count_check (CHECK)\n  CHECK ((rating_count >= 0))\n\n• meals_protein_g_check (CHECK)\n  CHECK ((protein_g >= 0))\n\n• meals_rating_check (CHECK)\n  CHECK (((rating >= (0)::numeric) AND (rating <= (5)::numeric)))\n\n• meals_sugar_g_check (CHECK)\n  CHECK ((sugar_g >= 0))\n\n• meals_spice_level_check (CHECK)\n  CHECK (((spice_level >= 0) AND (spice_level <= 5)))\n\n• meals_sodium_mg_check (CHECK)\n  CHECK ((sodium_mg >= 0))\n\n• meals_base_price_check (CHECK)\n  CHECK ((base_price >= (0)::numeric))\n\n• meals_calories_check (CHECK)\n  CHECK ((calories >= 0))\n\n• meals_carbs_g_check (CHECK)\n  CHECK ((carbs_g >= 0))\n\n",
+    "sort_order": 2,
+    "table_name": "meals"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• meals_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX meals_pkey ON public.meals USING btree (id)\n\n• idx_meals_discount\n  Columns: discount_percentage, discount_valid_until\n  Definition: CREATE INDEX idx_meals_discount ON public.meals USING btree (discount_percentage, discount_valid_until) WHERE ((discount_percentage > (0)::numeric) AND (discount_valid_until > '2023-10-01 00:00:00+00'::timestamp with time zone))\n\n• idx_meals_available_featured\n  Columns: is_available, is_featured\n  Definition: CREATE INDEX idx_meals_available_featured ON public.meals USING btree (is_available, is_featured) WHERE (is_available = true)\n\n• idx_meals_calories\n  Columns: calories\n  Definition: CREATE INDEX idx_meals_calories ON public.meals USING btree (calories)\n\n• idx_meals_protein\n  Columns: protein_g\n  Definition: CREATE INDEX idx_meals_protein ON public.meals USING btree (protein_g)\n\n• idx_meals_rating\n  Columns: rating\n  Definition: CREATE INDEX idx_meals_rating ON public.meals USING btree (rating DESC) WHERE (rating IS NOT NULL)\n\n• idx_meals_dietary\n  Columns: is_vegetarian, is_vegan, is_gluten_free, is_dairy_free\n  Definition: CREATE INDEX idx_meals_dietary ON public.meals USING btree (is_vegetarian, is_vegan, is_gluten_free, is_dairy_free)\n\n",
+    "sort_order": 3,
+    "table_name": "meals"
+  },
+  {
+    "output": "4️⃣  Triggers & Function Definitions\n-------------------------------------------------\n🔥 TRIGGER: trigger_update_timestamp_meals\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.update_timestamp()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_update_timestamp_meals BEFORE UPDATE ON public.meals FOR EACH ROW EXECUTE FUNCTION update_timestamp()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.update_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    NEW.updated_at = NOW();\r\n    RETURN NEW;\r\nEND;\r\n$function$\n\n\n",
+    "sort_order": 4,
+    "table_name": "meals"
+  },
+  {
+    "output": "=========================================================\nTABLE: order_items\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.order_items (\n    id uuid DEFAULT uuid_generate_v4() NOT NULL,\n    order_id uuid NOT NULL,\n    order_meal_id uuid,\n    item_id integer,\n    quantity integer DEFAULT 1 NOT NULL,\n    unit_price double precision NOT NULL,\n    total_price numeric(10,2) NOT NULL,\n    name text NOT NULL,\n    name_arabic text,\n    category text,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    CONSTRAINT order_items_pkey PRIMARY KEY (id)\n);\n",
+    "sort_order": 1,
+    "table_name": "order_items"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• order_items_unit_price_check (CHECK)\n  CHECK ((unit_price >= ((0)::numeric)::double precision))\n\n• order_items_item_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE SET NULL\n\n• order_items_order_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE\n\n• order_items_order_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (order_meal_id) REFERENCES order_meals(id) ON DELETE CASCADE\n\n• order_items_quantity_check (CHECK)\n  CHECK ((quantity > 0))\n\n• order_items_total_price_check (CHECK)\n  CHECK ((total_price >= (0)::numeric))\n\n• valid_item_total (CHECK)\n  CHECK (((total_price)::double precision = (unit_price * ((quantity)::numeric)::double precision)))\n\n",
+    "sort_order": 2,
+    "table_name": "order_items"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• order_items_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX order_items_pkey ON public.order_items USING btree (id)\n\n• idx_order_items_order_id\n  Columns: order_id\n  Definition: CREATE INDEX idx_order_items_order_id ON public.order_items USING btree (order_id)\n\n• idx_order_items_meal_id\n  Columns: order_meal_id\n  Definition: CREATE INDEX idx_order_items_meal_id ON public.order_items USING btree (order_meal_id)\n\n",
+    "sort_order": 3,
+    "table_name": "order_items"
+  },
+  {
+    "output": "=========================================================\nTABLE: order_meals\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.order_meals (\n    id uuid DEFAULT uuid_generate_v4() NOT NULL,\n    order_id uuid NOT NULL,\n    meal_id integer,\n    quantity integer DEFAULT 1 NOT NULL,\n    unit_price numeric(10,2) NOT NULL,\n    total_price numeric(10,2) NOT NULL,\n    name text NOT NULL,\n    name_arabic text,\n    description text,\n    calories integer,\n    protein_g integer,\n    carbs_g integer,\n    fat_g integer,\n    customization_notes text,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    CONSTRAINT order_meals_pkey PRIMARY KEY (id)\n);\n",
+    "sort_order": 1,
+    "table_name": "order_meals"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• valid_meal_total (CHECK)\n  CHECK ((total_price = (unit_price * (quantity)::numeric)))\n\n• order_meals_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE SET NULL\n\n• order_meals_order_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE\n\n• order_meals_quantity_check (CHECK)\n  CHECK ((quantity > 0))\n\n• order_meals_total_price_check (CHECK)\n  CHECK ((total_price >= (0)::numeric))\n\n• order_meals_unit_price_check (CHECK)\n  CHECK ((unit_price >= (0)::numeric))\n\n",
+    "sort_order": 2,
+    "table_name": "order_meals"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• order_meals_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX order_meals_pkey ON public.order_meals USING btree (id)\n\n• idx_order_meals_order_id\n  Columns: order_id\n  Definition: CREATE INDEX idx_order_meals_order_id ON public.order_meals USING btree (order_id)\n\n",
+    "sort_order": 3,
+    "table_name": "order_meals"
+  },
+  {
+    "output": "=========================================================\nTABLE: orders\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.orders (\n    id uuid DEFAULT uuid_generate_v4() NOT NULL,\n    user_id uuid,\n    subscription_id uuid,\n    order_number integer NOT NULL,\n    subtotal numeric(10,2) DEFAULT 0 NOT NULL,\n    tax_amount numeric(10,2) DEFAULT 0 NOT NULL,\n    discount_amount numeric(10,2) DEFAULT 0 NOT NULL,\n    delivery_fee numeric(10,2) DEFAULT 0 NOT NULL,\n    total_amount numeric(10,2) DEFAULT 0 NOT NULL,\n    status order_status_enum DEFAULT 'pending'::order_status_enum NOT NULL,\n    payment_status text DEFAULT 'pending'::text NOT NULL,\n    payment_method payment_method_enum,\n    payment_reference text,\n    paid_at timestamp with time zone,\n    delivery_address_id uuid,\n    delivery_instructions text,\n    scheduled_delivery_date timestamp with time zone,\n    actual_delivery_date timestamp with time zone,\n    delivery_driver_id uuid,\n    contact_phone text,\n    special_instructions text,\n    coupon_code text,\n    loyalty_points_used integer DEFAULT 0,\n    loyalty_points_earned integer DEFAULT 0,\n    subscription_meal_index integer,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    updated_at timestamp with time zone DEFAULT now() NOT NULL,\n    CONSTRAINT orders_pkey PRIMARY KEY (id)\n);\n",
+    "sort_order": 1,
+    "table_name": "orders"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• orders_delivery_address_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (delivery_address_id) REFERENCES user_addresses(id) ON DELETE SET NULL\n\n• orders_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• orders_total_amount_check (CHECK)\n  CHECK ((total_amount >= (0)::numeric))\n\n• orders_tax_amount_check (CHECK)\n  CHECK ((tax_amount >= (0)::numeric))\n\n• orders_subtotal_check (CHECK)\n  CHECK ((subtotal >= (0)::numeric))\n\n• orders_subscription_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (subscription_id) REFERENCES user_subscriptions(id) ON DELETE CASCADE\n\n• orders_payment_status_check (CHECK)\n  CHECK ((payment_status = ANY (ARRAY['pending'::text, 'paid'::text, 'failed'::text, 'refunded'::text, 'partial_refund'::text])))\n\n• orders_order_number_key (UNIQUE)\n  UNIQUE (order_number)\n\n• orders_loyalty_points_used_check (CHECK)\n  CHECK ((loyalty_points_used >= 0))\n\n• orders_loyalty_points_earned_check (CHECK)\n  CHECK ((loyalty_points_earned >= 0))\n\n• orders_discount_amount_check (CHECK)\n  CHECK ((discount_amount >= (0)::numeric))\n\n• orders_delivery_fee_check (CHECK)\n  CHECK ((delivery_fee >= (0)::numeric))\n\n• valid_total (CHECK)\n  CHECK ((total_amount = (((subtotal + tax_amount) + delivery_fee) - discount_amount)))\n\n",
+    "sort_order": 2,
+    "table_name": "orders"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• orders_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX orders_pkey ON public.orders USING btree (id)\n\n• orders_order_number_key (UNIQUE)\n  Columns: order_number\n  Definition: CREATE UNIQUE INDEX orders_order_number_key ON public.orders USING btree (order_number)\n\n• idx_orders_user_created\n  Columns: user_id, created_at\n  Definition: CREATE INDEX idx_orders_user_created ON public.orders USING btree (user_id, created_at DESC)\n\n• idx_orders_subscription\n  Columns: subscription_id\n  Definition: CREATE INDEX idx_orders_subscription ON public.orders USING btree (subscription_id) WHERE (subscription_id IS NOT NULL)\n\n• idx_orders_status_created\n  Columns: status, created_at\n  Definition: CREATE INDEX idx_orders_status_created ON public.orders USING btree (status, created_at DESC)\n\n• idx_orders_delivery_date\n  Columns: scheduled_delivery_date\n  Definition: CREATE INDEX idx_orders_delivery_date ON public.orders USING btree (scheduled_delivery_date) WHERE (scheduled_delivery_date IS NOT NULL)\n\n• idx_orders_number\n  Columns: order_number\n  Definition: CREATE INDEX idx_orders_number ON public.orders USING btree (order_number)\n\n• idx_orders_payment_status\n  Columns: payment_status, paid_at\n  Definition: CREATE INDEX idx_orders_payment_status ON public.orders USING btree (payment_status, paid_at) WHERE (payment_status = 'paid'::text)\n\n• idx_orders_delivery_address_id\n  Columns: delivery_address_id\n  Definition: CREATE INDEX idx_orders_delivery_address_id ON public.orders USING btree (delivery_address_id)\n\n",
+    "sort_order": 3,
+    "table_name": "orders"
+  },
+  {
+    "output": "4️⃣  Triggers & Function Definitions\n-------------------------------------------------\n🔥 TRIGGER: trigger_order_delivery\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.handle_order_delivery()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_order_delivery BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION handle_order_delivery()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.handle_order_delivery()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nDECLARE\n  v_meals_len integer;\nBEGIN\n  IF TG_OP = 'UPDATE' AND OLD.status != 'delivered' AND NEW.status = 'delivered' THEN\n    NEW.actual_delivery_date := NOW();\n\n    IF NEW.subscription_id IS NOT NULL THEN\n      -- get array length (meals is assumed to be a jsonb column on user_subscriptions)\n      SELECT jsonb_array_length(meals) INTO v_meals_len\n      FROM user_subscriptions\n      WHERE id = NEW.subscription_id;\n\n      IF v_meals_len IS NULL OR v_meals_len = 0 THEN\n        -- fallback to total_meals if array not present; ensure at least 1\n        SELECT GREATEST(COALESCE(total_meals, 1), 1) INTO v_meals_len\n        FROM user_subscriptions\n        WHERE id = NEW.subscription_id;\n      END IF;\n\n      UPDATE user_subscriptions\n      SET\n        consumed_meals = consumed_meals + 1\n      WHERE id = NEW.subscription_id;\n\n      RAISE NOTICE 'Updated subscription % - incremented consumed meals', NEW.subscription_id;\n    END IF;\n  END IF;\n\n  RETURN NEW;\nEND;\n$function$\n\n\n---\n\n🔥 TRIGGER: trigger_order_delivery_dates\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.handle_order_delivery_dates()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_order_delivery_dates BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION handle_order_delivery_dates()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.handle_order_delivery_dates()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nDECLARE\n    v_preferred_time time;\n    v_candidate_date timestamptz;\nBEGIN\n    -- 1. Set scheduled_delivery_date when status changes to 'active'\n    IF NEW.status = 'active' AND OLD.status != 'active' THEN\n        IF NEW.subscription_id IS NOT NULL THEN\n            -- Get preferred delivery time from subscription\n            SELECT preferred_delivery_time INTO v_preferred_time\n            FROM user_subscriptions\n            WHERE id = NEW.subscription_id;\n\n            -- Calculate nearest occurrence of preferred time\n            v_candidate_date = date_trunc('day', NOW()) + v_preferred_time;\n            IF v_candidate_date < NOW() THEN\n                v_candidate_date = v_candidate_date + interval '1 day';\n            END IF;\n\n            NEW.scheduled_delivery_date = v_candidate_date;\n        END IF;\n    END IF;\n\n    -- 2. Set actual_delivery_date when status changes to 'confirmed'\n    IF NEW.status = 'confirmed' AND OLD.status != 'confirmed' THEN\n        IF NEW.scheduled_delivery_date IS NOT NULL THEN\n            NEW.actual_delivery_date = NEW.scheduled_delivery_date;\n        ELSIF NEW.subscription_id IS NOT NULL THEN\n            -- Get preferred delivery time from subscription\n            SELECT preferred_delivery_time INTO v_preferred_time\n            FROM user_subscriptions\n            WHERE id = NEW.subscription_id;\n\n            -- Calculate nearest occurrence of preferred time\n            v_candidate_date = date_trunc('day', NOW()) + v_preferred_time;\n            IF v_candidate_date < NOW() THEN\n                v_candidate_date = v_candidate_date + interval '1 day';\n            END IF;\n\n            NEW.actual_delivery_date = v_candidate_date;\n        END IF;\n    END IF;\n\n    RETURN NEW;\nEND;\n$function$\n\n\n---\n\n🔥 TRIGGER: trigger_set_order_number\n   Timing: BEFORE\n   Events: INSERT\n   Function: public.set_order_number()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_set_order_number BEFORE INSERT ON public.orders FOR EACH ROW EXECUTE FUNCTION set_order_number()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.set_order_number()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    IF NEW.order_number IS NULL OR NEW.order_number = 0 THEN\r\n        NEW.order_number := nextval('order_number_seq');\r\n    END IF;\r\n    RETURN NEW;\r\nEND;\r\n$function$\n\n\n---\n\n🔥 TRIGGER: trigger_update_timestamp_orders\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.update_timestamp()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_update_timestamp_orders BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION update_timestamp()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.update_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    NEW.updated_at = NOW();\r\n    RETURN NEW;\r\nEND;\r\n$function$\n\n\n",
+    "sort_order": 4,
+    "table_name": "orders"
+  },
+  {
+    "output": "=========================================================\nTABLE: plan_meals\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.plan_meals (\n    id uuid DEFAULT uuid_generate_v4() NOT NULL,\n    plan_id integer NOT NULL,\n    meal_id integer NOT NULL,\n    is_substitutable boolean DEFAULT true NOT NULL,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    CONSTRAINT plan_meals_pkey PRIMARY KEY (id)\n);\n",
+    "sort_order": 1,
+    "table_name": "plan_meals"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• plan_meals_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE\n\n• plan_meals_plan_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE CASCADE\n\n",
+    "sort_order": 2,
+    "table_name": "plan_meals"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• plan_meals_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX plan_meals_pkey ON public.plan_meals USING btree (id)\n\n",
+    "sort_order": 3,
+    "table_name": "plan_meals"
+  },
+  {
+    "output": "=========================================================\nTABLE: plans\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.plans (\n    id integer DEFAULT nextval('plans_id_seq'::regclass) NOT NULL,\n    title text NOT NULL,\n    title_arabic text,\n    description text,\n    description_arabic text,\n    price_per_meal numeric(10,2) NOT NULL,\n    short_term_meals integer NOT NULL,\n    medium_term_meals integer NOT NULL,\n    kcal integer,\n    protein integer,\n    carb integer,\n    avatar_url text,\n    is_active boolean DEFAULT true NOT NULL,\n    sort_order integer DEFAULT 0 NOT NULL,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    updated_at timestamp with time zone DEFAULT now() NOT NULL,\n    duration_days bigint DEFAULT '12'::bigint,\n    additives integer[],\n    CONSTRAINT plans_pkey PRIMARY KEY (id)\n);\n",
+    "sort_order": 1,
+    "table_name": "plans"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• plans_target_calories_per_meal_check (CHECK)\n  CHECK ((kcal > 0))\n\n• plans_target_protein_per_meal_check (CHECK)\n  CHECK ((protein > 0))\n\n• plans_target_carbs_per_meal_check (CHECK)\n  CHECK ((carb >= 0))\n\n• plans_check (CHECK)\n  CHECK ((medium_term_meals >= short_term_meals))\n\n• plans_min_meals_per_week_check (CHECK)\n  CHECK ((short_term_meals > 0))\n\n• plans_price_per_meal_check (CHECK)\n  CHECK ((price_per_meal >= (0)::numeric))\n\n",
+    "sort_order": 2,
+    "table_name": "plans"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• plans_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX plans_pkey ON public.plans USING btree (id)\n\n",
+    "sort_order": 3,
+    "table_name": "plans"
+  },
+  {
+    "output": "4️⃣  Triggers & Function Definitions\n-------------------------------------------------\n🔥 TRIGGER: trigger_update_timestamp_plans\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.update_timestamp()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_update_timestamp_plans BEFORE UPDATE ON public.plans FOR EACH ROW EXECUTE FUNCTION update_timestamp()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.update_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    NEW.updated_at = NOW();\r\n    RETURN NEW;\r\nEND;\r\n$function$\n\n\n",
+    "sort_order": 4,
+    "table_name": "plans"
+  },
+  {
+    "output": "=========================================================\nTABLE: spatial_ref_sys\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.spatial_ref_sys (\n    srid integer NOT NULL,\n    auth_name character varying(256),\n    auth_srid integer,\n    srtext character varying(2048),\n    proj4text character varying(2048),\n    CONSTRAINT spatial_ref_sys_pkey PRIMARY KEY (srid)\n);\n",
+    "sort_order": 1,
+    "table_name": "spatial_ref_sys"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• spatial_ref_sys_srid_check (CHECK)\n  CHECK (((srid > 0) AND (srid <= 998999)))\n\n",
+    "sort_order": 2,
+    "table_name": "spatial_ref_sys"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• spatial_ref_sys_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: srid\n  Definition: CREATE UNIQUE INDEX spatial_ref_sys_pkey ON public.spatial_ref_sys USING btree (srid)\n\n",
+    "sort_order": 3,
+    "table_name": "spatial_ref_sys"
+  },
+  {
+    "output": "=========================================================\nTABLE: user_addresses\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.user_addresses (\n    id uuid DEFAULT uuid_generate_v4() NOT NULL,\n    user_id uuid NOT NULL,\n    label text NOT NULL,\n    address_line1 text NOT NULL,\n    address_line2 text,\n    city text NOT NULL,\n    state text,\n    postal_code text,\n    country character(2) DEFAULT 'SA'::bpchar NOT NULL,\n    location geography(Point,4326),\n    is_default boolean DEFAULT false NOT NULL,\n    delivery_instructions text,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    updated_at timestamp with time zone DEFAULT now() NOT NULL,\n    CONSTRAINT user_addresses_pkey PRIMARY KEY (id)\n);\n",
+    "sort_order": 1,
+    "table_name": "user_addresses"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• only_one_default_address_per_user (EXCLUDE)\n  EXCLUDE USING btree (user_id WITH =) WHERE ((is_default = true))\n\n• user_addresses_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n",
+    "sort_order": 2,
+    "table_name": "user_addresses"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• user_addresses_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX user_addresses_pkey ON public.user_addresses USING btree (id)\n\n• only_one_default_address_per_user\n  Columns: user_id\n  Definition: CREATE INDEX only_one_default_address_per_user ON public.user_addresses USING btree (user_id) WHERE (is_default = true)\n\n• idx_user_addresses_user_default\n  Columns: user_id, is_default\n  Definition: CREATE INDEX idx_user_addresses_user_default ON public.user_addresses USING btree (user_id, is_default)\n\n• idx_user_addresses_location\n  Columns: location\n  Definition: CREATE INDEX idx_user_addresses_location ON public.user_addresses USING gist (location) WHERE (location IS NOT NULL)\n\n",
+    "sort_order": 3,
+    "table_name": "user_addresses"
+  },
+  {
+    "output": "4️⃣  Triggers & Function Definitions\n-------------------------------------------------\n🔥 TRIGGER: trigger_update_timestamp_user_addresses\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.update_timestamp()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_update_timestamp_user_addresses BEFORE UPDATE ON public.user_addresses FOR EACH ROW EXECUTE FUNCTION update_timestamp()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.update_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    NEW.updated_at = NOW();\r\n    RETURN NEW;\r\nEND;\r\n$function$\n\n\n",
+    "sort_order": 4,
+    "table_name": "user_addresses"
+  },
+  {
+    "output": "=========================================================\nTABLE: user_allergies\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.user_allergies (\n    user_id uuid NOT NULL,\n    allergy_id integer NOT NULL,\n    severity_override integer,\n    CONSTRAINT user_allergies_pkey PRIMARY KEY (user_id, allergy_id)\n);\n",
+    "sort_order": 1,
+    "table_name": "user_allergies"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_allergies_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• user_allergies_allergy_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (allergy_id) REFERENCES allergies(id) ON DELETE CASCADE\n\n• user_allergies_severity_override_check (CHECK)\n  CHECK (((severity_override >= 1) AND (severity_override <= 5)))\n\n",
+    "sort_order": 2,
+    "table_name": "user_allergies"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• user_allergies_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: user_id, allergy_id\n  Definition: CREATE UNIQUE INDEX user_allergies_pkey ON public.user_allergies USING btree (user_id, allergy_id)\n\n",
+    "sort_order": 3,
+    "table_name": "user_allergies"
+  },
+  {
+    "output": "=========================================================\nTABLE: user_dietary_preferences\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.user_dietary_preferences (\n    user_id uuid NOT NULL,\n    preference_id integer NOT NULL,\n    CONSTRAINT user_dietary_preferences_pkey PRIMARY KEY (user_id, preference_id)\n);\n",
+    "sort_order": 1,
+    "table_name": "user_dietary_preferences"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_dietary_preferences_preference_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (preference_id) REFERENCES dietary_preferences(id) ON DELETE CASCADE\n\n• user_dietary_preferences_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n",
+    "sort_order": 2,
+    "table_name": "user_dietary_preferences"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• user_dietary_preferences_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: user_id, preference_id\n  Definition: CREATE UNIQUE INDEX user_dietary_preferences_pkey ON public.user_dietary_preferences USING btree (user_id, preference_id)\n\n",
+    "sort_order": 3,
+    "table_name": "user_dietary_preferences"
+  },
+  {
+    "output": "=========================================================\nTABLE: user_favorite_items\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.user_favorite_items (\n    user_id uuid NOT NULL,\n    item_id integer NOT NULL,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    CONSTRAINT user_favorite_items_pkey PRIMARY KEY (user_id, item_id)\n);\n",
+    "sort_order": 1,
+    "table_name": "user_favorite_items"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_favorite_items_item_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE\n\n• user_favorite_items_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n",
+    "sort_order": 2,
+    "table_name": "user_favorite_items"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• user_favorite_items_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: user_id, item_id\n  Definition: CREATE UNIQUE INDEX user_favorite_items_pkey ON public.user_favorite_items USING btree (user_id, item_id)\n\n",
+    "sort_order": 3,
+    "table_name": "user_favorite_items"
+  },
+  {
+    "output": "=========================================================\nTABLE: user_favorite_meals\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.user_favorite_meals (\n    user_id uuid NOT NULL,\n    meal_id integer NOT NULL,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    CONSTRAINT user_favorite_meals_pkey PRIMARY KEY (user_id, meal_id)\n);\n",
+    "sort_order": 1,
+    "table_name": "user_favorite_meals"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_favorite_meals_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• user_favorite_meals_meal_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE\n\n",
+    "sort_order": 2,
+    "table_name": "user_favorite_meals"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• user_favorite_meals_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: user_id, meal_id\n  Definition: CREATE UNIQUE INDEX user_favorite_meals_pkey ON public.user_favorite_meals USING btree (user_id, meal_id)\n\n",
+    "sort_order": 3,
+    "table_name": "user_favorite_meals"
+  },
+  {
+    "output": "=========================================================\nTABLE: user_health_profiles\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.user_health_profiles (\n    user_id uuid NOT NULL,\n    fitness_goal text,\n    height_cm numeric(5,2),\n    weight_kg numeric(5,2),\n    activity_level activity_level_enum DEFAULT 'moderately_active'::activity_level_enum NOT NULL,\n    target_calories integer,\n    target_protein integer,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    updated_at timestamp with time zone DEFAULT now() NOT NULL,\n    CONSTRAINT user_health_profiles_pkey PRIMARY KEY (user_id)\n);\n",
+    "sort_order": 1,
+    "table_name": "user_health_profiles"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_health_profiles_weight_kg_check (CHECK)\n  CHECK (((weight_kg > (0)::numeric) AND (weight_kg < (500)::numeric)))\n\n• user_health_profiles_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• user_health_profiles_target_protein_check (CHECK)\n  CHECK ((target_protein > 0))\n\n• user_health_profiles_target_calories_check (CHECK)\n  CHECK ((target_calories > 0))\n\n• user_health_profiles_height_cm_check (CHECK)\n  CHECK (((height_cm > (0)::numeric) AND (height_cm < (300)::numeric)))\n\n",
+    "sort_order": 2,
+    "table_name": "user_health_profiles"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• user_health_profiles_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: user_id\n  Definition: CREATE UNIQUE INDEX user_health_profiles_pkey ON public.user_health_profiles USING btree (user_id)\n\n",
+    "sort_order": 3,
+    "table_name": "user_health_profiles"
+  },
+  {
+    "output": "4️⃣  Triggers & Function Definitions\n-------------------------------------------------\n🔥 TRIGGER: trigger_update_timestamp_user_health_profiles\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.update_timestamp()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_update_timestamp_user_health_profiles BEFORE UPDATE ON public.user_health_profiles FOR EACH ROW EXECUTE FUNCTION update_timestamp()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.update_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    NEW.updated_at = NOW();\r\n    RETURN NEW;\r\nEND;\r\n$function$\n\n\n",
+    "sort_order": 4,
+    "table_name": "user_health_profiles"
+  },
+  {
+    "output": "=========================================================\nTABLE: user_messages\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.user_messages (\n    id uuid DEFAULT uuid_generate_v4() NOT NULL,\n    user_id uuid NOT NULL,\n    admin_id uuid,\n    content text NOT NULL,\n    sender_type message_sender_type NOT NULL,\n    is_read boolean DEFAULT false NOT NULL,\n    read_at timestamp with time zone,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    updated_at timestamp with time zone DEFAULT now() NOT NULL,\n    CONSTRAINT user_messages_pkey PRIMARY KEY (id)\n);\n",
+    "sort_order": 1,
+    "table_name": "user_messages"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_messages_admin_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (admin_id) REFERENCES user_profiles(id) ON DELETE SET NULL\n\n• user_messages_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n",
+    "sort_order": 2,
+    "table_name": "user_messages"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• user_messages_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX user_messages_pkey ON public.user_messages USING btree (id)\n\n• idx_user_messages_user_id\n  Columns: user_id\n  Definition: CREATE INDEX idx_user_messages_user_id ON public.user_messages USING btree (user_id)\n\n• idx_user_messages_admin_id\n  Columns: admin_id\n  Definition: CREATE INDEX idx_user_messages_admin_id ON public.user_messages USING btree (admin_id)\n\n• idx_user_messages_created_at\n  Columns: created_at\n  Definition: CREATE INDEX idx_user_messages_created_at ON public.user_messages USING btree (created_at DESC)\n\n• idx_user_messages_is_read\n  Columns: is_read\n  Definition: CREATE INDEX idx_user_messages_is_read ON public.user_messages USING btree (is_read) WHERE (is_read = false)\n\n• idx_user_messages_user_created\n  Columns: user_id, created_at\n  Definition: CREATE INDEX idx_user_messages_user_created ON public.user_messages USING btree (user_id, created_at DESC)\n\n• idx_user_messages_realtime\n  Columns: user_id, created_at\n  Definition: CREATE INDEX idx_user_messages_realtime ON public.user_messages USING btree (user_id, created_at DESC)\n\n• idx_user_messages_unread\n  Columns: user_id, is_read\n  Definition: CREATE INDEX idx_user_messages_unread ON public.user_messages USING btree (user_id, is_read) WHERE ((is_read = false) AND (sender_type = 'admin'::message_sender_type))\n\n• idx_user_messages_admin\n  Columns: admin_id, created_at\n  Definition: CREATE INDEX idx_user_messages_admin ON public.user_messages USING btree (admin_id, created_at DESC) WHERE (admin_id IS NOT NULL)\n\n",
+    "sort_order": 3,
+    "table_name": "user_messages"
+  },
+  {
+    "output": "4️⃣  Triggers & Function Definitions\n-------------------------------------------------\n🔥 TRIGGER: set_user_messages_read_at\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.set_read_timestamp()\n\n📋 Trigger Definition:\nCREATE TRIGGER set_user_messages_read_at BEFORE UPDATE ON public.user_messages FOR EACH ROW EXECUTE FUNCTION set_read_timestamp()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.set_read_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    IF NEW.is_read AND NOT OLD.is_read THEN\n        NEW.read_at = NOW();\n    END IF;\n    RETURN NEW;\nEND;\n$function$\n\n\n---\n\n🔥 TRIGGER: trigger_set_read_timestamp_user_messages\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.set_message_read_timestamp()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_set_read_timestamp_user_messages BEFORE UPDATE ON public.user_messages FOR EACH ROW EXECUTE FUNCTION set_message_read_timestamp()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.set_message_read_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    IF NEW.is_read = true AND OLD.is_read = false THEN\r\n        NEW.read_at = NOW();\r\n    ELSIF NEW.is_read = false THEN\r\n        NEW.read_at = NULL;\r\n    END IF;\r\n    RETURN NEW;\r\nEND;\r\n$function$\n\n\n---\n\n🔥 TRIGGER: trigger_update_timestamp_user_messages\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.update_message_timestamp()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_update_timestamp_user_messages BEFORE UPDATE ON public.user_messages FOR EACH ROW EXECUTE FUNCTION update_message_timestamp()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.update_message_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    NEW.updated_at = NOW();\r\n    RETURN NEW;\r\nEND;\r\n$function$\n\n\n---\n\n🔥 TRIGGER: update_user_messages_updated_at\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.update_updated_at_column()\n\n📋 Trigger Definition:\nCREATE TRIGGER update_user_messages_updated_at BEFORE UPDATE ON public.user_messages FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.update_updated_at_column()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    NEW.updated_at = NOW();\n    RETURN NEW;\nEND;\n$function$\n\n\n",
+    "sort_order": 4,
+    "table_name": "user_messages"
+  },
+  {
+    "output": "=========================================================\nTABLE: user_notification_preferences\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.user_notification_preferences (\n    user_id uuid NOT NULL,\n    email_enabled boolean DEFAULT true NOT NULL,\n    sms_enabled boolean DEFAULT false NOT NULL,\n    push_enabled boolean DEFAULT true NOT NULL,\n    order_confirmations boolean DEFAULT true NOT NULL,\n    delivery_updates boolean DEFAULT true NOT NULL,\n    meal_reminders boolean DEFAULT true NOT NULL,\n    plan_updates boolean DEFAULT true NOT NULL,\n    promotional_emails boolean DEFAULT false NOT NULL,\n    promotional_sms boolean DEFAULT false NOT NULL,\n    weekly_reports boolean DEFAULT true NOT NULL,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    updated_at timestamp with time zone DEFAULT now() NOT NULL,\n    CONSTRAINT user_notification_preferences_pkey PRIMARY KEY (user_id)\n);\n",
+    "sort_order": 1,
+    "table_name": "user_notification_preferences"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_notification_preferences_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n",
+    "sort_order": 2,
+    "table_name": "user_notification_preferences"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• user_notification_preferences_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: user_id\n  Definition: CREATE UNIQUE INDEX user_notification_preferences_pkey ON public.user_notification_preferences USING btree (user_id)\n\n",
+    "sort_order": 3,
+    "table_name": "user_notification_preferences"
+  },
+  {
+    "output": "4️⃣  Triggers & Function Definitions\n-------------------------------------------------\n🔥 TRIGGER: trigger_update_timestamp_user_notification_preferences\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.update_timestamp()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_update_timestamp_user_notification_preferences BEFORE UPDATE ON public.user_notification_preferences FOR EACH ROW EXECUTE FUNCTION update_timestamp()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.update_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    NEW.updated_at = NOW();\r\n    RETURN NEW;\r\nEND;\r\n$function$\n\n\n",
+    "sort_order": 4,
+    "table_name": "user_notification_preferences"
+  },
+  {
+    "output": "=========================================================\nTABLE: user_payment_methods\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.user_payment_methods (\n    id uuid DEFAULT uuid_generate_v4() NOT NULL,\n    user_id uuid NOT NULL,\n    provider text,\n    last_four character(4),\n    expiry_month integer,\n    expiry_year integer,\n    cardholder_name text,\n    is_default boolean DEFAULT false NOT NULL,\n    is_verified boolean DEFAULT false NOT NULL,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    updated_at timestamp with time zone DEFAULT now() NOT NULL,\n    CONSTRAINT user_payment_methods_pkey PRIMARY KEY (id)\n);\n",
+    "sort_order": 1,
+    "table_name": "user_payment_methods"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_payment_methods_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• user_payment_methods_expiry_month_check (CHECK)\n  CHECK (((expiry_month >= 1) AND (expiry_month <= 12)))\n\n• only_one_default_payment_per_user (EXCLUDE)\n  EXCLUDE USING btree (user_id WITH =) WHERE ((is_default = true))\n\n• user_payment_methods_expiry_year_check (CHECK)\n  CHECK (((expiry_year)::numeric >= EXTRACT(year FROM now())))\n\n",
+    "sort_order": 2,
+    "table_name": "user_payment_methods"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• user_payment_methods_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX user_payment_methods_pkey ON public.user_payment_methods USING btree (id)\n\n• only_one_default_payment_per_user\n  Columns: user_id\n  Definition: CREATE INDEX only_one_default_payment_per_user ON public.user_payment_methods USING btree (user_id) WHERE (is_default = true)\n\n",
+    "sort_order": 3,
+    "table_name": "user_payment_methods"
+  },
+  {
+    "output": "4️⃣  Triggers & Function Definitions\n-------------------------------------------------\n🔥 TRIGGER: trigger_update_timestamp_user_payment_methods\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.update_timestamp()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_update_timestamp_user_payment_methods BEFORE UPDATE ON public.user_payment_methods FOR EACH ROW EXECUTE FUNCTION update_timestamp()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.update_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    NEW.updated_at = NOW();\r\n    RETURN NEW;\r\nEND;\r\n$function$\n\n\n",
+    "sort_order": 4,
+    "table_name": "user_payment_methods"
+  },
+  {
+    "output": "=========================================================\nTABLE: user_profiles\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.user_profiles (\n    id uuid DEFAULT auth.uid() NOT NULL,\n    display_name text,\n    phone_number text,\n    avatar_url text,\n    is_admin boolean DEFAULT false NOT NULL,\n    loyalty_points integer DEFAULT 0 NOT NULL,\n    notes text,\n    language character(2) DEFAULT 'en'::bpchar NOT NULL,\n    age integer,\n    gender text,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    updated_at timestamp with time zone DEFAULT now() NOT NULL,\n    last_login timestamp with time zone,\n    email text DEFAULT ''::text,\n    google_id text DEFAULT ''::text,\n    account_status text DEFAULT 'active'::text NOT NULL,\n    timezone text DEFAULT 'Asia/Riyadh'::text NOT NULL,\n    phone_verified boolean DEFAULT false NOT NULL,\n    email_verified boolean DEFAULT false NOT NULL,\n    profile_completed boolean DEFAULT false NOT NULL,\n    CONSTRAINT user_profiles_pkey PRIMARY KEY (id)\n);\n",
+    "sort_order": 1,
+    "table_name": "user_profiles"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_profiles_age_check (CHECK)\n  CHECK (((age > 0) AND (age < 150)))\n\n• user_profiles_gender_check (CHECK)\n  CHECK ((gender = ANY (ARRAY['male'::text, 'female'::text, 'other'::text, 'prefer_not_to_say'::text])))\n\n• user_profiles_id_key (UNIQUE)\n  UNIQUE (id)\n\n• user_profiles_language_check (CHECK)\n  CHECK ((language = ANY (ARRAY['en'::bpchar, 'ar'::bpchar])))\n\n• user_profiles_loyalty_points_check (CHECK)\n  CHECK ((loyalty_points >= 0))\n\n",
+    "sort_order": 2,
+    "table_name": "user_profiles"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• user_profiles_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX user_profiles_pkey ON public.user_profiles USING btree (id)\n\n• idx_user_profiles_phone\n  Columns: phone_number\n  Definition: CREATE INDEX idx_user_profiles_phone ON public.user_profiles USING btree (phone_number) WHERE (phone_number IS NOT NULL)\n\n• idx_user_profiles_language\n  Columns: language\n  Definition: CREATE INDEX idx_user_profiles_language ON public.user_profiles USING btree (language)\n\n• idx_user_profiles_last_login\n  Columns: last_login\n  Definition: CREATE INDEX idx_user_profiles_last_login ON public.user_profiles USING btree (last_login DESC)\n\n• user_profiles_id_key (UNIQUE)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX user_profiles_id_key ON public.user_profiles USING btree (id)\n\n• idx_user_profiles_email\n  Columns: email\n  Definition: CREATE INDEX idx_user_profiles_email ON public.user_profiles USING btree (email)\n\n• idx_user_profiles_google_id\n  Columns: google_id\n  Definition: CREATE INDEX idx_user_profiles_google_id ON public.user_profiles USING btree (google_id)\n\n",
+    "sort_order": 3,
+    "table_name": "user_profiles"
+  },
+  {
+    "output": "4️⃣  Triggers & Function Definitions\n-------------------------------------------------\n🔥 TRIGGER: trigger_update_timestamp_user_profiles\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.update_timestamp()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_update_timestamp_user_profiles BEFORE UPDATE ON public.user_profiles FOR EACH ROW EXECUTE FUNCTION update_timestamp()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.update_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    NEW.updated_at = NOW();\r\n    RETURN NEW;\r\nEND;\r\n$function$\n\n\n",
+    "sort_order": 4,
+    "table_name": "user_profiles"
+  },
+  {
+    "output": "=========================================================\nTABLE: user_subscriptions\n=========================================================\n\n1️⃣  CREATE TABLE Definition\n-------------------------------------------------\nCREATE TABLE public.user_subscriptions (\n    id uuid DEFAULT uuid_generate_v4() NOT NULL,\n    user_id uuid NOT NULL,\n    plan_id integer NOT NULL,\n    status subscription_status_enum DEFAULT 'pending'::subscription_status_enum NOT NULL,\n    start_date date NOT NULL,\n    end_date date,\n    price_per_meal numeric(10,2) NOT NULL,\n    total_meals integer NOT NULL,\n    consumed_meals integer DEFAULT 0 NOT NULL,\n    preferred_delivery_time time without time zone DEFAULT '12:00:00'::time without time zone NOT NULL,\n    auto_renewal boolean DEFAULT false NOT NULL,\n    payment_method_id uuid,\n    meals jsonb NOT NULL,\n    created_at timestamp with time zone DEFAULT now() NOT NULL,\n    updated_at timestamp with time zone DEFAULT now() NOT NULL,\n    delivery_address_id uuid NOT NULL,\n    CONSTRAINT user_subscriptions_pkey PRIMARY KEY (id)\n);\n",
+    "sort_order": 1,
+    "table_name": "user_subscriptions"
+  },
+  {
+    "output": "2️⃣  Constraints\n-------------------------------------------------\n• user_subscriptions_total_meals_check (CHECK)\n  CHECK ((total_meals > 0))\n\n• user_subscriptions_user_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (user_id) REFERENCES user_profiles(id) ON DELETE CASCADE\n\n• valid_end_date (CHECK)\n  CHECK (((end_date IS NULL) OR (end_date > start_date)))\n\n• user_subscriptions_price_per_meal_check (CHECK)\n  CHECK ((price_per_meal >= (0)::numeric))\n\n• user_subscriptions_plan_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE CASCADE\n\n• user_subscriptions_payment_method_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (payment_method_id) REFERENCES user_payment_methods(id)\n\n• user_subscriptions_delivery_address_id_fkey (FOREIGN KEY)\n  FOREIGN KEY (delivery_address_id) REFERENCES addresses(id) ON UPDATE CASCADE ON DELETE CASCADE\n\n• user_subscriptions_consumed_meals_check (CHECK)\n  CHECK ((consumed_meals >= 0))\n\n• consumed_not_exceed_total_meals (CHECK)\n  CHECK ((consumed_meals <= total_meals))\n\n",
+    "sort_order": 2,
+    "table_name": "user_subscriptions"
+  },
+  {
+    "output": "3️⃣  Indexes\n-------------------------------------------------\n• user_subscriptions_pkey (UNIQUE) (PRIMARY KEY)\n  Columns: id\n  Definition: CREATE UNIQUE INDEX user_subscriptions_pkey ON public.user_subscriptions USING btree (id)\n\n• idx_subscriptions_user_status\n  Columns: user_id, status\n  Definition: CREATE INDEX idx_subscriptions_user_status ON public.user_subscriptions USING btree (user_id, status)\n\n• idx_subscriptions_status_active\n  Columns: status\n  Definition: CREATE INDEX idx_subscriptions_status_active ON public.user_subscriptions USING btree (status) WHERE (status = 'active'::subscription_status_enum)\n\n",
+    "sort_order": 3,
+    "table_name": "user_subscriptions"
+  },
+  {
+    "output": "4️⃣  Triggers & Function Definitions\n-------------------------------------------------\n🔥 TRIGGER: trigger_update_timestamp_user_subscriptions\n   Timing: BEFORE\n   Events: UPDATE\n   Function: public.update_timestamp()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_update_timestamp_user_subscriptions BEFORE UPDATE ON public.user_subscriptions FOR EACH ROW EXECUTE FUNCTION update_timestamp()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.update_timestamp()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    NEW.updated_at = NOW();\r\n    RETURN NEW;\r\nEND;\r\n$function$\n\n\n---\n\n🔥 TRIGGER: trigger_validate_subscription\n   Timing: BEFORE\n   Events: INSERT, UPDATE\n   Function: public.validate_subscription_before_save()\n\n📋 Trigger Definition:\nCREATE TRIGGER trigger_validate_subscription BEFORE INSERT OR UPDATE ON public.user_subscriptions FOR EACH ROW EXECUTE FUNCTION validate_subscription_before_save()\n\n⚙️  Function Definition:\nCREATE OR REPLACE FUNCTION public.validate_subscription_before_save()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    -- Only validate when status is active or when inserting with active status\r\n    IF NEW.status = 'active' THEN\r\n        PERFORM validate_subscription_data(NEW);\r\n    END IF;\r\n    \r\n    RETURN NEW;\r\nEND;\r\n$function$\n\n\n",
+    "sort_order": 4,
+    "table_name": "user_subscriptions"
+  }
+]
