@@ -34,3 +34,30 @@ _legacy/
 
 # Supabase temp
 supabase/.temp/
+
+# build output at repo root
+/public/
+
+# --- Saucia v2 additions ---
+# Build outputs
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Supabase CLI temp + generated edge bundle
+supabase/.temp/
+supabase/functions/_shared/server.js
+supabase/functions/_shared/server.js.map
+
+# Turborepo
+.turbo/
+
+# Editor / OS
+.DS_Store
+Thumbs.db

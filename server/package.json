@@ -1,0 +1,16 @@
+﻿{
+  "name": "@saucia/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/composition/routes.ts" },
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@saucia/domain": "workspace:*",
+    "@saucia/contracts": "workspace:*",
+    "@saucia/db-types": "workspace:*"
+  }
+}

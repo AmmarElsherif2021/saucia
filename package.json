@@ -1,0 +1,24 @@
+﻿{
+  "name": "saucia",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "dev": "turbo run dev --filter=@saucia/client",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "test": "turbo run test",
+    "arch": "depcruise client/src server/src packages --config .dependency-cruiser.cjs && steiger ./client/src",
+    "db:types": "supabase gen types typescript --local > packages/db-types/src/database.ts"
+  },
+  "devDependencies": {
+    "turbo": "^2.1.0",
+    "typescript": "^5.6.0",
+    "dependency-cruiser": "^16.4.0",
+    "steiger": "^0.5.0",
+    "eslint": "^9.11.0",
+    "typescript-eslint": "^8.8.0",
+    "eslint-plugin-boundaries": "^5.0.0"
+  }
+}
