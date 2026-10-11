@@ -162,6 +162,10 @@ importers:
       '@saucia/domain':
         specifier: workspace:*
         version: link:../packages/domain
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.5
+        version: 26.6.5
 
 packages:
 
