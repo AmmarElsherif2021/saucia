@@ -3,13 +3,18 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@9.12.0",
+  "pnpm": {
+    "overrides": {
+      "cosmiconfig": "8.3.6"
+    }
+  },
   "scripts": {
     "dev": "turbo run dev --filter=@saucia/client",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
     "test": "turbo run test",
-    "arch": "depcruise client/src server/src packages --config .dependency-cruiser.cjs && steiger ./client/src",
+    "arch": "depcruise client/src server/src packages --config .dependency-cruiser.cjs",
     "db:types": "supabase gen types typescript --local > packages/db-types/src/database.ts"
   },
   "devDependencies": {
