@@ -1,5 +1,4 @@
-﻿{
-  "name": "saucia",
+{ "name":"saucia",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@9.12.0",
