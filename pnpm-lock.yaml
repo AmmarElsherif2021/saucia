@@ -151,7 +151,14 @@ importers:
         specifier: ^6.3.3
         version: 6.4.4(@types/node@26.6.5)(jiti@2.7.0)(yaml@2.9.1)
 
-  packages/contracts: {}
+  packages/contracts:
+    dependencies:
+      '@saucia/domain':
+        specifier: workspace:*
+        version: link:../domain
+      zod:
+        specifier: ^3.24.4
+        version: 3.25.76
 
   packages/db-types: {}
 

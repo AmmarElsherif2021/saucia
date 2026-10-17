@@ -1,7 +1,2 @@
-﻿// TODO: implement
-const Result = {
-  // Example method: Check if the result is successful
-  isSuccess: (result) => {
-    return result && result.success === true;
-  },
-};
+// TODO: implement the shared Result type when the server kernel is built.
+export {};
