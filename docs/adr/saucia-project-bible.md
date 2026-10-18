@@ -1,6 +1,6 @@
 # Saucia v2 — Project Bible
 
-> **Revision:** 2 · **Synced to repo tree snapshot of:** 2026-10-17 **Purpose:** the reference of record for Saucia v2 structure, rules, sequencing and decisions. If any other document disagrees with it, raise the conflict and log it in section 12. **Where this lives in the repo:** `docs/adr/saucia-project-bible.md`
+> **Revision:** 3 · **Synced to repo tree snapshot of:** 2026-10-18 **Purpose:** the reference of record for Saucia v2 structure, rules, sequencing and decisions. If any other document disagrees with it, raise the conflict and log it in section 12. **Where this lives in the repo:** `docs/adr/saucia-project-bible.md`
 
 ---
 
@@ -19,11 +19,11 @@
 | ⏸ HOLD     | Deliberately not started, as the plan itself specifies                                                          |
 | ℹ️ NOTE    | Observation recorded without a status                                                                           |
 
-**Evidence method and limits.** Statuses were derived by comparing the plan with the repository tree as of 2026-10-17 (Revision 2). The tree shows which files and folders exist, not what is inside them, so "DONE" means the structure is there; the 🔍 items inside each row are the content-level checks still owed. Task IDs (`P<phase>.<row>`) number the rows of each phase table in their original order.
+**Evidence method and limits.** Statuses were derived by comparing the plan with the repository tree as of 2026-10-18 (Revision 3). The tree shows which files and folders exist, not what is inside them, so "DONE" means the structure is there; the 🔍 items inside each row are the content-level checks still owed. Task IDs (`P<phase>.<row>`) number the rows of each phase table in their original order.
 
 ### 0.2 Where we are
 
-**Stage A (Phases 0–6) is in progress.** Phase 0's workspace wiring is now verifiable: `pnpm install --frozen-lockfile`, `pnpm type-check`, `pnpm test` and `pnpm arch` all pass at the root (Revision 2). The shared packages are complete: domain has money, order totals, order-status transitions, cart rules, Saudi phone validation, BMI, TDEE and the nutrition pipeline; contracts has error codes, order-status schema, submit-order and subscription-enrollment schemas. What remains in Phase 0 is the Deno interop spike (P0.8), the secrets audit (P0.7) and scaffolding loose ends (P0.9). Phase 1 still owes the root ESLint/Steiger enforcement (P1.1), the kernel dedup (P1.3), the SessionProvider split (P1.4) and asset cleanup (P1.6). Phase 2 still owes the server use cases, DB migrations, edge bundle and client features; Phases 3–6 remain scaffolding. Stage B (Phase 7) has not started.
+**Stage A (Phases 0–6) is in progress.** Phase 0's workspace wiring is verifiable: `pnpm install --frozen-lockfile`, `pnpm type-check`, `pnpm test` and `pnpm arch` all pass at the root (Revision 3). The shared packages are complete: domain has money, order totals, order-status transitions, cart rules, Saudi phone validation, BMI, TDEE and the nutrition pipeline; contracts has error codes, order-status schema, submit-order and subscription-enrollment schemas. Revision 3 adds the server-local kernel: `Result`, a generic HTTP-free `DomainError`, and the `Clock`/`IdGenerator`/`Logger` ports with 7 tests; `packages/kernel` remains deferred until a second consumer. What remains in Phase 0 is the Deno interop spike (P0.8), the secrets audit (P0.7) and scaffolding loose ends (P0.9). Phase 1 still owes the root ESLint/Steiger enforcement (P1.1), the shared-kernel extraction (P1.3), the SessionProvider split (P1.4) and asset cleanup (P1.6). Phase 2 still owes the server use cases, DB migrations, edge bundle and client features; Phases 3–6 remain scaffolding. Stage B (Phase 7) has not started.
 
 _Reading of the plan used here:_ Stage A = Phases 0–6; Stage B = Phase 7 together with section 2. This follows Phase 7's title and open question 2 ("once Phases 0–6 have landed").
 
@@ -32,7 +32,7 @@ _Reading of the plan used here:_ Stage A = Phases 0–6; Stage B = Phase 7 toget
 | Phase | Title                               | Status                   | Task marks                | Still open (by task ID)           |
 | :---- | :---------------------------------- | :----------------------- | :------------------------ | :-------------------------------- |
 | 0     | Hygiene and wiring                  | 🟡 In progress           | 6 ✅ · 1 🟡 · 1 🔍 · 1 ⬜ | P0.7, P0.8, P0.9 |
-| 1     | Enforce boundaries on what exists   | 🟡 Started               | 2 ✅ · 2 🟡 · 2 ⬜        | P1.1, P1.3, P1.4, P1.6 |
+| 1     | Enforce boundaries on what exists   | 🟡 Started               | 2 ✅ · 3 🟡 · 1 ⬜        | P1.1, P1.3, P1.4, P1.6 |
 | 2     | Vertical slice #1: order submission | 🟡 Started (contracts/domain done) | 5 🟡 · 1 ⬜        | P2.1–P2.6 |
 | 3     | Menu and admin management           | ⬜ Not started           | 3 ⬜                      | P3.1–P3.3                         |
 | 4     | Subscriptions                       | 🟡 Started (domain done) | 1 ✅ · 2 ⬜               | P4.1, P4.3 |
@@ -93,19 +93,21 @@ _Reading of the plan used here:_ Stage A = Phases 0–6; Stage B = Phase 7 toget
 
 ---
 
-### 0.8 Extracted: done and dead points (Revision 2)
+### 0.8 Extracted: done and dead points (Revisions 2–3)
 
-**Closed in Revision 2 (moved out of the open roadmap):**
+**Closed in Revisions 2–3 (moved out of the open roadmap):**
 
 | Point | Evidence |
 | :--- | :--- |
 | P1.2 single order status | `packages/domain/src/order/orderRules.ts` owns the values and transitions; `packages/contracts/src/order/orderStatus.ts` derives the Zod schema; `server/src/modules/order/domain/OrderStatus.ts` is a re-export facade. |
 | Domain package stubs | `Money`, `computeOrderTotals`, cart rules, Saudi phone validation, BMI, TDEE and the nutrition pipeline are implemented. 46 domain tests pass. |
 | Contract package stubs | Error codes, order-status schema, submit-order request/response, subscription enrollment and nutrition-profile schemas are implemented. 22 contract tests pass. |
+| Server kernel (Revision 3) | `Result`, a generic HTTP-free `DomainError`, and the `Clock`/`IdGenerator`/`Logger` ports live in `server/src/kernel`; 7 tests pass; no business rules or entities. |
 | Drift item 4 (triple order status) | Closed by P1.2; no second status list or transition table remains. |
 | Drift item 7 (lockfile/tooling) | `pnpm-lock.yaml` exists and `pnpm install --frozen-lockfile` passes. |
 | P0.1 lockfile / P1.5 db-types | Root lockfile committed; `packages/db-types` exists and type-checks. |
-| Type-check blockers | `server/src/kernel/Result.ts` and `client/src/shared/config/constants.ts` converted to empty modules; workspace `pnpm type-check` is green. |
+| Type-check blockers | `client/src/shared/config/constants.ts` is a real module; the server kernel is implemented; workspace `pnpm type-check` is green. |
+| Kernel boundaries (Revision 3) | `server-kernel-imports-nothing` and the future `packages-kernel-*` rules are in `.dependency-cruiser.cjs`; entities stay in the app-local domain. |
 
 **Dead / superseded points (do not reopen):**
 
@@ -116,8 +118,10 @@ _Reading of the plan used here:_ Stage A = Phases 0–6; Stage B = Phase 7 toget
 | "No root CI files" | `.github/workflows/CI.yaml` and `ci.yml` exist; CI content may still need tuning. |
 | `packages/contracts/src/order/orderStatus.ts` importing server | Removed; the broken leaf import was replaced by `@saucia/domain`. |
 | `processing` / `shipped` order statuses | Superseded by the ADR/v1 set: `pending`, `confirmed`, `preparing`, `out_for_delivery`, `delivered`, `cancelled`. Do not add `processing`/`shipped` without a new decision. |
+| Entities in kernel or shared domain | Rejected. `Order`, `Meal` and `Cart` belong to the app-local domain that owns their lifecycle; kernel is technical vocabulary only. |
+| HTTP status on `DomainError` | Rejected. `DomainError` carries a generic code, message and details; delivery maps codes to transport responses. |
 
-**Still live (not extracted):** P0.7 secrets, P0.8 Deno spike, P0.9 empty dirs; P1.1 root lint/Steiger, P1.3 kernel dedup, P1.4 SessionProvider, P1.6 assets; P2.1 server validation/client mapping, P2.2 server use case/MealPriceReader, P2.3 DB migrations, P2.4 edge bundle, P2.5 client features, P2.6 server use-case tests; Phases 3–7.
+**Still live (not extracted):** P0.7 secrets, P0.8 Deno spike, P0.9 empty dirs; P1.1 root lint/Steiger, P1.3 shared-kernel extraction/`packages/kernel`, P1.4 SessionProvider, P1.6 assets; P2.1 server validation/client mapping, P2.2 server use case/MealPriceReader, P2.3 DB migrations, P2.4 edge bundle, P2.5 client features, P2.6 server use-case tests; Phases 3–7.
 
 ---
 
@@ -290,14 +294,14 @@ shared adapters        ← never (see anti-triggers)
 
 ## 3. Boundary rules
 
-> **Status overlay — boundary rules (synced 2026-10-17):** partially enforced; dependency-cruiser is green.
+> **Status overlay — boundary rules (synced 2026-10-18):** partially enforced; dependency-cruiser is green and includes the server-kernel rules.
 >
 > | Item                                                                            | Status    | Evidence in tree                                                    |
 > | :------------------------------------------------------------------------------ | :-------- | :------------------------------------------------------------------ |
 > | FSD layer folders (`app`, `pages`, `widgets`, `features`, `entities`, `shared`) | ✅ DONE   | All present under `client/src/`; `app/{di,providers,router}` exist. |
 > | Slices expose an `index.ts`                                                     | ✅ DONE   | Every slice listed in the tree has an `index.ts`.                   |
 > | ESLint boundaries config (3.1)                                                  | 🟡 PARTIAL | `client/eslint.config.js` exists; no root `eslint.config.js`; boundary rules not re-audited.                     |
-> | `.dependency-cruiser.cjs` (3.2)                                                | ✅ DONE   | Present at the root; `pnpm arch` is green (Revision 2).                                                              |
+> | `.dependency-cruiser.cjs` (3.2)                                                | ✅ DONE   | Present at the root; `pnpm arch` is green; kernel boundary rules added in Revision 3. |
 > | Steiger (`steiger ./client/src`)                                                | 🟡 PARTIAL | `steiger.config.cjs` exists; `pnpm arch` currently runs only dependency-cruiser, so Steiger is not enforced.     |
 
 ### 3.1 FSD layers (client)
@@ -416,6 +420,11 @@ module.exports = {
       from: { path: '^server/src/modules/([^/]+)/' },
       to:   { path: '^server/src/modules/(?!\\1/)[^/]+/(domain|application|infrastructure)/' } },
 
+    // ---- server kernel ----
+    { name: 'server-kernel-imports-nothing', severity: 'error',
+      from: { path: '^server/src/kernel/' },
+      to:   { path: '^server/src/(modules|composition|platform|delivery-shared)/' } },
+
     // ---- workspace ----
     { name: 'packages-are-leaves', severity: 'error',
       from: { path: '^packages/' }, to: { path: '^(client|server|apps|supabase)/' } },
@@ -423,10 +432,20 @@ module.exports = {
       from: { path: '^server/' }, to: { path: '^client/' } },
     { name: 'client-never-imports-server', severity: 'error',
       from: { path: '^client/' }, to: { path: '^server/' } },
+
+    // packages/kernel is the planned Stage B technical kernel.
+    { name: 'packages-kernel-no-apps', severity: 'error',
+      from: { path: '^packages/kernel/' },
+      to:   { path: '^(client|server|apps|supabase)/' } },
+    { name: 'packages-kernel-no-model-packages', severity: 'error',
+      from: { path: '^packages/kernel/' },
+      to:   { path: '^packages/(domain|contracts|db-types)/' } },
   ],
 };
 
 ```
+
+**Server kernel.** `server/src/kernel` is the server's dependency sink: `Result`, `DomainError` and the ports. Every server layer may import it; it may not import modules, composition, platform or delivery. `DomainError` carries no HTTP status. `packages/kernel` is a Stage B extraction, gated on a second consumer; it must not import apps, domain, contracts or db-types, and entities/aggregates stay in the app-local domain.
 
 Add **Steiger** (`steiger ./client/src`) for FSD structure. Expect to tune or disable a couple of its rules that assume the default segment vocabulary (`api/model/ui/lib/config`), since the ring names are custom.
 
@@ -671,18 +690,18 @@ Secrets: use `supabase secrets set`; remove `client/supabase/functions/.env`.
 
 ### Phase 1: enforce boundaries on what exists
 
-> **Status overlay — Phase 1 (synced 2026-10-17):** 🟡 STARTED (2 ✅ · 2 🟡 · 2 ⬜)
+> **Status overlay — Phase 1 (synced 2026-10-18):** 🟡 STARTED (2 ✅ · 3 🟡 · 1 ⬜)
 >
 > | ID   | Task (first column of the table below, verbatim)                                                                                                  | Status     | Evidence in tree                                                                                                                                                                                                                                                                                                                                                                                                  |
 > | :--- | :------------------------------------------------------------------------------------------------------------------------------------------------ | :--------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 > | P1.1 | Add the ESLint boundary config, dependency-cruiser rules, Steiger; add `ci.yml`. Start with rules as `warn`, fix violations, then flip to `error` | 🟡 PARTIAL | `.dependency-cruiser.cjs`, `steiger.config.cjs` and CI workflows exist; `pnpm arch` is green. Root ESLint boundaries and Steiger enforcement are still missing. |
 > | P1.2 | Single source for order status: define in `packages/domain/order`; derive the contracts enum from it; delete the server's duplicate               | ✅ DONE    | `packages/domain/src/order/orderRules.ts` owns values/transitions; `packages/contracts/src/order/orderStatus.ts` derives the Zod schema; `server/.../OrderStatus.ts` is a re-export facade. 6 domain + 3 contract tests pass. |
-> | P1.3 | Diff `client/shared/kernel/Result.ts` vs `server/src/kernel/Result.ts`; if identical, move to `@saucia/domain` (kernel) and import from both      | ⬜ OPEN    | Both still present: `client/src/shared/kernel/Result.ts` and `server/src/kernel/Result.ts`.                                                                                                                                                                                                                                                                                                                       |
+> | P1.3 | Diff `client/shared/kernel/Result.ts` vs `server/src/kernel/Result.ts`; if identical, move to `@saucia/domain` (kernel) and import from both      | 🟡 PARTIAL | `server/src/kernel` now has `Result`, a generic `DomainError` and the ports with 7 tests. The client `Result.ts` is still a placeholder, so shared extraction/`packages/kernel` remains gated on a second consumer. |
 > | P1.4 | Resolve duplicate `SessionProvider`; keep the provider in `app/providers` and the state/hooks in `entities/session/model`                         | ⬜ OPEN    | Both still present: `client/src/app/providers/SessionProvider.tsx` and `client/src/entities/session/model/SessionProvider.tsx`.                                                                                                                                                                                                                                                                                   |
 > | P1.5 | Add `packages/db-types` and wire `db:types`                                                                                                       | ✅ DONE    | `packages/db-types/` exists with `package.json`, `src/database.ts`, `src/index.ts`. 🔍 Confirm the `db:types` script is wired in the root `package.json` and one consumer imports the package.                                                                                                                                                                                                                    |
 > | P1.6 | Asset cleanup and relocate the 3D system (section 6)                                                                                              | 🟡 PARTIAL | Done: `Outfit` font folder absent from the live client; GLTFs at `client/public/models/` (21 files); fonts at `client/public/fonts/{Asap,Zain}`. Open: duplicated names across `shared/assets/admin`, `shared/assets/menu` and the assets top level; `*_compressed` hero files beside originals; `hero-*.json` still present (open question 5: can be deleted); 3D system not yet in the live client (section 6). |
 >
-> **Exit status:** 🟡 PARTIAL — `pnpm arch` green; P1.1 lint/Steiger, P1.3 kernel dedup, P1.4 SessionProvider and P1.6 assets remain.
+> **Exit status:** 🟡 PARTIAL — `pnpm arch` green; P1.1 lint/Steiger, P1.3 shared-kernel extraction, P1.4 SessionProvider and P1.6 assets remain.
 
 | Task                                                                                                                                              | Suggested legacy reference (from `_legacy/`)                                                                                                                                                                                                                                                                                        | Explanation                                                                                                                  |
 | :------------------------------------------------------------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------- |
@@ -916,9 +935,9 @@ _Added in revision 1. Not part of the original plan._
 | Marks                 | Count                                                                                                          |
 | :-------------------- | :------------------------------------------------------------------------------------------------------------- |
 | ✅ DONE               | 9 task rows (P0.1–P0.6, P1.2, P1.5, P4.2) plus drift items 1, 2, 3, 4, 7 |
-| 🟡 PARTIAL            | 8 task rows (P0.9, P1.1, P1.6, P2.1, P2.2, P2.4, P2.5, P2.6) — see per-phase overlays |
+| 🟡 PARTIAL            | 9 task rows (P0.9, P1.1, P1.3, P1.6, P2.1, P2.2, P2.4, P2.5, P2.6) — see per-phase overlays |
 | 🔍 VERIFY             | P0.7 plus inline 🔍 checks inside DONE/PARTIAL rows |
-| ⬜ OPEN / NOT STARTED | P0.8, P1.3, P1.4, P2.3, P3.1–P3.3, P4.1, P4.3, P5.1–P5.2, P6.1, P7.1, P7.3 (P7.2 on hold) |
+| ⬜ OPEN / NOT STARTED | P0.8, P1.4, P2.3, P3.1–P3.3, P4.1, P4.3, P5.1–P5.2, P6.1, P7.1, P7.3 (P7.2 on hold) |
 
 ### 10.2 Tree-versus-plan observations (recorded, not judged)
 
@@ -928,6 +947,7 @@ _Added in revision 1. Not part of the original plan._
 4. Section 1 describes the `order` module's Supabase repository as having `dto/` and `mappers/`; on the client side that is the case only as a repository file, and on the server `infrastructure/supabase/{dto,mappers}` currently appear as folders with no files listed.
 5. `docs/` contains `API_CONTRACTS.md`, `ARCHITECTURE.md`, `DEPLOYMENT.md`, `FSD_CLEAN_RULES.md`, `SERVER.md`. They are not referenced by the plan; they need to be reconciled with this bible (see 0.1 and section 12).
 6. `client/src/shared/api/` holds both `legacy-supabaseClient.jsx` and `supabaseClient.ts`, as expected mid-transition (see P1 exit: zero _new_ imports of `legacy-*`).
+7. `server/src/kernel` has `Result`, a generic `DomainError` and the ports with 7 tests (Revision 3); `packages/kernel` does not exist and the client `Result.ts` remains a placeholder.
 
 ---
 
@@ -963,6 +983,7 @@ _Added in revision 1._
 | :--------- | :------- | :----------------------------------------------------------------------------------------------------------------------- |
 | 2026-10-08 | 1        | Bible created from the original plan. Added section 0, status overlays and sections 10–12. Original plan text unchanged. |
 | 2026-10-17 | 2        | Domain and contracts completed (money, totals, cart, phone, BMI/TDEE/nutrition; error codes, order/subscription schemas); P1.2 order-status dedup; 68 tests; type-check/test/arch green; done/dead points extracted to 0.8. |
+| 2026-10-18 | 3        | Server kernel implemented (`Result`, generic HTTP-free `DomainError`, `Clock`/`IdGenerator`/`Logger` ports, 7 tests); kernel boundary rules added to dependency-cruiser; 75 tests green. |
 
 ### 12.2 Decision log
 
@@ -977,3 +998,4 @@ The answers in section 9 are carried here with the phase that depends on each an
 | 5   | Hero assets (`hero-*.json`, `hero*.jpg`) can be deleted                                                                                                     | Phase 1 (task P1.6)         | `client/src/shared/assets/hero/*`                                                                                       | Not stated in plan | Decided; deletion not yet performed |
 | 6   | Order-status values and transitions live in `@saucia/domain`; contracts derives the wire schema; the server file is a re-export facade | Phase 1/2 | `packages/domain/src/order/orderRules.ts`, `packages/contracts/src/order/orderStatus.ts`, `server/src/modules/order/domain/OrderStatus.ts` | 2026-10-17 | Implemented |
 | 7   | Subscription nutrition uses the ADR activity/goal vocabulary and the v1 macro ratios | Phase 4 | `packages/domain/src/subscription/*`, `packages/contracts/src/subscription/*` | 2026-10-17 | Implemented in domain/contracts |
+| 8   | Server kernel stays server-local for Stage A; `DomainError` is generic and HTTP-free; `packages/kernel` is deferred until a second consumer and must be the lowest package | Phase 1/Stage B | `server/src/kernel/*`, `.dependency-cruiser.cjs` | 2026-10-18 | Implemented server-local; extraction deferred |

@@ -1,12 +1,11 @@
-/**
- * Canonical order-status registry and transition rules.
- *
- * This file is the single owner of order-status values and of the legal moves
- * between them. Wire formats, Zod schemas, HTTP handlers and database mappers
- * may project these values, but they must not redefine them.
- *
- * The status set and the forward workflow follow the v2 plan
- * (`docs/adr/saucia-phase2.md`, Task 1.2) and the v1 order tracker.
+﻿/**
+  ============== Canonical order-status registry and transition rules ============
+ 
+ = This module is the single owner of order-status values and of the legal movesbetween them. 
+   Wire formats, Zod schemas, HTTP handlers and database mappers
+   may project these values, BUT THEY MUST NEVER REDEFINE THEM.
+ 
+= Revise (`docs/adr/saucia-phase2.md`, Task 1.2) and the v1 order tracker for investigating exact definitions.
  */
 export const ORDER_STATUSES = [
   'pending',
@@ -20,10 +19,10 @@ export const ORDER_STATUSES = [
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 /**
- * Data-driven state machine.
- *
- * Cancellation is allowed until the order reaches a terminal state; the
- * `preparing` row intentionally follows the ADR, which permits only the
+ ======== Data-driven state machine ===========
+ 
+ = Cancellation is allowed until the order reaches a terminal state; the
+ = preparing row intentionally follows the ADR, which permits only the
  * forward move to `out_for_delivery`.
  */
 export const ORDER_STATUS_TRANSITIONS: Readonly<
@@ -37,17 +36,14 @@ export const ORDER_STATUS_TRANSITIONS: Readonly<
   cancelled: [],
 };
 
-/**
- * Pure guard: answers only "may this move happen?".
- *
- * Persistence-facing conditions (for example, "cancelled is terminal once a
- * delivery row exists") belong on the aggregate, not in this table.
- */
+
+// ================== Transition guard: Approve if this move may happen or not ==================
+ 
 export function canTransition(from: OrderStatus, to: OrderStatus): boolean {
   return ORDER_STATUS_TRANSITIONS[from].includes(to);
 }
 
-/** True for statuses with no outgoing transitions. */
+// is terminal status?
 export function isTerminalOrderStatus(status: OrderStatus): boolean {
   return ORDER_STATUS_TRANSITIONS[status].length === 0;
 }

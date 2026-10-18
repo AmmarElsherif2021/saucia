@@ -171,39 +171,30 @@ export type SubmitOrder = z.infer<typeof submitOrderSchema>;
 The boundary level makes the direction of dependency visible. The domain points at nothing. Contracts points at the domain.
 
 ---
+# But why the abscence of Entities and Aggregates in the shared packages?
+Entities and aggregates belong to the bounded context that owns their identity, lifecycle and invariants — not to packages/domain by default.
 
-## The server-local file — extracted
+## Decision rules:
+1. Does it cross the process boundary?
 
-`server/src/modules/order/domain/orderStatus.ts` is a separate concern from the two above. It is not a third level; it is a *shadow* of Level 1 and Level 2, sitting in a module that already imports `@saucia/domain` for other reasons.
+    Answer: Define a DTO or schema in packages/contracts (for example: SubmitOrderRequest, MealSummary).
 
-```ts
-// The current shape — a duplicate union and a duplicate array.
-export type OrderStatus = 'pending' | 'confirmed' | 'processing' | ...;
-export const ORDER_STATUSES = ['pending', 'confirmed', ...];
-```
+2. Does it have identity, lifecycle, or invariants?
 
-**Diagnosis:**
+    Answer: Place it as an entity or aggregate in the owning app context (for example: the Order aggregate in server/src/modules/order/domain/Order.ts or the Meal entity in server/src/modules/menu/domain/Meal.ts).
 
-- **DRY violated** — two type unions and two arrays describing the same domain concept.
-  - *Search: Don't Repeat Yourself, Shotgun Surgery, Code Smell Catalog.*
-- **Open/Closed violated** — adding a status modifies three files instead of one.
-  - *Search: SOLID, Ripple Effect, Coupling.*
-- **Pattern:** *Anti-pattern* — a shadow copy of a Value Object.
-  - *Search: Anti-Patterns, Code Smells, Martin Fowler Refactoring.*
-- **Principle for its removal:** *Dependency Inversion* — the server's order module already imports `@saucia/domain`. Its local copy is a competing owner of a fact the domain already owns.
+3. Is it I/O-free behavior that must be identical on client and server?
 
-**Fix — delete and replace imports:**
+    Answer: Place it in packages/domain (acting as a shared kernel for pure policy, value objects, and shared behavior like Money, OrderStatus, canTransition, and totals).
 
-```ts
-import { ORDER_STATUSES, canTransition, type OrderStatus } from '@saucia/domain';
-```
+4. Is it only a UI projection or local state?
 
-**The one thing to check before deleting:** whether the server file holds a *persistence-facing* invariant the domain does not — for example, "cancelled orders may not be re-opened once the delivery row exists." That is not a new status rule; it is an aggregate-level invariant and belongs next to `Order.ts`, not next to a copy of `orderStatus.ts`.
+    Answer: Place it in the client-side entities slice (client/src/entities/{order,menu}/domain/).
 
-The server-local file is the only one of the three whose reason to change is *nothing*. It should not exist.
+5. Is it a database row?
 
----
-
+    Answer: Place it in packages/db-types accompanied by an infrastructure mapper.
+----------------------------------
 ## How the patterns orchestrate
 
 Each pattern above has a narrow role. They compose because each one only knows about the one immediately downstream. Tracing a single request shows the chain.

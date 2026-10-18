@@ -25,6 +25,13 @@ module.exports = {
       from: { path: '^server/src/modules/([^/]+)/' },
       to:   { path: '^server/src/modules/(?!\\1/)[^/]+/(domain|application|infrastructure)/' } },
 
+    // ---- server kernel ----
+    // The kernel is the server's dependency sink: every layer may import it,
+    // but it must not reach into modules, composition, platform or delivery.
+    { name: 'server-kernel-imports-nothing', severity: 'error',
+      from: { path: '^server/src/kernel/' },
+      to:   { path: '^server/src/(modules|composition|platform|delivery-shared)/' } },
+
     // ---- workspace ----
     { name: 'packages-are-leaves', severity: 'error',
       from: { path: '^packages/' }, to: { path: '^(client|server|apps|supabase)/' } },
@@ -32,5 +39,16 @@ module.exports = {
       from: { path: '^server/' }, to: { path: '^client/' } },
     { name: 'client-never-imports-server', severity: 'error',
       from: { path: '^client/' }, to: { path: '^server/' } },
+
+    // `packages/kernel` is the planned Stage B technical kernel. It does not
+    // exist yet; when it lands it must stay the lowest package. Entities and
+    // aggregates (Order, Meal, Cart) belong to the app-local domain that owns
+    // their lifecycle, never to kernel or shared domain.
+    { name: 'packages-kernel-no-apps', severity: 'error',
+      from: { path: '^packages/kernel/' },
+      to:   { path: '^(client|server|apps|supabase)/' } },
+    { name: 'packages-kernel-no-model-packages', severity: 'error',
+      from: { path: '^packages/kernel/' },
+      to:   { path: '^packages/(domain|contracts|db-types)/' } },
   ],
 };
