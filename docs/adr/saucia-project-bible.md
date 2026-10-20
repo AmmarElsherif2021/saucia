@@ -1,6 +1,6 @@
 # Saucia v2 — Project Bible
 
-> **Revision:** 3 · **Synced to repo tree snapshot of:** 2026-10-18 **Purpose:** the reference of record for Saucia v2 structure, rules, sequencing and decisions. If any other document disagrees with it, raise the conflict and log it in section 12. **Where this lives in the repo:** `docs/adr/saucia-project-bible.md`
+> **Revision:** 4 · **Synced to repo tree snapshot of:** 2026-10-20 **Purpose:** the reference of record for Saucia v2 structure, rules, sequencing and decisions. If any other document disagrees with it, raise the conflict and log it in section 12. **Where this lives in the repo:** `docs/adr/saucia-project-bible.md`
 
 ---
 
@@ -19,11 +19,11 @@
 | ⏸ HOLD     | Deliberately not started, as the plan itself specifies                                                          |
 | ℹ️ NOTE    | Observation recorded without a status                                                                           |
 
-**Evidence method and limits.** Statuses were derived by comparing the plan with the repository tree as of 2026-10-18 (Revision 3). The tree shows which files and folders exist, not what is inside them, so "DONE" means the structure is there; the 🔍 items inside each row are the content-level checks still owed. Task IDs (`P<phase>.<row>`) number the rows of each phase table in their original order.
+**Evidence method and limits.** Statuses were derived by comparing the plan with the repository tree as of 2026-10-20 (Revision 4). The tree shows which files and folders exist, not what is inside them, so "DONE" means the structure is there; the 🔍 items inside each row are the content-level checks still owed. Task IDs (`P<phase>.<row>`) number the rows of each phase table in their original order.
 
 ### 0.2 Where we are
 
-**Stage A (Phases 0–6) is in progress.** Phase 0's workspace wiring is verifiable: `pnpm install --frozen-lockfile`, `pnpm type-check`, `pnpm test` and `pnpm arch` all pass at the root (Revision 3). The shared packages are complete: domain has money, order totals, order-status transitions, cart rules, Saudi phone validation, BMI, TDEE and the nutrition pipeline; contracts has error codes, order-status schema, submit-order and subscription-enrollment schemas. Revision 3 adds the server-local kernel: `Result`, a generic HTTP-free `DomainError`, and the `Clock`/`IdGenerator`/`Logger` ports with 7 tests; `packages/kernel` remains deferred until a second consumer. What remains in Phase 0 is the Deno interop spike (P0.8), the secrets audit (P0.7) and scaffolding loose ends (P0.9). Phase 1 still owes the root ESLint/Steiger enforcement (P1.1), the shared-kernel extraction (P1.3), the SessionProvider split (P1.4) and asset cleanup (P1.6). Phase 2 still owes the server use cases, DB migrations, edge bundle and client features; Phases 3–6 remain scaffolding. Stage B (Phase 7) has not started.
+**Stage A (Phases 0–6) is in progress. Revision 4 closed the Phase 1 cleanup queue.** Phase 0's workspace wiring is verifiable: `pnpm install --frozen-lockfile`, `pnpm type-check`, `pnpm test`, `pnpm arch` and the client `vite build` pass at the root. The shared packages are complete: domain has money, order totals, order-status transitions, cart rules, Saudi phone validation, BMI, TDEE and the nutrition pipeline; contracts has error codes, order-status schema, submit-order and subscription-enrollment schemas. The server-local kernel is the canonical error/port vocabulary: `Result`, a generic HTTP-free `DomainError`, and the `Clock`/`IdGenerator`/`Logger` ports (8 tests); `packages/kernel` remains deferred until a second consumer. **Revision 4 closed P1.3 (the client `Result.ts` duplicate is deleted), P1.4 (provider vs state split for `SessionProvider`), P1.6 (assets deduplicated and the 3D landing system moved into the live client) and P0.9 (every empty scaffolding directory now has a `.gitkeep`).** What remains in Phase 0 is the secrets audit (P0.7) and the Deno interop spike (P0.8). Root ESLint/Steiger enforcement (P1.1) is the only Phase 1 task still open. Phase 2 still owes the server use cases, DB migrations, edge bundle and client features; Phases 3–6 remain scaffolding. Stage B (Phase 7) has not started, but the live tree is now structurally ready for its moves; its sequencing gates are P0.7, P0.8 and P1.1.
 
 _Reading of the plan used here:_ Stage A = Phases 0–6; Stage B = Phase 7 together with section 2. This follows Phase 7's title and open question 2 ("once Phases 0–6 have landed").
 
@@ -31,8 +31,8 @@ _Reading of the plan used here:_ Stage A = Phases 0–6; Stage B = Phase 7 toget
 
 | Phase | Title                               | Status                   | Task marks                | Still open (by task ID)           |
 | :---- | :---------------------------------- | :----------------------- | :------------------------ | :-------------------------------- |
-| 0     | Hygiene and wiring                  | 🟡 In progress           | 6 ✅ · 1 🟡 · 1 🔍 · 1 ⬜ | P0.7, P0.8, P0.9 |
-| 1     | Enforce boundaries on what exists   | 🟡 Started               | 2 ✅ · 3 🟡 · 1 ⬜        | P1.1, P1.3, P1.4, P1.6 |
+| 0     | Hygiene and wiring                  | 🟡 In progress           | 7 ✅ · 1 🔍 · 1 ⬜ | P0.7, P0.8 |
+| 1     | Enforce boundaries on what exists   | 🟡 Started               | 5 ✅ · 1 🟡        | P1.1 |
 | 2     | Vertical slice #1: order submission | 🟡 Started (contracts/domain done) | 5 🟡 · 1 ⬜        | P2.1–P2.6 |
 | 3     | Menu and admin management           | ⬜ Not started           | 3 ⬜                      | P3.1–P3.3                         |
 | 4     | Subscriptions                       | 🟡 Started (domain done) | 1 ✅ · 2 ⬜               | P4.1, P4.3 |
@@ -40,7 +40,7 @@ _Reading of the plan used here:_ Stage A = Phases 0–6; Stage B = Phase 7 toget
 | 6     | Payments and notifications          | ⬜ Not started           | 1 ⬜ · 1 🟡               | P6.1–P6.2                         |
 | 7     | Stage B: planned product split      | ⬜ Not started           | 2 ⬜ · 1 ⏸                | P7.1, P7.3 (P7.2 on hold)         |
 
-**Gates stated in the plan that affect sequencing:** the Phase 0 spike "determines the shape of every later edge-function task" (P0.8 → P2.4, P4.1, P6.2); Stage B move 6 waits on the Phase 1 kernel dedup (P1.3); move 7 waits on Phase 2 in-memory ports (P2.6); the admin split waits on Phases 0–6 landing and the rename settling.
+**Gates stated in the plan that affect sequencing:** the Phase 0 spike "determines the shape of every later edge-function task" (P0.8 → P2.4, P4.1, P6.2); Stage B move 6 now waits only on a second consumer, because the Phase 1 kernel dedup (P1.3) closed by making the server kernel canonical; move 7 waits on Phase 2 in-memory ports (P2.6); the admin split waits on Phases 0–6 landing and the rename settling.
 
 ### 0.4 Table of contents
 
@@ -85,29 +85,34 @@ _Reading of the plan used here:_ Stage A = Phases 0–6; Stage B = Phase 7 toget
 
 | Gate       | Exit criterion (verbatim from the plan)                                                                       | Status           |
 | :--------- | :------------------------------------------------------------------------------------------------------------ | :--------------- |
-| Phase 0    | `pnpm install && pnpm build && pnpm type-check` pass from the root; Vercel preview builds from the workspace. | 🟡 PARTIAL — install/type-check/test/arch pass; build and Vercel preview not re-run in Revision 2 |
-| Phase 1    | `pnpm arch` and `pnpm lint` green in CI with rules at `error`; zero new imports of `legacy-*` files. | 🟡 PARTIAL — `pnpm arch` is green; lint/Steiger and legacy quarantine still open |
+| Phase 0    | `pnpm install && pnpm build && pnpm type-check` pass from the root; Vercel preview builds from the workspace. | 🟡 PARTIAL — install/type-check/test/arch/build pass locally; Vercel preview not re-run in Revision 4 |
+| Phase 1    | `pnpm arch` and `pnpm lint` green in CI with rules at `error`; zero new imports of `legacy-*` files. | 🟡 PARTIAL — `pnpm arch` is green (0 violations, 1634 modules) and the legacy-file count is 0; lint/Steiger still missing |
 | Phase 2    | Checkout works end to end against local Supabase; client-computed totals are display-only.                    | ⬜ NOT MET       |
 | Phases 3–6 | (No explicit exit line in the plan; each has review points.)                                                  | ⬜ NOT STARTED   |
 | Stage B    | See 'Exit criterion for Stage B' in section 2.                                                                | ⬜ NOT MET       |
 
 ---
 
-### 0.8 Extracted: done and dead points (Revisions 2–3)
+### 0.8 Extracted: done and dead points (Revisions 2–4)
 
-**Closed in Revisions 2–3 (moved out of the open roadmap):**
+**Closed in Revisions 2–4 (moved out of the open roadmap):**
 
 | Point | Evidence |
 | :--- | :--- |
 | P1.2 single order status | `packages/domain/src/order/orderRules.ts` owns the values and transitions; `packages/contracts/src/order/orderStatus.ts` derives the Zod schema; `server/src/modules/order/domain/OrderStatus.ts` is a re-export facade. |
 | Domain package stubs | `Money`, `computeOrderTotals`, cart rules, Saudi phone validation, BMI, TDEE and the nutrition pipeline are implemented. 46 domain tests pass. |
 | Contract package stubs | Error codes, order-status schema, submit-order request/response, subscription enrollment and nutrition-profile schemas are implemented. 22 contract tests pass. |
-| Server kernel (Revision 3) | `Result`, a generic HTTP-free `DomainError`, and the `Clock`/`IdGenerator`/`Logger` ports live in `server/src/kernel`; 7 tests pass; no business rules or entities. |
+| Server kernel (Revision 3) | `Result`, a generic HTTP-free `DomainError`, and the `Clock`/`IdGenerator`/`Logger` ports live in `server/src/kernel`; 7 tests at Revision 3, 8 after Revision 4; no business rules or entities. |
 | Drift item 4 (triple order status) | Closed by P1.2; no second status list or transition table remains. |
 | Drift item 7 (lockfile/tooling) | `pnpm-lock.yaml` exists and `pnpm install --frozen-lockfile` passes. |
 | P0.1 lockfile / P1.5 db-types | Root lockfile committed; `packages/db-types` exists and type-checks. |
 | Type-check blockers | `client/src/shared/config/constants.ts` is a real module; the server kernel is implemented; workspace `pnpm type-check` is green. |
 | Kernel boundaries (Revision 3) | `server-kernel-imports-nothing` and the future `packages-kernel-*` rules are in `.dependency-cruiser.cjs`; entities stay in the app-local domain. |
+| P1.3 duplicate `Result.ts` (Revision 4) | `client/src/shared/kernel/Result.ts` deleted; `client/src/shared/kernel/index.ts` exports `AppError` only and records that `server/src/kernel/Result.ts` is the single owner. |
+| P1.4 duplicate `SessionProvider` (Revision 4) | Provider shell at `client/src/app/providers/SessionProvider.tsx`; state, type and `useSession` at `client/src/entities/session/model/sessionContext.ts`; the duplicate file is gone. |
+| P1.6 assets + 3D landing (Revision 4) | 0 byte-identical asset groups; one canonical file per hero (5 files, `*_compressed` suffixes gone); 19 GLBs (the unused `customize.glb` and `planet.glb` removed); `shared/ui/three/ThreeDisplay.tsx`, `pages/home/ui/{DiscreteLandingPage,Section}.tsx`, `pages/home/config/{landingConfig,modelsConfig}.json`. |
+| P0.9 empty scaffolding (Revision 4) | The 12 remaining live empty directories now carry `.gitkeep`; 0 empty directories remain in `client/src`, `server/src` or `packages`. |
+| Legacy files in live layers (Revision 4) | The three `legacy-*` files moved to `_legacy/client/src/shared/{api,i18n,theme}/`; live count is 0 and no live file imports them. |
 
 **Dead / superseded points (do not reopen):**
 
@@ -119,9 +124,9 @@ _Reading of the plan used here:_ Stage A = Phases 0–6; Stage B = Phase 7 toget
 | `packages/contracts/src/order/orderStatus.ts` importing server | Removed; the broken leaf import was replaced by `@saucia/domain`. |
 | `processing` / `shipped` order statuses | Superseded by the ADR/v1 set: `pending`, `confirmed`, `preparing`, `out_for_delivery`, `delivered`, `cancelled`. Do not add `processing`/`shipped` without a new decision. |
 | Entities in kernel or shared domain | Rejected. `Order`, `Meal` and `Cart` belong to the app-local domain that owns their lifecycle; kernel is technical vocabulary only. |
-| HTTP status on `DomainError` | Rejected. `DomainError` carries a generic code, message and details; delivery maps codes to transport responses. |
+| HTTP status on `DomainError` | Rejected. `DomainError` carries a generic code, a fixed client-safe `message`, an `internalMessage` for logs and optional details; delivery maps codes to transport responses. |
 
-**Still live (not extracted):** P0.7 secrets, P0.8 Deno spike, P0.9 empty dirs; P1.1 root lint/Steiger, P1.3 shared-kernel extraction/`packages/kernel`, P1.4 SessionProvider, P1.6 assets; P2.1 server validation/client mapping, P2.2 server use case/MealPriceReader, P2.3 DB migrations, P2.4 edge bundle, P2.5 client features, P2.6 server use-case tests; Phases 3–7.
+**Still live (not extracted):** P0.7 secrets audit, P0.8 Deno spike; P1.1 root lint/Steiger; P2.1 server validation/client mapping, P2.2 server use case/MealPriceReader, P2.3 DB migrations, P2.4 edge bundle, P2.5 client features, P2.6 server use-case tests; Phases 3–7.
 
 ---
 
@@ -162,13 +167,13 @@ A monorepo plan for Saucia v2 that keeps its goals (FSD x Clean on the client, C
 > | 2   | Root `public/assets/*.js` build output                        | ✅ DONE             | No root `public/`; it now lives at `_legacy/public/`.                                                                                                                                                                   |
 > | 3   | Three migration locations / two function locations            | ✅ DONE (structure) | `server/database` and `client/supabase` gone from live code; `supabase/{migrations,seed,config.toml}` and `supabase/functions/*` exist; legacy functions at `_legacy/edge-functions/`. `supabase/migrations/` is empty. |
 > | 4   | Triple definition of order status                             | ✅ DONE (Revision 2) | Single source in `packages/domain/src/order/orderRules.ts`; contracts derives the schema; the server file is a re-export facade.                                                                                          |
-> | 5   | Duplicate `Result.ts`                                         | ⬜ OPEN             | Both files still present (see P1.3).                                                                                                                                                                                    |
-> | 6   | Legacy files inside live layers + duplicate `SessionProvider` | ⬜ OPEN             | `client/src/shared/api/legacy-supabaseClient.jsx`, `client/src/shared/i18n/legacy-i18n.jsx`, `client/src/shared/theme/legacy-theme.jsx` present; both `SessionProvider.tsx` files present.                              |
+> | 5   | Duplicate `Result.ts`                                         | ✅ DONE (Revision 4) | Client copy deleted; `client/src/shared/kernel/index.ts` exports `AppError` only. `server/src/kernel/Result.ts` is the single owner. Decision 9. |
+> | 6   | Legacy files inside live layers + duplicate `SessionProvider` | ✅ DONE (Revision 4) | No `legacy-*` files under `client/src`; `client/src/app/providers/SessionProvider.tsx` is a provider shell and `client/src/entities/session/model/sessionContext.ts` owns the state/hook. |
 > | 7   | Lockfile/tooling mismatch                                     | ✅ DONE             | `client/package-lock.json` absent; `client/vite.config.ts` present; root `pnpm-lock.yaml` committed and `pnpm install --frozen-lockfile` passes.                                                                     |
-> | 8   | Empty scaffolding                                             | 🟡 PARTIAL          | Client slices hold `index.ts` instead of empty rings. 16 empty directories remain, mostly on the server side (section 11).                                                                                              |
-> | 9   | Assets                                                        | 🟡 PARTIAL          | `Outfit` folder gone from live client. Duplicates (`assets/admin` vs `assets/menu` vs top level), `*_compressed` hero variants and `hero-*.json` remain. Zain files are at `client/public/fonts/Zain`.                  |
+> | 8   | Empty scaffolding                                             | ✅ DONE (Revision 4) | Client slices hold `index.ts`; the 12 remaining empty live directories carry `.gitkeep`. 0 empty directories remain (section 11).                                                                                       |
+> | 9   | Assets                                                        | ✅ DONE (Revision 4) | `Outfit` gone; 0 byte-identical asset groups; one canonical hero per slot (`heroA..heroE`); `hero-*.json` and `*_compressed` names removed; Asap static weights pruned (variable fonts + Zain kept); 19 GLBs. |
 > | 10  | Secrets hygiene                                               | 🔍 VERIFY           | `client/.env`, `client/.env.example`, `_legacy/edge-functions/.env` exist on disk; gitignore/history status is not visible.                                                                                             |
-> | 11  | No home for the 3D landing system                             | ⬜ OPEN             | GLTFs are in `client/public/models/` (21 files); `ThreeDisplay`, `DiscreteLandingPage`, `landingConfig.json`, `modelsConfig.json` are not yet in the live client (only under `_legacy/`).                               |
+> | 11  | No home for the 3D landing system                             | ✅ DONE (Revision 4) | GLTFs in `client/public/models/` (19 files); `shared/ui/three/ThreeDisplay.tsx`, `pages/home/ui/DiscreteLandingPage.tsx`, `pages/home/ui/Section.tsx`, `pages/home/config/{landingConfig,modelsConfig}.json` are live. |
 
 **Review points (current-state snapshot):**
 
@@ -182,16 +187,16 @@ A monorepo plan for Saucia v2 that keeps its goals (FSD x Clean on the client, C
 
 ### Stage B: planned product split
 
-> **Status overlay — Stage B (synced 2026-10-08):** ⬜ NOT STARTED. `client/` and `server/` remain at the repo root; there is no `apps/`; `packages/` holds only `contracts`, `db-types`, `domain`. Stage B is gated by Stage A (Phases 0–6); see Phase 7 and open question 2.
+> **Status overlay — Stage B (synced 2026-10-20):** ⬜ NOT STARTED, structurally unblocked. `client/` and `server/` remain at the repo root; there is no `apps/`; `packages/` holds only `contracts`, `db-types`, `domain`. Revision 4 removed the two prerequisites that used to block moves 1 and 6 (duplicate `Result.ts`, legacy files) and the live tree has no duplicate definitions, empty directories or legacy imports. Stage B still follows Stage A's sequencing gates (P0.7, P0.8, P1.1); see Phase 7 and open question 2.
 >
 > | #   | Move (see table below)                                     | Status  | Gate stated in the plan                           |
 > | :-- | :--------------------------------------------------------- | :------ | :------------------------------------------------ |
-> | 1   | `client/` → `apps/customer-web`, `server/` → `apps/server` | ⬜ OPEN | Spine of Stage B; one-way door                    |
+> | 1   | `client/` → `apps/customer-web`, `server/` → `apps/server` | ⬜ OPEN | Spine of Stage B; one-way door; prerequisites met  |
 > | 2   | Split `apps/admin-dashboard`                               | ⬜ OPEN | After move 1; one-way door                        |
 > | 3   | `packages/ui`                                              | ⬜ OPEN | After the admin split                             |
 > | 4   | `packages/i18n`                                            | ⬜ OPEN | Same gate as `packages/ui`                        |
 > | 5   | `packages/api-client`                                      | ⬜ OPEN | After the admin split                             |
-> | 6   | `packages/kernel`                                          | ⬜ OPEN | After Phase 1 kernel dedup (P1.3)                 |
+> | 6   | `packages/kernel`                                          | ⬜ OPEN | P1.3 closed; gate is now a second consumer        |
 > | 7   | `packages/testing`                                         | ⬜ OPEN | After Phase 2 in-memory ports exist (P2.6)        |
 > | 8   | `packages/realtime`                                        | ⬜ OPEN | Settled chat adapter interface AND a 2nd consumer |
 > | 9   | `apps/mobile`                                              | ⏸ HOLD  | Only when the mobile project is greenlit          |
@@ -621,14 +626,16 @@ Secrets: use `supabase secrets set`; remove `client/supabase/functions/.env`.
 
 ## 6. Where the 3D landing system lives
 
-> **Status overlay — 3D landing system (synced 2026-10-08).**
+> **Status overlay — 3D landing system (synced 2026-10-20, Revision 4).**
 >
 > | Target                                                | Status  | Evidence in tree                                                                                             |
 > | :---------------------------------------------------- | :------ | :----------------------------------------------------------------------------------------------------------- |
-> | `shared/ui/three/ThreeDisplay.tsx`                    | ⬜ OPEN | No `client/src/shared/ui/` yet; component exists only as `_legacy/client/src/Components/ThreeDisplayer.jsx`. |
-> | `pages/home/ui/DiscreteLandingPage.tsx`               | ⬜ OPEN | `pages/home/` holds only `index.ts`.                                                                         |
-> | `pages/home/config/{landingConfig,modelsConfig}.json` | ⬜ OPEN | Configs exist only under `_legacy/client/src/Pages/NewLanding/`.                                             |
-> | GLTF files in `client/public/models/`                 | ✅ DONE | 21 `.glb` files present.                                                                                     |
+> | `shared/ui/three/ThreeDisplay.tsx`                    | ✅ DONE | Typed port of `_legacy/client/src/Components/ThreeScene.jsx` plus `types.ts`; config is a prop, so it has no page knowledge. |
+> | `pages/home/ui/DiscreteLandingPage.tsx`               | ✅ DONE | Owns active segment, camera target, scroll and focus; renders `ThreeDisplay`.                                 |
+> | `pages/home/config/{landingConfig,modelsConfig}.json` | ✅ DONE | Copied from `_legacy/client/src/Pages/NewLanding/`; the missing `fruit_salad.glb` entry was removed.         |
+> | GLTF files in `client/public/models/`                 | ✅ DONE | 19 `.glb` files present (unused `customize.glb` and `planet.glb` removed).                                   |
+>
+> Also live: `pages/home/ui/Section.tsx`, `pages/home/model/useDiscreteScroll.ts`, `shared/lib/useClickSpark.ts`, and `shared/i18n/locale.ts` (`useLocale`) replacing the legacy `I18nContext` import.
 
 - `shared/ui/three/ThreeDisplay.tsx`: generic renderer, no business knowledge (shared may not import upward).
 - `pages/home/ui/DiscreteLandingPage.tsx`: owns camera authority and segment/scroll logic (page-level composition).
@@ -660,7 +667,7 @@ Secrets: use `supabase secrets set`; remove `client/supabase/functions/.env`.
 > | P0.6 | Move `client/supabase/functions/*` to `_legacy/edge-functions/` (still deployable from there until ported); gitignore `.temp`                                            | ✅ DONE    | No `client/supabase/`; functions quarantined at `_legacy/edge-functions/` (all 9 functions plus `deno.json`, `deno.lock`, `.env`, `.env.example`). 🔍 Confirm `.temp` is gitignored.                                                                                                                                                   |
 > | P0.7 | Verify `.env` files are ignored and never committed; rotate if needed                                                                                                    | 🔍 VERIFY  | Not provable from a tree. `.env` files visible on disk: `client/.env`, `client/.env.example`, `_legacy/edge-functions/.env`. `client/supabase/functions/.env` no longer exists at that path. Needs a manual gitignore + git-history check (and key rotation if ever committed).                                                        |
 > | P0.8 | Run the Deno interop spike (section 5)                                                                                                                                   | ⬜ OPEN    | `supabase/functions/_shared/` and `server/runtimes/supabase-edge/` each hold only `.gitkeep`; no bundler config visible. Entry stubs exist for `order-processing`, `cron-jobs`, `subscription-mgmt`, `payment-webhook`, `auth-handlers`, but no recorded proof that `Money` was imported from `@saucia/domain` in a deployed function. |
-> | P0.9 | Remove empty scaffolding folders (or keep them with `.gitkeep` only where you will fill them this week)                                                                  | 🟡 PARTIAL | Client entity rings are no longer pre-scaffolded (slices hold `index.ts`); `.gitkeep` is used in `supabase/functions/_shared` and `server/runtimes/supabase-edge`. 16 empty directories remain in the live tree (section 11). The two legacy empties named here (`admin-assets`, `Outfit/static`) now exist only inside `_legacy/`.    |
+> | P0.9 | Remove empty scaffolding folders (or keep them with `.gitkeep` only where you will fill them this week)                                                                  | ✅ DONE (Revision 4) | Every remaining empty directory in the live tree carries a `.gitkeep`: `server/src/delivery-shared/http`, `server/src/modules/{identity,menu,notification,payment,subscription}`, `server/src/modules/order/domain/errors`, `server/src/modules/order/infrastructure/supabase/{dto,mappers}`, `server/src/platform/{email,stripe,supabase}`. 12 placeholders, 0 unmarked empty directories. Client slices hold `index.ts`. |
 >
 > **Exit status:** 🟡 PARTIAL — install/type-check/test/arch pass; build and Vercel preview not re-run in Revision 2.
 
@@ -696,12 +703,12 @@ Secrets: use `supabase secrets set`; remove `client/supabase/functions/.env`.
 > | :--- | :------------------------------------------------------------------------------------------------------------------------------------------------ | :--------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 > | P1.1 | Add the ESLint boundary config, dependency-cruiser rules, Steiger; add `ci.yml`. Start with rules as `warn`, fix violations, then flip to `error` | 🟡 PARTIAL | `.dependency-cruiser.cjs`, `steiger.config.cjs` and CI workflows exist; `pnpm arch` is green. Root ESLint boundaries and Steiger enforcement are still missing. |
 > | P1.2 | Single source for order status: define in `packages/domain/order`; derive the contracts enum from it; delete the server's duplicate               | ✅ DONE    | `packages/domain/src/order/orderRules.ts` owns values/transitions; `packages/contracts/src/order/orderStatus.ts` derives the Zod schema; `server/.../OrderStatus.ts` is a re-export facade. 6 domain + 3 contract tests pass. |
-> | P1.3 | Diff `client/shared/kernel/Result.ts` vs `server/src/kernel/Result.ts`; if identical, move to `@saucia/domain` (kernel) and import from both      | 🟡 PARTIAL | `server/src/kernel` now has `Result`, a generic `DomainError` and the ports with 7 tests. The client `Result.ts` is still a placeholder, so shared extraction/`packages/kernel` remains gated on a second consumer. |
-> | P1.4 | Resolve duplicate `SessionProvider`; keep the provider in `app/providers` and the state/hooks in `entities/session/model`                         | ⬜ OPEN    | Both still present: `client/src/app/providers/SessionProvider.tsx` and `client/src/entities/session/model/SessionProvider.tsx`.                                                                                                                                                                                                                                                                                   |
+> | P1.3 | Diff `client/shared/kernel/Result.ts` vs `server/src/kernel/Result.ts`; if identical, move to `@saucia/domain` (kernel) and import from both      | ✅ DONE (Revision 4, decision 9) | The client file was a `const Result = {}` placeholder, never a real duplicate. It is deleted; `client/src/shared/kernel/index.ts` exports `AppError` only and records the server kernel as owner. `server/src/kernel` is canonical; `packages/kernel` stays deferred until a second real consumer. |
+> | P1.4 | Resolve duplicate `SessionProvider`; keep the provider in `app/providers` and the state/hooks in `entities/session/model`                         | ✅ DONE (Revision 4) | `client/src/app/providers/SessionProvider.tsx` is the provider shell; `client/src/entities/session/model/sessionContext.ts` owns `SessionState`, `SessionContext` and `useSession`. The duplicate file is deleted and `entities/session/index.ts` exports the state API. |
 > | P1.5 | Add `packages/db-types` and wire `db:types`                                                                                                       | ✅ DONE    | `packages/db-types/` exists with `package.json`, `src/database.ts`, `src/index.ts`. 🔍 Confirm the `db:types` script is wired in the root `package.json` and one consumer imports the package.                                                                                                                                                                                                                    |
-> | P1.6 | Asset cleanup and relocate the 3D system (section 6)                                                                                              | 🟡 PARTIAL | Done: `Outfit` font folder absent from the live client; GLTFs at `client/public/models/` (21 files); fonts at `client/public/fonts/{Asap,Zain}`. Open: duplicated names across `shared/assets/admin`, `shared/assets/menu` and the assets top level; `*_compressed` hero files beside originals; `hero-*.json` still present (open question 5: can be deleted); 3D system not yet in the live client (section 6). |
+> | P1.6 | Asset cleanup and relocate the 3D system (section 6)                                                                                              | ✅ DONE (Revision 4) | 0 byte-identical asset groups; 11 duplicate admin copies removed; one canonical hero per slot (`heroA..heroE`, no `*_compressed` names); `hero-*.json` removed; Asap static weights pruned to the variable fonts (Zain kept); 19 GLBs. 3D system live in `shared/ui/three` + `pages/home` (section 6). |
 >
-> **Exit status:** 🟡 PARTIAL — `pnpm arch` green; P1.1 lint/Steiger, P1.3 shared-kernel extraction, P1.4 SessionProvider and P1.6 assets remain.
+> **Exit status:** 🟡 PARTIAL — `pnpm arch` is green (0 violations, 1634 modules) and the legacy-file count is 0. Only P1.1 (root ESLint/Steiger enforcement) remains.
 
 | Task                                                                                                                                              | Suggested legacy reference (from `_legacy/`)                                                                                                                                                                                                                                                                                        | Explanation                                                                                                                  |
 | :------------------------------------------------------------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------- |
@@ -885,11 +892,11 @@ Secrets: use `supabase secrets set`; remove `client/supabase/functions/.env`.
 > | `CartContext.jsx`                      | 🟡 PARTIAL      | `entities/cart/infrastructure/LocalStorageCartRepository.ts` exists; no `model/` yet.                               |
 > | `useOrders`                            | ⬜ OPEN         | `entities/order/model/` absent.                                                                                     |
 > | `orderAPI.jsx`                         | 🟡 PARTIAL      | `entities/order/infrastructure/SupabaseOrderRepository.ts` exists; `features/submit-order` empty beyond `index.ts`. |
-> | `AuthContext`                          | 🟡 PARTIAL      | Both `SessionProvider.tsx` files exist (duplicate; P1.4).                                                           |
+> | `AuthContext`                          | ✅ DONE (Revision 4) | Provider shell `app/providers/SessionProvider.tsx`; state/hook `entities/session/model/sessionContext.ts`.       |
 > | `ElementsContext`                      | ⬜ OPEN         | No TanStack Query hooks visible in entity `model/` folders (`app/providers/QueryProvider.tsx` exists).              |
 > | `client/supabase/functions/*`          | ✅ DONE (moved) | At `_legacy/edge-functions/`; porting is tracked in section 5.                                                      |
 > | `server/database/*`                    | 🟡 PARTIAL      | Seed moved to `supabase/seed/`; `supabase/migrations/` empty.                                                       |
-> | `shared/{api,i18n,theme}/legacy-*.jsx` | ⬜ OPEN         | All three still present (legacy-file count: 3).                                                                     |
+> | `shared/{api,i18n,theme}/legacy-*.jsx` | ✅ DONE (Revision 4) | Quarantined at `_legacy/client/src/shared/{api,i18n,theme}/`; live legacy-file count is 0.                     |
 
 | Legacy                                 | v2                                                                               |
 | :------------------------------------- | :------------------------------------------------------------------------------- |
@@ -917,7 +924,7 @@ Secrets: use `supabase secrets set`; remove `client/supabase/functions/.env`.
 2. **Admin:** do you expect a separate admin domain, MFA, or a separate team soon? **Answer:** yes — Stage B treats the admin split as a planned product decision. It ships as `apps/admin-dashboard` once Phases 0–6 have landed and the rename has settled. MFA / IP rules are part of the split's rationale.
 3. **Order delivery / track-last-order:** do these need server logic or can RLS-protected client queries replace them? **Answer:** they need server logic.
 4. **Chat transport:** keep the custom WebSocket function or move to Supabase Realtime? **Answer:** through an adapter for extensibility concerns.
-5. **Hero assets (`hero-*.json`,** **`hero*.jpg`):** still referenced after the 3D landing, or safe to delete? **Answer:** can be deleted.
+5. **Hero assets (`hero-*.json`,** **`hero*.jpg`):** still referenced after the 3D landing, or safe to delete? **Answer:** deleted in Revision 4. Nothing in the live tree referenced them; the `hero-*.json` Lottie files are gone and the raster heroes are consolidated to one canonical file per slot (`heroA..heroE`).
 
 **Review points (open questions):**
 
@@ -934,39 +941,48 @@ _Added in revision 1. Not part of the original plan._
 
 | Marks                 | Count                                                                                                          |
 | :-------------------- | :------------------------------------------------------------------------------------------------------------- |
-| ✅ DONE               | 9 task rows (P0.1–P0.6, P1.2, P1.5, P4.2) plus drift items 1, 2, 3, 4, 7 |
-| 🟡 PARTIAL            | 9 task rows (P0.9, P1.1, P1.3, P1.6, P2.1, P2.2, P2.4, P2.5, P2.6) — see per-phase overlays |
+| ✅ DONE               | 13 task rows (P0.1–P0.6, P0.9, P1.2–P1.6, P4.2) plus drift items 1–9 and 11 |
+| 🟡 PARTIAL            | 6 task rows (P1.1, P2.1, P2.2, P2.4, P2.5, P2.6) — see per-phase overlays |
 | 🔍 VERIFY             | P0.7 plus inline 🔍 checks inside DONE/PARTIAL rows |
-| ⬜ OPEN / NOT STARTED | P0.8, P1.4, P2.3, P3.1–P3.3, P4.1, P4.3, P5.1–P5.2, P6.1, P7.1, P7.3 (P7.2 on hold) |
+| ⬜ OPEN / NOT STARTED | P0.8, P2.3, P3.1–P3.3, P4.1, P4.3, P5.1–P5.2, P6.1, P7.1, P7.3 (P7.2 on hold) |
 
 ### 10.2 Tree-versus-plan observations (recorded, not judged)
 
 1. `supabase/functions/auth-handlers/` exists; section 5 lists `auth-handlers` as "do not create yet".
 2. `server/src/platform/stripe/` exists as an empty vendor-named folder; the Phase 6 task speaks of naming adapters by port. The plan's open question 1 says the payment provider could be a placeholder.
 3. ~~`packages/domain` and `packages/contracts` show no `package.json` in the tree; `packages/db-types` does.~~ Resolved in Revision 2: all three manifests exist, and contracts declares `@saucia/domain` + `zod`.
-4. Section 1 describes the `order` module's Supabase repository as having `dto/` and `mappers/`; on the client side that is the case only as a repository file, and on the server `infrastructure/supabase/{dto,mappers}` currently appear as folders with no files listed.
+4. Section 1 describes the `order` module's Supabase repository as having `dto/` and `mappers/`; on the client side that is the case only as a repository file, and on the server `infrastructure/supabase/{dto,mappers}` hold only `.gitkeep` placeholders as of Revision 4.
 5. `docs/` contains `API_CONTRACTS.md`, `ARCHITECTURE.md`, `DEPLOYMENT.md`, `FSD_CLEAN_RULES.md`, `SERVER.md`. They are not referenced by the plan; they need to be reconciled with this bible (see 0.1 and section 12).
-6. `client/src/shared/api/` holds both `legacy-supabaseClient.jsx` and `supabaseClient.ts`, as expected mid-transition (see P1 exit: zero _new_ imports of `legacy-*`).
-7. `server/src/kernel` has `Result`, a generic `DomainError` and the ports with 7 tests (Revision 3); `packages/kernel` does not exist and the client `Result.ts` remains a placeholder.
+6. `client/src/shared/api/` now holds only `supabaseClient.ts`; Revision 4 moved `legacy-supabaseClient.jsx`, `legacy-i18n.jsx` and `legacy-theme.jsx` to `_legacy/client/src/shared/` (see P1 exit: zero _new_ imports of `legacy-*`).
+7. `server/src/kernel` has `Result`, a generic `DomainError` and the ports with 8 tests (Revision 4); `packages/kernel` does not exist and the client `Result.ts` duplicate has been removed (decision 9).
 
 ---
 
 ## 11. Baseline tally (appendix)
 
-_Added in revision 1. Fulfils the 'one-page inventory' review point of section 1, measured on the 2026-10-08 snapshot._
+_Added in revision 1. Fulfils the 'one-page inventory' review point of section 1, measured on the 2026-10-20 snapshot (Revision 4)._
 
 | Metric                                                    | Count | Detail                                                                                                                                                                                                                                                                                                                                                                        |
 | :-------------------------------------------------------- | :---- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Duplicate definition sets                                 | 3     | Order status (×3 files), `Result.ts` (×2), `SessionProvider.tsx` (×2)                                                                                                                                                                                                                                                                                                         |
-| `legacy-*` files inside live layers                       | 3     | `legacy-supabaseClient.jsx`, `legacy-i18n.jsx`, `legacy-theme.jsx`                                                                                                                                                                                                                                                                                                            |
-| Empty directories in the live tree (excluding `_legacy/`) | 16    | `.github/workflows`; `packages/contracts/src/subscription`; `server/tests`; `server/src/delivery-shared/http`; `server/src/modules/{{identity,menu,notification,payment,subscription}}`; `server/src/modules/order/domain/errors`; `server/src/modules/order/infrastructure/supabase/{{dto,mappers}}`; `server/src/platform/{{email,stripe,supabase}}`; `supabase/migrations` |
-| Empty directories inside `_legacy/`                       | 3     | `.github/workflows`; `client/src/Pages/Admin/admin-assets`; `client/src/assets/fonts/Outfit/static`                                                                                                                                                                                                                                                                           |
+| Duplicate definition sets                                 | 0     | Order status is single-sourced (Revision 2); `Result.ts` and `SessionProvider.tsx` were deduped in Revision 4.                                                                                                                                                                                                                                                                  |
+| `legacy-*` files inside live layers                       | 0     | All three moved to `_legacy/client/src/shared/`; no live file imports them.                                                                                                                                                                                                                                                                                                    |
+| Empty directories in the live tree (excluding `_legacy/`) | 0     | 12 scaffolding directories carry `.gitkeep`; client slices hold `index.ts`.                                                                                                                                                                                                                                                                                                     |
+| Empty directories inside `_legacy/`                       | 3     | `.github/workflows`; `client/src/Pages/Admin/admin-assets`; `client/src/assets/fonts/Outfit/static`                                                                                                                                                                                                                                                                             |
+| Duplicate asset groups (byte-identical)                   | 0     | 11 `admin/` copies removed in favour of `menu/`; hero duplicates collapsed.                                                                                                                                                                                                                                                                                                    |
+| Asset files under `shared/assets`                          | 109   | 5.61 MB total.                                                                                                                                                                                                                                                                                                                                                                 |
+| GLTF models in `public/models`                            | 19    | 20.1 MB; unused `customize.glb` and `planet.glb` removed.                                                                                                                                                                                                                                                                                                                        |
+| Fonts in `public/fonts`                                   | 12    | 2.18 MB: Zain (8 weights + OFL) and Asap variable + italic + OFL; static Asap weight dumps pruned (≈6.2 MB saved).                                                                                                                                                                                                                                                               |
 
 Counts were taken by hand from the tree. To recompute from the repo root:
 
-```
-find . -type d -empty -not -path './_legacy/*' -not -path '*/node_modules/*' -not -path './.git/*'
+```powershell
+# empty live directories (PowerShell)
+Get-ChildItem -Recurse -Directory client\src, server\src, packages |
+  Where-Object { $_.FullName -notmatch 'node_modules|\.turbo' -and -not (Get-ChildItem -Force -LiteralPath $_.FullName) }
 
+# duplicate asset bytes
+Get-ChildItem -Recurse -File client\src\shared\assets | Get-FileHash -Algorithm SHA256 |
+  Group-Object Hash | Where-Object Count -gt 1
 ```
 
 Track these numbers over time; the migration map (section 8) expects the legacy-file count to only decrease.
@@ -984,6 +1000,7 @@ _Added in revision 1._
 | 2026-10-08 | 1        | Bible created from the original plan. Added section 0, status overlays and sections 10–12. Original plan text unchanged. |
 | 2026-10-17 | 2        | Domain and contracts completed (money, totals, cart, phone, BMI/TDEE/nutrition; error codes, order/subscription schemas); P1.2 order-status dedup; 68 tests; type-check/test/arch green; done/dead points extracted to 0.8. |
 | 2026-10-18 | 3        | Server kernel implemented (`Result`, generic HTTP-free `DomainError`, `Clock`/`IdGenerator`/`Logger` ports, 7 tests); kernel boundary rules added to dependency-cruiser; 75 tests green. |
+| 2026-10-20 | 4        | Closed the Phase 1 cleanup queue. Deleted the client `Result.ts` (server kernel is canonical, decision 9); split `SessionProvider` into provider shell + entity state/hook (P1.4); quarantined the three `legacy-*` files; removed 11 duplicate admin assets, hero duplicates and `hero-*.json`, pruned static Asap weights, deleted 2 unused GLBs; ported the 3D landing system to `shared/ui/three` + `pages/home` (P1.6); added 12 `.gitkeep` placeholders (P0.9). `DomainError` now has a fixed client-safe `message` plus `internalMessage` (8 kernel tests). Arch, type-check, tests and build green. |
 
 ### 12.2 Decision log
 
@@ -995,7 +1012,12 @@ The answers in section 9 are carried here with the phase that depends on each an
 | 2   | Admin split is a planned product decision; ships as `apps/admin-dashboard` after Phases 0–6 and the rename settle; MFA / IP rules are part of the rationale | Phase 7 (Stage B moves 1–2) | `pages/admin`, `features/admin-*`, `widgets/admin-*`, admin-only shared bits                                            | Not stated in plan | Planned                             |
 | 3   | `order-delivery` / `track-last-order` need server logic                                                                                                     | Phase 2 (task P2.4)         | New use cases under `server/src/modules/order/application/use-cases/`; `supabase/functions/order-processing/index.ts`   | Not stated in plan | Decided; not yet implemented        |
 | 4   | Chat transport goes through an adapter for extensibility                                                                                                    | Phase 5                     | `server/src/modules/support` (new), `client/src/entities/message/infrastructure`, `features/send-support-message` (new) | Not stated in plan | Decided; not yet implemented        |
-| 5   | Hero assets (`hero-*.json`, `hero*.jpg`) can be deleted                                                                                                     | Phase 1 (task P1.6)         | `client/src/shared/assets/hero/*`                                                                                       | Not stated in plan | Decided; deletion not yet performed |
+| 5   | Hero assets (`hero-*.json`, `hero*.jpg`) can be deleted                                                                                                     | Phase 1 (task P1.6)         | `client/src/shared/assets/hero/*`                                                                                       | Not stated in plan | Implemented (Revision 4)            |
 | 6   | Order-status values and transitions live in `@saucia/domain`; contracts derives the wire schema; the server file is a re-export facade | Phase 1/2 | `packages/domain/src/order/orderRules.ts`, `packages/contracts/src/order/orderStatus.ts`, `server/src/modules/order/domain/OrderStatus.ts` | 2026-10-17 | Implemented |
 | 7   | Subscription nutrition uses the ADR activity/goal vocabulary and the v1 macro ratios | Phase 4 | `packages/domain/src/subscription/*`, `packages/contracts/src/subscription/*` | 2026-10-17 | Implemented in domain/contracts |
 | 8   | Server kernel stays server-local for Stage A; `DomainError` is generic and HTTP-free; `packages/kernel` is deferred until a second consumer and must be the lowest package | Phase 1/Stage B | `server/src/kernel/*`, `.dependency-cruiser.cjs` | 2026-10-18 | Implemented server-local; extraction deferred |
+| 9   | The client `Result.ts` is not a second kernel. The server kernel is the single owner, the client copy is deleted, and `packages/kernel` waits for a real second consumer | Phase 1 (P1.3) / Stage B | `client/src/shared/kernel/*`, `server/src/kernel/Result.ts` | 2026-10-20 | Implemented |
+| 10  | Session state belongs to `entities/session/model`; `app/providers/SessionProvider.tsx` only mounts it | Phase 1 (P1.4) | `client/src/app/providers/SessionProvider.tsx`, `client/src/entities/session/model/sessionContext.ts` | 2026-10-20 | Implemented |
+| 11  | The 3D landing system lives in `shared/ui/three` (generic renderer) and `pages/home` (camera, scroll, configs) | Phase 1 (P1.6) / section 6 | `client/src/shared/ui/three/*`, `client/src/pages/home/*` | 2026-10-20 | Implemented |
+| 12  | `DomainError.message` is a fixed client-safe string; detail travels in `internalMessage` and is never forwarded to a client | Phase 1/2 | `server/src/kernel/DomainError.ts`; delivery error mapping (Phase 2) | 2026-10-20 | Implemented in kernel; delivery mapping follows P2 |
+| 13  | Stage B is structurally ready: no duplicate definitions, no live `legacy-*` imports, no unmarked empty directories; sequencing gates remain P0.7, P0.8 and P1.1 | Phase 7 | `client/`, `server/`, `packages/` | 2026-10-20 | Ready except the named gates |

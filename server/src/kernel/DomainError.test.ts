@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { DomainError, isDomainError } from './DomainError';
 
 describe('DomainError', () => {
-  it('carries a stable code, message and details', () => {
-    const error = new DomainError('ORDER_NOT_FOUND', 'Order not found', {
+  it('carries a stable code, internal message and details', () => {
+    const error = new DomainError('ORDER_NOT_FOUND', 'Order order-1 missing', {
       orderId: 'order-1',
     });
 
@@ -11,8 +11,19 @@ describe('DomainError', () => {
     expect(error).toBeInstanceOf(DomainError);
     expect(error.name).toBe('DomainError');
     expect(error.code).toBe('ORDER_NOT_FOUND');
-    expect(error.message).toBe('Order not found');
+    expect(error.internalMessage).toBe('Order order-1 missing');
     expect(error.details).toEqual({ orderId: 'order-1' });
+  });
+
+  it('keeps the client-safe message generic', () => {
+    const error = new DomainError(
+      'FINANCIAL_MISMATCH',
+      'expected 1000 cents but got 900',
+    );
+
+    expect(error.message).toBe('Domain error');
+    expect(error.message).not.toContain('1000');
+    expect(error.message).not.toContain('900');
   });
 
   it('stays free of HTTP semantics', () => {

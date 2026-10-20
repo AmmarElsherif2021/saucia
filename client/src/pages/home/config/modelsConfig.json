@@ -1,0 +1,483 @@
+{
+  "models": {
+    "saladBowl": {
+      "priority": true,
+      "path": "/models/salad.glb",
+      "scale": 75.0,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "visible": true,
+      "castShadow": true,
+      "receiveShadow": false,
+      "userData": {
+        "interactive": true
+      },
+      "material": {
+        "roughness": 0.4,
+        "metalness": 0.1
+      },
+      "autoRotate": true,
+      "autoRotateSpeed": 0.3,
+      "navPath": "/menu",
+      "navSection": "make your own salad"
+    },
+    "ball": {
+      "priority": true,
+      "path": "/models/low_poly_bowl.glb",
+      "scale": 100.0,
+      "position": {
+        "x": 0,
+        "y": -70,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": -1,
+        "z": 0
+      },
+      "visible": true,
+      "castShadow": true,
+      "receiveShadow": false,
+      "userData": {
+        "interactive": true
+      },
+      "material": {
+        "roughness": 0.4,
+        "metalness": 0.1
+      },
+      "autoRotate": true,
+      "autoRotateSpeed": 0.3,
+      "navPath": "/menu",
+      "flipY": true,
+      "navSection": "make your own salad"
+    },
+    "signature": {
+      "priority": false,
+      "path": "/models/signature.glb",
+      "scale": 200.0,
+      "position": {
+        "x": 100,
+        "y": 0,
+        "z": 60
+      },
+      "rotation": {
+        "x": 0.1,
+        "y": 0.1,
+        "z": 0
+      },
+      "visible": true,
+      "castShadow": true,
+      "receiveShadow": false,
+      "userData": {
+        "interactive": true
+      },
+      "material": {
+        "roughness": 0.4,
+        "metalness": 0.1
+      },
+      "autoRotate": false,
+      "autoRotateSpeed": 0.3,
+      "navPath": "/menu",
+      "navSection": "Our signature salad",
+      "explicit": {
+        "label": "Signature Bowl",
+        "label_ar": "سلطاتنا المميزة",
+        "brief": "Our hero — every grain, green, and garnish chosen for balance. Seasonal, hand-composed, and ready in under five minutes.",
+        "brief_ar": "سلطاتنا المميزة - كل مكون مختار بعناية من أجل التوازن. موسمية، معدة يدويًا، وجاهزة في أقل من خمس دقائق.",
+        "link": "/menu?category=bowls"
+      }
+    },
+    "sparkle": {
+      "priority": false,
+      "path": "/models/sparkle_emoji.glb",
+      "scale": 100.5,
+      "position": {
+        "x": 0,
+        "y": 50,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "autoRotate": true,
+      "autoRotateSpeed": 0.5
+    },
+    "cake": {
+      "priority": false,
+      "path": "/models/fruit_cake.glb",
+      "scale": 20.0,
+      "position": {
+        "x": -90,
+        "y": 0,
+        "z": -90
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "autoRotate": true,
+      "autoRotateSpeed": 0.5,
+      "link": "/menu?category=desserts",
+      "buttonLabel": "Desserts",
+      "navPath": "/menu",
+      "navSection": "Desserts",
+      "explicit": {
+        "label": "Desserts",
+        "label_ar": "الحلويات",
+        "brief_ar": "نهايات غنية بالنكهات الطبيعية تشعرك بالرفاهية بدون الشعور بالذنب. طبقات باردة ومعدة طازجة كل صباح.",
+        "brief": "Fruit-forward finishes that feel indulgent without the guilt. Layered, chilled, and made fresh every morning.",
+        "link": "/menu?category=desserts"
+      }
+    },
+    "juice": {
+      "priority": false,
+      "path": "/models/juice.glb",
+      "scale": 4.0,
+      "position": {
+        "x": -80,
+        "y": 0,
+        "z": 80
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "autoRotate": true,
+      "autoRotateSpeed": 0.5,
+      "link": "/menu?category=juice",
+      "buttonLabel": "juice",
+      "navPath": "/menu",
+      "navSection": "Juices",
+      "explicit": {
+        "label": "Cold-Pressed Juices",
+        "label_ar": "عصائر باردة",
+        "brief_ar": "لم تسخن، لم تسرع. كل زجاجة معصورة حسب الطلب من الفاكهة الكاملة - لا مركزات، لا سكر مضاف.",
+        "brief": "Never heated, never rushed. Every bottle is pressed to order from whole fruit — no concentrates, no added sugar.",
+        "link": "/menu?category=juice"
+      }
+    },
+    "soup": {
+      "priority": false,
+      "path": "/models/soup.glb",
+      "scale": 800.0,
+      "position": {
+        "x": 80,
+        "y": 0,
+        "z": -80
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0.6,
+        "z": 0
+      },
+      "autoRotate": true,
+      "autoRotateSpeed": 0.5,
+      "link": "/menu?category=soups",
+      "buttonLabel": "Soups",
+      "navPath": "/menu",
+      "navSection": "Soups",
+      "explicit": {
+        "label": "Seasonal Soups",
+        "label_ar": "الحساء الموسمية",
+        "brief": "Slow-simmered, blended silky smooth, and finished with a drizzle from our house herb oil. Comfort you can feel good about.",
+        "brief_ar": "حساء مطهى ببطء، مخلوط ناعم، وتم إنهاؤه برش من زيت الأعشاب الخاص بنا. راحة يمكنك الشعور بها.",
+        "link": "/menu?category=soups"
+      }
+    },
+    "customize": {
+      "priority": false,
+      "path": "/models/mixer.glb",
+      "scale": 12.0,
+      "position": {
+        "x": -45,
+        "y": 0,
+        "z": 120
+      },
+      "rotation": {
+        "x": -0.05,
+        "y": -0.5,
+        "z": 0.08
+      },
+      "autoRotate": false,
+      "autoRotateSpeed": 0.5,
+      "navPath": "/menu",
+      "navSection": "make your own salad"
+    },
+    "bottles": {
+      "priority": false,
+      "path": "/models/bottles.glb",
+      "scale": 500.0,
+      "position": {
+        "x": 90,
+        "y": 0,
+        "z": 90
+      },
+      "rotation": {
+        "x": -0.05,
+        "y": -0.5,
+        "z": 0.08
+      },
+      "flipX": true,
+      "tilt": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "autoRotate": false,
+      "autoRotateSpeed": 0.5
+    },
+    "cauldron": {
+      "priority": false,
+      "path": "/models/cauldron.glb",
+      "scale": 60.0,
+      "position": {
+        "x": -80,
+        "y": 0,
+        "z": -80
+      },
+      "rotation": {
+        "x": -0.05,
+        "y": -0.5,
+        "z": 0.08
+      },
+      "flipX": true,
+      "tilt": {
+        "x": 0,
+        "y": 45,
+        "z": 0
+      },
+      "autoRotate": false,
+      "autoRotateSpeed": 0.5
+    },
+    "vegetables_basket": {
+      "priority": false,
+      "path": "/models/vegetables.glb",
+      "scale": 2.0,
+      "position": {
+        "x": 30,
+        "y": 0,
+        "z": -170
+      },
+      "rotation": {
+        "x": -1.0,
+        "y": 0.0,
+        "z": -0.05
+      },
+      "flipX": true,
+      "autoRotate": false,
+      "autoRotateSpeed": 0.5,
+      "link": "/menu?category=dressings",
+      "buttonLabel": "Shop Dressings",
+      "navPath": "/menu",
+      "navSection": "make your own salad",
+      "explicit": {
+        "label": "Fresh Produce",
+        "label_ar": "المنتجات الطازجة",
+        "brief": "Sourced from local farms three times a week. If it's on your bowl, it was growing in a field 48 hours ago.",
+        "brief_ar": "مصدرها من المزارع المحلية ثلاث مرات في الأسبوع. إذا كان على طبقك، فكان ينمو في الحقل قبل 48 ساعة.",
+        "link": "/menu?category=fresh"
+      }
+    },
+    "crown": {
+      "priority": true,
+      "path": "/models/crown.glb",
+      "scale": 27.0,
+      "position": {
+        "x": 0,
+        "y": 55,
+        "z": 10
+      },
+      "rotation": {
+        "x": -0.05,
+        "y": -0.5,
+        "z": 0.08
+      },
+      "autoRotate": true,
+      "link": "/premium",
+      "buttonLabel": "Go Premium",
+      "navPath": "/premium",
+      "navSection": "premium",
+      "explicit": {
+        "label": "SauciaSalad Premium",
+        "label_ar": "SauciaSalad Premium",
+        "brief": "Chef-crafted exclusive recipes, early access to seasonal drops, zero queuing, and a free birthday bowl every year.",
+        "brief_ar": "وصفات حصرية مصنوعة من قبل الطهاة، وصول مبكر إلى العروض الموسمية، وصفة مجانية كل عام.",
+        "link": "/premium"
+      }
+    },
+    "robot": {
+      "priority": false,
+      "path": "/models/robot.glb",
+      "scale": 30.0,
+      "position": {
+        "x": 110,
+        "y": 0,
+        "z": 30
+      },
+      "rotation": {
+        "x": -0.05,
+        "y": -0.5,
+        "z": 0.08
+      },
+      "autoRotate": false,
+      "tilt": {
+        "x": 0,
+        "y": 105,
+        "z": 0.5
+      },
+      "link": "/premium",
+      "buttonLabel": "Go Premium",
+      "navPath": "/premium",
+      "navSection": "premium",
+      "explicit": {
+        "label": "Nutrition Robot",
+        "label_ar": "المساعد الغذائي الآلي",
+        "brief": "Chef-crafted exclusive recipes, early access to seasonal drops, zero queuing, and a free birthday bowl every year.",
+        "brief_ar": "وصفات حصرية مصنوعة من قبل الطهاة، وصول مبكر إلى العروض الموسمية، وصفة مجانية كل عام.",
+        "link": "/premium"
+      }
+    },
+    "balance": {
+      "priority": false,
+      "path": "/models/balance.glb",
+      "scale": 20.0,
+      "position": {
+        "x": 50,
+        "y": 0,
+        "z": 90
+      },
+      "rotation": {
+        "x": -0.05,
+        "y": -0.5,
+        "z": 0.08
+      },
+      "autoRotate": false,
+      "link": "/premium",
+      "buttonLabel": "Go Premium",
+      "navPath": "/premium",
+      "navSection": "premium"
+    },
+    "lowpoly_tomato": {
+      "priority": false,
+      "path": "/models/tomato_lowpoly.glb",
+      "scale": 5.0,
+      "position": {
+        "x": -300,
+        "y": 0,
+        "z": 300
+      },
+      "rotation": {
+        "x": -0.05,
+        "y": -0.5,
+        "z": 0.08
+      },
+      "autoRotate": true,
+      "autoRotateSpeed": 0.5
+    },
+    "lowpoly_leaf": {
+      "priority": false,
+      "path": "/models/leaf_lowpoly.glb",
+      "scale": 10.0,
+      "position": {
+        "x": 300,
+        "y": 0,
+        "z": -300
+      },
+      "rotation": {
+        "x": -0.05,
+        "y": -0.5,
+        "z": 0.08
+      },
+      "autoRotate": true,
+      "autoRotateSpeed": 0.5
+    },
+    "lowpoly_pear": {
+      "priority": false,
+      "path": "/models/lowpoly_pear.glb",
+      "scale": 2.0,
+      "position": {
+        "x": 300,
+        "y": 0,
+        "z": 300
+      },
+      "rotation": {
+        "x": -0.05,
+        "y": -0.5,
+        "z": 0.08
+      },
+      "autoRotate": true,
+      "autoRotateSpeed": 0.5
+    },
+    "lowpoly_lemon": {
+      "priority": false,
+      "path": "/models/lemon_lowpoly.glb",
+      "scale": 5.0,
+      "position": {
+        "x": -300,
+        "y": 0,
+        "z": -300
+      },
+      "rotation": {
+        "x": -0.05,
+        "y": -0.5,
+        "z": 0.08
+      },
+      "autoRotate": true,
+      "autoRotateSpeed": 0.5
+    },
+    "lowpoly_carrot": {
+      "priority": false,
+      "path": "/models/lowpoly_carrot.glb",
+      "scale": 10.0,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 300
+      },
+      "rotation": {
+        "x": -0.05,
+        "y": -0.5,
+        "z": 0.08
+      },
+      "autoRotate": true,
+      "autoRotateSpeed": 0.5
+    }
+  },
+  "default": {
+    "scale": 1.0,
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "rotation": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "autoRotate": false,
+    "autoRotateSpeed": 1.0
+  },
+  "global": {
+    "cameraPosition": {
+      "x": -150,
+      "y": 300,
+      "z": 0
+    },
+    "cameraFov": 45,
+    "controlsEnabled": true,
+    "shadows": true
+  }
+}

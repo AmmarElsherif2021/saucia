@@ -1,13 +1,15 @@
 /**
- * Explicit success/failure channel used across server layers.
- *
- * The kernel owns the shape only; it does not know about HTTP, Supabase or
- * business errors. Use `Result<T, DomainError>` where a use case can fail.
+ ==> Explicit success/failure channel used across server layers.
+ 
+ * IMPORTANT: The kernel owns the shape only; it does not know about HTTP, Supabase or
+  business errors. Use `Result<T, DomainError>` where a use case can fail.
  */
 export type Result<T, E = Error> = Success<T> | Failure<E>;
 
 export class Success<T> {
+  // Label the kind of result so we can discriminate between success and failure.
   readonly kind = 'success' as const;
+  
 
   constructor(readonly value: T) {}
 
@@ -21,6 +23,7 @@ export class Success<T> {
 }
 
 export class Failure<E> {
+  // Same labeling so we can discriminate between success and failure.
   readonly kind = 'failure' as const;
 
   constructor(readonly error: E) {}
@@ -34,6 +37,7 @@ export class Failure<E> {
   }
 }
 
+// Factory functions for creating success and failure results.
 export const Ok = <T, E = Error>(value: T): Result<T, E> => new Success(value);
 
 export const Err = <E, T = never>(error: E): Result<T, E> => new Failure(error);

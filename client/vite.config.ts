@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react-swc'
 export default defineConfig({
   plugins: [
     react(),
-    visualizer({ open: true, gzip: true, filename: 'dist/stats.html' })
+    visualizer({ open: false, gzip: true, filename: 'dist/stats.html' })
   ],
   base: '/',
   build: {

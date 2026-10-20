@@ -1,0 +1,172 @@
+{
+  "theme": {
+    "primaryColor": "brand",
+    "sparkleColor": "#97e861ff"
+  },
+  "segments": [
+    {
+      "id": "hero",
+      "navSection": "hero",
+      "title": "Welcome to SauciaSalad!",
+      "title_ar": "أهلاً بك في صوصيا سالاد!",
+      "subtitle": "Delicious taste and healthy choices",
+      "subtitle_ar": "طعم لذيذ وخيارات صحية",
+      "description": "Experience the perfect blend of flavor and wellness.",
+      "description_ar": "اكتشف التوازن المثالي بين النكهة والصحة.",
+      "modelKey": [
+        "saladBowl",
+        "sparkle"
+      ],
+      "sceneBackground": "#eef7ec",
+      "cameraPosition": {
+        "x": -50,
+        "y": 80,
+        "z": 150
+      },
+      "textColor": "brand.800",
+      "buttonText": "Explore Now",
+      "buttonText_ar": "استكشف الآن",
+      "buttonLink": "/menu",
+      "animation": "fadeUp",
+      "textAlign": "left"
+    },
+    {
+      "id": "featured",
+      "navSection": "Our signature salad",
+      "title": "Explore Our Featured Salads!",
+      "title_ar": "اكتشف سلطاتنا المميزة!",
+      "subtitle": "Discover the perfect bowl for every craving",
+      "subtitle_ar": "طبقك المثالي لكل شهية",
+      "description": "Based on your preferences, we'll recommend the perfect bowl combinations to satisfy your cravings and fuel your day.",
+      "description_ar": "بناءً على تفضيلاتك، نختار لك التوليفة المثالية لتشبع شهيتك وتملأ يومك بالطاقة.",
+      "modelKey": [
+        "saladBowl",
+        "sparkle",
+        "signature"
+      ],
+      "sceneBackground": "#eef7ec",
+      "cameraPosition": {
+        "x": 200,
+        "y": 40,
+        "z": 240
+      },
+      "textColor": "brand.800",
+      "buttonText": "Explore Now",
+      "buttonText_ar": "استكشف الآن",
+      "buttonLink": "/menu",
+      "animation": "fadeUp",
+      "textAlign": "left"
+    },
+    {
+      "id": "explore",
+      "navSection": "Soups",
+      "title": "Our menu is fresh, vibrant, and versatile",
+      "title_ar": "قائمتنا طازجة ومتنوعة",
+      "description": "Discover new flavors and combinations with our seasonal menu.",
+      "description_ar": "اكتشف نكهات جديدة مع قائمتنا الموسمية المتجددة.",
+      "modelKey": [
+        "juice",
+        "cake",
+        "saladBowl",
+        "sparkle",
+        "soup"
+      ],
+      "sceneBackground": "#f5fbf2",
+      "cameraPosition": {
+        "x": -250,
+        "y": 200,
+        "z": 0
+      },
+      "textColor": "gray.700",
+      "buttonText": "View Menu",
+      "buttonText_ar": "عرض القائمة",
+      "buttonLink": "/menu",
+      "animation": "slideRight",
+      "textAlign": "right",
+      "linkedSections": [
+        "Soups",
+        "Juices",
+        "Desserts"
+      ]
+    },
+    {
+      "id": "customize",
+      "navSection": "make your own salad",
+      "title": "Build Your Own Bowl",
+      "title_ar": "صمّم طبقك الخاص",
+      "description": "20+ toppings, 8 house-made dressings. Your bowl, your rules — endlessly customisable.",
+      "description_ar": "أكثر من 20 إضافة و8 صلصات منزلية. طبقك، قواعدك — خيارات لا تنتهي.",
+      "modelKey": [
+        "vegetables_basket",
+        "bottles",
+        "cauldron",
+        "customize",
+        "saladBowl",
+        "sparkle"
+      ],
+      "sceneBackground": "#ecf7e8",
+      "cameraPosition": {
+        "x": 210,
+        "y": 300,
+        "z": -50
+      },
+      "textColor": "brand.800",
+      "buttonText": "Customize",
+      "buttonText_ar": "خصّص الآن",
+      "buttonLink": "/menu?custom=true",
+      "animation": "scale",
+      "textAlign": "left"
+    },
+    {
+      "id": "premium",
+      "navSection": "premium",
+      "title": "Ask our nutrition expert bot",
+      "title_ar": "اسأل خبير التغذية الآلي الخاص بنا",
+      "description": "Get personalized salad recommendations, nutrition tips, and healthy eating advice from our AI-powered bot.",
+      "description_ar": "احصل على وصفات حصرية من الشيف الالكتروني، وصول مبكر للقوائم الموسمية، وأولوية في الطلبات.",
+      "modelKey": [
+        "saladBowl",
+        "sparkle",
+        "crown"
+      ],
+      "sceneBackground": "#e8f0f7",
+      "cameraPosition": {
+        "x": 8,
+        "y": 166,
+        "z": 134
+      },
+      "textColor": "secondary.800",
+      "buttonText": "Learn More",
+      "buttonText_ar": "اعرف أكثر",
+      "buttonLink": "/premium",
+      "animation": "fadeLeft",
+      "textAlign": "right"
+    },
+    {
+      "id": "premium2",
+      "navSection": "premium",
+      "title": "Enjoy full control over your salad experience with SauciaSalad Premium",
+      "title_ar": "تحكّم كامل في تجربتك مع SauciaSalad Premium",
+      "description": "Unlock exclusive chef-crafted recipes, early access to seasonal menus, and priority ordering.",
+      "description_ar": "احصل على وصفات حصرية من الشيف، وصول مبكر للقوائم الموسمية، وأولوية في الطلبات.",
+      "modelKey": [
+        "saladBowl",
+        "sparkle",
+        "robot",
+        "balance"
+      ],
+      "sceneBackground": "#e8f0f7",
+      "cameraPosition": {
+        "x": -250,
+        "y": 70,
+        "z": 200
+      },
+      "textColor": "secondary.800",
+      "buttonText": "Learn More",
+      "buttonText_ar": "اعرف أكثر",
+      "buttonLink": "/premium",
+      "animation": "fadeLeft",
+      "textAlign": "right"
+    }
+  ]
+}
