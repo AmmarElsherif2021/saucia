@@ -1,4 +1,4 @@
-# server/src
+# apps/server/src
 
 | Folder | Layer | Role |
 |---|---|---|

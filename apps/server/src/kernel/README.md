@@ -4,7 +4,7 @@ The server is built in layers, like an onion. The kernel is the tiny center of t
 Result.ts is the file that answers one question: "When this function fails, how does it tell me?" Answer: it returns the failure, it doesn't throw it.
 
 - Every server layer may import from the kernel.
-- It imports nothing from `server/src/modules`, `server/src/composition`, `server/src/platform` or `server/src/delivery-shared`.
+- It imports nothing from `apps/server/src/modules`, `apps/server/src/composition`, `apps/server/src/platform` or `apps/server/src/delivery-shared`.
 - It must stay free of business rules (those belong in `@saucia/domain`), HTTP semantics, and framework types.
 
 ## Contents
@@ -13,7 +13,7 @@ Result.ts is the file that answers one question: "When this function fails, how 
 | :--- | :--- |
 | `Result`, `Ok`, `Err`, `Success`, `Failure`, `isSuccess`, `isFailure` | Explicit success/failure channel; no exceptions across layers. |
 | `DomainError` | Expected business failure carrying a generic `code`, a fixed client-safe `message`, an `internalMessage` for logs, and optional details. No status code, headers or response body. |
-| `Clock` | Time port. Implementations live in `server/src/platform` and are injected by composition. |
+| `Clock` | Time port. Implementations live in `apps/server/src/platform` and are injected by composition. |
 | `IdGenerator` | ID port. Implementations live in platform adapters. |
 | `Logger` | Logging port. Implementations live in platform adapters. |
 
@@ -224,7 +224,7 @@ The key teaching point: **`DomainError` has no HTTP status on it.** It only has 
 
 Be aware: the kernel is real, but almost everything around it is a stub.
 
-- ✅ `server/src/kernel/` — complete, with tests (3 for `Result`, 5 for `DomainError`).
+- ✅ `apps/server/src/kernel/` — complete, with tests (3 for `Result`, 5 for `DomainError`).
 - 🚧 `SubmitOrder.ts`, `orderController.ts`, `Order.ts`, `container.ts`, `routes.ts`, the Supabase repository — all contain literally `// TODO: implement`.
 
 So `Result` currently has **zero real callers**. It's a contract waiting for its first user. That first user will be the `SubmitOrder` use case. If you write it, your signature should be:

@@ -1,4 +1,4 @@
-﻿# dependencies
+# dependencies
 node_modules/
 .pnpm-store/
 
@@ -13,10 +13,10 @@ out/
 .env.local
 .env.*.local
 .env.*.js
-client/.env
-client/.env.local
-client/supabase/functions/.env
-client/supabase/functions/.env.local
+apps/customer-web/.env
+apps/customer-web/.env.local
+apps/customer-web/supabase/functions/.env
+apps/customer-web/supabase/functions/.env.local
 
 # logs
 *.log

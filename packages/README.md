@@ -1,10 +1,14 @@
 # packages/
 
-Shared leaf packages, consumed by `client/` and `server/`.
+Shared leaf packages, consumed by `apps/customer-web/` and `apps/server/`.
 
-- **Leaves:** nothing here may import from `client/`, `server/`, `apps/` or `supabase/`.
+- **Leaves:** nothing here may import from `apps/` or `supabase/`.
 - **Just-in-time:** each package's `exports` point at TS source, so there is no build step.
 - Naming: `@saucia/<package>`.
+
+> Stage B move 1 renamed `client/` → `apps/customer-web/` and `server/` →
+> `apps/server/` (2026-10-21). Where the article below still says `client/src`
+> or `server/src`, read the corresponding path under `apps/`.
 
 | Package | Purpose |
 |---|---|

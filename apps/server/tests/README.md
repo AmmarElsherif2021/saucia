@@ -1,4 +1,4 @@
-# server/tests
+# apps/server/tests
 
 Tests for the server.
 

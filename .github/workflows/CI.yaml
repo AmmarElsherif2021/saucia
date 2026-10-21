@@ -84,8 +84,8 @@ jobs:
 
       # ---- Architecture ----------------------------------------------------
       # `pnpm arch` runs:
-      #   - dependency-cruiser over client/src, server/src, packages
-      #   - steiger over client/src (FSD structure)
+      #   - dependency-cruiser over apps/customer-web/src, apps/server/src, packages
+      #   - steiger over apps/customer-web/src (FSD structure)
       # These are the rules from sections 3.1 and 3.2 of the plan.
       - name: Architecture boundaries (depcruise + steiger)
         run: pnpm arch
@@ -107,7 +107,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: client-dist
-          path: client/dist
+          path: apps/customer-web/dist
           if-no-files-found: ignore
           retention-days: 7
 

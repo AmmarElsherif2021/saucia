@@ -1,4 +1,4 @@
-/** Logging port; implementations live in `server/src/platform`. */
+/** Logging port; implementations live in `apps/server/src/platform`. */
 export interface Logger {
   debug(message: string, context?: Record<string, unknown>): void;
   info(message: string, context?: Record<string, unknown>): void;

@@ -1,6 +1,6 @@
 # Saucia v2 — Project Bible
 
-> **Revision:** 4.1 · **Synced to repo tree snapshot of:** 2026-10-20 **Purpose:** the reference of record for Saucia v2 structure, rules, sequencing and decisions. If any other document disagrees with it, raise the conflict and log it in section 12. **Where this lives in the repo:** `docs/adr/saucia-project-bible.md`
+> **Revision:** 5 · **Synced to repo tree snapshot of:** 2026-10-21 **Purpose:** the reference of record for Saucia v2 structure, rules, sequencing and decisions. If any other document disagrees with it, raise the conflict and log it in section 12. **Where this lives in the repo:** `docs/adr/saucia-project-bible.md`
 
 ---
 
@@ -19,11 +19,11 @@
 | ⏸ HOLD     | Deliberately not started, as the plan itself specifies                                                          |
 | ℹ️ NOTE    | Observation recorded without a status                                                                           |
 
-**Evidence method and limits.** Statuses were derived by comparing the plan with the repository tree as of 2026-10-20 (Revision 4.1). The tree shows which files and folders exist, not what is inside them, so "DONE" means the structure is there; the 🔍 items inside each row are the content-level checks still owed. Task IDs (`P<phase>.<row>`) number the rows of each phase table in their original order.
+**Evidence method and limits.** Statuses were derived by comparing the plan with the repository tree as of 2026-10-21 (Revision 5). The tree shows which files and folders exist, not what is inside them, so "DONE" means the structure is there; the 🔍 items inside each row are the content-level checks still owed. Task IDs (`P<phase>.<row>`) number the rows of each phase table in their original order.
 
 ### 0.2 Where we are
 
-**Stage A (Phases 0–6) is in progress. Revision 4 closed the Phase 1 cleanup queue.** Phase 0's workspace wiring is verifiable: `pnpm install --frozen-lockfile`, `pnpm type-check`, `pnpm test`, `pnpm arch` and the client `vite build` pass at the root. The shared packages are complete: domain has money, order totals, order-status transitions, cart rules, Saudi phone validation, BMI, TDEE and the nutrition pipeline; contracts has error codes, order-status schema, submit-order and subscription-enrollment schemas. The server-local kernel is the canonical error/port vocabulary: `Result`, a generic HTTP-free `DomainError`, and the `Clock`/`IdGenerator`/`Logger` ports (8 tests); `packages/kernel` remains deferred until a second consumer. **Revision 4 closed P1.3 (the client `Result.ts` duplicate is deleted), P1.4 (provider vs state split for `SessionProvider`), P1.6 (assets deduplicated and the 3D landing system moved into the live client) and P0.9 (every empty scaffolding directory now has a `.gitkeep`).** What remains in Phase 0 is the secrets audit (P0.7) and the Deno interop spike (P0.8). Root ESLint/Steiger enforcement (P1.1) is the only Phase 1 task still open. Phase 2 still owes the server use cases, DB migrations, edge bundle and client features; Phases 3–6 remain scaffolding. Stage B (Phase 7) has not started, but the live tree is now structurally ready for its moves; its sequencing gates are P0.7, P0.8 and P1.1.
+**Stage A (Phases 0–6) is in progress, and Stage B move 1 has landed.** Phase 0's workspace wiring is verifiable: `pnpm install --frozen-lockfile`, `pnpm type-check`, `pnpm test`, `pnpm arch` and `pnpm build` pass at the root. The shared packages are complete: domain has money, order totals, order-status transitions, cart rules, Saudi phone validation, BMI, TDEE and the nutrition pipeline; contracts has error codes, order-status schema, submit-order and subscription-enrollment schemas. The server-local kernel is the canonical error/port vocabulary: `Result`, a generic HTTP-free `DomainError`, and the `Clock`/`IdGenerator`/`Logger` ports (8 tests); `packages/kernel` remains deferred until a second consumer. **Revision 4 closed P1.3 (the client `Result.ts` duplicate is deleted), P1.4 (provider vs state split for `SessionProvider`), P1.6 (assets deduplicated and the 3D landing system moved into the live client) and P0.9 (every empty scaffolding directory now has a `.gitkeep`). Revision 5 executed Stage B move 1:** `client/` → `apps/customer-web/`, `server/` → `apps/server/`, with the workspace glob, TypeScript `extends`, dependency-cruiser paths, root scripts, CI artifact path, gitignore and lockfile importers updated. Workspace package names stay `@saucia/client`/`@saucia/server` for this move. What remains in Phase 0 is the secrets audit (P0.7) and the Deno interop spike (P0.8). Root ESLint/Steiger enforcement (P1.1) is the only Phase 1 task still open. Phase 2 still owes the server use cases, DB migrations, edge bundle and client features; Phases 3–6 remain scaffolding. Stage B moves 2–10 are open: the admin split, `packages/{ui,i18n,api-client}`, and `kernel`/`testing`/`realtime` only when their gates fire. The Vercel project root still has to be switched in the dashboard from `client` to `apps/customer-web`.
 
 _Reading of the plan used here:_ Stage A = Phases 0–6; Stage B = Phase 7 together with section 2. This follows Phase 7's title and open question 2 ("once Phases 0–6 have landed").
 
@@ -38,7 +38,7 @@ _Reading of the plan used here:_ Stage A = Phases 0–6; Stage B = Phase 7 toget
 | 4     | Subscriptions                       | 🟡 Started (domain done) | 1 ✅ · 2 ⬜               | P4.1, P4.3 |
 | 5     | Support chat                        | ⬜ Not started           | 2 ⬜                      | P5.1–P5.2                         |
 | 6     | Payments and notifications          | ⬜ Not started           | 1 ⬜ · 1 🟡               | P6.1–P6.2                         |
-| 7     | Stage B: planned product split      | ⬜ Not started           | 2 ⬜ · 1 ⏸                | P7.1, P7.3 (P7.2 on hold)         |
+| 7     | Stage B: planned product split      | 🟡 Started (move 1)      | 1 🟡 · 1 ⏸ · 1 ⬜        | P7.1 (moves 2–10), P7.3 |
 
 **Gates stated in the plan that affect sequencing:** the Phase 0 spike "determines the shape of every later edge-function task" (P0.8 → P2.4, P4.1, P6.2); Stage B move 6 now waits only on a second consumer, because the Phase 1 kernel dedup (P1.3) closed by making the server kernel canonical; move 7 waits on Phase 2 in-memory ports (P2.6); the admin split waits on Phases 0–6 landing and the rename settling.
 
@@ -89,7 +89,7 @@ _Reading of the plan used here:_ Stage A = Phases 0–6; Stage B = Phase 7 toget
 | Phase 1    | `pnpm arch` and `pnpm lint` green in CI with rules at `error`; zero new imports of `legacy-*` files. | 🟡 PARTIAL — `pnpm arch` is green (0 violations, 1634 modules) and the legacy-file count is 0; lint/Steiger still missing |
 | Phase 2    | Checkout works end to end against local Supabase; client-computed totals are display-only.                    | ⬜ NOT MET       |
 | Phases 3–6 | (No explicit exit line in the plan; each has review points.)                                                  | ⬜ NOT STARTED   |
-| Stage B    | See 'Exit criterion for Stage B' in section 2.                                                                | ⬜ NOT MET       |
+| Stage B    | See 'Exit criterion for Stage B' in section 2.                                                                | 🟡 IN PROGRESS — move 1 landed (`apps/customer-web`, `apps/server`); admin split and package extractions remain |
 
 ---
 
@@ -113,6 +113,7 @@ _Reading of the plan used here:_ Stage A = Phases 0–6; Stage B = Phase 7 toget
 | P1.6 assets + 3D landing (Revision 4) | 0 byte-identical asset groups; one canonical file per hero (5 files, `*_compressed` suffixes gone); 19 GLBs (the unused `customize.glb` and `planet.glb` removed); `shared/ui/three/ThreeDisplay.tsx`, `pages/home/ui/{DiscreteLandingPage,Section}.tsx`, `pages/home/config/{landingConfig,modelsConfig}.json`. |
 | P0.9 empty scaffolding (Revision 4) | The 12 remaining live empty directories now carry `.gitkeep`; 0 empty directories remain in `client/src`, `server/src` or `packages`. |
 | Legacy files in live layers (Revision 4) | The three `legacy-*` files moved to `_legacy/client/src/shared/{api,i18n,theme}/`; live count is 0 and no live file imports them. |
+| Stage B move 1 (Revision 5) | `client/` → `apps/customer-web/`, `server/` → `apps/server/`. Updated `pnpm-workspace.yaml`, both app `tsconfig` `extends` paths, `.dependency-cruiser.cjs`, the root `arch` script, `.gitignore`, the CI artifact path and `pnpm-lock.yaml` importers; `pnpm install --frozen-lockfile`, `type-check` (5 tasks), `test` (4 tasks), `arch` and `build` are green.|
 
 **Dead / superseded points (do not reopen):**
 
@@ -187,11 +188,11 @@ A monorepo plan for Saucia v2 that keeps its goals (FSD x Clean on the client, C
 
 ### Stage B: planned product split
 
-> **Status overlay — Stage B (synced 2026-10-20):** ⬜ NOT STARTED, structurally unblocked. `client/` and `server/` remain at the repo root; there is no `apps/`; `packages/` holds only `contracts`, `db-types`, `domain`. Revision 4 removed the two prerequisites that used to block moves 1 and 6 (duplicate `Result.ts`, legacy files) and the live tree has no duplicate definitions, empty directories or legacy imports. Stage B still follows Stage A's sequencing gates (P0.7, P0.8, P1.1); see Phase 7 and open question 2.
+> **Status overlay — Stage B (synced 2026-10-21):** 🟡 IN PROGRESS — **move 1 has landed**; moves 2–10 are open. `apps/customer-web/` and `apps/server/` replace `client/`/`server/`; `packages/` holds `contracts`, `db-types`, `domain`. Where the plan text below still says `client/` or `server/`, read `apps/customer-web/` or `apps/server/`. Workspace package names remain `@saucia/client` and `@saucia/server` until the admin split. Sequencing gates remain P0.7, P0.8 and P1.1; see Phase 7 and open question 2.
 >
 > | #   | Move (see table below)                                     | Status  | Gate stated in the plan                           |
 > | :-- | :--------------------------------------------------------- | :------ | :------------------------------------------------ |
-> | 1   | `client/` → `apps/customer-web`, `server/` → `apps/server` | ⬜ OPEN | Spine of Stage B; one-way door; prerequisites met  |
+> | 1   | `client/` → `apps/customer-web`, `server/` → `apps/server` | ✅ DONE (2026-10-21) | Landed as one commit; one-way door; frozen install/type-check/test/arch/build green |
 > | 2   | Split `apps/admin-dashboard`                               | ⬜ OPEN | After move 1; one-way door                        |
 > | 3   | `packages/ui`                                              | ⬜ OPEN | After the admin split                             |
 > | 4   | `packages/i18n`                                            | ⬜ OPEN | Same gate as `packages/ui`                        |
@@ -862,13 +863,13 @@ Secrets: use `supabase secrets set`; remove `client/supabase/functions/.env`.
 
 ### Phase 7: Stage B — the planned product split
 
-> **Status overlay — Phase 7 (synced 2026-10-21):** ⬜ NOT STARTED (2 ⬜ · 1 ⏸ hold)
+> **Status overlay — Phase 7 (synced 2026-10-21):** 🟡 STARTED (1 🟡 · 1 ⬜ · 1 ⏸ hold)
 >
 > | ID   | Task (first column of the table below, verbatim)                                                                                                                                                                                      | Status  | Evidence in tree                                                                                                             |
 > | :--- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :------ | :--------------------------------------------------------------------------------------------------------------------------- |
-> | P7.1 | Execute the moves in section 2 under the gates and order defined there: rename `client`/`server` -> `apps/*`, split `apps/admin-dashboard` out, then extract `packages/{ui,i18n,api-client}`; extract `packages/{kernel,testing,realtime}` only when its own gate fires (second consumer, P2.6, adapter + second consumer) | ⬜ OPEN | `client/` and `server/` are still at the repo root; no `apps/`; `packages/` contains only `contracts`, `db-types`, `domain`. |
+> | P7.1 | Execute the moves in section 2 under the gates and order defined there: rename `client`/`server` -> `apps/*`, split `apps/admin-dashboard` out, then extract `packages/{ui,i18n,api-client}`; extract `packages/{kernel,testing,realtime}` only when its own gate fires (second consumer, P2.6, adapter + second consumer) | 🟡 PARTIAL | Move 1 landed: `apps/customer-web/` and `apps/server/` exist; workspace glob, app `tsconfig` extends, depcruise paths, root `arch` script, CI artifact path, gitignore and lockfile importers updated. Moves 2–10 remain. |
 > | P7.2 | Hold `apps/mobile` and `packages/mobile-*` until the mobile project is greenlit                                                                                                                                                       | ⏸ HOLD  | Held by design. No `apps/mobile`, no `packages/mobile-*` exist — consistent with the plan.                                   |
-> | P7.3 | The Vercel project layout may lag the codebase; that is accepted, not a blocker                                                                                                                                                       | ⬜ OPEN | `client/vercel.json` and `client/.vercel/` unchanged; `.github/workflows/` empty. Follows the split.                         |
+> | P7.3 | The Vercel project layout may lag the codebase; that is accepted, not a blocker                                                                                                                                                       | ⬜ OPEN | CI artifact path is `apps/customer-web/dist`; the Vercel project root still needs switching from `client` to `apps/customer-web` in the dashboard. |
 
 > **Note (Revision 4.1).** The table below is the original plan text and stays as written. Its “dependency order” wording, and its inclusion of `kernel`/`testing` in the rename batch, are superseded by the gates in section 2: rename → admin split → `ui`/`i18n`/`api-client`, then `kernel`/`testing`/`realtime` only when their own gates fire.
 
@@ -946,9 +947,9 @@ _Added in revision 1. Not part of the original plan._
 | Marks                 | Count                                                                                                          |
 | :-------------------- | :------------------------------------------------------------------------------------------------------------- |
 | ✅ DONE               | 13 task rows (P0.1–P0.6, P0.9, P1.2–P1.6, P4.2) plus drift items 1–9 and 11 |
-| 🟡 PARTIAL            | 6 task rows (P1.1, P2.1, P2.2, P2.4, P2.5, P2.6) — see per-phase overlays |
+| 🟡 PARTIAL            | 7 task rows (P1.1, P2.1, P2.2, P2.4, P2.5, P2.6, P7.1) — see per-phase overlays |
 | 🔍 VERIFY             | P0.7 plus inline 🔍 checks inside DONE/PARTIAL rows |
-| ⬜ OPEN / NOT STARTED | P0.8, P2.3, P3.1–P3.3, P4.1, P4.3, P5.1–P5.2, P6.1, P7.1, P7.3 (P7.2 on hold) |
+| ⬜ OPEN / NOT STARTED | P0.8, P2.3, P3.1–P3.3, P4.1, P4.3, P5.1–P5.2, P6.1, P7.3 (P7.2 on hold) |
 
 ### 10.2 Tree-versus-plan observations (recorded, not judged)
 
@@ -1006,6 +1007,7 @@ _Added in revision 1._
 | 2026-10-18 | 3        | Server kernel implemented (`Result`, generic HTTP-free `DomainError`, `Clock`/`IdGenerator`/`Logger` ports, 7 tests); kernel boundary rules added to dependency-cruiser; 75 tests green. |
 | 2026-10-20 | 4        | Closed the Phase 1 cleanup queue. Deleted the client `Result.ts` (server kernel is canonical, decision 9); split `SessionProvider` into provider shell + entity state/hook (P1.4); quarantined the three `legacy-*` files; removed 11 duplicate admin assets, hero duplicates and `hero-*.json`, pruned static Asap weights, deleted 2 unused GLBs; ported the 3D landing system to `shared/ui/three` + `pages/home` (P1.6); added 12 `.gitkeep` placeholders (P0.9). `DomainError` now has a fixed client-safe `message` plus `internalMessage` (8 kernel tests). Arch, type-check, tests and build green. |
 | 2026-10-21 | 4.1      | Section 2 consistency pass, no tree change. Kernel gate restated as “a second consumer” instead of the already-closed P1.3 dedup; `packages/config` removed from the plan (client and server env models differ); the dependency diagram rewritten as **gates + landing order** with the rename first. Stage B exit criterion and P7.1 aligned with those gates. |
+| 2026-10-21 | 5        | Stage B move 1: `client/` → `apps/customer-web/`, `server/` → `apps/server/`. Updated `pnpm-workspace.yaml`, both app `tsconfig` extends paths, `.dependency-cruiser.cjs`, the root `arch` script, `.gitignore`, CI artifact path and `pnpm-lock.yaml` importers; package names unchanged. `pnpm install --frozen-lockfile`, `type-check` (5 tasks), `test` (4 tasks), `arch` and `build` green. |
 
 ### 12.2 Decision log
 
@@ -1025,4 +1027,4 @@ The answers in section 9 are carried here with the phase that depends on each an
 | 10  | Session state belongs to `entities/session/model`; `app/providers/SessionProvider.tsx` only mounts it | Phase 1 (P1.4) | `client/src/app/providers/SessionProvider.tsx`, `client/src/entities/session/model/sessionContext.ts` | 2026-10-20 | Implemented |
 | 11  | The 3D landing system lives in `shared/ui/three` (generic renderer) and `pages/home` (camera, scroll, configs) | Phase 1 (P1.6) / section 6 | `client/src/shared/ui/three/*`, `client/src/pages/home/*` | 2026-10-20 | Implemented |
 | 12  | `DomainError.message` is a fixed client-safe string; detail travels in `internalMessage` and is never forwarded to a client | Phase 1/2 | `server/src/kernel/DomainError.ts`; delivery error mapping (Phase 2) | 2026-10-20 | Implemented in kernel; delivery mapping follows P2 |
-| 13  | Stage B is structurally ready: no duplicate definitions, no live `legacy-*` imports, no unmarked empty directories; sequencing gates remain P0.7, P0.8 and P1.1 | Phase 7 | `client/`, `server/`, `packages/` | 2026-10-20 | Ready except the named gates |
+| 13  | Stage B is structurally ready: no duplicate definitions, no live `legacy-*` imports, no unmarked empty directories; sequencing gates remain P0.7, P0.8 and P1.1 | Phase 7 | `client/`, `server/`, `packages/` | 2026-10-20 | Move 1 landed 2026-10-21; moves 2–10 and the named gates remain |
