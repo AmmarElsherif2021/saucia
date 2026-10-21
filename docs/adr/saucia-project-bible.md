@@ -1,6 +1,6 @@
 # Saucia v2 — Project Bible
 
-> **Revision:** 4 · **Synced to repo tree snapshot of:** 2026-10-20 **Purpose:** the reference of record for Saucia v2 structure, rules, sequencing and decisions. If any other document disagrees with it, raise the conflict and log it in section 12. **Where this lives in the repo:** `docs/adr/saucia-project-bible.md`
+> **Revision:** 4.1 · **Synced to repo tree snapshot of:** 2026-10-20 **Purpose:** the reference of record for Saucia v2 structure, rules, sequencing and decisions. If any other document disagrees with it, raise the conflict and log it in section 12. **Where this lives in the repo:** `docs/adr/saucia-project-bible.md`
 
 ---
 
@@ -19,7 +19,7 @@
 | ⏸ HOLD     | Deliberately not started, as the plan itself specifies                                                          |
 | ℹ️ NOTE    | Observation recorded without a status                                                                           |
 
-**Evidence method and limits.** Statuses were derived by comparing the plan with the repository tree as of 2026-10-20 (Revision 4). The tree shows which files and folders exist, not what is inside them, so "DONE" means the structure is there; the 🔍 items inside each row are the content-level checks still owed. Task IDs (`P<phase>.<row>`) number the rows of each phase table in their original order.
+**Evidence method and limits.** Statuses were derived by comparing the plan with the repository tree as of 2026-10-20 (Revision 4.1). The tree shows which files and folders exist, not what is inside them, so "DONE" means the structure is there; the 🔍 items inside each row are the content-level checks still owed. Task IDs (`P<phase>.<row>`) number the rows of each phase table in their original order.
 
 ### 0.2 Where we are
 
@@ -46,7 +46,7 @@ _Reading of the plan used here:_ Stage A = Phases 0–6; Stage B = Phase 7 toget
 
 0. How to use this document (front matter)
 1. Current-state snapshot
-2. Target structure (Stage B, dependency order, anti-triggers, ownership table)
+2. Target structure (Stage B, gates and landing order, anti-triggers, ownership table)
 3. Boundary rules (3.1 FSD layers, 3.2 Clean rings)
 4. Config files
 5. Edge functions: legacy -> new (including the Deno interop spike)
@@ -67,7 +67,7 @@ _Reading of the plan used here:_ Stage A = Phases 0–6; Stage B = Phase 7 toget
 | Clean ring direction, DI-only access to infrastructure, dependency-cruiser rules                      | 3.2                                               |
 | Workspace rules (`packages-are-leaves`, `server-never-imports-client`, `client-never-imports-server`) | 3.2                                               |
 | Where does X go? (ownership table)                                                                    | Section 2, 'Ownership table'                      |
-| Stage B moves, dependency order, one-way doors, anti-triggers, exit criterion                         | Section 2                                         |
+| Stage B moves, gates and landing order, one-way doors, anti-triggers, exit criterion                     | Section 2                                         |
 | Just-in-time internal packages, turbo/root/CI/Vercel config                                           | Section 4                                         |
 | Edge function mapping, bundle approach, Deno fallback, secrets                                        | Section 5                                         |
 | Placement of the 3D landing system                                                                    | Section 6                                         |
@@ -211,23 +211,24 @@ Stage B is a **product decision**, not a set of observed triggers. The direction
 
 The Vercel deployment staying in sync is explicitly **not** a constraint. The split is the goal; deployment config follows the split. Preview deploys may break for a day while Vercel's root directory catches up — that is accepted, not a blocker. CI runs the full matrix until path filters are updated; the repo is small enough that this is correct.
 
-**Dependency order.** Moves fire in this order; a move cannot fire before the move it depends on:
+**Gates and order.** A move may not fire before its gate is true. Within that constraint, land the moves in this order:
 
 ```
-packages/config        (safe anytime; usually first)
-packages/kernel        ← after Phase 1 kernel dedup lands
-packages/testing       ← after Phase 2 in-memory ports exist
-rename -> apps/*       ← the spine of Stage B
-admin split            ← after the rename; admin code is already namespaced
-packages/ui            ← after the admin split (two apps share a theme)
-packages/i18n          ← same gate as packages/ui
-packages/api-client    ← after the admin split (both apps share edge client)
-packages/realtime      ← after the chat adapter interface is settled AND 2nd consumer
-apps/mobile            ← optional; only when the mobile project is greenlit
-packages/mobile-*      ← only after apps/mobile exists
-shared adapters        ← never (see anti-triggers)
+rename -> apps/*        ← spine; no prerequisite; rewrites every import path
+admin split             ← after the rename; admin code is already namespaced
+packages/ui             ← after the admin split (two apps share a theme)
+packages/i18n           ← same gate as packages/ui
+packages/api-client     ← after the admin split (both apps share the edge client)
+packages/kernel         ← gate: a second app imports Result/DomainError/ports
+packages/testing        ← gate: Phase 2 in-memory ports exist (P2.6)
+packages/realtime       ← gate: settled adapter AND a second consumer
+apps/mobile             ← gate: product greenlight; optional
+packages/mobile-*       ← only after apps/mobile exists
+shared adapters         ← never (see anti-triggers)
 
 ```
+
+`packages/config` is **not planned**: client env (`import.meta.env`, `VITE_*`) and server env (`Deno.env` / `process.env`) are different models and stay app-local — the same reasoning that keeps repository adapters unshared.
 
 **The moves.**
 
@@ -238,7 +239,7 @@ shared adapters        ← never (see anti-triggers)
 | 3   | Extract `packages/ui`                                        | Admin and web both need the Chakra theme, tokens, and shared primitives. Two apps sharing a theme is the trigger; the "10+ components" heuristic is dropped — with two apps it is already worth it.              | Low — folder move + import rewrite                                                                  |
 | 4   | Extract `packages/i18n`                                      | Same reason as `packages/ui`: two apps need one `dict.json`.                                                                                                                                                     | Low                                                                                                 |
 | 5   | Extract `packages/api-client`                                | Admin and web both call the same edge functions with the same `errorNormalizer` and auth wrapper.                                                                                                                | Low                                                                                                 |
-| 6   | Extract `packages/kernel`                                    | `Result`, `DomainError`, `Clock`, `IdGenerator`, `Logger` are now needed by `apps/server`, `apps/admin-dashboard`, and `apps/customer-web`. Depends on the Phase 1 kernel dedup landing first.                   | Medium — reversible with a codemod                                                                  |
+| 6   | Extract `packages/kernel`                                    | `Result`, `DomainError`, `Clock`, `IdGenerator`, `Logger` are consumed by `apps/server` today. Extract only when a second app actually imports them: P1.3 removed the duplicate, it did not create a consumer. | Medium — reversible with a codemod                                                                  |
 | 7   | Extract `packages/testing`                                   | In-memory ports and the contract-test harness are consumed by server and by both web apps' integration tests. Depends on Phase 2.                                                                                | Medium                                                                                              |
 | 8   | Extract `packages/realtime`                                  | Only after the chat transport adapter has a settled interface **and** both web and admin chat consume it. One consumer keeps it local.                                                                           | Medium                                                                                              |
 | 9   | `apps/mobile` (optional)                                     | Only when the mobile project is greenlit. Until then, the rest of Stage B is designed so that a future mobile app is _addable_, not _already present_.                                                           | High — new deployable, not a move                                                                   |
@@ -258,17 +259,18 @@ shared adapters        ← never (see anti-triggers)
 - "The empty folder bothers me."
 - "A blog post recommended it."
 - First use of a pattern (extract on the second consumer).
+- Pre-creating `packages/config` — client env (`import.meta.env`) and server env (`Deno.env` / `process.env`) are different models.
 - Refactoring "while we're in here."
 - Pre-creating `packages/mobile-*` before `apps/mobile` exists.
 
 **One-way doors.** Steps 1 (rename) and 2 (admin split) are the only one-way doors. Everything else is a folder move plus an import rewrite. Land each of steps 1 and 2 as a single commit so that `pnpm install && pnpm build && pnpm type-check && pnpm arch` is green at every point a teammate checks out.
 
-**Exit criterion for Stage B.** `apps/` contains `customer-web`, `admin-dashboard`, and `server` (and `mobile` if greenlit). `packages/` contains `domain`, `contracts`, `db-types`, `ui`, `i18n`, `api-client`, `kernel`, `testing`, and optionally `realtime` and `mobile-*`. No app imports another app. Every cross-app dependency goes through a `@saucia/*` package. `pnpm arch` is green. The Vercel project layout may lag — that is accepted, not a blocker.
+**Exit criterion for Stage B.** `apps/` contains `customer-web`, `admin-dashboard`, and `server` (and `mobile` if greenlit). `packages/` contains `domain`, `contracts`, `db-types`, `ui`, `i18n`, `api-client`, plus `kernel` and `testing` once their gates have fired, and optionally `realtime` and `mobile-*`. No app imports another app. Every cross-app dependency goes through a `@saucia/*` package. `pnpm arch` is green. The Vercel project layout may lag — that is accepted, not a blocker.
 
 **Review points (target structure):**
 
 - Draw the Stage A tree and the Stage B tree side by side; annotate each `packages/*` extraction with the consumer that justifies it.
-- Walk through the dependency-order list and point at the phase in section 7 that unblocks each move.
+- Walk through the gates-and-order list and point at the phase in section 7 that unblocks each move.
 - Show the "anti-triggers" list as a decision log; each rejected extraction gets a one-line reason.
 - For the one-way doors (rename, admin split), show the commit plan: one commit per move, green CI at each step.
 
@@ -860,13 +862,15 @@ Secrets: use `supabase secrets set`; remove `client/supabase/functions/.env`.
 
 ### Phase 7: Stage B — the planned product split
 
-> **Status overlay — Phase 7 (synced 2026-10-08):** ⬜ NOT STARTED (2 ⬜ · 1 ⏸ hold)
+> **Status overlay — Phase 7 (synced 2026-10-21):** ⬜ NOT STARTED (2 ⬜ · 1 ⏸ hold)
 >
 > | ID   | Task (first column of the table below, verbatim)                                                                                                                                                                                      | Status  | Evidence in tree                                                                                                             |
 > | :--- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :------ | :--------------------------------------------------------------------------------------------------------------------------- |
-> | P7.1 | Execute the moves in section 2 in dependency order: rename `client`/`server` -> `apps/*`, split `apps/admin-dashboard` out, then extract `packages/{ui,i18n,api-client,kernel,testing}` (and `realtime` once its 2nd consumer exists) | ⬜ OPEN | `client/` and `server/` are still at the repo root; no `apps/`; `packages/` contains only `contracts`, `db-types`, `domain`. |
+> | P7.1 | Execute the moves in section 2 under the gates and order defined there: rename `client`/`server` -> `apps/*`, split `apps/admin-dashboard` out, then extract `packages/{ui,i18n,api-client}`; extract `packages/{kernel,testing,realtime}` only when its own gate fires (second consumer, P2.6, adapter + second consumer) | ⬜ OPEN | `client/` and `server/` are still at the repo root; no `apps/`; `packages/` contains only `contracts`, `db-types`, `domain`. |
 > | P7.2 | Hold `apps/mobile` and `packages/mobile-*` until the mobile project is greenlit                                                                                                                                                       | ⏸ HOLD  | Held by design. No `apps/mobile`, no `packages/mobile-*` exist — consistent with the plan.                                   |
 > | P7.3 | The Vercel project layout may lag the codebase; that is accepted, not a blocker                                                                                                                                                       | ⬜ OPEN | `client/vercel.json` and `client/.vercel/` unchanged; `.github/workflows/` empty. Follows the split.                         |
+
+> **Note (Revision 4.1).** The table below is the original plan text and stays as written. Its “dependency order” wording, and its inclusion of `kernel`/`testing` in the rename batch, are superseded by the gates in section 2: rename → admin split → `ui`/`i18n`/`api-client`, then `kernel`/`testing`/`realtime` only when their own gates fire.
 
 | Task                                                                                                                                                                                                                                  | Suggested legacy reference (from `_legacy/`)                                                                                                                                                                                                                                                                                   | Explanation                                                                                                 |
 | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------- |
@@ -1001,6 +1005,7 @@ _Added in revision 1._
 | 2026-10-17 | 2        | Domain and contracts completed (money, totals, cart, phone, BMI/TDEE/nutrition; error codes, order/subscription schemas); P1.2 order-status dedup; 68 tests; type-check/test/arch green; done/dead points extracted to 0.8. |
 | 2026-10-18 | 3        | Server kernel implemented (`Result`, generic HTTP-free `DomainError`, `Clock`/`IdGenerator`/`Logger` ports, 7 tests); kernel boundary rules added to dependency-cruiser; 75 tests green. |
 | 2026-10-20 | 4        | Closed the Phase 1 cleanup queue. Deleted the client `Result.ts` (server kernel is canonical, decision 9); split `SessionProvider` into provider shell + entity state/hook (P1.4); quarantined the three `legacy-*` files; removed 11 duplicate admin assets, hero duplicates and `hero-*.json`, pruned static Asap weights, deleted 2 unused GLBs; ported the 3D landing system to `shared/ui/three` + `pages/home` (P1.6); added 12 `.gitkeep` placeholders (P0.9). `DomainError` now has a fixed client-safe `message` plus `internalMessage` (8 kernel tests). Arch, type-check, tests and build green. |
+| 2026-10-21 | 4.1      | Section 2 consistency pass, no tree change. Kernel gate restated as “a second consumer” instead of the already-closed P1.3 dedup; `packages/config` removed from the plan (client and server env models differ); the dependency diagram rewritten as **gates + landing order** with the rename first. Stage B exit criterion and P7.1 aligned with those gates. |
 
 ### 12.2 Decision log
 
