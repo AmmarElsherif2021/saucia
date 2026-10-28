@@ -33,7 +33,6 @@ The differentiation below is four architectural *levels* (type, value, behaviour
 ## Level 1 — Type level
 
 The compiler sees a type. What kind of type, and where does it come from?
-
 **Domain** — a *derived union* from a canonical literal tuple. This is the TypeScript equivalent of a Value Object: identity is the value itself, not an object reference.
 
 ```ts

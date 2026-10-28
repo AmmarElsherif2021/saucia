@@ -8,7 +8,8 @@
   },
   "scripts": {
     "type-check": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "build:edge": "esbuild runtimes/supabase-edge/entry.ts --bundle --format=esm --platform=neutral --target=es2022 --tsconfig=../../tsconfig.base.json --outfile=../../supabase/functions/_shared/server-bundle.mjs"
   },
   "dependencies": {
     "@saucia/contracts": "workspace:*",
@@ -16,6 +17,7 @@
     "@saucia/domain": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^26.6.5"
+    "@types/node": "^26.6.5",
+    "esbuild": "^0.28.2"
   }
 }
