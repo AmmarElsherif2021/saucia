@@ -1,12 +1,10 @@
-
-
 # Saucia v2 — Project Bible
 
-> **Revision:** 4 · **Snapshot:** 2026-10-27 · **Purpose:** the reference of record for structure, rules, sequencing and decisions.
+> **Revision:** 5 · **Snapshot:** 2026-11-01 · **Purpose:** the reference of record for structure, rules, sequencing and decisions.
 >
-> This revision is a **current-state document**. Completed tasks and superseded decisions are not restated; they live in git history (Revisions 1–7) and in `_legacy/`. If a task is not listed as open, it is done.
+> This revision is a **current-state document**. Completed tasks and superseded decisions are not restated; they live in git history and in `_legacy/`. If a task is not listed as open, it is considered done unless the codebase proves otherwise.
 
-**Where things are:** `apps/customer-web/` (React), `apps/server/` (Clean core + edge bundle source), `packages/{domain,contracts,db-types}` (shared leaves), `supabase/` (migrations, seed, function entries), `docs/` (this file), `_legacy/` (quarantined v1).
+**Where things are:** canonical target structure is `apps/customer-web/` (React), `apps/server/` (Clean core + edge bundle source); `packages/{domain,contracts,db-types}` remain the shared leaves; `supabase/` holds migrations, seed and edge entries. The current repo tree still contains legacy root-level `client/` and `server/` folders, so this repository is in a mixed-state migration. Treat `apps/*` as the planning source of truth, but do not assume the legacy roots are deleted yet.
 
 ---
 
@@ -21,11 +19,12 @@
 | ⏸ HOLD | Deliberately not started |
 
 - **Stage A** = Phases 0–6. **Stage B** = Phase 7 + section 3.
-- Paths are current (`apps/...`). Older docs may say `client/` or `server/`; read them as `apps/customer-web/` or `apps/server/`.
+- Paths are current (`apps/...`). Older docs may still say `client/` or `server/`; read them as `apps/customer-web/` or `apps/server/` when the target structure is intended.
+- The repository is mixed-state: both the target `apps/*` layout and legacy `client/` / `server/` roots are present in `main` today.
 - A task may not start before its **gate** is true.
 - **V1 is deployed by another owner.** Nothing in v2 may change the v1 deployment, `_legacy/`, or the remote Supabase project until the rollout is agreed.
 
-**Verification baseline (2026-10-21):** `pnpm install --frozen-lockfile`, `pnpm type-check`, `pnpm test` (76 tests), `pnpm arch` (0 violations, 1,634 modules) and `pnpm build` are green.
+**Current code evidence (2026-11-01):** the repo contains both `apps/customer-web/` + `apps/server/` and still contains legacy `client/` + `server/` directories. The migrated target structure is present, but the rename is not yet cleanly complete.
 
 ---
 
@@ -33,15 +32,15 @@
 
 | Area | State |
 | :--- | :--- |
-| Workspace | pnpm + Turborepo; globs `apps/*`, `packages/*`; 6 projects |
-| `apps/customer-web` | FSD × Clean skeleton; 3D landing ported; app bootstrap still TODO. Not yet configured against v2 |
-| `apps/server` | Kernel complete (8 tests). `Order` aggregate done (kernel `Result`, `reconstitute` validation). `SubmitOrder`, controller, repository and composition still TODO |
-| `packages/domain` | Money, order totals, order-status rules, cart rules, phone validation, BMI/TDEE/nutrition: 46 tests |
-| `packages/contracts` | Error codes, order-status schema, submit-order and subscription/enrollment schemas: 22 tests |
-| `packages/db-types` | Generated row types |
-| `supabase/` | Config present (BOM removed); `migrations/` empty; function entry stubs exist, none wired |
-| Local tooling | Docker Desktop (WSL 2) and Supabase CLI installed. Local `supabase start` blocked on pulling `supabase/postgres:17.6.1.054` (network timeouts) |
-| Stage B | **Move 1 landed**. Moves 2–10 open (§3) |
+| Workspace | pnpm + Turborepo; target layout under `apps/*`; legacy root `client/` and `server/` folders still present in the tree |
+| `apps/customer-web` | FSD × Clean skeleton exists; landing page and app bootstrap are present; legacy root client still remains as a compatibility layer |
+| `apps/server` | Server core and edge runtime scaffolding exist; `@saucia/domain`, `contracts` and `db-types` are wired; target server layout is visible but not all phase work is complete |
+| `packages/domain` | Pure business rules and validation logic exist; order/cart/health rules are present |
+| `packages/contracts` | Shared request/response and status schemas exist |
+| `packages/db-types` | Generated DB row types and tooling exist |
+| `supabase/` | Config, migrations and edge function entry points exist; migrations are not yet complete for the remaining phases |
+| Local tooling | Docker Desktop (WSL 2), Supabase CLI and edge tooling are expected; local image pull reliability remains a deployment blocker |
+| Stage B | **Migration is in progress**. Target paths exist, but legacy roots are still present in the current tree; do not mark move 1 as cleanly complete |
 
 **Hygiene invariants (keep these true):** 0 duplicate definitions, 0 live `legacy-*` imports, 0 unmarked empty directories, 0 byte-identical asset groups.
 
@@ -81,7 +80,7 @@ domain <- ports + application <- infrastructure (implements ports)
 
 Enforced by `.dependency-cruiser.cjs` (run `pnpm arch`): `client-inner-rings-no-infra`, `client-infra-only-from-di`, `client-domain-pure`, `server-domain-pure` (allows `@saucia/domain` and the kernel; **P1.3 pending**), `server-application-no-outer`, `server-delivery-no-infra`, `server-no-cross-module-internals`, `server-kernel-imports-nothing`, `modules-public-api-only` (**planned, P1.2**), `packages-are-leaves`, `server-never-imports-client`, `client-never-imports-server`, `packages-kernel-*`.
 
-`packages/domain` gains `pricing/`, `payment/` (Phase 6) and `subscription/consumptionRules.ts`. These are shared rules and stay free of I/O.
+`packages/domain` gains `pricing/`, `payment/` (Phase 6) and `subscription/consumptionRules.ts`. These stay free of I/O.
 
 ### 2.3 Server kernel (`apps/server/src/kernel`)
 
@@ -94,11 +93,12 @@ The dependency sink: `Result`, `DomainError`, and the ports `Clock` / `IdGenerat
 - Entities and aggregates (`Order`, `Meal`, `Cart`, `Subscription`) never live in the kernel.
 
 ### 2.4 Supabase access (path rules)
- **Client**: anon key + RLS, read-only. 
- **Server**: service role, only via platform/supabase and module infrastructure/supabase. 
- **Writes of orders, money or status**: edge functions only. 
- **Schema, RLS and invariant triggers**: supabase/migrations only. packages/contracts never imports packages/db-types.
- 
+
+**Client**: anon key + RLS, read-only.
+**Server**: service role, only via platform/supabase and module infrastructure/supabase.
+**Writes of orders, money or status**: edge functions only.
+**Schema, RLS and invariant triggers**: `supabase/migrations` only. `packages/contracts` never imports `packages/db-types`.
+
 ### 2.5 Workspace boundaries
 
 - `packages/*` are leaves: they never import `apps/` or `supabase/`.
@@ -127,8 +127,8 @@ The dependency sink: `Result`, `DomainError`, and the ports `Clock` / `IdGenerat
 | Chat transport | `apps/customer-web/src/entities/message/infrastructure` → `packages/realtime` after adapter and second consumer |
 | Generic three.js renderer | `apps/customer-web/src/shared/ui/three` |
 | Landing page composition | `apps/customer-web/src/pages/home` |
-| Supabase client factories | anon: apps/customer-web/src/shared/api → packages/api-client; service role: apps/server/src/platform/supabase |
-| RLS policies, constraints, triggers | supabase/migrations |
+| Supabase client factories | anon: `apps/customer-web/src/shared/api` → `packages/api-client`; service role: `apps/server/src/platform/supabase` |
+| RLS policies, constraints, triggers | `supabase/migrations` |
 
 **Error messages** are client-only: the server returns codes; the client maps codes to `dict.json` keys.
 
@@ -145,18 +145,19 @@ The dependency sink: `Result`, `DomainError`, and the ports `Clock` / `IdGenerat
 - Client-side room checks as a security boundary for support chat (decision 18).
 - Client-side writes to order, payment or status tables.
 - Service-role key in any client-reachable ring.
+
 ---
 
 ## 3. Stage B: target structure
 
-**Status:** 🟡 IN PROGRESS. Move 1 landed; moves 2–10 open.
+**Status:** 🟡 IN PROGRESS. The target `apps/*` structure is reflected in the tree, but the repository still contains root-level `client/` and `server/` folders. The migration is therefore not complete until the legacy roots are removed or deliberately retained as compatibility wrappers.
 
 **Target:** `apps/{customer-web,admin-dashboard,server}` (+ optional `mobile`); `packages/{domain,contracts,db-types,ui,i18n,api-client,kernel,testing}` (+ optional `realtime`, `mobile-*`). No app imports another app.
 
 **Gates and order.**
 
 ```
-rename -> apps/*        ✅ done
+rename -> apps/*        🟡 mixed state: target paths exist; legacy root paths still present
 admin split             ← after the rename; one-way door
 packages/ui             ← after the admin split
 packages/i18n           ← same gate as ui
@@ -173,7 +174,7 @@ shared adapters         ← never (see §2.6)
 
 | # | Move | Gate / rationale |
 | :-- | :--- | :--- |
-| 1 | `client/` → `apps/customer-web`, `server/` → `apps/server` | ✅ done 2026-10-21 (one-way door) |
+| 1 | `client/` → `apps/customer-web`, `server/` → `apps/server` | 🟡 partial: target paths exist, legacy roots still present |
 | 2 | Split `apps/admin-dashboard` from customer-web | after move 1; one-way door |
 | 3 | `packages/ui` | after move 2 |
 | 4 | `packages/i18n` | same gate as move 3 |
@@ -185,9 +186,9 @@ shared adapters         ← never (see §2.6)
 | 10 | `packages/mobile-{ui,native}` | ⏸ hold; after move 9 |
 | — | Shared repository adapters | never (§2.6) |
 
-**One-way doors:** moves 1 (done) and 2. Land each as one commit with `pnpm install --frozen-lockfile && pnpm build && pnpm type-check && pnpm arch` green.
+**One-way doors:** moves 1 and 2 remain gated by the repository state. Do not call move 1 complete while the legacy roots remain in `main`.
 
-**Deployment.** The Vercel root must switch from `client` to `apps/customer-web` (keep "include files outside Root Directory" on). The CI artifact path is `apps/customer-web/dist`. Edge deploy is unaffected by Vercel.
+**Deployment.** The Vercel root must switch from `client` to `apps/customer-web` once the rename is final. Edge deploy is unaffected by Vercel.
 
 **Exit criterion.** `apps/` contains `customer-web`, `admin-dashboard`, `server` (+ `mobile` if greenlit); `packages/` contains the listed shared packages once their gates fire; no app imports another app; `pnpm arch` green.
 
@@ -290,104 +291,6 @@ src/
         └── delivery/http/                      [NEW]
 ```
 
-#### 2. Shared packages
-
-```
-packages/
-├── domain/src/
-│   ├── money/                                (unchanged)
-│   ├── order/                                (unchanged; orderRules, computeOrderTotals)
-│   ├── cart/ identity/ subscription/ BMI/TDEE  (unchanged)
-│   ├── subscription/consumptionRules.ts      [NEW] P4.1
-│   ├── subscription/consumptionRules.test.ts [NEW]
-│   ├── pricing/                              [NEW] P3.4
-│   │   ├── discountRules.ts                  [NEW]
-│   │   └── discountRules.test.ts             [NEW]
-│   ├── payment/                              [HOLD] P6.2, open question 2
-│   │   ├── paymentStatusRules.ts             [NEW]
-│   │   └── paymentStatusRules.test.ts        [NEW]
-│   └── index.ts                              [EDIT] export pricing, consumption, payment rules
-│
-├── contracts/src/
-│   ├── errors/                               (unchanged)
-│   ├── order/submitOrder.schema.ts           [EDIT] add additive item lines (P2.7)
-│   ├── subscription/                         (unchanged)
-│   ├── meal/                                 [NEW] P3.1, P3.6
-│   │   ├── mealSummary.schema.ts             [NEW] read DTO, derived from domain
-│   │   └── mealSummary.schema.test.ts        [NEW]
-│   ├── payment/                              [HOLD] P6.2
-│   │   ├── paymentStatus.schema.ts           [NEW]
-│   │   └── paymentStatus.schema.test.ts      [NEW]
-│   ├── support/                              [HOLD] P5.1
-│   │   ├── supportMessage.schema.ts          [NEW]
-│   │   └── supportMessage.schema.test.ts     [NEW]
-│   └── index.ts                              [EDIT] export new schemas
-│
-└── db-types/src/
-    └── database.ts                           [REGENERATE] pnpm db:types, after migrations (never by hand)
-```
-
-#### 3. Supabase: `supabase/`
-
-```
-supabase/
-├── functions/
-│   ├── _shared/server-bundle.mjs             (generated, gitignored; P0.8)
-│   ├── order-processing/index.ts             [EDIT] thin entry; imports bundle (P0.8, P2.4)
-│   ├── subscription-mgmt/index.ts            [EDIT] thin entry (P4.1)
-│   ├── cron-jobs/index.ts                    [EDIT] thin entry for consumption and delivery dates (P4.3)
-│   ├── payment-webhook/index.ts              [EDIT] HOLD until provider confirmed (P6.3)
-│   ├── notifications/index.ts                [NEW] HOLD, P6.3
-│   ├── support/index.ts                      [NEW] HOLD until P5.2 chooses WebSocket or Realtime
-│   └── auth-handlers/                        (unchanged; do not create yet)
-├── migrations/                               (empty; created by supabase migration new)
-│   ├── <ts>_orders_schema.sql                [NEW] P2.3
-│   ├── <ts>_menu_schema.sql                  [NEW] P3.1
-│   ├── <ts>_subscriptions_schema.sql         [NEW] P4.1
-│   ├── <ts>_support_schema.sql               [NEW] P5.1, HOLD
-│   └── <ts>_rls_policies.sql                 [NEW] P5.3, HOLD
-└── seed/                                     (unchanged)
-```
-
-#### 4. Client: `apps/customer-web/src` (FSD)
-
-New server modules need matching client slices only where a screen uses them.
-
-```
-src/
-├── entities/
-│   ├── meal/                                 [EDIT] index.ts + model/ (P3.1 consumer side)
-│   ├── order/model/                          [NEW] useOrders replacement (P2.5)
-│   ├── order/infrastructure/                 (exists)
-│   ├── subscription/model/                   [NEW] P4.4
-│   ├── cart/model/                           [NEW] from CartContext (section 7)
-│   └── message/                              [HOLD] Phase 5
-├── features/
-│   ├── submit-order/                         [EDIT] was index.ts only; P2.5
-│   ├── enroll-subscription/                  [EDIT] P4.4
-│   ├── calculate-health-plan/                [EDIT] P4.4
-│   ├── send-support-message/                 [NEW] HOLD, P5.1
-│   └── …other slices                         (unchanged)
-├── widgets/
-│   ├── subscription-dashboard/               [EDIT] P4.4
-│   └── …other widgets                        (unchanged)
-└── pages/
-    ├── checkout/                             [EDIT] uses submit-order
-    ├── premium/                              [EDIT] uses enroll-subscription
-    └── admin/                                [EDIT] lazy-loaded (P3.3)
-```
-
-### Rules for adding a new server module
-
-Use this checklist before creating any module folder.
-
-1. **One bounded context per folder.** Name it after the business concept, not the table.
-2. **Create the public `index.ts` first.** Other modules and composition import through it only.
-3. **Ports belong to the consumer.** If `order` needs something from `menu`, the port goes in `order/application/ports`, and `menu` provides the adapter.
-4. **Domain may import `@saucia/domain` and the kernel only.** Run `pnpm arch` after each module.
-5. **Database rules stay in the database only where they protect data.** CHECK constraints, foreign keys and sequences stay in migrations. Sequencing (delivery → consumption) stays in use cases (decision 16).
-6. **Client slices follow the server only where a screen calls it.** Do not mirror every server module into `entities/`.
-
 ---
 
 ## 4. Open work
@@ -397,27 +300,27 @@ Use this checklist before creating any module folder.
 | ID | Task | Status | Remaining |
 | :-- | :--- | :--- | :--- |
 | P0.7 | Verify `.env` files are ignored and never committed; rotate if needed | ✅ DONE | None |
-| P0.8 | Deno interop spike: bundle inlines `@saucia/domain`; `order-processing` returns 200 locally | 🟡 PARTIAL | Bundle and entry files written. Blocked on pulling `supabase/postgres:17.6.1.054`. Remaining: `supabase start`, `functions serve`, curl 200, evidence. Remote deploy deferred (v1 owner coordination). `deploy.yml` not yet created |
+| P0.8 | Deno interop spike: bundle inlines `@saucia/domain`; `order-processing` returns 200 locally | 🟡 PARTIAL | Bundle and entry files are present; final local verification remains blocked on stable Supabase image pull |
 
 ### Phase 1: boundary enforcement
 
 | ID | Task | Status | Remaining |
 | :-- | :--- | :--- | :--- |
-| P1.1 | Root ESLint boundary config + Steiger enforcement; `ci.yml` | 🟡 PARTIAL | `apps/customer-web/eslint.config.js`, `steiger.config.cjs`, `.github/workflows/CI.yaml` exist; no root `eslint.config.js`; Steiger not in `pnpm arch` |
-| P1.2 | `modules-public-api-only` dependency-cruiser rule (decision 14) | ⬜ OPEN | Add rule; confirm `pnpm arch` passes after the module `index.ts` files exist |
+| P1.1 | Root ESLint boundary config + Steiger enforcement; `ci.yml` | 🟡 PARTIAL | App-level config exists; root-level enforcement remains partial |
+| P1.2 | `modules-public-api-only` dependency-cruiser rule (decision 14) | ⬜ OPEN | Add rule and confirm `pnpm arch` passes after module `index.ts` files exist |
 | P1.3 | `server-domain-pure`: allow `@saucia/domain` and the kernel (decision 15) | ⬜ OPEN | Update rule and its description; confirm `pnpm arch` passes |
 
 ### Phase 2: order money path
 
 | ID | Task | Status | Remaining |
 | :-- | :--- | :--- | :--- |
-| P2.1 | Validate `submitOrder.schema` on the server; map codes to i18n keys on the client | 🟡 PARTIAL | Schemas and `ErrorCode` exist; server validation and client mapping missing |
-| P2.2 | `SubmitOrder` recomputes totals via `MealPriceReader`; never trusts client totals | 🟡 PARTIAL | `Order` aggregate ✅. `SubmitOrder.ts` and menu price reader ⬜ |
-| P2.3 | `orders`, `order_meals`, `order_items` migrations with CHECK and total CHECK; `order_number` sequence | ⬜ OPEN | `supabase/migrations/` empty |
-| P2.4 | `order-processing` function via bundle; port `process-order`, `manage-order`, `list-orders`, `track-last-order` | 🟡 PARTIAL | Stub entry; depends on P0.8 |
-| P2.5 | `features/submit-order` + `entities/order` call the edge function via `edgeClient`/`errorNormalizer` | 🟡 PARTIAL | API modules and client repo exist; feature is `index.ts` only; no `entities/order/model` |
-| P2.6 | Domain tests ✅ (46 domain + 22 contract + Order tests); use-case tests with in-memory ports | 🟡 PARTIAL | Use-case tests ⬜ |
-| P2.7 | `OrderLine` supports additive item lines (`order_items`) with `max_free_per_meal` rule | ⬜ OPEN | Needs P3.4 pricing rules |
+| P2.1 | Validate `submitOrder.schema` on the server; map codes to i18n keys on the client | 🟡 PARTIAL | Schemas and `ErrorCode` exist; server validation and client mapping remain incomplete |
+| P2.2 | `SubmitOrder` recomputes totals via `MealPriceReader`; never trusts client totals | 🟡 PARTIAL | `Order` aggregate exists; `SubmitOrder.ts` and menu price reader remain pending |
+| P2.3 | `orders`, `order_meals`, `order_items` migrations with CHECK and total CHECK; `order_number` sequence | ⬜ OPEN | `supabase/migrations/` not complete |
+| P2.4 | `order-processing` function via bundle; port `process-order`, `manage-order`, `list-orders`, `track-last-order` | 🟡 PARTIAL | Stub entry exists; depends on stable edge runtime |
+| P2.5 | `features/submit-order` + `entities/order` call the edge function via `edgeClient`/`errorNormalizer` | 🟡 PARTIAL | API modules and repo scaffolding exist; feature remains thin |
+| P2.6 | Domain tests ✅; use-case tests with in-memory ports | 🟡 PARTIAL | Use-case tests remain incomplete |
+| P2.7 | `OrderLine` supports additive item lines (`order_items`) with `max_free_per_meal` rule | ⬜ OPEN | Needs pricing rules |
 | P2.8 | Verify legacy order status and payment values against canonical lists; document mapping | ⬜ OPEN | Open questions 1 and 2 (§9) |
 
 **Exit:** checkout works end to end against local Supabase; client totals are display-only.
@@ -426,11 +329,11 @@ Use this checklist before creating any module folder.
 
 | ID | Task | Status | Remaining |
 | :-- | :--- | :--- | :--- |
-| P3.1 | `modules/menu` with `Meal`, `Item`, `MenuPriceReader`; `meals`, `items`, `meal_items` migration | ⬜ OPEN | Folder holds `.gitkeep` only |
+| P3.1 | `modules/menu` with `Meal`, `Item`, `MenuPriceReader`; `meals`, `items`, `meal_items` migration | ⬜ OPEN | Need module and migration |
 | P3.2 | Admin features (`admin-create-meal`, `admin-update-order-status`) on server use cases | ⬜ OPEN | Placeholders only |
 | P3.3 | Keep admin lazy-loaded | ⬜ OPEN | Nothing to verify until admin exists |
-| P3.4 | `packages/domain/pricing`: `discountRules.ts` (percentage discount, free-additive allowance) | ⬜ OPEN | New. Open question 4 |
-| P3.5 | Rating aggregation as a use case on review publish (replaces `trigger_update_meal_rating_*`) | ⬜ OPEN | Needs `meal_reviews` migration |
+| P3.4 | `packages/domain/pricing`: `discountRules.ts` (percentage discount, free-additive allowance) | ⬜ OPEN | Open question 4 |
+| P3.5 | Rating aggregation as a use case on review publish | ⬜ OPEN | Needs `meal_reviews` migration |
 | P3.6 | Allergy and dietary filters (`meal_allergies`, `item_allergies`) | ⬜ OPEN | Read model |
 
 ### Phase 4: subscriptions
@@ -438,8 +341,8 @@ Use this checklist before creating any module folder.
 | ID | Task | Status | Remaining |
 | :-- | :--- | :--- | :--- |
 | P4.1 | `user_subscriptions` and `plan_meals` migration; `packages/domain/subscription/consumptionRules.ts` | ⬜ OPEN | New |
-| P4.2 | Delivery records consumption in the same `UnitOfWork` as the status change (replaces `trigger_order_delivery`) | ⬜ OPEN | Depends on P2.3, P4.1 |
-| P4.3 | Delivery-date policy in `subscription` domain (replaces `trigger_order_delivery_dates`) | ⬜ OPEN | Open question 3 |
+| P4.2 | Delivery records consumption in the same `UnitOfWork` as the status change | ⬜ OPEN | Depends on P2.3, P4.1 |
+| P4.3 | Delivery-date policy in `subscription` domain | ⬜ OPEN | Open question 3 |
 | P4.4 | Client `enroll-subscription`, `calculate-health-plan`, `subscription-dashboard` | ⬜ OPEN | Placeholders |
 
 ### Phase 5: support chat
@@ -448,7 +351,7 @@ Use this checklist before creating any module folder.
 | :-- | :--- | :--- | :--- |
 | P5.1 | `modules/support`; `user_messages` migration | ⬜ OPEN | No module |
 | P5.2 | Realtime adapter behind a port; decide WebSocket or Realtime | ⬜ OPEN | Gated by P5.1 |
-| P5.3 | Authorization by RLS: users see their `user_id` rows; admins by role. Replaces the legacy client-side room check (decision 18) | ⬜ OPEN | Security-critical |
+| P5.3 | Authorization by RLS: users see their `user_id` rows; admins by role | ⬜ OPEN | Security-critical |
 
 ### Phase 6: payments and notifications
 
@@ -462,9 +365,9 @@ Use this checklist before creating any module folder.
 
 | ID | Task | Status | Remaining |
 | :-- | :--- | :--- | :--- |
-| P7.1 | Execute moves 2–10 under the gates in §3 | 🟡 PARTIAL | Move 1 done |
+| P7.1 | Execute moves 2–10 under the gates in §3 | 🟡 PARTIAL | Mixed-state repo; final move not complete |
 | P7.2 | Hold `apps/mobile` / `packages/mobile-*` | ⏸ HOLD | By design |
-| P7.3 | Vercel root switch | ⬜ OPEN | Dashboard root still `client` |
+| P7.3 | Vercel root switch | ⬜ OPEN | Root still not fully cut over in the current tree |
 
 ### Phase 8: legacy data
 
@@ -476,13 +379,13 @@ Use this checklist before creating any module folder.
 
 | Gate | Criterion | State |
 | :--- | :--- | :--- |
-| Phase 0 | install/build/type-check pass; local Supabase spike passes | 🟡 PARTIAL: local commands green; spike blocked on image pull; Vercel preview not re-run |
-| Phase 1 | `pnpm arch` + `pnpm lint` green at `error`; zero new `legacy-*` imports | 🟡 PARTIAL: arch green; P1.2 and P1.3 pending; lint and Steiger missing |
+| Phase 0 | install/build/type-check pass; local Supabase spike passes | 🟡 PARTIAL: repo contains target structure and legacy roots together; end-to-end local proof not yet clean |
+| Phase 1 | `pnpm arch` + `pnpm lint` green at `error`; zero new `legacy-*` imports | 🟡 PARTIAL: app-level config exists; root-level enforcement pending |
 | Phase 2 | Checkout end to end against local Supabase | ⬜ NOT MET |
 | Phases 3–6 | Per-task review | ⬜ NOT STARTED |
-| Stage B | §3 exit criterion | 🟡 IN PROGRESS: move 1 done |
+| Stage B | §3 exit criterion | 🟡 IN PROGRESS: mixed-state repo; final rename still outstanding |
 
-> Legacy reference paths remain in `_legacy/` and in git history (Revisions ≤ 7).
+> Legacy reference paths remain in `_legacy/` and in git history. The current `main` branch is mixed-state and should be treated as transitional rather than final.
 
 ---
 
@@ -492,7 +395,7 @@ One thin entry per function, delegating to the server bundle.
 
 | Legacy | New home | State |
 | :--- | :--- | :--- |
-| `process-order` / `manage-order` | `order-processing` → `SubmitOrder` / `UpdateOrderStatus` | 🟡 stubs; use cases not wired |
+| `process-order` / `manage-order` | `order-processing` → `SubmitOrder` / `UpdateOrderStatus` | 🟡 stubs; use cases not fully wired |
 | `list-orders` / `track-last-order` | `order-processing` → `ListOrders` / `GetLastOrder` | ⬜ no use cases |
 | `order-delivery` | `order-processing` → delivery route | ⬜ confirm behaviour |
 | `subscription-orders` | `cron-jobs` + `subscription-mgmt` | 🟡 stubs, no logic |
@@ -529,9 +432,9 @@ One thin entry per function, delegating to the server bundle.
 
 | Legacy | v2 home | State |
 | :--- | :--- | :--- |
-| `CartContext.jsx` | `apps/customer-web/src/entities/cart/model` (+ `LocalStorageCartRepository`) | 🟡 repository exists; no `model/` |
+| `CartContext.jsx` | `apps/customer-web/src/entities/cart/model` (+ `LocalStorageCartRepository`) | 🟡 repository exists; no final model split |
 | `useOrders` | `apps/customer-web/src/entities/order/model` | ⬜ absent |
-| `orderAPI.jsx` | `entities/order/infrastructure` + `features/submit-order` | 🟡 repo exists; feature empty |
+| `orderAPI.jsx` | `entities/order/infrastructure` + `features/submit-order` | 🟡 repo exists; feature remains thin |
 | `ElementsContext` | TanStack Query hooks in each entity's `model/` | ⬜ none yet |
 | `server/database/*` | `supabase/migrations` | 🟡 seed moved; migrations empty |
 | `orders`, `order_meals`, `order_items` | `supabase/migrations` (P2.3) | ⬜ schema pending |
@@ -558,7 +461,7 @@ Schema pending for `orders`, `meals`, `user_subscriptions` and `user_messages`: 
 | 10 | Session state in `entities/session/model`; `app/providers/SessionProvider` only mounts it | implemented |
 | 11 | 3D landing: generic renderer in `shared/ui/three`, composition in `pages/home` | implemented |
 | 12 | `DomainError.message` is fixed and client-safe; detail travels in `internalMessage` and is never forwarded | implemented; delivery mapping lands with P2 |
-| 13 | Stage B move 1 landed; moves 2–10 follow §3 gates | in progress |
+| 13 | Stage B move 1 is underway but the repo is mixed-state until the old roots are fully retired | in progress |
 | 14 | Each server module exposes a single `index.ts`; other modules, the edge bundle and composition import only through it. Infrastructure adapters are exported through it and restricted to `composition/` | planned: rule P1.2 |
 | 15 | Server domain returns kernel `Result<T, DomainError<Code>>`; shared-package `RangeError`s are converted at the domain boundary. The domain may import the kernel; the kernel imports nothing from modules. Totals are a snapshot computed at placement and validated on rehydration | implemented; rule P1.3 pending |
 | 16 | Legacy triggers that encode business sequencing move into server use cases inside `UnitOfWork`: subscription consumption on delivery, delivery dates, rating aggregation. The database keeps only data integrity: CHECK constraints, total CHECK, foreign keys, `order_number` sequence | planned |
@@ -573,14 +476,15 @@ Schema pending for `orders`, `meals`, `user_subscriptions` and `user_messages`: 
 
 ## 9. Open questions
 
-1. **Order status values:** does legacy code use `processing` or `shipped`? If so, map to `preparing` and `out_for_delivery` in a documented step (P2.8). Answer:  yes.
+1. **Order status values:** does legacy code use `processing` or `shipped`? If so, map to `preparing` and `out_for_delivery` in a documented step (P2.8). Answer: yes.
 2. **Payment transitions:** which moves are legal among `pending`, `paid`, `failed`, `refunded`, `partial_refund`? (P6.2) Answer: All.
 3. **Delivery-date rule:** exact logic of `trigger_order_delivery_dates` before porting (P4.3). Answer: Free to alter.
 4. **Free-additive rule:** is `max_free_per_meal` per meal line or per order? (P3.4): Answer: per meal line.
 5. **Payment provider:** Stripe is not confirmed; may be a placeholder (Phase 6). Answer: Make it a placeholder.
-6. **Admin:** separate app after Phases 0–6 and rename; MFA/IP allowlist is part of the rationale (move 2).
-Answer: Hang on!
----
-
+6. **Admin:** separate app after Phases 0–6 and rename; MFA/IP allowlist is part of the rationale (move 2). Answer: Hang on!
 
 ---
+
+# Final note
+
+The repository as of `main` is not a single clean rename yet. It is a mixed-state monorepo: target paths under `apps/*` exist, and legacy root-level `client/` and `server/` directories still remain in the working tree. This bible should therefore be read as a target architecture document that is currently being adopted incrementally, not as a claim that the migration is fully complete.
