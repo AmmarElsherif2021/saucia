@@ -54,9 +54,14 @@ export {
 } from './subscription/TDEECalculator';
 export {
   MACRO_RATIOS,
-  CALORIES_PER_GRAM,
   calculateMacros,
   calculateNutritionProfile,
-  type MacroSplit,
   type NutritionProfile,
 } from './subscription/NutritionCalculator';
+
+
+export * from './dietary/allergens';
+export * from './dietary/allergenRules';
+export * from './dietary/diet';
+export * from './dietary/summary';
+export * from './nutrition/energy';

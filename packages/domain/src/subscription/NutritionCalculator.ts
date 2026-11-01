@@ -4,11 +4,7 @@ import {
   type HealthProfile,
 } from './TDEECalculator';
 
-export interface MacroSplit {
-  readonly protein: number;
-  readonly carbs: number;
-  readonly fat: number;
-}
+import { CALORIES_PER_GRAM, type MacroSplit } from '../nutrition/energy';
 
 export interface NutritionProfile {
   readonly bmr: number;
@@ -29,11 +25,6 @@ export const MACRO_RATIOS: Readonly<
   gain: { protein: 0.3, carbs: 0.45, fat: 0.25 },
 };
 
-export const CALORIES_PER_GRAM: Readonly<Record<keyof MacroSplit, number>> = {
-  protein: 4,
-  carbs: 4,
-  fat: 9,
-};
 
 function assertTargetCalories(targetCalories: number): void {
   if (!Number.isFinite(targetCalories) || targetCalories < 0) {

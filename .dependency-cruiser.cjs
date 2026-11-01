@@ -21,9 +21,14 @@ module.exports = {
     { name: 'server-delivery-no-infra', severity: 'error',
       from: { path: '^apps/server/src/modules/[^/]+/delivery/' },
       to:   { path: '^apps/server/src/modules/[^/]+/infrastructure/' } },
-    { name: 'server-no-cross-module-internals', severity: 'error',
+    {
+      name: 'server-no-cross-module-internals',
+      severity: 'error',
       from: { path: '^apps/server/src/modules/([^/]+)/' },
-      to:   { path: '^apps/server/src/modules/(?!\\1/)[^/]+/(domain|application|infrastructure)/' } },
+      to: {
+        path: '^apps/server/src/modules/(?!$1/)[^/]+/(domain|application|infrastructure)/',
+      },
+    },
 
     // ---- server kernel ----
     // The kernel is the server's dependency sink: every layer may import it,

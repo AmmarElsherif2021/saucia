@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import type { HealthProfile } from './TDEECalculator';
 import {
-  CALORIES_PER_GRAM,
   MACRO_RATIOS,
   calculateMacros,
   calculateNutritionProfile,
 } from './NutritionCalculator';
-import type { HealthProfile } from './TDEECalculator';
-
+import { CALORIES_PER_GRAM } from '../nutrition/energy';
 const profile: HealthProfile = {
   age: 30,
   gender: 'M',

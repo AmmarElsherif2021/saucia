@@ -93,14 +93,20 @@ The dependency sink: `Result`, `DomainError`, and the ports `Clock` / `IdGenerat
 - The client has **no `Result`**; it owns `AppError` only.
 - Entities and aggregates (`Order`, `Meal`, `Cart`, `Subscription`) never live in the kernel.
 
-### 2.4 Workspace boundaries
+### 2.4 Supabase access (path rules)
+ **Client**: anon key + RLS, read-only. 
+ **Server**: service role, only via platform/supabase and module infrastructure/supabase. 
+ **Writes of orders, money or status**: edge functions only. 
+ **Schema, RLS and invariant triggers**: supabase/migrations only. packages/contracts never imports packages/db-types.
+ 
+### 2.5 Workspace boundaries
 
 - `packages/*` are leaves: they never import `apps/` or `supabase/`.
 - The two apps never import each other.
 - `packages/kernel`, when it exists, may not import apps, `packages/domain`, `contracts` or `db-types`.
 - Internal packages are **just-in-time**: `exports` point at TS source; no build step.
 
-### 2.5 Ownership: "where does X go?"
+### 2.6 Ownership: "where does X go?"
 
 | Concept | Home today |
 | :--- | :--- |
@@ -121,10 +127,12 @@ The dependency sink: `Result`, `DomainError`, and the ports `Clock` / `IdGenerat
 | Chat transport | `apps/customer-web/src/entities/message/infrastructure` → `packages/realtime` after adapter and second consumer |
 | Generic three.js renderer | `apps/customer-web/src/shared/ui/three` |
 | Landing page composition | `apps/customer-web/src/pages/home` |
+| Supabase client factories | anon: apps/customer-web/src/shared/api → packages/api-client; service role: apps/server/src/platform/supabase |
+| RLS policies, constraints, triggers | supabase/migrations |
 
 **Error messages** are client-only: the server returns codes; the client maps codes to `dict.json` keys.
 
-### 2.6 Rejected / do not reopen
+### 2.7 Rejected / do not reopen
 
 - HTTP status or response body on `DomainError`.
 - Entities or business rules in the kernel or a shared package.
@@ -135,7 +143,8 @@ The dependency sink: `Result`, `DomainError`, and the ports `Clock` / `IdGenerat
 - `processing` / `shipped` order statuses. The canonical set is `pending`, `confirmed`, `preparing`, `out_for_delivery`, `delivered`, `cancelled`. Legacy values are mapped in a documented step (P2.8).
 - Extracting a package on its first consumer or "while we're in here".
 - Client-side room checks as a security boundary for support chat (decision 18).
-
+- Client-side writes to order, payment or status tables.
+- Service-role key in any client-reachable ring.
 ---
 
 ## 3. Stage B: target structure
@@ -564,15 +573,14 @@ Schema pending for `orders`, `meals`, `user_subscriptions` and `user_messages`: 
 
 ## 9. Open questions
 
-1. **Order status values:** does legacy code use `processing` or `shipped`? If so, map to `preparing` and `out_for_delivery` in a documented step (P2.8).
-2. **Payment transitions:** which moves are legal among `pending`, `paid`, `failed`, `refunded`, `partial_refund`? (P6.2)
-3. **Delivery-date rule:** exact logic of `trigger_order_delivery_dates` before porting (P4.3).
-4. **Free-additive rule:** is `max_free_per_meal` per meal line or per order? (P3.4)
-5. **Payment provider:** Stripe is not confirmed; may be a placeholder (Phase 6).
+1. **Order status values:** does legacy code use `processing` or `shipped`? If so, map to `preparing` and `out_for_delivery` in a documented step (P2.8). Answer:  yes.
+2. **Payment transitions:** which moves are legal among `pending`, `paid`, `failed`, `refunded`, `partial_refund`? (P6.2) Answer: All.
+3. **Delivery-date rule:** exact logic of `trigger_order_delivery_dates` before porting (P4.3). Answer: Free to alter.
+4. **Free-additive rule:** is `max_free_per_meal` per meal line or per order? (P3.4): Answer: per meal line.
+5. **Payment provider:** Stripe is not confirmed; may be a placeholder (Phase 6). Answer: Make it a placeholder.
 6. **Admin:** separate app after Phases 0–6 and rename; MFA/IP allowlist is part of the rationale (move 2).
-
+Answer: Hang on!
 ---
 
-*Revisions 1–8 (2026-10-08 → 2026-10-27): workspace wiring; domain and contracts; server kernel; Phase 1 cleanup; Stage B gates; move 1; module public surface; domain kernel boundary; legacy schema plan. Detailed history is in git.*
 
 ---

@@ -1,138 +1,99 @@
-import type { Money } from 'packages/domain/src/money/Money';
+import { Money } from '@saucia/domain';
 import { DomainError, Err, Ok, type Result } from '../../../kernel';
+import type { ItemId, MealId } from './IDs';
 
-export interface Item{
-     readonly id: string;
-     readonly unitPrice: Money;
-     readonly maxFreeUnits: number; // For DIY meals
-     readonly storageUnits: number; // Inventory system could be added in future
-     // rest od old db props
+export type MealErrorCode =
+  | 'INVALID_ID'
+  | 'NEGATIVE_PRICE'
+  | 'NO_ITEMS'
+  | 'INVALID_ITEM_ID'
+  | 'INVALID_RATING'
+  | 'DUPLICATE_ITEM'
+  | 'MEAL_NOT_FOUND';
+
+// MealResult<T> is a Result type that can either be a success containing a value of type T or a failure containing a DomainError with a MealErrorCode. This allows for robust error handling when working with Meal entities in the application.
+export type MealResult<T> = Result<T, DomainError<MealErrorCode>>;
+
+export interface MealProps {
+  readonly id: MealId;
+  readonly name: string;                   // legacy meals.name
+  readonly basePrice: Money;              // legacy meals.base_price; discounts are applied in pricing
+  readonly itemIds: readonly ItemId[];    // references to Item aggregates, never Item objects
+  readonly isSelective: boolean;          // legacy meals.is_selective (customizable meal)
+  readonly isAvailable: boolean;          // legacy meals.is_available, set by admins
 }
 
-// Errors
-export type ItemErrorCode =
-  | 'PRICE_ZERO'
-  | 'INVALID_STORAGE_QUANTITY';
-export type MealErrorCode='PRICE_ZERO'| 'NO_ITEMS';
+// Returns the first rule violated, or undefined when the props are valid. 
+function firstViolation(p: MealProps): DomainError<MealErrorCode> | undefined {
+  if (!Number.isSafeInteger(p.id) || p.id <= 0) {
+    return new DomainError('INVALID_ID', `Meal id ${p.id} must be a positive integer`);
+  }
+  if (p.basePrice.isNegative()) {
+    return new DomainError('NEGATIVE_PRICE', `Meal ${p.id} has a negative base price`);
+  }
+  if (p.itemIds.length === 0) {
+    return new DomainError('NO_ITEMS', `Meal ${p.id} must reference at least one item`);
+  }
 
-//Creating items/orders results:
-export type CreateItemResult<T> = Result<T, DomainError<ItemErrorCode>>;
-export type CreatingMealResult<T> = Result<T, DomainError<MealErrorCode>>;
-
-// create item and meal props:
-export interface CreateItemProps {
-     readonly id: string;
-     readonly unitPrice: Money;
-     readonly maxFreeUnits: number; // For DIY meals
-     readonly storageUnits: number; 
-}
-export interface CreateMealProps {
-  readonly id: string;
-  readonly items: readonly Item[];
-  readonly mealPrice: Money;
-  // rest of old db props
-}
-
-export interface PersistedMealProps {
-  readonly id: string;
-  readonly items: Item[];
-  readonly mealPrice: Money;
-  // rest of db props
+  const seen = new Set<number>();
+  for (const itemId of p.itemIds) {
+    if (!Number.isSafeInteger(itemId) || itemId <= 0) {
+      return new DomainError('INVALID_ITEM_ID', `Meal ${p.id} contains an invalid item id ${itemId}`);
+    }
+    if (seen.has(itemId)) {
+      return new DomainError('DUPLICATE_ITEM', `Meal ${p.id} lists item ${itemId} more than once`);
+    }
+    seen.add(itemId);
+  }
+  return undefined;
 }
 
 export class Meal {
-  private constructor(
-    readonly id: string,
-    readonly items: readonly Item[],
-    readonly mealPrice: Money
-  ) {}
+  private constructor(private props: MealProps) {}
 
-  /** Place a new order. Totals are computed once and kept as a snapshot. */
-  static create(props: CreateMealProps): CreatingMealResult<Meal> {
-    if (props.mealPrice.isZero() === true) {
-      return fail('EMPTY_ORDER', 'Order must contain at least one line');
-    }
-
-    for (const item of props.items) {
-      if (!Number.isSafeInteger(item.storageUnits) || item.storageUnits <= 0) {
-        return fail(
-          'INVALID_QUANTITY',
-          `Quantity for meal ${line.mealId} must be a positive integer`,
-        );
-      }
-    }
-
-    try {
-      const totals = computeOrderTotals(
-        sumLines(props.lines),
-        props.taxAmount,
-        props.deliveryFee,
-        props.discountAmount,
-      );
-      return Ok(
-        new Order(props.id, props.customerId, props.lines, totals, INITIAL_STATUS),
-      );
-    } catch (error) {
-      // Shared rules throw RangeError (negative amount, discount above balance).
-      // The domain converts it, so callers never need try/catch.
-      return fail('INVALID_TOTALS', errorMessage(error));
-    }
+  /*
+   IMPORTANT: Checks the shape and internal rules only. Whether each item exists and is
+   available is I/O, so the use case checks it through an ItemReader port.
+   */
+  static create(props: MealProps): MealResult<Meal> {
+    const violation = firstViolation(props);
+    // Copy the array so later changes to the caller's array cannot alter the entity.
+    return violation
+      ? Err(violation)
+      : Ok(new Meal({ ...props, itemIds: [...props.itemIds] }));
   }
 
-  /** Rebuild from storage. The stored snapshot is checked, not trusted. */
-  static reconstitute(props: PersistedOrderProps): OrderResult<Order> {
-    const check = validateOrderTotals(props.totals);
-    if (!check.isValid) {
-      return fail('INVALID_TOTALS', check.error ?? 'Invalid stored totals');
+  // Stored data is not trusted: rebuilding runs the same checks as creating.
+  static reconstitute(props: MealProps): MealResult<Meal> {
+    return Meal.create(props);
+  }
+
+  get id(): MealId { return this.props.id; }
+  get basePrice(): Money { return this.props.basePrice; }
+  get itemIds(): readonly ItemId[] { return this.props.itemIds; }
+  get isSelective(): boolean { return this.props.isSelective; }
+  get isAvailable(): boolean { return this.props.isAvailable; }
+
+  hasItem(itemId: ItemId): boolean {
+    return this.props.itemIds.includes(itemId);
+  }
+
+  setAvailable(next: boolean): void {
+    this.props = { ...this.props, isAvailable: next };
+  }
+
+  applyRating(summary: { average: number; count: number }): void {
+
+    // This method would typically update the meal's rating based on the summary provided.
+    // Implementation details would depend on how ratings are stored and managed within the Meal entity.
+    // For example, you might store the average rating and count as part of the MealProps or in a separate property.
+  }
+
+  changeBasePrice(next: Money): MealResult<void> {
+    if (next.isNegative()) {
+      return Err(new DomainError('NEGATIVE_PRICE', `Meal ${this.props.id} cannot have a negative base price`));
     }
-
-    if (!sumLines(props.lines).equals(props.totals.subtotal)) {
-      return fail(
-        'INVALID_TOTALS',
-        'Stored subtotal does not match the order lines',
-      );
-    }
-
-    return Ok(
-      new Order(props.id, props.customerId, props.lines, props.totals, props.status),
-    );
-  }
-
-  get status(): OrderStatus {
-    return this.currentStatus;
-  }
-
-  get totalAmount(): Money {
-    return this.totals.totalAmount;
-  }
-
-  get itemCount(): number {
-    return this.lines.reduce((count, line) => count + line.quantity, 0);
-  }
-
-  updateStatus(next: OrderStatus): OrderResult<void> {
-    if (!canTransition(this.currentStatus, next)) {
-      return fail(
-        'INVALID_TRANSITION',
-        `Cannot transition order from ${this.currentStatus} to ${next}`,
-      );
-    }
-    this.currentStatus = next;
+    this.props = { ...this.props, basePrice: next };
     return Ok(undefined);
   }
-}
-
-function fail(code: OrderErrorCode, internalMessage: string): OrderResult<never> {
-  return Err(new DomainError(code, internalMessage));
-}
-
-function sumLines(lines: readonly OrderLine[]): Money {
-  return lines.reduce(
-    (sum, line) => sum.add(line.unitPrice.multiply(line.quantity)),
-    Money.zero(),
-  );
-}
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'Invalid order totals';
 }
