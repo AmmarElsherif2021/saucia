@@ -1,4 +1,4 @@
-import { Err, Ok, DomainError, isFailure, type Result } from '../../../../kernel';
+import { Err, Ok, DomainError, isFailure } from '../../../../kernel';
 import type { ItemRepository } from '../ports/ItemRepository';
 import type { MealRepository } from '../ports/MealRepository';
 import { Meal, type MealProps, type MealResult, type MealErrorCode } from '../../domain/Meal';

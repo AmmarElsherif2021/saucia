@@ -9,18 +9,20 @@
     }
   },
   "scripts": {
+    "db:types": "supabase gen types typescript --local > packages/db-types/src/database.ts",
     "dev": "turbo run dev --filter=@saucia/client",
     "build": "turbo run build",
-    "lint": "turbo run lint",
+    "lint": "turbo run lint -- --max-warnings=0",
     "type-check": "turbo run type-check",
     "test": "turbo run test",
-    "arch": "depcruise apps/customer-web/src apps/server/src packages --config .dependency-cruiser.cjs",
-    "db:types": "supabase gen types typescript --local > packages/db-types/src/database.ts"
+    "arch": "depcruise apps/customer-web/src apps/server/src packages --config .dependency-cruiser.cjs && steiger apps/customer-web/src"
   },
   "devDependencies": {
+    "@eslint/js": "^9.11.0",
+    "@feature-sliced/steiger-plugin": "^0.8.2",
     "dependency-cruiser": "^16.4.0",
     "eslint": "^9.11.0",
-    "eslint-plugin-boundaries": "^5.0.0",
+    "globals": "^16.1.0",
     "steiger": "^0.5.0",
     "turbo": "^2.1.0",
     "typescript": "^5.6.0",

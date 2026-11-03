@@ -170,6 +170,7 @@ export const ThreeDisplay = forwardRef<ThreeDisplayHandle, ThreeDisplayProps>(
     const silhouetteTouchedRef = useRef<
       Array<{ mesh: THREE.Mesh; material: THREE.Material | THREE.Material[] }>
     >([]);
+    const silhouetteTouched = silhouetteTouchedRef.current;
 
     const ambientGroupsRef = useRef<Record<string, AmbientGroup>>({});
     const ambientDummyRef = useRef(new THREE.Object3D());
@@ -1079,7 +1080,7 @@ export const ThreeDisplay = forwardRef<ThreeDisplayHandle, ThreeDisplayProps>(
         silhouetteSceneRef.current = null;
         silhouetteCameraRef.current = null;
         silhouetteUniformsRef.current = null;
-        silhouetteTouchedRef.current.length = 0;
+        silhouetteTouched.length = 0;
 
         const renderer = rendererRef.current;
         const dom = renderer?.domElement;

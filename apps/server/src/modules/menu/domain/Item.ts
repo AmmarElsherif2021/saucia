@@ -1,7 +1,7 @@
 import { Money } from '@saucia/domain';
 import { DomainError, Err, Ok, type Result } from '../../../kernel';
 import type { ItemId } from './IDs';
-import { dietAllergenConflicts, macroViolation } from '@saucia/domain';
+//import { dietAllergenConflicts, macroViolation } from '@saucia/domain';
 import type { AllergenId, DietClass, MacroSplit } from '@saucia/domain';
 
 //Errors and Results

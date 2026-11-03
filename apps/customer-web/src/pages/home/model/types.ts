@@ -1,4 +1,4 @@
-import type { Vec3 } from '../../../shared/ui/three/types';
+import type { Vec3 } from '../../../shared/ui/three/index';
 
 export type LandingAnimation = 'fadeUp' | 'slideRight' | 'fadeLeft' | 'scale';
 

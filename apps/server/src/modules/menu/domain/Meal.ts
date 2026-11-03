@@ -82,8 +82,8 @@ export class Meal {
     this.props = { ...this.props, isAvailable: next };
   }
 
-  applyRating(summary: { average: number; count: number }): void {
-
+  applyRating(): void {
+    // To be: applyRating(summary: { average: number; count: number })
     // This method would typically update the meal's rating based on the summary provided.
     // Implementation details would depend on how ratings are stored and managed within the Meal entity.
     // For example, you might store the average rating and count as part of the MealProps or in a separate property.

@@ -2,7 +2,7 @@ import type { PropsWithChildren } from 'react';
 import {
   SessionContext,
   anonymousSession,
-} from '../../entities/session/model/sessionContext';
+} from '../../entities/session/index'; 
 
 /**
  * Provider/composition shell only.
