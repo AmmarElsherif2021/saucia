@@ -306,24 +306,44 @@ src/
 
 | ID | Task | Status | Remaining |
 | :-- | :--- | :--- | :--- |
-| P1.1 | Root ESLint boundary config + Steiger enforcement; `ci.yml` | 🟡 PARTIAL | App-level config exists; root-level enforcement remains partial |
-| P1.2 | `modules-public-api-only` dependency-cruiser rule (decision 14) | ⬜ OPEN | Add rule and confirm `pnpm arch` passes after module `index.ts` files exist |
-| P1.3 | `server-domain-pure`: allow `@saucia/domain` and the kernel (decision 15) | ⬜ OPEN | Update rule and its description; confirm `pnpm arch` passes |
+| P1.1 | Root ESLint boundary config + Steiger enforcement; `ci.yml` | 🟡 PARTIAL | Root ESLint + app configs exist; `pnpm arch` runs dependency-cruiser and Steiger, and CI runs the architecture gate before the verification job. However, Steiger still leaves key rules at `warn` instead of enforcing them as errors, and branch protection is not enabled on `main`. |
+| P1.2 | `modules-public-api-only` dependency-cruiser rule (decision 14) | 🟡 PARTIAL / VERIFY | The rule is present in `.dependency-cruiser.cjs`, and placeholder `index.ts` files exist for the server modules, but the repo still needs a live proof run showing the intended deep-import probe fails and legitimate index-based imports do not. |
+| P1.3 | `server-domain-pure`: allow `@saucia/domain` and the kernel (decision 15) | 🟡 PARTIAL / VERIFY | The dependency-cruiser rule restricts server-domain imports from composition/platform/delivery-shared and from other packages, while allowing `@saucia/domain` and the kernel. The positive allow-list case still needs a clean, explicit verification pass in CI/local `pnpm arch`. |
+
+**Current evidence (2026-11-03):**
+- The repo has a root `eslint.config.js`, app-level ESLint config files, `steiger.config.mjs`, and a root `arch` script.
+- `.dependency-cruiser.cjs` contains server module public API checks, FSD rules, Clean Architecture assertions, and workspace boundary rules.
+- `.github/workflows/CI.yaml` runs `pnpm arch` in a dedicated `architecture` job before the `verify` job.
+- The latest CI run on `main` reached the verification stage but failed during `type-check` in `packages/db-types`, not in the arch rule itself.
+- Steiger still has warning-level overrides (`fsd/public-api`, `fsd/forbidden-imports`, and the client `react-refresh` rule), so the boundary gate is not yet fully enforced at error level.
+- `main` is not covered by required branch protection, so the gate remains advisory rather than enforced.
+
+**Exit:** 🟡 NOT YET MET. The tooling exists and is wired into CI, but it is not yet demonstrated as a strict enforcement gate.
+
+---
 
 ### Phase 2: order money path
 
 | ID | Task | Status | Remaining |
 | :-- | :--- | :--- | :--- |
-| P2.1 | Validate `submitOrder.schema` on the server; map codes to i18n keys on the client | 🟡 PARTIAL | Schemas and `ErrorCode` exist; server validation and client mapping remain incomplete |
-| P2.2 | `SubmitOrder` recomputes totals via `MealPriceReader`; never trusts client totals | 🟡 PARTIAL | `Order` aggregate exists; `SubmitOrder.ts` and menu price reader remain pending |
-| P2.3 | `orders`, `order_meals`, `order_items` migrations with CHECK and total CHECK; `order_number` sequence | ⬜ OPEN | `supabase/migrations/` not complete |
-| P2.4 | `order-processing` function via bundle; port `process-order`, `manage-order`, `list-orders`, `track-last-order` | 🟡 PARTIAL | Stub entry exists; depends on stable edge runtime |
-| P2.5 | `features/submit-order` + `entities/order` call the edge function via `edgeClient`/`errorNormalizer` | 🟡 PARTIAL | API modules and repo scaffolding exist; feature remains thin |
-| P2.6 | Domain tests ✅; use-case tests with in-memory ports | 🟡 PARTIAL | Use-case tests remain incomplete |
-| P2.7 | `OrderLine` supports additive item lines (`order_items`) with `max_free_per_meal` rule | ⬜ OPEN | Needs pricing rules |
-| P2.8 | Verify legacy order status and payment values against canonical lists; document mapping | ⬜ OPEN | Open questions 1 and 2 (§9) |
+| P2.1 | Validate `submitOrder.schema` on the server; map codes to i18n keys on the client | 🟡 PARTIAL | The domain and contract layer exist; server validation and client translation mapping are still incomplete. |
+| P2.2 | `SubmitOrder` recomputes totals via `MealPriceReader`; never trusts client totals | 🟡 PARTIAL | The order aggregate exists, but the actual use case and price reader wiring still remain incomplete. |
+| P2.3 | `orders`, `order_meals`, `order_items` migrations with CHECK and total CHECK; `order_number` sequence | ⬜ OPEN | The Supabase migrations are not complete for the money path. |
+| P2.4 | `order-processing` function via bundle; port `process-order`, `manage-order`, `list-orders`, `track-last-order` | 🟡 PARTIAL | Edge-function entrypoints and bundle scaffolding exist, but the flow is not fully wired and verified end to end. |
+| P2.5 | `features/submit-order` + `entities/order` call the edge function via `edgeClient`/`errorNormalizer` | 🟡 PARTIAL | Feature scaffolding exists, but the end-to-end order flow remains thin and not fully integrated. |
+| P2.6 | Domain tests ✅; use-case tests with in-memory ports | 🟡 PARTIAL | Domain logic is present, but the in-memory use-case tests remain incomplete. |
+| P2.7 | `OrderLine` supports additive item lines (`order_items`) with `max_free_per_meal` rule | ⬜ OPEN | Pricing logic and migration support are still missing. |
+| P2.8 | Verify legacy order status and payment values against canonical lists; document mapping | ⬜ OPEN | Requires legacy-data confirmation and mapping documentation. |
 
 **Exit:** checkout works end to end against local Supabase; client totals are display-only.
+
+**Current evidence (2026-11-03):**
+- The order aggregate and related domain rules are present.
+- The repo includes server-side scaffolding and edge-function entry placeholders.
+- The migration and live checkout path are still open.
+- The full order-money flow is not yet demonstrated locally or in CI.
+
+**Phase 2 status:** 🟡 IN PROGRESS. The money path is partly modeled, but it is not yet end-to-end verified.
 
 ### Phase 3: menu
 
