@@ -107,7 +107,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-turbo-
 
-      - name: Lint (eslint + boundaries)
+      - name: Lint (eslint)
         run: pnpm lint
 
       - name: Type-check

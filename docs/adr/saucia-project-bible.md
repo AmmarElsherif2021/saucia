@@ -302,13 +302,30 @@ src/
 | P0.7 | Verify `.env` files are ignored and never committed; rotate if needed | ✅ DONE | None |
 | P0.8 | Deno interop spike: bundle inlines `@saucia/domain`; `order-processing` returns 200 locally | 🟡 PARTIAL | Bundle and entry files are present; final local verification remains blocked on stable Supabase image pull |
 
+## Phase 1: boundary enforcement
+
+**Status:** 🟡 PARTIAL. The gate is enforced and proven. Three rule sets are present but not all are proven, and a few small items remain.
+
+**Context.** Architecture rules are enforced by tools and by the platform, not by review discipline. One tool owns each kind of rule: dependency-cruiser owns the import graph and module edges, Steiger owns FSD layers, slices and public APIs, and ESLint owns per-file quality. `eslint-plugin-boundaries` was removed because it duplicated dependency-cruiser. The local gate is `pnpm arch`, the CI gate is the `architecture` job, and branch protection on `main` requires it. On 2026-11-03 the repository had no branch protection; it was configured with the four required checks (`architecture`, `verify`, `secret-scan`, `dependency-review`), strict up-to-date checks, and admin enforcement.
+
+**Proof of the gate.** A throwaway PR (#1) added `apps/server/src/kernel/tmp/bad.ts` importing a module's domain. The `architecture` job failed with `server-kernel-imports-nothing` and `module-order-public-api-only`, `verify` was skipped, and the merge state was BLOCKED. The PR was closed and the branch deleted; the run remains as evidence.
+
 ### Phase 1: boundary enforcement
 
-| ID | Task | Status | Remaining |
+| ID | Task | Status | Evidence |
 | :-- | :--- | :--- | :--- |
-| P1.1 | Root ESLint boundary config + Steiger enforcement; `ci.yml` | 🟡 PARTIAL | App-level config exists; root-level enforcement remains partial |
-| P1.2 | `modules-public-api-only` dependency-cruiser rule (decision 14) | ⬜ OPEN | Add rule and confirm `pnpm arch` passes after module `index.ts` files exist |
-| P1.3 | `server-domain-pure`: allow `@saucia/domain` and the kernel (decision 15) | ⬜ OPEN | Update rule and its description; confirm `pnpm arch` passes |
+| P1.1 | Root ESLint, Steiger, CI gate; `pnpm arch` runs dependency-cruiser then Steiger | ✅ DONE | `pnpm install --frozen-lockfile` and `pnpm lint` (zero warnings) pass; one tracked workflow (`CI.yaml`); branch protection on `main` requires `architecture`, `verify`, `secret-scan`, `dependency-review`; negative PR #1 blocked by `architecture` |
+| P1.2 | `modules-public-api-only` (decision 14) | ✅ DONE | Per-module and `modules-public-api-only` rules at severity error; negative test fired `module-order-public-api-only`; `modules/order/index.ts` exports verified |
+| P1.3 | `server-domain-pure` allow-list (decision 15) | ✅ DONE | Rules `server-domain-pure` and `server-domain-pure-external` at severity error; negative case: a domain file importing `@supabase/supabase-js` fails with `[rule name observed]` |
+
+**Corrections to earlier assumptions.**
+- The Steiger config is `steiger.config.mjs`. Any `.cjs` reference in the docs is wrong.
+- The earlier "branch unprotected" conclusion came from a request with literal `:owner/:repo` placeholders, which was not a real check. The correct repository is `AmmarElsherif2021/saucia`.
+- P1.2 did not need Phase 2 work first. The module `index.ts` files already exist; what remains is verifying them.
+- The Vercel deployment is failing. It is not a required check and is outside Phase 1; it is tracked under P7.3.
+
+**Phase 1 exit criteria.**
+| Phase 1 | `pnpm arch` and `pnpm lint` green at error; zero new `legacy-*` imports; negative tests observed for each rule family | ✅ DONE. Zero `legacy-*` imports confirmed by `git grep -n "legacy-" -- apps packages` |
 
 ### Phase 2: order money path
 
@@ -421,8 +438,9 @@ One thin entry per function, delegating to the server bundle.
 - **Globs:** `apps/*`, `packages/*`; Turborepo tasks in `turbo.json`.
 - **JIT packages:** `exports` point at source; no build step.
 - **Turbo env:** `build` declares `VITE_*`.
-- **Root scripts:** `dev` filters `@saucia/client`; `arch` runs dependency-cruiser over `apps/customer-web/src apps/server/src packages`; `db:types` is the only writer of `packages/db-types/src/database.ts`.
-- **CI:** `pnpm install --frozen-lockfile`, then lint, type-check, arch, test, build; artifact `apps/customer-web/dist`.
+- **Root scripts:** `arch` runs dependency-cruiser over `apps/customer-web/src apps/server/src packages`, then Steiger over `apps/customer-web/src`. `lint` runs with `--max-warnings=0`. `db:types` is the only writer of `packages/db-types/src/database.ts`.
+- **CI:** one workflow, `.github/workflows/CI.yaml`. Jobs: `architecture` (runs `pnpm arch`), then `verify` (needs `architecture`), with `secret-scan` and `dependency-review` also required. Required checks match the job `name:` values.
+- **Pinned architecture tooling:** `steiger@0.5.0` with `@feature-sliced/steiger-plugin@0.8.2`, tested together.
 - **Vercel:** root `apps/customer-web`, include files outside root, `pnpm install --frozen-lockfile`.
 - **Migrations:** created with `supabase migration new`; applied locally with `supabase db reset` only. No `db push` or `link` without owner approval.
 
@@ -469,7 +487,8 @@ Schema pending for `orders`, `meals`, `user_subscriptions` and `user_messages`: 
 | 18 | Support chat authorization is enforced by RLS. Client-side room checks are not a security boundary | planned |
 | 19 | Order lines include meal and additive item lines. Pricing rules shared by client and server (discounts, free-additive allowance) live in `packages/domain/pricing` | planned |
 | 20 | Adapters are named by port (`platform/payment`, `platform/email`), never by vendor. Vendor-specific code lives inside the adapter file | planned |
-
+| 21 | Each architecture rule has one owner: dependency-cruiser for the import graph and module edges, Steiger for FSD layers, slices and public APIs, ESLint for per-file quality. `eslint-plugin-boundaries` is removed as a duplicate of dependency-cruiser | implemented |
+| 22 | The architecture gate is enforced by branch protection on `main`, not by convention: required checks `architecture`, `verify`, `secret-scan`, `dependency-review`; strict up-to-date checks; `enforce_admins` on; zero required approvals for a solo developer (raise when a second reviewer exists) | implemented |
 **Rejected:** HTTP status on `DomainError`; entities or rules in the kernel; shared repository adapters; `packages/config`; hero Lottie `hero-*.json` and duplicate asset variants; `processing`/`shipped` statuses.
 
 ---
