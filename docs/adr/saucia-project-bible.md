@@ -312,22 +312,24 @@ src/
 
 ### Phase 1: boundary enforcement
 
-| ID | Task | Status | Evidence |
+| ID | Task | Status | Evidence / open item |
 | :-- | :--- | :--- | :--- |
-| P1.1 | Root ESLint, Steiger, CI gate; `pnpm arch` runs dependency-cruiser then Steiger | ✅ DONE | `pnpm install --frozen-lockfile` and `pnpm lint` (zero warnings) pass; one tracked workflow (`CI.yaml`); branch protection on `main` requires `architecture`, `verify`, `secret-scan`, `dependency-review`; negative PR #1 blocked by `architecture` |
-| P1.2 | `modules-public-api-only` (decision 14) | ✅ DONE | Per-module and `modules-public-api-only` rules at severity error; negative test fired `module-order-public-api-only`; `modules/order/index.ts` exports verified |
-| P1.3 | `server-domain-pure` allow-list (decision 15) | ✅ DONE | Rules `server-domain-pure` and `server-domain-pure-external` at severity error; negative case: a domain file importing `@supabase/supabase-js` fails with `[rule name observed]` |
+| P1.1 | Root ESLint, Steiger, CI gate | 🟡 PARTIAL | `pnpm arch` runs both tools; `pnpm lint` passes; one workflow; branch protection requires four checks. Open: `verify` is red on `main` (P1.4 to P1.6), so the gate cannot pass a merge yet |
+| P1.2 | `modules-public-api-only` | 🟡 PARTIAL | Rule present; fired in negative test. Open: confirm `modules/order/index.ts` exports the public surface (currently 12 bytes) |
+| P1.3 | `server-domain-pure` allow-list | 🟡 PARTIAL | Rules present; negative test fired for the kernel and module rules. Open: negative case for `@supabase/supabase-js` in a domain file |
+| P1.4 | `db-types` placeholder restored | ⬜ OPEN (deferred) | `database.ts` was committed empty (`c8bd2409`); valid placeholder at `a1df8576`. Deferred until Supabase setup |
+| P1.5 | Real database types generated | ⬜ OPEN (deferred) | Needs Docker, `supabase start`, a unique migration version for `20261028124044`, then `pnpm db:types` |
+| P1.6 | `apps/server` type-check green | ⬜ OPEN | Never passed on `main`. Done: `@supabase/supabase-js` added, `IDs` casing fixed (WIP). Open: `never` row types (P1.5), `moneyFromNumeric`, `applyRating` arity, allergen narrowing |
 
-**Corrections to earlier assumptions.**
-- The Steiger config is `steiger.config.mjs`. Any `.cjs` reference in the docs is wrong.
-- The earlier "branch unprotected" conclusion came from a request with literal `:owner/:repo` placeholders, which was not a real check. The correct repository is `AmmarElsherif2021/saucia`.
-- P1.2 did not need Phase 2 work first. The module `index.ts` files already exist; what remains is verifying them.
+**Note:**
 - The Vercel deployment is failing. It is not a required check and is outside Phase 1; it is tracked under P7.3.
 
 **Phase 1 exit criteria.**
-| Phase 1 | `pnpm arch` and `pnpm lint` green at error; zero new `legacy-*` imports; negative tests observed for each rule family | ✅ DONE. Zero `legacy-*` imports confirmed by `git grep -n "legacy-" -- apps packages` |
+| Phase 1 | 
+`pnpm arch` and `pnpm lint` green at error; zero new `legacy-*` imports; negative tests observed for each rule family |🟡 PARTIAL. legacy-* check not yet run (git grep -n "legacy-" -- apps packages). |
 
-### Phase 2: order money path
+
+### Phase 2: order money path:
 
 | ID | Task | Status | Remaining |
 | :-- | :--- | :--- | :--- |
