@@ -6,3 +6,4 @@
 - Import direction goes downward only: app -> pages -> widgets -> features -> entities -> shared.
 - Slices are imported only through their index.ts.
 - No legacy-* imports: the three v1 files are quarantined under `_legacy/client/src/shared/`.
+- Steiger enforces FSD layers and slice public APIs in `pnpm arch`; ESLint enforces per-file rules in `pnpm lint`. Neither rule set is duplicated in the other.
