@@ -1,8 +1,8 @@
 # Saucia v2 — Project Bible
 
-> **Revision:** 5 · **Snapshot:** 2026-11-01 · **Purpose:** the reference of record for structure, rules, sequencing and decisions.
+> **Revision:** 6 · **Snapshot:** 2026-11-03 · **Purpose:** Phase 1 closeout.
 >
-> This revision is a **current-state document**. Completed tasks and superseded decisions are not restated; they live in git history and in `_legacy/`. If a task is not listed as open, it is considered done unless the codebase proves otherwise.
+
 
 **Where things are:** canonical target structure is `apps/customer-web/` (React), `apps/server/` (Clean core + edge bundle source); `packages/{domain,contracts,db-types}` remain the shared leaves; `supabase/` holds migrations, seed and edge entries. The current repo tree still contains legacy root-level `client/` and `server/` folders, so this repository is in a mixed-state migration. Treat `apps/*` as the planning source of truth, but do not assume the legacy roots are deleted yet.
 
